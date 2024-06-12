@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35004.147
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LSL", "LSL\LSL.csproj", "{B086B065-0EE5-488F-AB00-A6147E991F41}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LSL.Desktop", "LSL.Desktop\LSL.Desktop.csproj", "{E2CBCD5B-8355-4FE0-86DB-7680C4B33595}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LSL.Browser", "LSL.Browser\LSL.Browser.csproj", "{6877D071-72A3-49B3-9392-E0B90B75ED55}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B086B065-0EE5-488F-AB00-A6147E991F41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B086B065-0EE5-488F-AB00-A6147E991F41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B086B065-0EE5-488F-AB00-A6147E991F41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B086B065-0EE5-488F-AB00-A6147E991F41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2CBCD5B-8355-4FE0-86DB-7680C4B33595}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2CBCD5B-8355-4FE0-86DB-7680C4B33595}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2CBCD5B-8355-4FE0-86DB-7680C4B33595}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2CBCD5B-8355-4FE0-86DB-7680C4B33595}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6877D071-72A3-49B3-9392-E0B90B75ED55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6877D071-72A3-49B3-9392-E0B90B75ED55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6877D071-72A3-49B3-9392-E0B90B75ED55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6877D071-72A3-49B3-9392-E0B90B75ED55}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {102E8657-13D0-4447-8E9C-601BEAD3C49C}
+	EndGlobalSection
+EndGlobal
