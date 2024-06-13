@@ -6,11 +6,17 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="LSL.Views.MainView"
              x:DataType="vm:MainViewModel">
-  <Design.DataContext>
+    <Design.DataContext>
     <!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-    <vm:MainViewModel />
-  </Design.DataContext>
+        <vm:MainViewModel />
+    </Design.DataContext>
 
-  <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+	<DockPanel>
+		<Grid Background="Azure" Width="800">
+			<StackPanel HorizontalAlignment="Left" Margin="0" Width="200">
+			    <TextBlock Text="欢迎回来" FontSize="20"/>
+		    </StackPanel>
+        </Grid>	
+	</DockPanel>
 </UserControl>
