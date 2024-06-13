@@ -15,7 +15,7 @@
 	<DockPanel>
 		<Grid Background="Azure" Width="800">
 			<StackPanel HorizontalAlignment="Left" Margin="0" Width="200">
-			    <TextBlock Text="欢迎回来" FontSize="20"/>
+			    <TextBlock Text="欢迎回来" FontSize="15"/>
 		    </StackPanel>
         </Grid>	
 	</DockPanel>
