@@ -1,4 +1,9 @@
-                    GNU GENERAL PUBLIC LICENSE
+本许可由基本条款GPL v3.0与一份附加条款组成。
+This license includes a basic clause GPL v3.0 and an additional clause.
+
+基本条款/Basic clause：
+
+                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
@@ -674,7 +679,7 @@ Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
 
 
-附加条款/Additional terms：
+附加条款/Additional clause：
 简体中文：
 在GPL v3.0的基础上，附加如下条款：
 第一条 对于采用本软件源码及其修改版本，且与本软件无明显功能差异的项目，特别地：
