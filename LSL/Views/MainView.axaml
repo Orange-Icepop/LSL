@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:LSL.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="600"
              x:Class="LSL.Views.MainView"
              x:DataType="vm:MainViewModel">
     <Design.DataContext>
@@ -13,9 +13,9 @@
     </Design.DataContext>
 
 	<DockPanel>
-		<Grid Background="Azure" Width="800">
+		<Grid Background="Azure" Width="1200">
 			<StackPanel HorizontalAlignment="Left" Margin="0" Width="200" Background="White">
-			    <TextBlock Text="欢迎回来" FontSize="15"/>
+			    <TextBlock Text="欢迎回来" FontSize="20" HorizontalAlignment="Center" Margin="50"/>
 		    </StackPanel>
         </Grid>	
 	</DockPanel>

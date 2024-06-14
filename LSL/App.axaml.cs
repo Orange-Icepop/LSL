@@ -6,7 +6,6 @@ using LSL.ViewModels;
 using LSL.Views;
 
 namespace LSL;
-
 public partial class App : Application
 {
     public override void Initialize()
