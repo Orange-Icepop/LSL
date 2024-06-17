@@ -12,14 +12,17 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-	<DockPanel>
-		<Grid Background="#c7d6ee" Width="1200">
-			<Grid HorizontalAlignment="Left" Margin="0" Width="350" Background="White">
-			    <TextBlock Text="欢迎回来" FontSize="30" HorizontalAlignment="Center" Margin="50"/>
-				<Button Content="启动服务器" Classes="blue" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="50" Height="50"></Button>
-		    </Grid>
-        </Grid>	
-	</DockPanel>
+	<Grid Background="#c7d6ee">
+		<Grid Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Background="White" Width="350">
+			<TextBlock Grid.Row="0" Grid.Column="0" Text="欢迎回来" FontSize="30" HorizontalAlignment="Center" Margin="50"/>
+			<Button Grid.Row="1" Grid.Column="0" Content="启动服务器" Classes="blue" Margin="0,0,0,90" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="70" Width="250"/>
+			<Grid ColumnDefinitions="*,*" Width="270" Margin="0,0,0,20" HorizontalAlignment="Center">
+			    <Button Grid.Row="0" Grid.Column="0" Content="服务器设置" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="50" Width="120"/>
+			    <Button Grid.Row="0" Grid.Column="1" Content="退出" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="50" Width="120"/>
+			</Grid>
+		</Grid>
+		<Grid Grid.Row="0" Grid.Column="1"/>
+	</Grid>
 </UserControl>
 
 

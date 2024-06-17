@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="50"
+             x:Class="LSL.Views.Bar">
+	<Grid RowDefinitions="*" Background="#33e0e5">
+		<TextBlock Text="Lime Server Launcher" FontSize="25" Margin="15,0,0,0" Foreground="White" Classes="title" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+		<DockPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+			<Button Content="主页" Classes="bar"/>
+			<Button Content="服务器" Classes="bar"/>
+			<Button Content="下载" Classes="bar"/>
+			<Button Content="设置" Classes="bar"/>
+		</DockPanel>
+	</Grid>
+</UserControl>

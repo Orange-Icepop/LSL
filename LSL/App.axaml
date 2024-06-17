@@ -10,22 +10,52 @@
 		<Style Selector="Window">
 			<Setter Property="FontFamily" Value="Microsoft YaHei UI,Simsun,苹方-简,宋体-简"/>
 		</Style>
+		<!--按钮基本样式重新定义-->
 		<Style Selector="Button">
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Border BorderBrush="{TemplateBinding BorderBrush}"
+							BorderThickness="{TemplateBinding BorderThickness}"
+							Background="{TemplateBinding Background}"
+							CornerRadius="5">
+						<ContentPresenter Content="{TemplateBinding Content}"
+										  ContentTemplate="{TemplateBinding ContentTemplate}"
+										  HorizontalAlignment="Center"
+										  VerticalAlignment="Center"/>
+					</Border>
+				</ControlTemplate>
+			</Setter>
 			<Setter Property="Background" Value="White"/>
 			<Setter Property="Foreground" Value="Black"/>
-			<Setter Property="Padding" Value="20"/>
 			<Setter Property="BorderThickness" Value="2"/>
 			<Setter	Property="BorderBrush" Value="Black"/>
+			<Setter Property="FontSize" Value="20"/>
 		</Style>
+		<!--普通按钮鼠标悬停样式定义-->
 		<Style Selector="Button:pointerover">
-			<Setter Property="Foreground" Value="#019eff"/>
-			<Setter	Property="BorderBrush" Value="#019eff"/>
+			<Setter Property="Foreground" Value="#33e0e5"/>
+			<Setter	Property="BorderBrush" Value="#33e0e5"/>
 			<Setter Property="Background" Value="#c7d6ee"/>
 		</Style>
-			<Style Selector="Button.blue">
-			<Setter Property="Foreground" Value="#019eff"/>
-			<Setter	Property="BorderBrush" Value="#019eff"/>
+		<!--首选按钮样式定义-->
+		<Style Selector="Button.blue">
+			<Setter Property="Foreground" Value="#33e0e5"/>
+			<Setter	Property="BorderBrush" Value="#33e0e5"/>
 		</Style>
+		<!--顶栏按钮样式定义-->
+		<Style Selector="Button.bar">
+			<Setter Property="Foreground" Value="White"/>
+			<Setter	Property="BorderThickness" Value="0"/>
+			<Setter Property="Background" Value="#33e0e5"/>
+			<Setter Property="Width" Value="70"/>
+			<Setter Property="Height" Value="35"/>
+			<Setter Property="Margin" Value="5"/>
+		</Style>
+		<!--顶栏按钮悬停样式定义-->
+		<Style Selector="Button.bar:pointerover">
+			<Setter Property="Background" Value="#33f3e9"/>
+		</Style>
+
 	</Application.Styles>
 
 </Application>
