@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="600"
+             x:Class="LSL.Views.Main.MainLeft">
+	<Grid  Width="350">
+		<TextBlock Grid.Row="0" Grid.Column="0" Text="欢迎回来" FontSize="30" HorizontalAlignment="Center" Margin="50"/>
+		<Button Grid.Row="1" Grid.Column="0" Content="启动服务器" Classes="blue" Margin="0,0,0,90" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="70" Width="250"/>
+		<Grid ColumnDefinitions="*,*" Width="270" Margin="0,0,0,20" HorizontalAlignment="Center">
+			<Button Grid.Row="0" Grid.Column="0" Content="服务器设置" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="50" Width="120"/>
+			<Button Grid.Row="0" Grid.Column="1" Content="面板设置" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="50" Width="120"/>
+		</Grid>
+	</Grid>
+</UserControl>

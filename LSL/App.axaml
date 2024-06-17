@@ -35,7 +35,7 @@
 		<Style Selector="Button:pointerover">
 			<Setter Property="Foreground" Value="#33e0e5"/>
 			<Setter	Property="BorderBrush" Value="#33e0e5"/>
-			<Setter Property="Background" Value="#c7d6ee"/>
+			<Setter Property="Background" Value="#c7ffee"/>
 		</Style>
 		<!--首选按钮样式定义-->
 		<Style Selector="Button.blue">
@@ -55,7 +55,6 @@
 		<Style Selector="Button.bar:pointerover">
 			<Setter Property="Background" Value="#33f3e9"/>
 		</Style>
-
-	</Application.Styles>
+		</Application.Styles>
 
 </Application>
