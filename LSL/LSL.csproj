@@ -12,6 +12,19 @@
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
+  
+  <ItemGroup>
+    <AvaloniaXaml Remove="Assets\GStyle.axaml" />
+    <AvaloniaXaml Remove="Views\GStyle.axaml" />
+  </ItemGroup>
+
+  
+  <ItemGroup>
+    <AvaloniaResource Include="Views\GStyle.axaml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </AvaloniaResource>
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
