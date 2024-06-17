@@ -10,7 +10,4 @@
         Icon="/Assets/icon.ico"
         Title="Lime Server Launcher">
         <views:MainView />
-	<Window.Styles>
-		<StyleInclude Source="GStyle.axaml"/>
-	</Window.Styles>
 </Window>

@@ -3,9 +3,20 @@
              x:Class="LSL.App"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
-
-    <Application.Styles>
+    
+	<Application.Styles>
         <FluentTheme />
-    </Application.Styles>
+		<!--全局样式定义-->
+		<Style Selector="Window">
+			<Setter Property="FontFamily" Value="Microsoft YaHei UI,Simsun,苹方-简,宋体-简"/>
+		</Style>
+		<Style Selector="Button">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="Foreground" Value="Black"/>
+			<Setter Property="Padding" Value="10"/>
+			<Setter Property="BorderThickness" Value="2"/>
+			<Setter	Property="BorderBrush" Value="Black"/>
+		</Style>
+	</Application.Styles>
 
 </Application>
