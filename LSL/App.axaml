@@ -13,9 +13,18 @@
 		<Style Selector="Button">
 			<Setter Property="Background" Value="White"/>
 			<Setter Property="Foreground" Value="Black"/>
-			<Setter Property="Padding" Value="10"/>
+			<Setter Property="Padding" Value="20"/>
 			<Setter Property="BorderThickness" Value="2"/>
 			<Setter	Property="BorderBrush" Value="Black"/>
+		</Style>
+		<Style Selector="Button:pointerover">
+			<Setter Property="Foreground" Value="#019eff"/>
+			<Setter	Property="BorderBrush" Value="#019eff"/>
+			<Setter Property="Background" Value="#c7d6ee"/>
+		</Style>
+			<Style Selector="Button.blue">
+			<Setter Property="Foreground" Value="#019eff"/>
+			<Setter	Property="BorderBrush" Value="#019eff"/>
 		</Style>
 	</Application.Styles>
 
