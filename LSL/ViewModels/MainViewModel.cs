@@ -3,6 +3,8 @@
 using Avalonia.Controls;
 using LSL.Views;
 using LSL.Views.Main;
+using LSL.Views.Server;
+using LSL.Views.Download;
 using LSL.Views.Settings;
 using ReactiveUI;
 using System.Windows.Input;
@@ -27,9 +29,17 @@ public class MainViewModel : ViewModelBase
         _mainLeftView = new MainLeft();
         _serverLeftView = new ServerLeft();
         _downloadLeftView = new DownloadLeft();
-        _settingsLeftView = new SettingsLeft();  
+        _settingsLeftView = new SettingsLeft();
 
-        // 添加一个命令或方法来切换视图  
+        // 添加命令或方法来切换视图  
+        this.SwitchToLeftViewCommand = ReactiveCommand.Create(() =>
+        {
+            LeftView = _mainLeftView; // 切换视图
+        });
+
+
+
+
         this.SwitchToLeftViewCommand = ReactiveCommand.Create(() =>
         {
             LeftView = _settingsLeftView; // 切换视图  
