@@ -27,8 +27,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Views\Server\" />
-    <Folder Include="Views\Download\" />
-    <Folder Include="Views\Settings\" />
+    <UpToDateCheckInput Remove="Views\Settings\SettingsLeft.axaml" />
   </ItemGroup>
 </Project>
