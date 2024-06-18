@@ -13,7 +13,7 @@
     </Design.DataContext>
 	
     <!--主页面的模板-->
-	<Grid Background="#c7ffee">
+	<Grid Background="#c7ffee" ColumnDefinitions="*,*">
 		<Grid Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Background="White">
 			<ContentControl Content="{Binding LeftView}" />
 		</Grid>

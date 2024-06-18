@@ -7,10 +7,10 @@
 	<Grid RowDefinitions="*" Background="#33e0e5">
 		<TextBlock Text="Lime Server Launcher" FontSize="25" Margin="15,0,0,0" Foreground="White" Classes="title" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 		<DockPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-			<Button Content="主页" Classes="bar"/>
-			<Button Content="服务器" Classes="bar"/>
-			<Button Content="下载" Classes="bar"/>
-			<Button Content="设置" Classes="bar"/>
+			<Button Content="主页" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="Home"/>
+			<Button Content="服务器" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="Server"/>
+			<Button Content="下载" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="Download"/>
+			<Button Content="设置" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="Settings"/>
 		</DockPanel>
 	</Grid>
 </UserControl>

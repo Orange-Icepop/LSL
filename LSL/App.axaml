@@ -55,6 +55,25 @@
 		<Style Selector="Button.bar:pointerover">
 			<Setter Property="Background" Value="#33f3e9"/>
 		</Style>
+		<!--侧栏按钮样式定义-->
+		<Style Selector="Button.left">
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Border BorderBrush="{TemplateBinding BorderBrush}"
+							BorderThickness="{TemplateBinding BorderThickness}"
+							Background="{TemplateBinding Background}"
+							CornerRadius="0"/>
+				</ControlTemplate>
+			</Setter>
+			<Setter Property="Foreground" Value="Black"/>
+			<Setter	Property="BorderThickness" Value="0"/>
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="Height" Value="50"/>
+		</Style>
+		<!--侧栏按钮悬停样式定义-->
+		<Style Selector="Button.left:pointerover">
+			<Setter Property="Background" Value="#33f3e9"/>
+		</Style>
 		</Application.Styles>
 
 </Application>

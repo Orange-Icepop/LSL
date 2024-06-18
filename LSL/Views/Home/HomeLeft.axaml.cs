@@ -1,11 +1,11 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace LSL.Views.Main
+namespace LSL.Views.Home
 {
-    public partial class MainLeft : UserControl
+    public partial class HomeLeft : UserControl
     {
-        public MainLeft()
+        public HomeLeft()
         {
             InitializeComponent();
         }

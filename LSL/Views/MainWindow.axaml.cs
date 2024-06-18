@@ -9,7 +9,6 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        this.AttachDevTools(); // 如果你在使用Avalonia DevTools的话  
         this.DataContext = new MainViewModel(); // 设置DataContext为MainViewModel的实例
     }
 }

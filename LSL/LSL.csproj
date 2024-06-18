@@ -29,4 +29,13 @@
   <ItemGroup>
     <UpToDateCheckInput Remove="Views\Settings\SettingsLeft.axaml" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Views\Home\HomeLeft.axaml.cs">
+      <DependentUpon>HomeLeft.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Home\HomeRight.axaml.cs">
+      <DependentUpon>HomeRight.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

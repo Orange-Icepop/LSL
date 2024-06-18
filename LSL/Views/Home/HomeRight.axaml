@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="600"
-             x:Class="LSL.Views.Main.MainRight">
+             x:Class="LSL.Views.Home.HomeRight">
 	<StackPanel>
 		<TextBlock Text="正在开发中的自定义主页" FontSize="24" TextAlignment="Center"/>
 	</StackPanel>
