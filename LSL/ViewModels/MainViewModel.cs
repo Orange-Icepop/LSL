@@ -15,55 +15,60 @@ using System.Collections.Generic;
 
 public class MainViewModel : ViewModelBase
 {
-
+    private UserControl _leftView;
+    private UserControl _rightView;
     //创建两个可变动视图
-    public UserControl LeftView { get; private set; }
-    public UserControl RightView { get; private set; }
+    public UserControl LeftView {
+        get => _leftView;
+        set
+        {
+            _leftView = value;
+            OnPropertyChanged(nameof(LeftView));
+        } 
+    }
+    public UserControl RightView 
+    { 
+        get => _rightView;
+        set
+        {
+            _rightView = value;
+            OnPropertyChanged(nameof(RightView));
+        }
+    }
     //创建切换触发方法
     public ICommand LeftViewCmd { get; }
-    // 使用字典来缓存已创建的视图  
-    private Dictionary<string, UserControl> _leftViews = new Dictionary<string, UserControl>();
-    // 字典缓存逻辑
-    private void SetLeftView(string viewName)
-    {
-        if (_leftViews.TryGetValue(viewName, out UserControl view))
-        {
-            // 如果视图已存在，则直接使用它  
-            LeftView = view;
-        }
-        else
-        {
-            // 否则，创建新视图并缓存它  
-            view = CreateLeftView(viewName);
-            _leftViews[viewName] = view;
-            LeftView = view;
-        }
-    }
+    public ICommand RightViewCmd { get; }
     public MainViewModel()
     {
-        SetLeftView("Home");//设置默认视图
-        LeftViewCmd = ReactiveCommand.Create<string>(viewName => LoadLeftView(viewName));
+        LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
+        //RightViewCmd = ReactiveCommand.Create<string>(NavigateRightView);
+        LeftView = new HomeLeft();
+        RightView = new HomeRight();
     }
-
-    private UserControl CreateLeftView(string viewName)
+    //切换命令
+    private void NavigateLeftView(string viewName)
     {
         switch (viewName)
         {
             case "Home":
-                return new HomeLeft();
+                LeftView = new HomeLeft();
+                //RightView = new HomeRight();
+                break;
             case "Server":
-                return new ServerLeft();
+                LeftView = new ServerLeft();
+                //RightView = new ServerRight();
+                break;
             case "Download":
-                return new DownloadLeft();
+                LeftView = new DownloadLeft();
+                //RightView = new DownloadRight();
+                break;
             case "Settings":
-                return new SettingsLeft();
-            default:
-                throw new ArgumentException("Invalid view name", nameof(viewName));
+                LeftView = new SettingsLeft();
+                //RightView = new SettingsRight();
+                break;
+
         }
     }
-    // 直接使用 SetLeftView 来设置 LeftView  
-    private void LoadLeftView(string viewName)
-    {
-        SetLeftView(viewName);
-    }
+
+
 }

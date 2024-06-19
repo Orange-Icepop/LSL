@@ -8,7 +8,9 @@
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
         x:Class="LSL.Views.MainWindow"
         Icon="/Assets/icon.ico"
-        Title="Lime Server Launcher">
+        Title="Lime Server Launcher"
+		WindowStartupLocation="CenterScreen">
+	
 	<Grid RowDefinitions="50,*">
 		<views:Bar Grid.Row="0"/>
         <views:MainView Grid.Row="1"/>

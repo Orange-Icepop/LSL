@@ -3,6 +3,12 @@
              x:Class="LSL.App"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+	<!--全局颜色资源定义-->
+	<Application.Resources>
+		<SolidColorBrush x:Key="OBlue" Color="#33e0e5"/>
+		<SolidColorBrush x:Key="OBlueLight" Color="#c7ffee"/>
+		<SolidColorBrush x:Key="OBlueBar" Color="#33f3e9"/>
+	</Application.Resources>
     
 	<Application.Styles>
         <FluentTheme />
@@ -33,27 +39,27 @@
 		</Style>
 		<!--普通按钮鼠标悬停样式定义-->
 		<Style Selector="Button:pointerover">
-			<Setter Property="Foreground" Value="#33e0e5"/>
-			<Setter	Property="BorderBrush" Value="#33e0e5"/>
-			<Setter Property="Background" Value="#c7ffee"/>
+			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
+			<Setter Property="Background" Value="{DynamicResource OBlueLight}"/>
 		</Style>
 		<!--首选按钮样式定义-->
 		<Style Selector="Button.blue">
-			<Setter Property="Foreground" Value="#33e0e5"/>
-			<Setter	Property="BorderBrush" Value="#33e0e5"/>
+			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
 		</Style>
 		<!--顶栏按钮样式定义-->
 		<Style Selector="Button.bar">
 			<Setter Property="Foreground" Value="White"/>
 			<Setter	Property="BorderThickness" Value="0"/>
-			<Setter Property="Background" Value="#33e0e5"/>
+			<Setter Property="Background" Value="{DynamicResource OBlue}"/>
 			<Setter Property="Width" Value="70"/>
 			<Setter Property="Height" Value="35"/>
 			<Setter Property="Margin" Value="5"/>
 		</Style>
 		<!--顶栏按钮悬停样式定义-->
 		<Style Selector="Button.bar:pointerover">
-			<Setter Property="Background" Value="#33f3e9"/>
+			<Setter Property="Background" Value="{DynamicResource OBlueBar}"/>
 		</Style>
 		<!--侧栏按钮样式定义-->
 		<Style Selector="Button.left">
@@ -62,7 +68,13 @@
 					<Border BorderBrush="{TemplateBinding BorderBrush}"
 							BorderThickness="{TemplateBinding BorderThickness}"
 							Background="{TemplateBinding Background}"
-							CornerRadius="0"/>
+							CornerRadius="0">
+						<ContentPresenter Content="{TemplateBinding Content}"
+										  ContentTemplate="{TemplateBinding ContentTemplate}"
+										  HorizontalAlignment="Left"
+										  VerticalAlignment="Center"
+										  Padding="10,0,0,0"/>
+					</Border>
 				</ControlTemplate>
 			</Setter>
 			<Setter Property="Foreground" Value="Black"/>
@@ -72,7 +84,7 @@
 		</Style>
 		<!--侧栏按钮悬停样式定义-->
 		<Style Selector="Button.left:pointerover">
-			<Setter Property="Background" Value="#33f3e9"/>
+			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
 		</Style>
 		</Application.Styles>
 

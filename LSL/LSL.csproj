@@ -38,4 +38,8 @@
       <DependentUpon>HomeRight.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\Settings\Common.axaml" />
+  </ItemGroup>
 </Project>
