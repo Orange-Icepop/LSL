@@ -690,7 +690,9 @@ Warning:This part uses machine translation, the Chinese part shall prevail.
   3、必须完整使用GPL v3.0及本附加条款作为开源协议。
 第二条 对于采用本软件UI部分源码及其修改版本，且与本软件有明显功能差异的项目，可以自由选择开源协议。
 第三条 对于参考了本软件UI设计，但未使用源码的项目，与本软件无法律关系。
-第四条 本附加条款内容与基本条款GPL v3.0有冲突的，以本附加条款为准。
+第四条 禁止在未经原开发者允许的情况下，私自将本软件源代码托管至任何代码托管平台，尤其禁止冒充原开发者进行托管。
+第五条 分发本软件时不得强制性收费，且必须附上本软件源代码仓库的URL。
+第六条 本附加条款内容与基本条款GPL v3.0有冲突的，以本附加条款为准。
 
 English:
 On the basis of GPL v3.0, the following terms are added:
@@ -700,4 +702,6 @@ Article 1: For projects that use the source code and its modified versions of th
   3. GPL v3.0 and these additional terms must be fully used as the open source agreement.
 Article 2: For projects that use the UI source code and its modified versions of this software, and have significant functional differences from this software, they can freely choose the open source protocol.
 Article 3: For projects refers to the UI design of this software but does not use the source code, has no legal relationship with this software.
-Article 4: In case of any conflict between the content of this additional clause and the basic clause GPL v3.0, this additional clause shall prevail.
+Article 4: Hosting the source code of this software on any platform without the original developer's permission is prohibited, particularly impersonating the original developer for hosting.
+Article 5: No mandatory fees are allowed when distributing this software, and the URL of the software source code repository must be attached.
+Article 6: In case of any conflict between the content of this additional clause and the basic clause GPL v3.0, this additional clause shall prevail.
