@@ -12,10 +12,6 @@ public class ViewModelBase : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
-public class HomeLeftViewModel : ViewModelBase;
-public class ServerLeftViewModel : ViewModelBase;
-public class DownloadLeftViewModel : ViewModelBase;
-public class SettingsLeftViewModel : ViewModelBase;
 /*public class ViewModelBase : ReactiveObject
 {
 }*/

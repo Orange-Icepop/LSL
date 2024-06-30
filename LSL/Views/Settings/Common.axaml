@@ -2,7 +2,29 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 xmlns:local="clr-namespace:LSL.Views;assembly=LSL"
+             mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.Common">
-  Welcome to Avalonia!
+	<StackPanel Width="1050">
+		<local:MyCard>
+			<StackPanel Margin="20">
+				<CheckBox Margin="0,5,0,5" IsChecked="True">自动同意EULA</CheckBox>
+				<DockPanel Margin="0,5,0,5">
+					<TextBlock VerticalAlignment="Center" Text="进程优先级"/>
+					<ComboBox Name="Priority" Width="300">
+						<ComboBoxItem Content="低"/>
+						<ComboBoxItem Content="中"/>
+						<ComboBoxItem Content="高"/>
+					</ComboBox>
+				</DockPanel>
+				<DockPanel Margin="0,5,0,5">
+					<TextBlock VerticalAlignment="Center" Text="Java选择"/>
+					<ComboBox Name="JavaSelection" Width="400">
+						<ComboBoxItem Content="自动选择"/>
+					</ComboBox>
+					<Button Classes="blue" Width="100" FontSize="15" Height="30">查找可用Java</Button>
+				</DockPanel>
+			</StackPanel>
+		</local:MyCard>
+	</StackPanel>
 </UserControl>

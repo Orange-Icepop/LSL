@@ -1,6 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="LSL.App"
+			 xmlns:local="clr-namespace:LSL.Views;assembly=LSL"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 	<!--全局颜色资源定义-->
@@ -11,81 +12,7 @@
 	</Application.Resources>
     
 	<Application.Styles>
-        <FluentTheme />
-		<!--全局样式定义-->
-		<Style Selector="Window">
-			<Setter Property="FontFamily" Value="Microsoft YaHei UI,Simsun,苹方-简,宋体-简"/>
-		</Style>
-		<!--按钮基本样式重新定义-->
-		<Style Selector="Button">
-			<Setter Property="Template">
-				<ControlTemplate>
-					<Border BorderBrush="{TemplateBinding BorderBrush}"
-							BorderThickness="{TemplateBinding BorderThickness}"
-							Background="{TemplateBinding Background}"
-							CornerRadius="5">
-						<ContentPresenter Content="{TemplateBinding Content}"
-										  ContentTemplate="{TemplateBinding ContentTemplate}"
-										  HorizontalAlignment="Center"
-										  VerticalAlignment="Center"/>
-					</Border>
-				</ControlTemplate>
-			</Setter>
-			<Setter Property="Background" Value="White"/>
-			<Setter Property="Foreground" Value="Black"/>
-			<Setter Property="BorderThickness" Value="2"/>
-			<Setter	Property="BorderBrush" Value="Black"/>
-			<Setter Property="FontSize" Value="20"/>
-		</Style>
-		<!--普通按钮鼠标悬停样式定义-->
-		<Style Selector="Button:pointerover">
-			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
-			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
-			<Setter Property="Background" Value="{DynamicResource OBlueLight}"/>
-		</Style>
-		<!--首选按钮样式定义-->
-		<Style Selector="Button.blue">
-			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
-			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
-		</Style>
-		<!--顶栏按钮样式定义-->
-		<Style Selector="Button.bar">
-			<Setter Property="Foreground" Value="White"/>
-			<Setter	Property="BorderThickness" Value="0"/>
-			<Setter Property="Background" Value="{DynamicResource OBlue}"/>
-			<Setter Property="Width" Value="70"/>
-			<Setter Property="Height" Value="35"/>
-			<Setter Property="Margin" Value="5"/>
-		</Style>
-		<!--顶栏按钮悬停样式定义-->
-		<Style Selector="Button.bar:pointerover">
-			<Setter Property="Background" Value="{DynamicResource OBlueBar}"/>
-		</Style>
-		<!--侧栏按钮样式定义-->
-		<Style Selector="Button.left">
-			<Setter Property="Template">
-				<ControlTemplate>
-					<Border BorderBrush="{TemplateBinding BorderBrush}"
-							BorderThickness="{TemplateBinding BorderThickness}"
-							Background="{TemplateBinding Background}"
-							CornerRadius="0">
-						<ContentPresenter Content="{TemplateBinding Content}"
-										  ContentTemplate="{TemplateBinding ContentTemplate}"
-										  HorizontalAlignment="Left"
-										  VerticalAlignment="Center"
-										  Padding="10,0,0,0"/>
-					</Border>
-				</ControlTemplate>
-			</Setter>
-			<Setter Property="Foreground" Value="Black"/>
-			<Setter	Property="BorderThickness" Value="0"/>
-			<Setter Property="Background" Value="White"/>
-			<Setter Property="Height" Value="50"/>
-		</Style>
-		<!--侧栏按钮悬停样式定义-->
-		<Style Selector="Button.left:pointerover">
-			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
-		</Style>
-		</Application.Styles>
+		<StyleInclude Source="/Styles/GlobalStyles.axaml"/>
 
+	</Application.Styles>
 </Application>

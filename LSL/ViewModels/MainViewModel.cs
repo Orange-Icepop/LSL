@@ -12,7 +12,34 @@ using System.Windows.Input;
 using System.Reactive;
 using System.Collections.Generic;
 
-
+//ViewFactory 创建视图，穷举所有视图
+public static class ViewFactory
+{
+    public static UserControl CreateView(string viewName)
+    {
+        switch (viewName)
+        {
+            case "HomeLeft":
+                return new HomeLeft();
+            case "ServerLeft":
+                return new ServerLeft();
+            case "DownloadLeft":
+                return new DownloadLeft();
+            case "SettingsLeft":
+                return new SettingsLeft();
+            case "Common":
+                return new Common();
+            case "Launcher":
+                return new Launcher();
+            case "DownloadSettings":
+                return new DownloadSettings();
+            case "About":
+                return new About();
+            default:
+                throw new ArgumentException($"No view found for name: {viewName}");
+        }
+    }
+}
 public class MainViewModel : ViewModelBase
 {
     private UserControl _leftView;
@@ -41,32 +68,40 @@ public class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
-        //RightViewCmd = ReactiveCommand.Create<string>(NavigateRightView);
+        RightViewCmd = ReactiveCommand.Create<string>(NavigateRightView);
         LeftView = new HomeLeft();
         RightView = new HomeRight();
     }
     //切换命令
     private void NavigateLeftView(string viewName)
     {
-        switch (viewName)
+        UserControl newView = ViewFactory.CreateView(viewName);
+        if (newView != null)
         {
-            case "Home":
-                LeftView = new HomeLeft();
-                //RightView = new HomeRight();
-                break;
-            case "Server":
-                LeftView = new ServerLeft();
-                //RightView = new ServerRight();
-                break;
-            case "Download":
-                LeftView = new DownloadLeft();
-                //RightView = new DownloadRight();
-                break;
-            case "Settings":
-                LeftView = new SettingsLeft();
-                //RightView = new SettingsRight();
-                break;
-
+            LeftView = newView;
+            switch (viewName)
+            {
+                case "HomeLeft":
+                    RightView = new HomeRight();
+                    break;
+                case "ServerLeft":
+                    RightView = new ServerConf();
+                    break;
+                case "DownloadLeft":
+                    RightView = new ManualDown();
+                    break;
+                case "SettingsLeft":
+                    RightView = new Common();
+                    break;
+            }
+        }
+    }
+    private void NavigateRightView(string viewName)
+    {
+        UserControl newView = ViewFactory.CreateView(viewName);
+        if (newView != null)
+        {
+            RightView = newView;
         }
     }
 

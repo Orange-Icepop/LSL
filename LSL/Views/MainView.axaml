@@ -13,14 +13,16 @@
     </Design.DataContext>
 	
     <!--主页面的模板-->
-	<Grid Background="#c7ffee" ColumnDefinitions="Auto,*">
-		<Grid Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Background="White">
-			<ContentControl Content="{Binding LeftView}" />
-		</Grid>
-		<Grid Grid.Row="0" Grid.Column="1">
-			<ContentControl Content="{Binding RightView}" />
-		</Grid>
-	</Grid>
+	<DockPanel Background="#c7ffee">
+		<ContentControl x:Name="LeftContent" Content="{Binding LeftView}"  HorizontalAlignment="Left" Background="White">
+			<ContentControl.Transitions>
+				<Transitions>
+					<DoubleTransition Property="Width" Duration="0:0:0.5" Easing="CubicEaseInOut"/>
+				</Transitions>
+			</ContentControl.Transitions>
+		</ContentControl>
+		<ContentControl x:Name="RightContent" Content="{Binding RightView}" />
+	</DockPanel>
 </UserControl>
 
 

@@ -4,13 +4,18 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="50"
              x:Class="LSL.Views.Bar">
-	<Grid RowDefinitions="*" Background="#33e0e5">
-		<TextBlock Text="Lime Server Launcher" FontSize="25" Margin="15,0,0,0" Foreground="White" Classes="title" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-		<DockPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-			<Button Content="主页" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="Home"/>
-			<Button Content="服务器" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="Server"/>
-			<Button Content="下载" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="Download"/>
-			<Button Content="设置" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="Settings"/>
+	<Grid RowDefinitions="*" Background="#33e0e5" Name="Bkg">
+		<TextBlock Name="Title" Text="Lime Server Launcher" FontSize="25" Margin="15,0,0,0" Foreground="White" Classes="title" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+		<DockPanel Name="Navigation" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+			<Button Content="主页" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="HomeLeft"/>
+			<Button Content="服务器" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="ServerLeft"/>
+			<Button Content="下载" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="DownloadLeft"/>
+			<Button Content="设置" Classes="bar" Command="{Binding LeftViewCmd}" CommandParameter="SettingsLeft"/>
 		</DockPanel>
+		<!--<DockPanel Name="WinHandle" HorizontalAlignment="Right">
+			<Button Content="X" Classes="bar" Width="35">
+				
+			</Button>
+		</DockPanel>-->
 	</Grid>
 </UserControl>

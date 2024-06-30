@@ -1,0 +1,36 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+        </Border>
+    </Design.PreviewWith>
+
+    <!-- Add Styles Here -->
+	<Style Selector="Button.MyButton">
+		<Setter Property="Template">
+			<ControlTemplate>
+				<Border BorderBrush="{TemplateBinding BorderBrush}"
+						BorderThickness="{TemplateBinding BorderThickness}"
+						Background="{TemplateBinding Background}"
+						CornerRadius="5">
+					<ContentPresenter Content="{TemplateBinding Content}"
+									  ContentTemplate="{TemplateBinding ContentTemplate}"
+									  HorizontalAlignment="Center"
+									  VerticalAlignment="Center"/>
+				</Border>
+			</ControlTemplate>
+		</Setter>
+		<Setter Property="Background" Value="White"/>
+		<Setter Property="Foreground" Value="Black"/>
+		<Setter Property="BorderThickness" Value="2"/>
+		<Setter	Property="BorderBrush" Value="Black"/>
+		<Setter Property="FontSize" Value="20"/>
+		<!--普通按钮鼠标悬停样式定义-->
+		<Style Selector="^:pointerover">
+			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
+			<Setter Property="Background" Value="{DynamicResource OBlueLight}"/>
+		</Style>
+	</Style>
+</Styles>
