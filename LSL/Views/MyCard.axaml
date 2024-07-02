@@ -1,12 +1,19 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+<Panel xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:local="clr-namespace:LSL.Views;assembly=LSL"
              x:Class="LSL.Views.MyCard">
 	
-	<Border Margin="10" Background="White" Padding="10" BorderThickness="0" CornerRadius="10">
+	<Border Margin="10" Background="White" Padding="20,0,20,40" BorderThickness="0" CornerRadius="10">
 		<StackPanel Background="White">
+			<TextBlock Name="titleText"
+					   Text="{Binding Text, RelativeSource={RelativeSource AncestorType={x:Type local:MyCard}}}"
+					   FontSize="15"
+					   FontWeight="Bold"
+					   Foreground="Black"
+					   Margin="0,15,0,15"/>
 			<!-- 这里可以放置你的子元素，或者使用 ContentControl 来绑定 Content -->
 		</StackPanel>
 	</Border>
-</UserControl>
+</Panel>

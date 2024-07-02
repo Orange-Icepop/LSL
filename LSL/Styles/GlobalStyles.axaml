@@ -6,7 +6,6 @@
         </Border>
     </Design.PreviewWith>
 
-    <!-- Add Styles Here -->
 	<FluentTheme />
 	<!--全局样式定义-->
 	<Style Selector="Window">
@@ -43,6 +42,17 @@
 			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
 			<Setter Property="Background" Value="{DynamicResource OBlueLight}"/>
 		</Style>
+		<!--右栏按钮样式微调-->
+		<Style Selector="^.rightblue">
+			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
+			<Setter Property="FontSize" Value="15"/>
+		</Style>
+		<Style Selector="^.right">
+			<Setter Property="Foreground" Value="Black"/>
+			<Setter	Property="BorderBrush" Value="Black"/>
+			<Setter Property="FontSize" Value="15"/>
+		</Style>
 	</Style>
 	<!--顶栏按钮样式定义-->
 	<Style Selector="Button.bar">
@@ -77,6 +87,7 @@
 		<Setter	Property="BorderThickness" Value="0"/>
 		<Setter Property="Background" Value="White"/>
 		<Setter Property="Height" Value="40"/>
+		<Setter Property="FontSize" Value="18"/>
 		<!--侧栏按钮悬停样式定义-->
 		<Style Selector="^:pointerover">
 			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>

@@ -29,8 +29,8 @@ public static class ViewFactory
                 return new SettingsLeft();
             case "Common":
                 return new Common();
-            case "Launcher":
-                return new Launcher();
+            case "StyleSettings":
+                return new StyleSettings();
             case "DownloadSettings":
                 return new DownloadSettings();
             case "About":

@@ -5,26 +5,51 @@
 			 xmlns:local="clr-namespace:LSL.Views;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.Common">
-	<StackPanel Width="1050">
-		<local:MyCard>
-			<StackPanel Margin="20">
+	<StackPanel>
+		<local:MyCard Text="常规设置">
+			<StackPanel Margin="30,40,0,15">
 				<CheckBox Margin="0,5,0,5" IsChecked="True">自动同意EULA</CheckBox>
 				<DockPanel Margin="0,5,0,5">
-					<TextBlock VerticalAlignment="Center" Text="进程优先级"/>
+					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="进程优先级"/>
 					<ComboBox Name="Priority" Width="300">
 						<ComboBoxItem Content="低"/>
 						<ComboBoxItem Content="中"/>
 						<ComboBoxItem Content="高"/>
 					</ComboBox>
 				</DockPanel>
+				<CheckBox Margin="0,5,0,5">关闭启动器时终止服务器进程</CheckBox>
+				<CheckBox Margin="0,5,0,5" IsChecked="True">保持后台进程开启</CheckBox>
 				<DockPanel Margin="0,5,0,5">
-					<TextBlock VerticalAlignment="Center" Text="Java选择"/>
-					<ComboBox Name="JavaSelection" Width="400">
+					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="Java选择"/>
+					<ComboBox Name="JavaSelection" Margin="0,0,10,0" Width="400">
 						<ComboBoxItem Content="自动选择"/>
 					</ComboBox>
-					<Button Classes="blue" Width="100" FontSize="15" Height="30">查找可用Java</Button>
+					<Button Classes="rightblue" Margin="0,0,10,0" Width="100" Height="30">查找可用Java</Button>
+					<Button Classes="right" Margin="0,0,10,0" Width="100" Height="30">手动选择Java</Button>
 				</DockPanel>
+				<CheckBox Margin="0,5,0,5" IsChecked="True">启动时自动刷新Java列表</CheckBox>
 			</StackPanel>
 		</local:MyCard>
+		<local:MyCard Text="终端设置">
+			<StackPanel Margin="30,40,0,15">
+				<DockPanel Margin="0,10,0,5">
+					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="输出编码格式"/>
+					<ComboBox Name="OutputEncodeType" Margin="0,0,10,0" Width="300">
+						<ComboBoxItem Content="ANSI（推荐）"/>
+						<ComboBoxItem Content="UTF-8"/>
+					</ComboBox>
+				</DockPanel>
+				<DockPanel Margin="0,10,0,5">
+					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="输入编码格式"/>
+					<ComboBox Name="InputEncodeType" Margin="0,0,10,0" Width="300">
+						<ComboBoxItem Content="跟随全局"/>
+						<ComboBoxItem Content="ANSI"/>
+						<ComboBoxItem Content="UTF-8"/>
+					</ComboBox>
+				</DockPanel>
+				<CheckBox Margin="0,5,0,5" IsChecked="True">终端分层设色</CheckBox>
+			</StackPanel>
+		</local:MyCard>
+		
 	</StackPanel>
 </UserControl>

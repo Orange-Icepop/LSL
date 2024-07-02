@@ -7,7 +7,7 @@
 	<StackPanel Width="150">
 		<Button Content="常规" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="Common" />
 		<Button Content="下载" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="DownloadSettings"/>
-		<Button Content="启动器" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="Launcher"/>
+		<Button Content="个性化" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="StyleSettings"/>
 		<Button Content="关于" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="About"/>
 	</StackPanel>
 </UserControl>

@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="600"
              x:Class="LSL.Views.Home.HomeLeft">
-	<Grid  Width="350">
+	<Grid Width="350">
 		<TextBlock Grid.Row="0" Grid.Column="0" Text="欢迎回来" FontSize="30" HorizontalAlignment="Center" Margin="50"/>
 		<ComboBox Grid.Row="1" Margin="0,0,0,180" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="30" Width="250"></ComboBox>
 		<Button Grid.Row="2" Grid.Column="0" Content="启动服务器" Classes="blue" Margin="0,0,0,90" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="70" Width="250"/>

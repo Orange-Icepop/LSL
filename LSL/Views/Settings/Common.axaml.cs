@@ -13,6 +13,8 @@ namespace LSL.Views.Settings
             InitializeComponent();
             Priority.SelectedIndex = 1;
             JavaSelection.SelectedIndex = 0;
+            OutputEncodeType.SelectedIndex = 0;
+            InputEncodeType.SelectedIndex = 0;
         }
     }
 }

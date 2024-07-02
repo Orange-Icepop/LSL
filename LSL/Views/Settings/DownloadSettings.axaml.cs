@@ -7,6 +7,7 @@ namespace LSL.Views.Settings
         public DownloadSettings()
         {
             InitializeComponent();
+            DownloadSource.SelectedIndex = 0;
         }
     }
 }

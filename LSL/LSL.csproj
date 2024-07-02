@@ -19,14 +19,12 @@
     <AvaloniaXaml Remove="Styles\GlobalStyles.axaml" />
     <AvaloniaXaml Remove="Styles\MyButtonStyles.axaml" />
     <AvaloniaXaml Remove="Styles\MyCardStyles.axaml" />
-    <AvaloniaXaml Remove="Views\MyButton.axaml" />
   </ItemGroup>
 
   
   <ItemGroup>
     <Compile Remove="Assets\MyCard.cs" />
     <Compile Remove="Models\MyCard.axaml.cs" />
-    <Compile Remove="Views\MyButton.axaml.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,6 +46,9 @@
     </Compile>
     <Compile Update="Views\Home\HomeRight.axaml.cs">
       <DependentUpon>HomeRight.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Settings\StyleSettings.axaml.cs">
+      <DependentUpon>StyleSettings.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
 
