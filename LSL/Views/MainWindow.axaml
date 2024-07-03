@@ -9,7 +9,9 @@
         x:Class="LSL.Views.MainWindow"
         Icon="/Assets/icon.ico"
         Title="Lime Server Launcher"
-		WindowStartupLocation="CenterScreen">
+		WindowStartupLocation="CenterScreen"
+		MinHeight="400"
+		MinWidth="1000">
 	
 	<Grid RowDefinitions="50,*">
 		<views:Bar Grid.Row="0"/>

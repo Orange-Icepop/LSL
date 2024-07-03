@@ -4,43 +4,51 @@ using Avalonia.Controls.Chrome;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using LSL.Views.Home;
+using ReactiveUI;
 using System;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace LSL.Views
 {
     public partial class Bar : UserControl
-    {
-
-        /*public static readonly StyledProperty<bool> IsSeamlessProperty =
-        AvaloniaProperty.Register<Bar, bool>(nameof(IsSeamless));
-        public event EventHandler<PointerPressedEventArgs> OnPointerMouseHander;
-
-        public bool IsSeamless
-        {
-            get { return GetValue(IsSeamlessProperty); }
-            set
-            {
-                SetValue(IsSeamlessProperty, value);
-                if (Title != null &&
-                    Navigation != null &&
-                    WinHandle != null)
-                {
-                    Title.IsVisible = IsSeamless ? false : true;
-                    Navigation.IsVisible = IsSeamless ? false : true;
-                    WinHandle.IsVisible = IsSeamless ? true : false;
-
-                    if (IsSeamless == false)
-                    {
-                        Bar.Resources["SystemControlForegroundBaseHighBrush"] = new SolidColorBrush { Color = new Color(255, 0, 0, 0) };
-                    }
-                }
-            }
-        }*/
-
+    { 
         public Bar()
         {
             InitializeComponent();
+            Home.Click += (sender, e) => ChangeBarColor("HomeLeft");
+            Server.Click += (sender, e) => ChangeBarColor("ServerLeft");
+            Download.Click += (sender, e) => ChangeBarColor("DownloadLeft");
+            Settings.Click += (sender, e) => ChangeBarColor("SettingsLeft");
+            Home.Classes.Add("selected");
+        }
+        //设置Bar按钮样式
+        private void ChangeBarColor(string NowPage)
+        {
+            Debug.WriteLine("Bar Button State Switched:"+NowPage);
+            Home.Classes.Remove("selected");
+            Server.Classes.Remove("selected");
+            Download.Classes.Remove("selected");
+            Settings.Classes.Remove("selected");
+            switch (NowPage)
+            {
+                case "HomeLeft":
+                    Home.Classes.Add("selected");
+                    break;
+                case "ServerLeft":
+                    Server.Classes.Add("selected");
+                    break;
+                case "DownloadLeft":
+                    Download.Classes.Add("selected");
+                    break;
+                case "SettingsLeft":
+                    Settings.Classes.Add("selected");
+                    break;
+
+            }
+
+
         }
     }
 

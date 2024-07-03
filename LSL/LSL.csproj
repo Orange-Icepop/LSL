@@ -75,4 +75,12 @@
   <ItemGroup>
     <UpToDateCheckInput Remove="Views\MyButton.axaml" />
   </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\Download\AutoDown.axaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\Server\ServerStat.axaml" />
+  </ItemGroup>
 </Project>

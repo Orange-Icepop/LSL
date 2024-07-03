@@ -6,22 +6,39 @@
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="600"
              x:Class="LSL.Views.MainView"
              x:DataType="vm:MainViewModel">
-    <Design.DataContext>
-    <!-- This only sets the DataContext for the previewer in an IDE,
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainViewModel />
-    </Design.DataContext>
-	
-    <!--主页面的模板-->
+		<vm:MainViewModel />
+	</Design.DataContext>
+
+	<!--主页面的模板-->
 	<DockPanel Background="#c7ffee">
-		<ContentControl x:Name="LeftContent" Content="{Binding LeftView}"  HorizontalAlignment="Left" Background="White">
-			<ContentControl.Transitions>
+		<TransitioningContentControl Name="LeftContent"
+						Content="{Binding LeftView}"
+						HorizontalAlignment="Left"
+						Background="White"
+						Width="{Binding LeftWidth}">
+			<TransitioningContentControl.Transitions>
 				<Transitions>
-					<DoubleTransition Property="Width" Duration="0:0:0.5" Easing="CubicEaseInOut"/>
+					<DoubleTransition Property="Width" Duration="0:0:0.2" Easing="CubicEaseInOut"/>
 				</Transitions>
-			</ContentControl.Transitions>
-		</ContentControl>
-		<ContentControl x:Name="RightContent" Content="{Binding RightView}" />
+			</TransitioningContentControl.Transitions>
+			<TransitioningContentControl.PageTransition>
+				<CompositePageTransition>
+					<PageSlide Duration="0:00:00.4" Orientation="Horizontal" SlideInEasing="CubicEaseInOut" SlideOutEasing="CubicEaseInOut"/>
+				</CompositePageTransition>
+			</TransitioningContentControl.PageTransition>
+		</TransitioningContentControl>
+		<TransitioningContentControl Name="RightContent"
+						Content="{Binding RightView}">
+			<TransitioningContentControl.PageTransition>
+				<CompositePageTransition>
+					<CrossFade Duration="0:00:00.4"/>
+					<PageSlide Duration="0:00:00.3" Orientation="Vertical" SlideInEasing="ExponentialEaseOut" SlideOutEasing="ExponentialEaseIn"/>
+				</CompositePageTransition>
+			</TransitioningContentControl.PageTransition>
+		</TransitioningContentControl>
 	</DockPanel>
 </UserControl>
 

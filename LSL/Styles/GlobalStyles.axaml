@@ -31,6 +31,14 @@
 		<Setter Property="BorderThickness" Value="2"/>
 		<Setter	Property="BorderBrush" Value="Black"/>
 		<Setter Property="FontSize" Value="20"/>
+		<!--按钮样式过渡-->
+		<Setter Property="Transitions">
+			<Transitions>
+				<BrushTransition Property="Background" Duration="0:0:0.1"/>
+				<BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
+				<BrushTransition Property="Foreground" Duration="0:0:0.1"/>
+			</Transitions>
+		</Setter>
 		<!--首选按钮样式定义-->
 		<Style Selector="^.blue">
 			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
@@ -52,8 +60,14 @@
 			<Setter Property="Foreground" Value="Black"/>
 			<Setter	Property="BorderBrush" Value="Black"/>
 			<Setter Property="FontSize" Value="15"/>
+			<Style Selector="^:pointerover">
+				<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+				<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
+				<Setter Property="Background" Value="{DynamicResource OBlueLight}"/>
+			</Style>
 		</Style>
 	</Style>
+	
 	<!--顶栏按钮样式定义-->
 	<Style Selector="Button.bar">
 		<Setter Property="Foreground" Value="White"/>
@@ -66,7 +80,12 @@
 		<Style Selector="^:pointerover">
 			<Setter Property="Background" Value="{DynamicResource OBlueBar}"/>
 		</Style>
+		<Style Selector="^.selected">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+		</Style>
 	</Style>
+	
 	<!--侧栏按钮样式定义-->
 	<Style Selector="Button.left">
 		<Setter Property="Template">
@@ -93,5 +112,5 @@
 			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
 		</Style>
 	</Style>
-
+	<!--窗口过渡变换-->
 </Styles>

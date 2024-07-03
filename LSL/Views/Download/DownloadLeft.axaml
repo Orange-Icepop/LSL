@@ -4,7 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="600"
              x:Class="LSL.Views.Download.DownloadLeft">
-	<StackPanel Width="150">
-		<Button Content="手动下载" Classes="left"/>
-	</StackPanel>
+	<DockPanel Width="150">
+		<TextBlock DockPanel.Dock="Top" Text="服务器核心" Margin="10,10,0,0" Foreground="Gray"/>
+		<Button DockPanel.Dock="Top" Content="自动下载" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="AutoDown"/>
+		<Button DockPanel.Dock="Top" Content="手动下载" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ManualDown"/>
+		<TextBlock DockPanel.Dock="Top" Text="其他资源" Margin="10,10,0,0" Foreground="Gray"/>
+		<Button DockPanel.Dock="Top" Content="Mod下载" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ModDown"/>
+		<Button Classes="right" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" Width="130" Height="40">下载源设置</Button>
+	</DockPanel>
 </UserControl>

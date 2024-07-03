@@ -4,13 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="600"
              x:Class="LSL.Views.Home.HomeLeft">
-	<Grid Width="350">
-		<TextBlock Grid.Row="0" Grid.Column="0" Text="欢迎回来" FontSize="30" HorizontalAlignment="Center" Margin="50"/>
-		<ComboBox Grid.Row="1" Margin="0,0,0,180" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="30" Width="250"></ComboBox>
-		<Button Grid.Row="2" Grid.Column="0" Content="启动服务器" Classes="blue" Margin="0,0,0,90" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="70" Width="250"/>
-		<Grid Grid.Row="3" ColumnDefinitions="*,*" Width="270" Margin="0,0,0,20" HorizontalAlignment="Center">
+	<DockPanel Width="350">
+		<TextBlock DockPanel.Dock="Top" Text="欢迎回来" FontSize="30" HorizontalAlignment="Center" Margin="50"/>
+		<Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,*" Width="270" Margin="0,0,0,20" HorizontalAlignment="Center">
 			<Button Grid.Row="0" Grid.Column="0" Content="服务器设置" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="50" Width="120"/>
 			<Button Grid.Row="0" Grid.Column="1" Content="面板设置" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="50" Width="120"/>
 		</Grid>
-	</Grid>
+		<Button DockPanel.Dock="Bottom" Content="启动服务器" Classes="blue" Margin="0,0,0,20" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="60" Width="250"/>
+		<ComboBox DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="30" Width="250" Margin="0,0,0,20"></ComboBox>
+	</DockPanel>
 </UserControl>

@@ -11,7 +11,10 @@ using System;
 using System.Windows.Input;
 using System.Reactive;
 using System.Collections.Generic;
+using Avalonia.Markup.Xaml.MarkupExtensions;
+using System.Diagnostics;
 
+//导航部分开始
 //ViewFactory 创建视图，穷举所有视图
 public static class ViewFactory
 {
@@ -35,6 +38,12 @@ public static class ViewFactory
                 return new DownloadSettings();
             case "About":
                 return new About();
+            case "AutoDown":
+                return new AutoDown();
+            case "ManualDown":
+                return new ManualDown();
+            case "ModDown":
+                return new ModDown();
             default:
                 throw new ArgumentException($"No view found for name: {viewName}");
         }
@@ -62,6 +71,18 @@ public class MainViewModel : ViewModelBase
             OnPropertyChanged(nameof(RightView));
         }
     }
+    //创建左栏宽度定义
+    private double _leftWidth;
+    public double LeftWidth
+    {
+        get => _leftWidth;
+        set
+        {
+            _leftWidth = value;
+            OnPropertyChanged(nameof(LeftWidth));
+        }
+    }
+
     //创建切换触发方法
     public ICommand LeftViewCmd { get; }
     public ICommand RightViewCmd { get; }
@@ -71,10 +92,14 @@ public class MainViewModel : ViewModelBase
         RightViewCmd = ReactiveCommand.Create<string>(NavigateRightView);
         LeftView = new HomeLeft();
         RightView = new HomeRight();
+        LeftWidth = 350;
     }
+    
+    
     //切换命令
     private void NavigateLeftView(string viewName)
     {
+        Debug.WriteLine("Left Page Switched:" + viewName);
         UserControl newView = ViewFactory.CreateView(viewName);
         if (newView != null)
         {
@@ -83,27 +108,31 @@ public class MainViewModel : ViewModelBase
             {
                 case "HomeLeft":
                     RightView = new HomeRight();
+                    LeftWidth = 350;
                     break;
                 case "ServerLeft":
                     RightView = new ServerConf();
+                    LeftWidth = 250;
                     break;
                 case "DownloadLeft":
                     RightView = new ManualDown();
+                    LeftWidth = 150;
                     break;
                 case "SettingsLeft":
                     RightView = new Common();
+                    LeftWidth = 150;
                     break;
             }
         }
     }
     private void NavigateRightView(string viewName)
     {
+        Debug.WriteLine("Right Page Switched:" + viewName);
         UserControl newView = ViewFactory.CreateView(viewName);
         if (newView != null)
         {
             RightView = newView;
         }
     }
-
-
+    //导航部分结束
 }

@@ -2,7 +2,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerLeft">
-  Welcome to Avalonia!
+	<DockPanel Width="250">
+		<TextBlock DockPanel.Dock="Top" Text="服务器列表" Margin="10,10,0,0" Foreground="Gray"/>
+		<Button Classes="left" DockPanel.Dock="Top">测试用页面</Button>
+		<Button Classes="right" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" Width="130" Height="40">添加服务器</Button>
+	</DockPanel>
 </UserControl>

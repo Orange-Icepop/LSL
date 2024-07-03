@@ -5,6 +5,7 @@
              mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.SettingsLeft">
 	<StackPanel Width="150">
+		<TextBlock DockPanel.Dock="Top" Text="设置" Margin="10,10,0,0" Foreground="Gray"/>
 		<Button Content="常规" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="Common" />
 		<Button Content="下载" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="DownloadSettings"/>
 		<Button Content="个性化" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="StyleSettings"/>

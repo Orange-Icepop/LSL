@@ -2,12 +2,11 @@ using Avalonia.Controls;
 
 namespace LSL.Views.Server
 {
-    public partial class ServerConf : UserControl
+    public partial class ServerTerminal : UserControl
     {
-        public ServerConf()
+        public ServerTerminal()
         {
             InitializeComponent();
-            JavaSelection.SelectedIndex = 0;
         }
     }
 }
