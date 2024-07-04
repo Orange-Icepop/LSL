@@ -8,6 +8,7 @@
 		<TextBlock DockPanel.Dock="Top" Text="设置" Margin="10,10,0,0" Foreground="Gray"/>
 		<Button Content="常规" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="Common" />
 		<Button Content="下载" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="DownloadSettings"/>
+		<Button Content="网页面板" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="PanelSettings"/>
 		<Button Content="个性化" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="StyleSettings"/>
 		<Button Content="关于" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="About"/>
 	</StackPanel>

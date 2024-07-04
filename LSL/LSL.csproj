@@ -25,6 +25,7 @@
   <ItemGroup>
     <Compile Remove="Assets\MyCard.cs" />
     <Compile Remove="Models\MyCard.axaml.cs" />
+    <Compile Remove="ViewModels\BarViewModel.cs" />
   </ItemGroup>
 
   <ItemGroup>

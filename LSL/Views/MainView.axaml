@@ -14,28 +14,31 @@
 
 	<!--主页面的模板-->
 	<DockPanel Background="#c7ffee">
-		<TransitioningContentControl Name="LeftContent"
-						Content="{Binding LeftView}"
-						HorizontalAlignment="Left"
-						Background="White"
-						Width="{Binding LeftWidth}">
-			<TransitioningContentControl.Transitions>
+		<!--左侧的内容-->
+		<!--为了防止背景被纳入过渡，加入一个Border包住内容-->
+		<Border Background="White" Width="{Binding LeftWidth}">
+			<TransitioningContentControl Name="LeftContent"
+							Content="{Binding LeftView}"
+							HorizontalAlignment="Left">
+				<TransitioningContentControl.PageTransition>
+					<CompositePageTransition>
+						<CrossFade Duration="0:00:00.2"/>
+					</CompositePageTransition>
+				</TransitioningContentControl.PageTransition>
+			</TransitioningContentControl>
+			<Border.Transitions>
 				<Transitions>
 					<DoubleTransition Property="Width" Duration="0:0:0.2" Easing="CubicEaseInOut"/>
 				</Transitions>
-			</TransitioningContentControl.Transitions>
-			<TransitioningContentControl.PageTransition>
-				<CompositePageTransition>
-					<PageSlide Duration="0:00:00.4" Orientation="Horizontal" SlideInEasing="CubicEaseInOut" SlideOutEasing="CubicEaseInOut"/>
-				</CompositePageTransition>
-			</TransitioningContentControl.PageTransition>
-		</TransitioningContentControl>
+			</Border.Transitions>
+		</Border>
+		<!--右侧的内容-->
 		<TransitioningContentControl Name="RightContent"
-						Content="{Binding RightView}">
+									 Content="{Binding RightView}">
 			<TransitioningContentControl.PageTransition>
 				<CompositePageTransition>
 					<CrossFade Duration="0:00:00.4"/>
-					<PageSlide Duration="0:00:00.3" Orientation="Vertical" SlideInEasing="ExponentialEaseOut" SlideOutEasing="ExponentialEaseIn"/>
+					<PageSlide Duration="0:00:00.3" Orientation="Vertical" SlideInEasing="ExponentialEaseOut" SlideOutEasing="SineEaseInOut"/>
 				</CompositePageTransition>
 			</TransitioningContentControl.PageTransition>
 		</TransitioningContentControl>

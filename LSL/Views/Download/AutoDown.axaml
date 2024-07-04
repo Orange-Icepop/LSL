@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Download.AutoDown">
 	<StackPanel>
-		<local:MyCard>
+		<local:MyCard Text="自动下载">
 			
 		</local:MyCard>
 	</StackPanel>

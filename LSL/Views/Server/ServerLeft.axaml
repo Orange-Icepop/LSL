@@ -7,6 +7,15 @@
 	<DockPanel Width="250">
 		<TextBlock DockPanel.Dock="Top" Text="服务器列表" Margin="10,10,0,0" Foreground="Gray"/>
 		<Button Classes="left" DockPanel.Dock="Top">测试用页面</Button>
-		<Button Classes="right" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" Width="130" Height="40">添加服务器</Button>
+		<Button Classes="right"
+				Name="AddServerButton"
+				Command="{Binding LeftViewCmd}"
+				CommandParameter="DownloadLeft"
+				DockPanel.Dock="Bottom"
+				VerticalAlignment="Bottom"
+				HorizontalAlignment="Center"
+				Margin="0,0,0,10"
+				Width="130"
+				Height="40">添加服务器</Button>
 	</DockPanel>
 </UserControl>

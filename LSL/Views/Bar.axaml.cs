@@ -26,7 +26,6 @@ namespace LSL.Views
         //设置Bar按钮样式
         private void ChangeBarColor(string NowPage)
         {
-            Debug.WriteLine("Bar Button State Switched:"+NowPage);
             Home.Classes.Remove("selected");
             Server.Classes.Remove("selected");
             Download.Classes.Remove("selected");
@@ -47,7 +46,7 @@ namespace LSL.Views
                     break;
 
             }
-
+            Debug.WriteLine("Bar Color Switched:" + NowPage);
 
         }
     }

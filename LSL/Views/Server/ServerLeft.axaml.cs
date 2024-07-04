@@ -1,4 +1,9 @@
 using Avalonia.Controls;
+using Avalonia.Markup.Xaml;
+using ReactiveUI;
+using System.Windows.Input;
+using System.Diagnostics;
+using LSL.ViewModels;
 
 namespace LSL.Views.Server
 {
@@ -7,6 +12,6 @@ namespace LSL.Views.Server
         public ServerLeft()
         {
             InitializeComponent();
-        }
+        }        
     }
 }

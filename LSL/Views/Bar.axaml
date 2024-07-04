@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="50"
              x:Class="LSL.Views.Bar">
+	
 	<Grid RowDefinitions="*" Background="#33e0e5" Name="Bkg">
 		<TextBlock Name="Title" Text="Lime Server Launcher" FontSize="25" Margin="15,0,0,0" Foreground="White" Classes="title" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 		<DockPanel Name="Navigation" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">

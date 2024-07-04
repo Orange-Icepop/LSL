@@ -15,7 +15,7 @@ using Avalonia.Markup.Xaml.MarkupExtensions;
 using System.Diagnostics;
 
 //导航部分开始
-//ViewFactory 创建视图，穷举所有视图
+#region ViewFactory穷举并创建所有视图
 public static class ViewFactory
 {
     public static UserControl CreateView(string viewName)
@@ -30,29 +30,46 @@ public static class ViewFactory
                 return new DownloadLeft();
             case "SettingsLeft":
                 return new SettingsLeft();
-            case "Common":
-                return new Common();
-            case "StyleSettings":
-                return new StyleSettings();
-            case "DownloadSettings":
-                return new DownloadSettings();
-            case "About":
-                return new About();
+            case "HomeRight":
+                return new HomeRight();
+            case "ServerConf":
+                return new ServerConf();
             case "AutoDown":
                 return new AutoDown();
             case "ManualDown":
                 return new ManualDown();
             case "ModDown":
                 return new ModDown();
+            case "Common":
+                return new Common();
+            case "DownloadSettings":
+                return new DownloadSettings();
+            case "PanelSettings":
+                return new PanelSettings();
+            case "StyleSettings":
+                return new StyleSettings();
+            case "About":
+                return new About();
             default:
                 throw new ArgumentException($"No view found for name: {viewName}");
         }
     }
 }
+#endregion
 public class MainViewModel : ViewModelBase
 {
+    //定义类，穷举写得依托答辩
+    //原View
     private UserControl _leftView;
     private UserControl _rightView;
+    //当前View
+    public string CurrentLeftView { get; set; }
+    public string CurrentRightView { get; set; }
+    //按钮样式类
+    public string HomeButtonClass { get; set; }
+    public string ServerButtonClass { get; set; }
+    public string DownloadButtonClass { get; set; }
+    public string SettingsButtonClass { get; set; }
     //创建两个可变动视图
     public UserControl LeftView {
         get => _leftView;
@@ -90,49 +107,66 @@ public class MainViewModel : ViewModelBase
     {
         LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
         RightViewCmd = ReactiveCommand.Create<string>(NavigateRightView);
-        LeftView = new HomeLeft();
-        RightView = new HomeRight();
+        //初始化
+        NavigateLeftView("HomeLeft");
+        NavigateRightView("HomeRight");
         LeftWidth = 350;
+        CurrentLeftView = "HomeLeft";
+        CurrentRightView = "HomeRight";
+        HomeButtonClass = "selected";
+        ServerButtonClass = "bar";
+        DownloadButtonClass = "bar";
+        SettingsButtonClass = "bar";
     }
     
     
     //切换命令
     private void NavigateLeftView(string viewName)
     {
-        Debug.WriteLine("Left Page Switched:" + viewName);
         UserControl newView = ViewFactory.CreateView(viewName);
-        if (newView != null)
+        if (newView != null && viewName != CurrentLeftView)
         {
             LeftView = newView;
+            HomeButtonClass = "bar";
+            ServerButtonClass = "bar";
+            DownloadButtonClass = "bar";
+            SettingsButtonClass = "bar";
             switch (viewName)
             {
                 case "HomeLeft":
-                    RightView = new HomeRight();
+                    NavigateRightView("HomeRight");
                     LeftWidth = 350;
+                    HomeButtonClass = "selected";
                     break;
                 case "ServerLeft":
-                    RightView = new ServerConf();
+                    NavigateRightView("ServerConf");
                     LeftWidth = 250;
+                    ServerButtonClass = "selected";
                     break;
                 case "DownloadLeft":
-                    RightView = new ManualDown();
+                    NavigateRightView("AutoDown");
                     LeftWidth = 150;
+                    DownloadButtonClass = "selected";
                     break;
                 case "SettingsLeft":
-                    RightView = new Common();
+                    NavigateRightView("Common");
                     LeftWidth = 150;
+                    SettingsButtonClass = "selected";
                     break;
             }
+            CurrentLeftView = viewName;
+            Debug.WriteLine("Left Page Switched:" + viewName);
         }
     }
     private void NavigateRightView(string viewName)
     {
-        Debug.WriteLine("Right Page Switched:" + viewName);
         UserControl newView = ViewFactory.CreateView(viewName);
-        if (newView != null)
+        if (newView != null && viewName != CurrentRightView)
         {
             RightView = newView;
+            CurrentRightView = viewName;
         }
+        Debug.WriteLine("Right Page Switched:" + viewName);
     }
     //导航部分结束
 }
