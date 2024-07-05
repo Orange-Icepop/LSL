@@ -15,7 +15,7 @@
   
   <ItemGroup>
     <AvaloniaXaml Remove="Assets\GStyle.axaml" />
-    <AvaloniaXaml Remove="Models\MyCard.axaml" />
+    <AvaloniaXaml Remove="Services\MyCard.axaml" />
     <AvaloniaXaml Remove="Styles\GlobalStyles.axaml" />
     <AvaloniaXaml Remove="Styles\MyButtonStyles.axaml" />
     <AvaloniaXaml Remove="Styles\MyCardStyles.axaml" />
@@ -24,8 +24,7 @@
   
   <ItemGroup>
     <Compile Remove="Assets\MyCard.cs" />
-    <Compile Remove="Models\MyCard.axaml.cs" />
-    <Compile Remove="ViewModels\BarViewModel.cs" />
+    <Compile Remove="Services\MyCard.axaml.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -59,10 +58,6 @@
 
   <ItemGroup>
     <UpToDateCheckInput Remove="Views\Download\ManualDown.axaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Models\" />
   </ItemGroup>
 
   <ItemGroup>

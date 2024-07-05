@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:LSL.ViewModels"
+			 xmlns:views="clr-namespace:LSL.Views"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="600"
              x:Class="LSL.Views.MainView"
              x:DataType="vm:MainViewModel">
@@ -14,6 +15,7 @@
 
 	<!--主页面的模板-->
 	<DockPanel Background="#c7ffee">
+		<views:Bar Height="50" DockPanel.Dock="Top"/>
 		<!--左侧的内容-->
 		<!--为了防止背景被纳入过渡，加入一个Border包住内容-->
 		<Border Background="White" Width="{Binding LeftWidth}">

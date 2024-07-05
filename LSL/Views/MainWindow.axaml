@@ -12,10 +12,7 @@
 		WindowStartupLocation="CenterScreen"
 		MinHeight="400"
 		MinWidth="1000">
-	
-	<Grid RowDefinitions="50,*">
-		<views:Bar Grid.Row="0"/>
-        <views:MainView Grid.Row="1"/>
-	</Grid>
+
+	<views:MainView/>
 </Window>
 
