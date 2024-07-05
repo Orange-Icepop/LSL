@@ -24,7 +24,7 @@
 							HorizontalAlignment="Left">
 				<TransitioningContentControl.PageTransition>
 					<CompositePageTransition>
-						<CrossFade Duration="0:00:00.2"/>
+						<CrossFade Duration="0:00:00.3"/>
 					</CompositePageTransition>
 				</TransitioningContentControl.PageTransition>
 			</TransitioningContentControl>
@@ -40,7 +40,7 @@
 			<TransitioningContentControl.PageTransition>
 				<CompositePageTransition>
 					<CrossFade Duration="0:00:00.4"/>
-					<PageSlide Duration="0:00:00.3" Orientation="Vertical" SlideInEasing="ExponentialEaseOut" SlideOutEasing="SineEaseInOut"/>
+					<PageSlide Duration="0:00:00.4" Orientation="Vertical" SlideInEasing="ExponentialEaseOut" SlideOutEasing="SineEaseInOut"/>
 				</CompositePageTransition>
 			</TransitioningContentControl.PageTransition>
 		</TransitioningContentControl>

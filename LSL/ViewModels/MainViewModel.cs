@@ -15,50 +15,9 @@ using Avalonia.Markup.Xaml.MarkupExtensions;
 using System.Diagnostics;
 
 //导航部分开始
-#region ViewFactory穷举并创建所有视图
-public static class ViewFactory
+public class MainViewModel : ViewModelBase, INavigationService
 {
-    public static UserControl CreateView(string viewName)
-    {
-        switch (viewName)
-        {
-            case "HomeLeft":
-                return new HomeLeft();
-            case "ServerLeft":
-                return new ServerLeft();
-            case "DownloadLeft":
-                return new DownloadLeft();
-            case "SettingsLeft":
-                return new SettingsLeft();
-            case "HomeRight":
-                return new HomeRight();
-            case "ServerConf":
-                return new ServerConf();
-            case "AutoDown":
-                return new AutoDown();
-            case "ManualDown":
-                return new ManualDown();
-            case "ModDown":
-                return new ModDown();
-            case "Common":
-                return new Common();
-            case "DownloadSettings":
-                return new DownloadSettings();
-            case "PanelSettings":
-                return new PanelSettings();
-            case "StyleSettings":
-                return new StyleSettings();
-            case "About":
-                return new About();
-            default:
-                throw new ArgumentException($"No view found for name: {viewName}");
-        }
-    }
-}
-#endregion
-public class MainViewModel : ViewModelBase
-{
-    //定义类，穷举写得依托答辩
+    #region 定义类，穷举写得依托答辩
     //原View
     private UserControl _leftView;
     private UserControl _rightView;
@@ -73,32 +32,21 @@ public class MainViewModel : ViewModelBase
     //创建两个可变动视图
     public UserControl LeftView {
         get => _leftView;
-        set
-        {
-            _leftView = value;
-            OnPropertyChanged(nameof(LeftView));
-        } 
+        set => this.RaiseAndSetIfChanged(ref _leftView, value);
     }
     public UserControl RightView 
     { 
         get => _rightView;
-        set
-        {
-            _rightView = value;
-            OnPropertyChanged(nameof(RightView));
-        }
+        set => this.RaiseAndSetIfChanged(ref _rightView, value);
     }
     //创建左栏宽度定义
     private double _leftWidth;
     public double LeftWidth
     {
         get => _leftWidth;
-        set
-        {
-            _leftWidth = value;
-            OnPropertyChanged(nameof(LeftWidth));
-        }
+        set => this.RaiseAndSetIfChanged(ref _leftWidth, value);
     }
+    #endregion
 
     //创建切换触发方法
     public ICommand LeftViewCmd { get; }
@@ -121,7 +69,8 @@ public class MainViewModel : ViewModelBase
     
     
     //切换命令
-    private void NavigateLeftView(string viewName)
+    //左视图
+    public void NavigateLeftView(string viewName)
     {
         UserControl newView = ViewFactory.CreateView(viewName);
         if (newView != null && viewName != CurrentLeftView)
@@ -155,10 +104,12 @@ public class MainViewModel : ViewModelBase
                     break;
             }
             CurrentLeftView = viewName;
+            BarChangedPublisher.Instance.PublishMessage(viewName);//通知导航栏按钮样式更改
             Debug.WriteLine("Left Page Switched:" + viewName);
         }
     }
-    private void NavigateRightView(string viewName)
+   //右视图
+    public void NavigateRightView(string viewName)
     {
         UserControl newView = ViewFactory.CreateView(viewName);
         if (newView != null && viewName != CurrentRightView)
@@ -168,5 +119,6 @@ public class MainViewModel : ViewModelBase
         }
         Debug.WriteLine("Right Page Switched:" + viewName);
     }
+
     //导航部分结束
 }

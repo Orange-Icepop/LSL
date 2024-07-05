@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using LSL.Views.Home;
+using LSL.ViewModels;
 using ReactiveUI;
 using System;
 using System.Diagnostics;
@@ -13,18 +14,22 @@ using System.Windows.Input;
 namespace LSL.Views
 {
     public partial class Bar : UserControl
-    { 
+    {
         public Bar()
         {
             InitializeComponent();
-            Home.Click += (sender, e) => ChangeBarColor("HomeLeft");
-            Server.Click += (sender, e) => ChangeBarColor("ServerLeft");
-            Download.Click += (sender, e) => ChangeBarColor("DownloadLeft");
-            Settings.Click += (sender, e) => ChangeBarColor("SettingsLeft");
-            Home.Classes.Add("selected");
+            //这里不需要初始化最初的高亮按钮，因为MainViewModel初始化时会调用一次这个方法
+            //以防万一，这里放一个备用的初始化方法
+            //Home.Classes.Add("selected");
+            BarChangedPublisher.Instance.MessageReceived += HandleBarChangeReceived;
         }
-        //设置Bar按钮样式
-        private void ChangeBarColor(string NowPage)
+        private void HandleBarChangeReceived(string navigateTarget)
+        {
+            ChangeBarColor(navigateTarget);
+        }
+
+        //设置Bar按钮样式方法
+        public void ChangeBarColor(string NowPage)
         {
             Home.Classes.Remove("selected");
             Server.Classes.Remove("selected");
