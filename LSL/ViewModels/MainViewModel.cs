@@ -56,6 +56,7 @@ public class MainViewModel : ViewModelBase, INavigationService
     //还有就是本来希望可以创建一个方法来传递两个参数的，但是太麻烦了，还是先搁置了
     public ReactiveCommand<Unit, Unit> PanelConfigCmd { get; }
     public ReactiveCommand<Unit, Unit> DownloadConfigCmd { get; }
+    public ReactiveCommand<Unit, Unit> CommonConfigCmd { get; }
     //结束
 
     public MainViewModel()
@@ -84,12 +85,16 @@ public class MainViewModel : ViewModelBase, INavigationService
             NavigateLeftView("SettingsLeft");
             NavigateRightView("DownloadSettings");
         });
-
+        CommonConfigCmd = ReactiveCommand.Create(() =>
+        {
+            NavigateLeftView("SettingsLeft");
+            NavigateRightView("Common");
+        });
 
     }
 
 
-    //切换命令
+    #region 切换命令
     //左视图
     public void NavigateLeftView(string viewName)
     {
@@ -140,6 +145,6 @@ public class MainViewModel : ViewModelBase, INavigationService
         }
         Debug.WriteLine("Right Page Switched:" + viewName);
     }
-
+    #endregion
     //导航部分结束
 }

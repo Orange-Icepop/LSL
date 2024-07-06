@@ -7,7 +7,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace LSL.Views
+namespace LSL.Controls
 {
     public partial class MyCard : Panel
     {

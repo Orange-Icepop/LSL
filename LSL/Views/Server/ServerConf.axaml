@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="650"
-			 xmlns:local="clr-namespace:LSL.Views;assembly=LSL"
+			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
              x:Class="LSL.Views.Server.ServerConf">
 	<StackPanel>
 		<local:MyCard Text="属性">
@@ -22,7 +22,7 @@
 						<ComboBoxItem Content="跟随全局"/>
 						<ComboBoxItem Content="自动选择"/>
 					</ComboBox>
-					<Button Classes="rightblue" Margin="0,0,10,0" Width="110" Height="30">转到Java设置</Button>
+					<Button Classes="rightblue" Margin="0,0,10,0" Width="110" Height="30" Command="{Binding CommonConfigCmd}">转到Java设置</Button>
 				</DockPanel>
 				<DockPanel Margin="0,5,0,5">
 					<TextBlock Margin="10,0,10,0" VerticalAlignment="Center" Text="内存占用"/>

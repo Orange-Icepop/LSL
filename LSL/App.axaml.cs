@@ -5,7 +5,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using LSL.ViewModels;
 using LSL.Views;
-using static LSL.Views.MyCard;
+using static LSL.Controls.MyCard;
 
 namespace LSL;
 public partial class App : Application

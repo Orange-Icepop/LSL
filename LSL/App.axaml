@@ -1,7 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="LSL.App"
-			 xmlns:local="clr-namespace:LSL.Views;assembly=LSL"
+			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 	<!--全局颜色资源定义-->
@@ -13,6 +13,5 @@
     
 	<Application.Styles>
 		<StyleInclude Source="/Styles/GlobalStyles.axaml"/>
-
 	</Application.Styles>
 </Application>

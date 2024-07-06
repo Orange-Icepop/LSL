@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
-			 xmlns:local="clr-namespace:LSL.Views;assembly=LSL"
+			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
              x:Class="LSL.Views.Download.ManualDown">
 	<StackPanel>
 		<local:MyCard Text="手动下载">

@@ -1,0 +1,22 @@
+<TreeView xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             x:Class="LSL.Controls.ServerTree">
+	<TreeView.Resources>
+		<TreeDataTemplate x:Key="TreeNodeTemplate" ItemsSource="{Binding Children}">
+			<StackPanel Orientation="Horizontal">
+				<TextBlock Text="{Binding Text}" Margin="5,0" />
+				<Button Content="设置"
+						Command="{Binding DataContext.NodeClickedCommand,RelativeSource={RelativeSource AncestorType={x:Type TreeView}}}"
+						CommandParameter="{Binding CommandParameter}" />
+			</StackPanel>
+		</TreeDataTemplate>
+	</TreeView.Resources>
+	
+	<TreeView.Styles>
+		<Style Selector="TreeView">
+			<Setter Property="ItemTemplate" Value="{StaticResource TreeNodeTemplate}" />
+		</Style>
+	</TreeView.Styles>
+</TreeView>

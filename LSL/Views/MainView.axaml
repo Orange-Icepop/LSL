@@ -30,7 +30,7 @@
 			</TransitioningContentControl>
 			<Border.Transitions>
 				<Transitions>
-					<DoubleTransition Property="Width" Duration="0:0:0.2" Easing="CubicEaseInOut"/>
+					<DoubleTransition Property="Width" Duration="0:0:0.3" Easing="CubicEaseInOut"/>
 				</Transitions>
 			</Border.Transitions>
 		</Border>

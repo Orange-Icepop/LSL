@@ -39,7 +39,7 @@
 				<BrushTransition Property="Foreground" Duration="0:0:0.1"/>
 			</Transitions>
 		</Setter>
-		<!--首选按钮样式定义-->
+		<!--首选蓝色按钮样式定义-->
 		<Style Selector="^.blue">
 			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
 			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
@@ -50,7 +50,7 @@
 			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
 			<Setter Property="Background" Value="{DynamicResource OBlueLight}"/>
 		</Style>
-		<!--右栏按钮样式微调-->
+		<!--右栏(RightView)按钮样式微调-->
 		<Style Selector="^.rightblue">
 			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
 			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
@@ -68,7 +68,7 @@
 		</Style>
 	</Style>
 
-	<!--顶栏按钮样式定义-->
+	<!--顶栏(Bar)按钮样式定义-->
 	<Style Selector="Button.bar">
 		<Setter Property="Foreground" Value="White"/>
 		<Setter	Property="BorderThickness" Value="0"/>
@@ -90,7 +90,7 @@
 		<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
 	</Style>
 
-	<!--侧栏按钮样式定义-->
+	<!--侧栏(LeftView)按钮样式定义-->
 	<Style Selector="Button.left">
 		<Setter Property="Template">
 			<ControlTemplate>
@@ -116,5 +116,4 @@
 			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
 		</Style>
 	</Style>
-	<!--窗口过渡变换-->
 </Styles>

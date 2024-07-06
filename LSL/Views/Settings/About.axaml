@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:local="clr-namespace:LSL.Views;assembly=LSL"
+			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.About">
 	<StackPanel>
@@ -11,7 +11,7 @@
 				<DockPanel>
 					<Image Source="avares://LSL/Assets/icon.ico" Width="70" HorizontalAlignment="Left" Margin="0,20,20,10" DockPanel.Dock="Left"/>
 					<Image Source="avares://LSL/Assets/LSL-WORD.png" Width="300" HorizontalAlignment="Left" Margin="0,25,0,0" DockPanel.Dock="Top"/>
-					<TextBlock Text="Copyright ©Orange-Icepop 橙子冰棒" FontSize="12" FontWeight="Bold" DockPanel.Dock="Top"/>
+					<TextBlock Text="©Orange-Icepop 橙子冰棒" FontSize="12" FontWeight="Bold" DockPanel.Dock="Top"/>
 				</DockPanel>
 			</StackPanel>
 		</local:MyCard>
