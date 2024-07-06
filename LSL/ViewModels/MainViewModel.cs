@@ -30,12 +30,13 @@ public class MainViewModel : ViewModelBase, INavigationService
     public string DownloadButtonClass { get; set; }
     public string SettingsButtonClass { get; set; }
     //创建两个可变动视图
-    public UserControl LeftView {
+    public UserControl LeftView
+    {
         get => _leftView;
         set => this.RaiseAndSetIfChanged(ref _leftView, value);
     }
-    public UserControl RightView 
-    { 
+    public UserControl RightView
+    {
         get => _rightView;
         set => this.RaiseAndSetIfChanged(ref _rightView, value);
     }
@@ -51,6 +52,12 @@ public class MainViewModel : ViewModelBase, INavigationService
     //创建切换触发方法
     public ICommand LeftViewCmd { get; }
     public ICommand RightViewCmd { get; }
+    //这一部分是多参数导航按钮的部分，由于设置别的VM会导致堆栈溢出且暂时没找到替代方案，所以先摆了
+    //还有就是本来希望可以创建一个方法来传递两个参数的，但是太麻烦了，还是先搁置了
+    public ReactiveCommand<Unit, Unit> PanelConfigCmd { get; }
+    public ReactiveCommand<Unit, Unit> DownloadConfigCmd { get; }
+    //结束
+
     public MainViewModel()
     {
         LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
@@ -65,9 +72,23 @@ public class MainViewModel : ViewModelBase, INavigationService
         ServerButtonClass = "bar";
         DownloadButtonClass = "bar";
         SettingsButtonClass = "bar";
+
+        //多参数导航
+        PanelConfigCmd = ReactiveCommand.Create(() =>
+        {
+            NavigateLeftView("SettingsLeft");
+            NavigateRightView("PanelSettings");
+        });
+        DownloadConfigCmd = ReactiveCommand.Create(() =>
+        {
+            NavigateLeftView("SettingsLeft");
+            NavigateRightView("DownloadSettings");
+        });
+
+
     }
-    
-    
+
+
     //切换命令
     //左视图
     public void NavigateLeftView(string viewName)
@@ -108,7 +129,7 @@ public class MainViewModel : ViewModelBase, INavigationService
             Debug.WriteLine("Left Page Switched:" + viewName);
         }
     }
-   //右视图
+    //右视图
     public void NavigateRightView(string viewName)
     {
         UserControl newView = ViewFactory.CreateView(viewName);
