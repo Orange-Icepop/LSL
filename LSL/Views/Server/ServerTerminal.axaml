@@ -3,7 +3,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
-             mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="650"
+             mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerTerminal">
-  Welcome to Avalonia!
+	<DockPanel Width="950" Height="600">
+		<DockPanel DockPanel.Dock="Bottom" Height="70">
+			<local:MyCard DockPanel.Dock="Right" Width="200">
+				
+			</local:MyCard>
+			<local:MyCard DockPanel.Dock="Right"/>
+		</DockPanel>
+		<local:MyCard Text="终端"/>
+	</DockPanel>
 </UserControl>

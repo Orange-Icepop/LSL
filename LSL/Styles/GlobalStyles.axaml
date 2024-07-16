@@ -80,14 +80,11 @@
 		<Style Selector="^:pointerover">
 			<Setter Property="Background" Value="{DynamicResource OBlueBar}"/>
 		</Style>
-	</Style>
-	<Style Selector="Button.selected">
-		<Setter	Property="BorderThickness" Value="0"/>
-		<Setter Property="Width" Value="70"/>
-		<Setter Property="Height" Value="35"/>
-		<Setter Property="Margin" Value="5"/>
-		<Setter Property="Background" Value="White"/>
-		<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+		<!--顶栏按钮选中样式定义-->
+		<Style Selector="^.selected">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+		</Style>
 	</Style>
 
 	<!--侧栏(LeftView)按钮样式定义-->
@@ -114,6 +111,11 @@
 		<!--侧栏按钮悬停样式定义-->
 		<Style Selector="^:pointerover">
 			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+		</Style>
+		<!--侧栏按钮选中样式定义-->
+		<Style Selector="^.selLeft">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="Foreground" Value="{DynamicResource OBlueBar}"/>
 		</Style>
 	</Style>
 </Styles>

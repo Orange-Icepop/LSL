@@ -7,7 +7,12 @@
              x:Class="LSL.Views.Server.ServerLeft">
 	<DockPanel Width="250">
 		<TextBlock DockPanel.Dock="Top" Text="服务器列表" Margin="10,10,0,0" Foreground="Gray"/>
-		<local:ServerTree ServerTreeRootItem="{Binding YourTreeData}"/>
+		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10">
+			<ComboBoxItem Content="1201"/>
+		</ComboBox>
+		<Button DockPanel.Dock="Top" Name="StatusButton" Content="状态" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ServerStat"/>
+		<Button DockPanel.Dock="Top" Name="TerminalButton" Content="终端" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ServerTerminal"/>
+		<Button DockPanel.Dock="Top" Name="ConfButton" Content="设置" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ServerConf"/>
 		<Button Classes="right"
 				Name="AddServerButton"
 				Command="{Binding LeftViewCmd}"

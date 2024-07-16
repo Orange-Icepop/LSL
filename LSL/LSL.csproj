@@ -79,4 +79,8 @@
   <ItemGroup>
     <UpToDateCheckInput Remove="Views\Server\ServerStat.axaml" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
 </Project>

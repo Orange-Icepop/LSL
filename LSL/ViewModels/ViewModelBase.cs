@@ -18,6 +18,7 @@ public static class ViewFactory
     {
         switch (viewName)
         {
+            //Bar
             case "HomeLeft":
                 return new HomeLeft();
             case "ServerLeft":
@@ -26,16 +27,24 @@ public static class ViewFactory
                 return new DownloadLeft();
             case "SettingsLeft":
                 return new SettingsLeft();
+            //Home
             case "HomeRight":
                 return new HomeRight();
+            //Server
+            case "ServerStat":
+                return new ServerStat();
+            case "ServerTerminal":
+                return new ServerTerminal();
             case "ServerConf":
                 return new ServerConf();
+            //Download
             case "AutoDown":
                 return new AutoDown();
             case "ManualDown":
                 return new ManualDown();
             case "ModDown":
                 return new ModDown();
+            //Settings
             case "Common":
                 return new Common();
             case "DownloadSettings":
@@ -97,6 +106,52 @@ public class BarChangedPublisher
     }
 }
 #endregion
+
+#region 定义左栏改变事件发布
+public class LeftChangedPublisher
+{
+    private static LeftChangedPublisher _instance;
+
+    private LeftChangedPublisher() { }
+
+    public static LeftChangedPublisher Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = new LeftChangedPublisher();
+            }
+            return _instance;
+        }
+    }
+    // 定义事件委托  
+    public delegate void LeftChangedEventHandler(string navigateLeftTarget);
+
+    // 定义事件  
+    public event LeftChangedEventHandler MessageReceived;
+
+    // 触发事件的方法  
+    protected virtual void LeftChangedReceived(string navigateLeftTarget)
+    {
+        // 检查是否有任何订阅者  
+        LeftChangedEventHandler handler = MessageReceived;
+        if (handler != null)
+        {
+            // 如果有，则调用它们  
+            handler(navigateLeftTarget);
+        }
+    }
+
+    // 一个公共方法，用于从类的外部请求触发事件  
+    public void LeftPublishMessage(string navigateLeftTarget)
+    {
+        // 这里，我们直接调用受保护的方法来触发事件  
+        LeftChangedReceived(navigateLeftTarget);
+    }
+}
+#endregion
+
 
 #region INavigationService 接口定义  
 public interface INavigationService

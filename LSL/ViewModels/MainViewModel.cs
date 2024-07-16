@@ -24,11 +24,6 @@ public class MainViewModel : ViewModelBase, INavigationService
     //当前View
     public string CurrentLeftView { get; set; }
     public string CurrentRightView { get; set; }
-    //按钮样式类
-    public string HomeButtonClass { get; set; }
-    public string ServerButtonClass { get; set; }
-    public string DownloadButtonClass { get; set; }
-    public string SettingsButtonClass { get; set; }
     //创建两个可变动视图
     public UserControl LeftView
     {
@@ -69,10 +64,6 @@ public class MainViewModel : ViewModelBase, INavigationService
         LeftWidth = 350;
         CurrentLeftView = "HomeLeft";
         CurrentRightView = "HomeRight";
-        HomeButtonClass = "selected";
-        ServerButtonClass = "bar";
-        DownloadButtonClass = "bar";
-        SettingsButtonClass = "bar";
 
         //多参数导航
         PanelConfigCmd = ReactiveCommand.Create(() =>
@@ -102,31 +93,23 @@ public class MainViewModel : ViewModelBase, INavigationService
         if (newView != null && viewName != CurrentLeftView)
         {
             LeftView = newView;
-            HomeButtonClass = "bar";
-            ServerButtonClass = "bar";
-            DownloadButtonClass = "bar";
-            SettingsButtonClass = "bar";
             switch (viewName)
             {
                 case "HomeLeft":
                     NavigateRightView("HomeRight");
                     LeftWidth = 350;
-                    HomeButtonClass = "selected";
                     break;
                 case "ServerLeft":
-                    NavigateRightView("ServerConf");
+                    NavigateRightView("ServerStat");
                     LeftWidth = 250;
-                    ServerButtonClass = "selected";
                     break;
                 case "DownloadLeft":
                     NavigateRightView("AutoDown");
                     LeftWidth = 150;
-                    DownloadButtonClass = "selected";
                     break;
                 case "SettingsLeft":
                     NavigateRightView("Common");
                     LeftWidth = 150;
-                    SettingsButtonClass = "selected";
                     break;
             }
             CurrentLeftView = viewName;
@@ -143,6 +126,7 @@ public class MainViewModel : ViewModelBase, INavigationService
             RightView = newView;
             CurrentRightView = viewName;
         }
+        LeftChangedPublisher.Instance.LeftPublishMessage(viewName);
         Debug.WriteLine("Right Page Switched:" + viewName);
     }
     #endregion

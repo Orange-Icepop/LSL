@@ -2,17 +2,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="650"
+             mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
 			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
              x:Class="LSL.Views.Server.ServerConf">
 	<StackPanel>
 		<local:MyCard Text="属性">
-			<DockPanel HorizontalAlignment="Left" Margin="20,50,10,20" Width="910">
-				<Image DockPanel.Dock="Left" Source="/Assets/mc.png" Width="32" Height="32" Margin="10"/>
-				<Button DockPanel.Dock="Right" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="rightblue" Height="30" Width="100" Margin="10">打开文件夹</Button>
-				<TextBlock DockPanel.Dock="Top" Text="1201" FontSize="20" FontWeight="Bold" HorizontalAlignment="Left" Margin="0,5,0,0"/>
-				<TextBlock DockPanel.Dock="Top" Text="Minecraft 1.20.1,Forge 47.10.0" FontSize="15" Foreground="Gray" HorizontalAlignment="Left"/>
-			</DockPanel>
+			<Grid HorizontalAlignment="Left" Margin="20,50,10,20" ColumnDefinitions="*,*">
+				<DockPanel Grid.Column="0">
+					<Image DockPanel.Dock="Left" Source="/Assets/mc.png" Width="32" Height="32" Margin="10"/>
+					<TextBlock DockPanel.Dock="Top" Text="1201" FontSize="20" FontWeight="Bold" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+					<TextBlock DockPanel.Dock="Top" Text="Minecraft 1.20.1,Forge 47.10.0" FontSize="15" Foreground="Gray" HorizontalAlignment="Left"/>
+				</DockPanel>
+				<Button Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="rightblue" Height="30" Width="100" Margin="10">打开文件夹</Button>
+			</Grid>
 		</local:MyCard>
 		<local:MyCard Text="服务器常规设置">
 			<StackPanel Margin="20,50,20,10">

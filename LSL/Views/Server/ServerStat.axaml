@@ -2,8 +2,22 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="650"
+             mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
 			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
              x:Class="LSL.Views.Server.ServerStat">
-  Welcome to Avalonia!
+	<StackPanel>
+		<local:MyCard Text="资源占用">
+			<Grid Margin="30,50,10,10" ColumnDefinitions="*,*,*">
+				<StackPanel Grid.Column="0">
+					<TextBlock Text="CPU占用" FontSize="12"/>
+				</StackPanel>
+				<StackPanel Grid.Column="1">
+					<TextBlock Text="内存占用" FontSize="12"/>
+				</StackPanel>
+				<StackPanel Grid.Column="2">
+					<TextBlock Text="网络占用" FontSize="12"/>
+				</StackPanel>
+			</Grid>
+		</local:MyCard>
+	</StackPanel>
 </UserControl>

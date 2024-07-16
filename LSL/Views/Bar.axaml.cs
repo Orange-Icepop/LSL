@@ -29,7 +29,7 @@ namespace LSL.Views
         }
 
         //设置Bar按钮样式方法
-        public void ChangeBarColor(string NowPage)
+        private void ChangeBarColor(string NowPage)
         {
             Home.Classes.Remove("selected");
             Server.Classes.Remove("selected");
