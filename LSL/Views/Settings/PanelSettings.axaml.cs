@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using LSL.ViewModels;
 
 namespace LSL.Views.Settings
 {
@@ -7,6 +8,7 @@ namespace LSL.Views.Settings
         public PanelSettings()
         {
             InitializeComponent();
+            this.DataContext = new ConfigViewModel();
         }
     }
 }

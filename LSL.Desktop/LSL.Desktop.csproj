@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <SignAssembly>False</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,3 +18,8 @@
     <ProjectReference Include="..\LSL\LSL.csproj" />
   </ItemGroup>
 </Project>
+<!--留给未来的自己：
+如果想要将程序包装为单个应用程序，可以使用ILMerge、ILRepack或SourceYard
+不要使用Fody，因为会对内存造成负担
+另外，打包可能会对AvaloniaUI的渲染库（如SkiaSharp）造成一定影响，请谨慎使用-->
+<!--https://cloud.tencent.com/developer/article/2348973-->

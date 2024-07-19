@@ -163,11 +163,12 @@ public interface INavigationService
 
 public class ViewModelBase : ReactiveObject
 {
-    //这一部分是用来实现INotifyPropertyChanged的，但是ReactiveUI已经实现了，所以可以不用，保险起见还是留着
-    /*public event PropertyChangedEventHandler PropertyChanged;
+    // 实现INotifyPropertyChanged
+    // 虽然使用了CommunityToolkit，但是原有的ReactiveUI部分必须依赖ReactiveObject，不能删
+    public event PropertyChangedEventHandler PropertyChanged;
 
-    protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    protected virtual void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }*/
+    }
 }

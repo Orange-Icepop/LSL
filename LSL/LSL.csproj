@@ -5,6 +5,9 @@
     <LangVersion>latest</LangVersion>
     <OutputType>Library</OutputType>
     <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+    <UseWindowsForms>False</UseWindowsForms>
+    <UseWPF>False</UseWPF>
+    <StartupObject></StartupObject>
   </PropertyGroup>
 
   
@@ -25,6 +28,7 @@
   <ItemGroup>
     <Compile Remove="Assets\MyCard.cs" />
     <Compile Remove="Services\MyCard.axaml.cs" />
+    <Compile Remove="ViewModels\SharedData.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,6 +38,8 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,6 +52,9 @@
     </Compile>
     <Compile Update="Views\Home\HomeRight.axaml.cs">
       <DependentUpon>HomeRight.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Server\Monitors\CpuStat.axaml.cs">
+      <DependentUpon>CpuStat.axaml</DependentUpon>
     </Compile>
     <Compile Update="Views\Settings\StyleSettings.axaml.cs">
       <DependentUpon>StyleSettings.axaml</DependentUpon>
@@ -78,9 +87,5 @@
 
   <ItemGroup>
     <UpToDateCheckInput Remove="Views\Server\ServerStat.axaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\" />
   </ItemGroup>
 </Project>

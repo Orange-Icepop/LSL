@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using LSL.ViewModels;
 
 namespace LSL.Views.Settings
 {
@@ -7,7 +8,7 @@ namespace LSL.Views.Settings
         public DownloadSettings()
         {
             InitializeComponent();
-            DownloadSource.SelectedIndex = 0;
+            this.DataContext = new ConfigViewModel();
         }
     }
 }

@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using LSL.ViewModels;
 using System.Collections.Generic;
 
 namespace LSL.Views.Settings
@@ -11,10 +12,7 @@ namespace LSL.Views.Settings
         public Common()
         {
             InitializeComponent();
-            Priority.SelectedIndex = 1;
-            JavaSelection.SelectedIndex = 0;
-            OutputEncodeType.SelectedIndex = 0;
-            InputEncodeType.SelectedIndex = 0;
+            this.DataContext = new ConfigViewModel();
         }
     }
 }

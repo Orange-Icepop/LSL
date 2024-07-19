@@ -6,7 +6,6 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using LSL.Views.Home;
 using LSL.ViewModels;
-using ReactiveUI;
 using System;
 using System.Diagnostics;
 using System.Windows.Input;

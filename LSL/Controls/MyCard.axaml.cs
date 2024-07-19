@@ -11,7 +11,7 @@ namespace LSL.Controls
 {
     public partial class MyCard : Panel
     {
-        //定义titie
+        //定义title
         private static readonly StyledProperty<string> TextProperty =
             AvaloniaProperty.Register<MyCard, string>(nameof(Text), defaultBindingMode: BindingMode.OneWay);
 
