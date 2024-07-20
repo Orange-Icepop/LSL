@@ -6,34 +6,184 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using MinecraftLaunch.Components.Fetcher;
+using MinecraftLaunch.Classes.Models.Game;
 
 namespace LSL.Services
 {
+    //JSON基本操作类
+    public class JsonHelper
+    {
+        #region 修改键值基本方法ModifyJson
+        public static void ModifyJson(string filePath, string keyPath, object keyValue)
+        {
+            //读取
+            string jsonString = File.ReadAllText(filePath);
+            JObject jsonObject = JObject.Parse(jsonString);
+            //寻找指定的值
+            JToken token = jsonObject.SelectToken(keyPath);
+            // 检查键是否存在  
+            if (token != null && token.Type != JTokenType.Property)
+            {
+                // 修改键的值
+                token.Replace(JToken.FromObject(keyValue));
+            }
+            else if (token is JProperty prop)
+            {
+                prop.Value = JToken.FromObject(keyValue);
+            }
+            else
+            {
+                throw new ArgumentException($"{keyPath} not existed.");
+            }
+
+
+            // 将修改后的JSON写回文件  
+            string updatedString = jsonObject.ToString(Formatting.Indented);
+            File.WriteAllText(filePath, updatedString);
+
+            Debug.WriteLine($"{keyPath} changed successfully.");
+        }
+        #endregion
+
+        #region 读取键值基本方法ReadJson
+        public static object ReadJson(string filePath, string keyPath)
+        {
+            //读取
+            string jsonString = File.ReadAllText(filePath);
+            JObject jsonObject = JObject.Parse(jsonString);
+            JToken token = jsonObject.SelectToken(keyPath);
+
+            if (token == null)
+            {
+                throw new ArgumentException($"{keyPath} not existed.");
+            }
+
+            switch (token.Type)
+            {
+                case JTokenType.String:
+                    return token.Value<string>();
+                case JTokenType.Integer:
+                    return token.Value<int>();
+                case JTokenType.Boolean:
+                    return token.Value<bool>();
+                default:
+                    throw new FormatException($"Key '{keyPath}' is not a string, number, or bool");
+            }
+        }
+        #endregion
+
+        #region 增加键值基本方法AddJson
+        public static void AddJson(string filePath, string keyPath, object keyValue)
+        {
+            string json = File.ReadAllText(filePath);
+            JObject jObject = JObject.Parse(json);
+            /*
+            //鉴定类型
+            if (keyValue is bool boolValue)
+            {
+                jObject.Add(key, boolValue);
+            }
+            else if (keyValue is int intValue)
+            {
+                jObject.Add(key, intValue);
+            }
+            else if (keyValue is string stringValue)
+            {
+                jObject.Add(key, stringValue);
+            }
+            else { throw new FormatException($"{keyValue} is not an expected format"); }
+            */
+
+            // 尝试找到路径的父对象或父数组  
+            string[] pathParts = keyPath.Split('.');
+            string lastPart = pathParts.Last();
+            string parentPath = string.Join(".", pathParts.Take(pathParts.Length - 1));
+
+            JToken parentToken = parentPath.Length > 0 ? jObject.SelectToken(parentPath) : jObject;
+
+            if (parentToken is null)
+            {
+                throw new ArgumentException("无法找到添加新值的JSON路径");
+            }
+
+            if (parentToken is JArray jArray)
+            {
+                // 如果是数组，添加新项（注意：这里假设jsonToAdd可以直接转换为JToken或简单类型）  
+                jArray.Add(JToken.FromObject(keyValue));
+            }
+            else if (parentToken is JObject jParentObject)
+            {
+                // 如果是对象，添加新属性  
+                jParentObject.Add(lastPart, JToken.FromObject(keyValue));
+            }
+            else
+            {
+                throw new ArgumentException("指定的JSON路径不是对象或数组");
+            }
+
+            // 将修改后的JObject转换回字符串并写回文件  
+            string output = jObject.ToString();
+            File.WriteAllText(filePath, output);
+
+            Debug.WriteLine($"Key {keyPath} added successfully");
+
+        }
+        #endregion
+
+        #region 清空JSON文件方法ClearJson
+        // 这个方法会创建一个json文件以避免错误
+        public static void ClearJson(string filePath)
+        {
+            // 检查文件路径是否有效  
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentNullException(nameof(filePath), "文件路径不能为空或仅包含空白字符。");
+            }
+
+            // 确保文件路径的目录存在  
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+            // 将文件内容替换为一个空的JSON对象  
+            File.WriteAllText(filePath, "{}");
+        }
+        #endregion
+
+    }
     // 配置文件管理  
     public class ConfigurationManager
     {
 
         // 配置文件的路径  
         private static readonly string _configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "config.json");
+        private static readonly string _serverConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "serverConfig.json");
+        public static readonly string _javaConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "javaConfig.json");
+        public static readonly string _serversPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Servers");
 
         // 初始化配置文件的路径  
         static ConfigurationManager()
         {
             // 确保LSL文件夹存在  
             Directory.CreateDirectory(Path.GetDirectoryName(_configFilePath)!);
+            Directory.CreateDirectory(Path.GetDirectoryName(_serverConfigPath)!);
+            Directory.CreateDirectory(Path.GetDirectoryName(_javaConfigPath)!);
+            Directory.CreateDirectory(Path.GetDirectoryName(_serversPath)!);
         }
         private ConfigurationManager()
-        { 
-            
+        {
+
         }
 
         // 获取配置文件的路径  
         public static string ConfigFilePath => _configFilePath;
+        public static string ServerConfigPath => _serverConfigPath;
+        public static string JavaConfigPath => _javaConfigPath;
+        public static string ServersPath => _serversPath;
 
-        #region 初始化配置文件方法
+        #region 初始化配置文件
         public static void WriteInitialConfig()
         {
             if (!File.Exists(_configFilePath))
@@ -66,145 +216,79 @@ namespace LSL.Services
                     beta_update = false
                 };
 
-                var inputOptions = new JsonSerializerOptions
-                {
-                    WriteIndented = true // 设置此属性为true以启用缩进  
-                };
                 // 序列化成JSON字符串并写入文件  
-                string configString = JsonSerializer.Serialize(initialConfig, inputOptions);
+                string configString = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
                 File.WriteAllText(_configFilePath, configString);
 
-                Console.WriteLine("config.json initialized.");
+                Debug.WriteLine("config.json initialized.");
             }
         }
         #endregion
 
-        #region 修改键值
+        #region 注册服务器
+        public static void RegisterServer(int id, string serverName)
+        {
+            if (!File.Exists(_serverConfigPath))
+            {
+                // 读取JSON文件  
+                string json = File.ReadAllText(_serverConfigPath);
+                JObject jObject = JObject.Parse(json);
+                // 连接服务器路径
+                string addedServerPath = Path.Combine(_serversPath, serverName);
+                string addedConfigPath = Path.Combine(addedServerPath, "lslconfig.json");
+                Directory.CreateDirectory(Path.GetDirectoryName(addedServerPath)!);
+                // 初始化服务器配置文件
+                var initialConfig = new
+                {
+                    name = serverName,
+
+                };
+
+                // 添加新的键值对  
+                jObject.Add(id.ToString(), addedServerPath); // JSON键必须是字符串，将int转换为string  
+
+                // 将修改后的JObject转换回字符串并写回文件  
+                string output = jObject.ToString();
+                File.WriteAllText(_serverConfigPath, output);
+
+                Debug.WriteLine($"Server {serverName} registered, config file path {addedServerPath}");
+            }
+        }
+        #endregion
+
+        // 修改配置键值
 
         public static void ModifyConfig(string key, object keyValue)
         {
-            //读取
-            string configString = File.ReadAllText(ConfigFilePath);
-            JsonDocument doc = JsonDocument.Parse(configString);
-            //缓冲区
-            using (var memoryStream = new MemoryStream())
-            {
-                using (var writer = new Utf8JsonWriter(memoryStream, new JsonWriterOptions { Indented = true }))
-                {
-                    bool foundKey = false;
-
-                    // 遍历原始JSON文档的每个元素  
-                    writer.WriteStartObject();
-                    foreach (var property in doc.RootElement.EnumerateObject())
-                    {
-                        if (property.Name == key)
-                        {
-                            // 写入新的值  
-                            foundKey = true;
-                            writer.WritePropertyName(key);
-                            JsonSerializer.Serialize(writer, keyValue);
-                        }
-                        else
-                        {
-                            // 写入原始属性的值  
-                            property.WriteTo(writer);
-                        }
-                    }
-
-                    if (!foundKey)
-                    {
-                        throw new ArgumentException($"Key '{key}' not found in config.json when writing");
-                    }
-
-                    writer.WriteEndObject();
-                }
-
-                // 读取修改后的JSON字符串并写回文件  
-                configString = Encoding.UTF8.GetString(memoryStream.ToArray());
-                File.WriteAllText(ConfigFilePath, configString);
-            }
-            //反序列化整个配置文件到一个字典
-            /*
-            using (JsonDocument doc = JsonDocument.Parse(configString))
-            {
-                var root = doc.RootElement;
-                if (root.TryGetProperty(key, out JsonElement value))
-                {
-                    var configObject = JsonSerializer.Deserialize<Dictionary<string, object>>(configString);
-                    if (configObject != null && configObject.ContainsKey(key))
-                    {
-                        configObject[key] = keyvalue; // 修改键值
-                        configString = JsonSerializer.Serialize(configObject, new JsonSerializerOptions { WriteIndented = true }); // 重新序列化
-                        File.WriteAllText(_configFilePath, configString); // 写回文件
-                    }
-                    else
-                    {
-                        throw new ArgumentException($"Key '{key}' not found in config.json when writing");
-                    }
-                }
-                else
-                {
-                    throw new ArgumentException($"Key '{key}' not found in config.json when writing");
-                }
-            }*/
+            string keyPath = "$." + key;
+            JsonHelper.ModifyJson(ConfigFilePath, keyPath, keyValue);
         }
-        #endregion
 
-        #region 读取键值
+        //读取配置键值
         public static object ReadConfig(string key)
         {
-            //读取
-            string configString = File.ReadAllText(ConfigFilePath);
-
-            using (JsonDocument doc = JsonDocument.Parse(configString))
-            {
-                JsonElement root = doc.RootElement;
-                switch (root.GetProperty(key).ValueKind)
-                {
-                    case JsonValueKind.String: return root.GetProperty(key).GetString();
-                    case JsonValueKind.Number: return root.GetProperty(key).GetInt32();
-                    case JsonValueKind.True: return true;
-                    case JsonValueKind.False: return false;
-                    default: throw new ArgumentException("Key is not a string, number or bool");
-                }
-            }
-            /*
-            // 反序列化JSON到一个字典  
-            var configObject = JsonSerializer.Deserialize<Dictionary<string, object>>(configString);
-
-            if (configObject != null && configObject.ContainsKey(key))
-            {
-                if (configObject.TryGetValue(key, out var value))
-                {
-                    if (value is bool)
-                    {
-                        return (bool)value;
-                    }
-                    else if (value is string)
-                    {
-                        return (string)value;
-                    }
-                    else if (value is int)
-                    {
-                        return (int)value; 
-                    }
-                    else
-                    {
-                        return value;
-                        //throw new ArgumentException($"Key '{key}' is not an expected type in config.json when reading");
-                    }
-                }
-                else
-                {
-                    throw new ArgumentException($"Key '{key}' not found in config.json when reading");
-                }
-                
-            }
-            else
-            {
-                throw new ArgumentException($"Key ' {key} ' not found in config.json when reading");
-            }*/
+            string keyPath = "$." + key;
+            return JsonHelper.ReadJson(ConfigFilePath, keyPath);
         }
-        #endregion
+
+    }
+
+    public class JavaManager//java相关服务
+    {
+        JavaFetcher javaFetcher = new JavaFetcher();
+        //获取java列表
+        public async void DetectJava()
+        {
+            var JavaList = await javaFetcher.FetchAsync();//调用MinecraftLaunch的API查找JAVA
+            JsonHelper.ClearJson(ConfigurationManager._javaConfigPath);//清空Java记录
+            //遍历写入Java信息
+            int id = 1;
+            foreach (JavaEntry javalist in JavaList)
+            {
+                string writtenId = id.ToString();
+                JsonHelper.AddJson(ConfigurationManager._javaConfigPath, writtenId, new { version = javalist.JavaVersion, path = javalist.JavaPath });
+                id++;
+            }
+        }
     }
 }

@@ -30,7 +30,8 @@ namespace LSL.ViewModels
         private bool panelTerminal;
         private bool autoUpdate;
         private bool betaUpdate;
-        //可观测对象
+        //可观测对象，最烦的一堆史
+        //communitytoolkit咋就不允许修改操作呢
         public bool AutoEula { get => autoEula; set { autoEula = value; OnPropertyChanged(nameof(AutoEula)); ConfigurationManager.ModifyConfig("auto_eula", value); } }
         public int AppPriority { get => appPriority; set { appPriority = value; OnPropertyChanged(nameof(AppPriority)); ConfigurationManager.ModifyConfig("app_priority",value); } }
         public bool EndServerWhenClose { get => endServerWhenClose; set { endServerWhenClose = value; OnPropertyChanged(nameof(EndServerWhenClose)); ConfigurationManager.ModifyConfig("end_server_when_close", value); } }
@@ -118,6 +119,11 @@ namespace LSL.ViewModels
             #endregion
         }
 
+        JavaManager javaManager = new JavaManager();
+        public void GetJava()
+        {
+            javaManager.DetectJava();
+        }
 
     }
 }
