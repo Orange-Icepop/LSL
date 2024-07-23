@@ -13,6 +13,16 @@
 		MinHeight="400"
 		MinWidth="1000">
 
-	<views:MainView/>
+	<Grid>
+		<views:MainView/>
+		<TransitioningContentControl>
+			<TransitioningContentControl.PageTransition>
+				<CompositePageTransition>
+					<CrossFade Duration="0:00:00.3"/>
+				</CompositePageTransition>
+			</TransitioningContentControl.PageTransition>
+			<views:Popup IsVisible="False" Name="Popup"/>
+		</TransitioningContentControl>
+	</Grid>
 </Window>
 

@@ -20,7 +20,7 @@ namespace LSL.Views
             //这里不需要初始化最初的高亮按钮，因为MainViewModel初始化时会调用一次这个方法
             //以防万一，这里放一个备用的初始化方法
             //Home.Classes.Add("selected");
-            BarChangedPublisher.Instance.MessageReceived += HandleBarChangeReceived;
+            BarChangedPublisher.Instance.BarMessageReceived += HandleBarChangeReceived;
         }
         private void HandleBarChangeReceived(string navigateTarget)
         {

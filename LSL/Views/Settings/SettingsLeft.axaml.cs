@@ -9,7 +9,7 @@ namespace LSL.Views.Settings
         public SettingsLeft()
         {
             InitializeComponent();
-            LeftChangedPublisher.Instance.MessageReceived += HandleLeftChangeReceived;
+            LeftChangedPublisher.Instance.LeftMessageReceived += HandleLeftChangeReceived;
         }
         private void HandleLeftChangeReceived(string navigateTarget)
         {

@@ -28,6 +28,7 @@
   <ItemGroup>
     <Compile Remove="Assets\MyCard.cs" />
     <Compile Remove="Services\MyCard.axaml.cs" />
+    <Compile Remove="ViewModels\ErrorPopupViewModel.cs" />
     <Compile Remove="ViewModels\SharedData.cs" />
   </ItemGroup>
 
@@ -49,6 +50,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Views\Popup.axaml.cs">
+      <DependentUpon>Popup.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\Home\HomeLeft.axaml.cs">
       <DependentUpon>HomeLeft.axaml</DependentUpon>
     </Compile>

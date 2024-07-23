@@ -12,7 +12,7 @@ namespace LSL.Views.Server
         public ServerLeft()
         {
             InitializeComponent();
-            LeftChangedPublisher.Instance.MessageReceived += HandleLeftChangeReceived;
+            LeftChangedPublisher.Instance.LeftMessageReceived += HandleLeftChangeReceived;
         }
         private void HandleLeftChangeReceived(string navigateTarget)
         {

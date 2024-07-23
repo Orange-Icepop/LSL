@@ -14,4 +14,29 @@
 	<Application.Styles>
 		<StyleInclude Source="/Styles/GlobalStyles.axaml"/>
 	</Application.Styles>
+	<!--托盘图标-->
+	<TrayIcon.Icons>
+		<TrayIcons>
+			<TrayIcon Icon="/Assets/icon.ico"
+					  ToolTipText="Lime Server Launcher">
+				<TrayIcon.Menu>
+					<NativeMenu>
+						<NativeMenuItem Header="唤出主窗口"/>
+						<NativeMenuItem Header="正常关闭所有服务器"/>
+						<NativeMenuItemSeparator />
+						<NativeMenuItem Header="关闭应用程序"/>
+						<!--示例，NativeMenu可以嵌套
+						<NativeMenuItem Header="Settings">
+							<NativeMenu>
+								<NativeMenuItem Header="唤出主窗口"/>
+								<NativeMenuItem Header="正常关闭所有服务器"/>
+								<NativeMenuItemSeparator />
+								<NativeMenuItem Header="关闭应用程序"/>
+							</NativeMenu>
+						</NativeMenuItem>-->
+					</NativeMenu>
+				</TrayIcon.Menu>
+			</TrayIcon>
+		</TrayIcons>
+	</TrayIcon.Icons>
 </Application>

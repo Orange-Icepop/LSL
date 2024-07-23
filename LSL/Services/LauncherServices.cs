@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using MinecraftLaunch.Components.Fetcher;
 using MinecraftLaunch.Classes.Models.Game;
+using LSL.ViewModels;
 
 namespace LSL.Services
 {
@@ -37,7 +38,7 @@ namespace LSL.Services
             }
             else
             {
-                throw new ArgumentException($"{keyPath} not existed.");
+                PopupPublisher.Instance.PopupMessage("deadlyError", $"{keyPath} 不存在。请备份并删除配置文件重试。");
             }
 
 
@@ -59,7 +60,7 @@ namespace LSL.Services
 
             if (token == null)
             {
-                throw new ArgumentException($"{keyPath} not existed.");
+                PopupPublisher.Instance.PopupMessage("deadlyError", $"{keyPath} not existed.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
             }
 
             switch (token.Type)
@@ -71,7 +72,8 @@ namespace LSL.Services
                 case JTokenType.Boolean:
                     return token.Value<bool>();
                 default:
-                    throw new FormatException($"Key '{keyPath}' is not a string, number, or bool");
+                    PopupPublisher.Instance.PopupMessage("deadlyError", $"Key '{keyPath}' is not a string, number, or bool.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
+                    return null;
             }
         }
         #endregion
@@ -141,7 +143,7 @@ namespace LSL.Services
             // 检查文件路径是否有效  
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                throw new ArgumentNullException(nameof(filePath), "文件路径不能为空或仅包含空白字符。");
+                PopupPublisher.Instance.PopupMessage("deadlyError", $"{nameof(filePath)}文件不存在。下一次启动时LSL将自动修复这个错误。");
             }
 
             // 确保文件路径的目录存在  
@@ -261,14 +263,29 @@ namespace LSL.Services
         public static void ModifyConfig(string key, object keyValue)
         {
             string keyPath = "$." + key;
-            JsonHelper.ModifyJson(ConfigFilePath, keyPath, keyValue);
+            try
+            {
+                JsonHelper.ModifyJson(ConfigFilePath, keyPath, keyValue);
+            }
+            catch (Exception ex)
+            {
+                PopupPublisher.Instance.PopupMessage("deadlyError", $"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。");
+            }
         }
 
         //读取配置键值
         public static object ReadConfig(string key)
         {
             string keyPath = "$." + key;
-            return JsonHelper.ReadJson(ConfigFilePath, keyPath);
+            try
+            {
+                return JsonHelper.ReadJson(ConfigFilePath, keyPath);
+            }
+            catch (Exception ex)
+            {
+                PopupPublisher.Instance.PopupMessage("deadlyError", $"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。");
+                return null;
+            }
         }
 
     }

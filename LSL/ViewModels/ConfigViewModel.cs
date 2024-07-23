@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
+using LSL.ViewModels;
 using LSL.Services;
 using ReactiveUI;
 using System.Configuration;
 using System.Diagnostics;
+using System.Windows.Input;
 
 namespace LSL.ViewModels
 {
-    public partial class ConfigViewModel : MainViewModel
+    public partial class ConfigViewModel : ViewModelBase
     {
         #region 配置变量
         //用ReactiveUI的办法真的是太烦了
@@ -33,7 +35,7 @@ namespace LSL.ViewModels
         //可观测对象，最烦的一堆史
         //communitytoolkit咋就不允许修改操作呢
         public bool AutoEula { get => autoEula; set { autoEula = value; OnPropertyChanged(nameof(AutoEula)); ConfigurationManager.ModifyConfig("auto_eula", value); } }
-        public int AppPriority { get => appPriority; set { appPriority = value; OnPropertyChanged(nameof(AppPriority)); ConfigurationManager.ModifyConfig("app_priority",value); } }
+        public int AppPriority { get => appPriority; set { appPriority = value; OnPropertyChanged(nameof(AppPriority)); ConfigurationManager.ModifyConfig("app_priority", value); } }
         public bool EndServerWhenClose { get => endServerWhenClose; set { endServerWhenClose = value; OnPropertyChanged(nameof(EndServerWhenClose)); ConfigurationManager.ModifyConfig("end_server_when_close", value); } }
         public bool Daemon { get => daemon; set { daemon = value; OnPropertyChanged(nameof(Daemon)); ConfigurationManager.ModifyConfig("daemon", value); } }
         public int JavaSelection { get => javaSelection; set { javaSelection = value; OnPropertyChanged(nameof(JavaSelection)); ConfigurationManager.ModifyConfig("java_selection", value); } }
@@ -41,7 +43,7 @@ namespace LSL.ViewModels
         public int OutputEncode { get => outputEncode; set { outputEncode = value; OnPropertyChanged(nameof(OutputEncode)); ConfigurationManager.ModifyConfig("output_encode", value); } }
         public int InputEncode { get => inputEncode; set { inputEncode = value; OnPropertyChanged(nameof(InputEncode)); ConfigurationManager.ModifyConfig("input_encode", value); } }
         public bool ColoringTerminal { get => coloringTerminal; set { coloringTerminal = value; OnPropertyChanged(nameof(ColoringTerminal)); ConfigurationManager.ModifyConfig("coloring_terminal", value); } }
-        public int DownloadSource { get => downloadSource; set { downloadSource = value; OnPropertyChanged(nameof(DownloadSource)); ConfigurationManager.ModifyConfig("download_source",value); } }
+        public int DownloadSource { get => downloadSource; set { downloadSource = value; OnPropertyChanged(nameof(DownloadSource)); ConfigurationManager.ModifyConfig("download_source", value); } }
         public int DownloadThreads { get => downloadThreads; set { downloadThreads = value; OnPropertyChanged(nameof(DownloadThreads)); ConfigurationManager.ModifyConfig("download_threads", value); } }
         public int DownloadLimit { get => downloadLimit; set { downloadLimit = value; OnPropertyChanged(nameof(DownloadLimit)); ConfigurationManager.ModifyConfig("download_limit", value); } }
         public bool PanelEnable { get => panelEnable; set { panelEnable = value; OnPropertyChanged(nameof(PanelEnable)); ConfigurationManager.ModifyConfig("panel_enable", value); } }
@@ -64,41 +66,48 @@ namespace LSL.ViewModels
         public ConfigViewModel()
         {
             #region 读取配置文件
-            autoEula = (bool)ConfigurationManager.ReadConfig("auto_eula");
-            appPriorityCache = (int)ConfigurationManager.ReadConfig("app_priority");
-            endServerWhenClose = (bool)ConfigurationManager.ReadConfig("end_server_when_close");
-            daemon = (bool)ConfigurationManager.ReadConfig("daemon");
-            javaSelectionCache = (int)ConfigurationManager.ReadConfig("java_selection");
-            autoFindJava = (bool)ConfigurationManager.ReadConfig("auto_find_java");
-            outputEncodeCache = (int)ConfigurationManager.ReadConfig("output_encode");
-            inputEncodeCache = (int)ConfigurationManager.ReadConfig("input_encode");
-            coloringTerminal = (bool)ConfigurationManager.ReadConfig("coloring_terminal");
-            downloadSourceCache = (int)ConfigurationManager.ReadConfig("download_source");
-            downloadThreadsCache = (int)ConfigurationManager.ReadConfig("download_threads");
-            downloadLimitCache = (int)ConfigurationManager.ReadConfig("download_limit");
-            panelEnable = (bool)ConfigurationManager.ReadConfig("panel_enable");
-            panelPortCache = (int)ConfigurationManager.ReadConfig("panel_port");
-            panelMonitor = (bool)ConfigurationManager.ReadConfig("panel_monitor");
-            panelTerminal = (bool)ConfigurationManager.ReadConfig("panel_terminal");
-            autoUpdate = (bool)ConfigurationManager.ReadConfig("auto_update");
-            betaUpdate = (bool)ConfigurationManager.ReadConfig("beta_update");
+            try
+            {
+                autoEula = (bool)ConfigurationManager.ReadConfig("auto_eula");
+                appPriorityCache = (int)ConfigurationManager.ReadConfig("app_priority");
+                endServerWhenClose = (bool)ConfigurationManager.ReadConfig("end_server_when_close");
+                daemon = (bool)ConfigurationManager.ReadConfig("daemon");
+                javaSelectionCache = (int)ConfigurationManager.ReadConfig("java_selection");
+                autoFindJava = (bool)ConfigurationManager.ReadConfig("auto_find_java");
+                outputEncodeCache = (int)ConfigurationManager.ReadConfig("output_encode");
+                inputEncodeCache = (int)ConfigurationManager.ReadConfig("input_encode");
+                coloringTerminal = (bool)ConfigurationManager.ReadConfig("coloring_terminal");
+                downloadSourceCache = (int)ConfigurationManager.ReadConfig("download_source");
+                downloadThreadsCache = (int)ConfigurationManager.ReadConfig("download_threads");
+                downloadLimitCache = (int)ConfigurationManager.ReadConfig("download_limit");
+                panelEnable = (bool)ConfigurationManager.ReadConfig("panel_enable");
+                panelPortCache = (int)ConfigurationManager.ReadConfig("panel_port");
+                panelMonitor = (bool)ConfigurationManager.ReadConfig("panel_monitor");
+                panelTerminal = (bool)ConfigurationManager.ReadConfig("panel_terminal");
+                autoUpdate = (bool)ConfigurationManager.ReadConfig("auto_update");
+                betaUpdate = (bool)ConfigurationManager.ReadConfig("beta_update");
+            }
+            catch (Exception)
+            {
+                PopupPublisher.Instance.PopupMessage("deadlyError", "配置文件出错，请删除主程序目录下LSL文件夹中的config.json后重试。");
+            }
             #endregion
 
             #region 缓存验证
-            if (appPriorityCache >= 0 && appPriorityCache <= 2) 
-                appPriority = appPriorityCache; 
+            if (appPriorityCache >= 0 && appPriorityCache <= 2)
+                appPriority = appPriorityCache;
             else ConfigurationManager.ModifyConfig("app_priority", 1);
 
-            if (javaSelectionCache >= 0) 
-                javaSelection = javaSelectionCache; 
+            if (javaSelectionCache >= 0)
+                javaSelection = javaSelectionCache;
             else ConfigurationManager.ModifyConfig("java_selection", 0);
 
-            if (outputEncodeCache >= 1 && outputEncodeCache <= 2) 
-                outputEncode = outputEncodeCache; 
+            if (outputEncodeCache >= 1 && outputEncodeCache <= 2)
+                outputEncode = outputEncodeCache;
             else ConfigurationManager.ModifyConfig("output_encode", 1);
 
-            if (inputEncodeCache >= 0 && inputEncodeCache <= 2) 
-                inputEncode = inputEncodeCache; 
+            if (inputEncodeCache >= 0 && inputEncodeCache <= 2)
+                inputEncode = inputEncodeCache;
             else ConfigurationManager.ModifyConfig("input_encode", 0);
 
             if (downloadSourceCache >= 0 && downloadSourceCache <= 1)
@@ -113,8 +122,8 @@ namespace LSL.ViewModels
                 downloadLimit = downloadLimitCache;
             else ConfigurationManager.ModifyConfig("download_limit", 0);
 
-            if (panelPortCache >= 8080 && panelPortCache <= 65535) 
-                panelPort = panelPortCache; 
+            if (panelPortCache >= 8080 && panelPortCache <= 65535)
+                panelPort = panelPortCache;
             else ConfigurationManager.ModifyConfig("panel_port", 25000);
             #endregion
         }

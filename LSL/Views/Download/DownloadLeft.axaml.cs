@@ -10,7 +10,7 @@ namespace LSL.Views.Download
         public DownloadLeft()
         {
             InitializeComponent();
-            LeftChangedPublisher.Instance.MessageReceived += HandleLeftChangeReceived;
+            LeftChangedPublisher.Instance.LeftMessageReceived += HandleLeftChangeReceived;
         }
         private void HandleLeftChangeReceived(string navigateTarget)
         {

@@ -56,7 +56,8 @@ public static class ViewFactory
             case "About":
                 return new About();
             default:
-                throw new ArgumentException($"No view found for name: {viewName}");
+                PopupPublisher.Instance.PopupMessage("deadlyError", $"未找到视图: {viewName}，应用程序可能已经损坏。");
+                return null;
         }
     }
 }
@@ -84,13 +85,13 @@ public class BarChangedPublisher
     public delegate void BarChangedEventHandler(string navigateTarget);
 
     // 定义事件  
-    public event BarChangedEventHandler MessageReceived;
+    public event BarChangedEventHandler BarMessageReceived;
 
     // 触发事件的方法  
     protected virtual void BarChangedReceived(string navigateTarget)
     {
         // 检查是否有任何订阅者  
-        BarChangedEventHandler handler = MessageReceived;
+        BarChangedEventHandler handler = BarMessageReceived;
         if (handler != null)
         {
             // 如果有，则调用它们  
@@ -129,13 +130,13 @@ public class LeftChangedPublisher
     public delegate void LeftChangedEventHandler(string navigateLeftTarget);
 
     // 定义事件  
-    public event LeftChangedEventHandler MessageReceived;
+    public event LeftChangedEventHandler LeftMessageReceived;
 
     // 触发事件的方法  
     protected virtual void LeftChangedReceived(string navigateLeftTarget)
     {
         // 检查是否有任何订阅者  
-        LeftChangedEventHandler handler = MessageReceived;
+        LeftChangedEventHandler handler = LeftMessageReceived;
         if (handler != null)
         {
             // 如果有，则调用它们  
@@ -152,6 +153,121 @@ public class LeftChangedPublisher
 }
 #endregion
 
+#region 定义弹窗事件发布
+public class PopupPublisher
+{
+    private static PopupPublisher _instance;
+
+    private PopupPublisher() { }
+
+    public static PopupPublisher Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = new PopupPublisher();
+            }
+            return _instance;
+        }
+    }
+    // 定义事件委托  
+    public delegate void PopupEventHandler(string Type, string PopupInfo);
+
+    // 定义事件  
+    public event PopupEventHandler PopupMessageReceived;
+
+    // 触发事件的方法  
+    protected virtual void PopupReceived(string Type, string PopupInfo)
+    {
+        // 检查是否有任何订阅者  
+        PopupEventHandler handler = PopupMessageReceived;
+        if (handler != null)
+        {
+            // 如果有，则调用它们  
+            handler(Type, PopupInfo);
+        }
+    }
+
+    // 一个公共方法，用于从类的外部请求触发事件  
+    public void PopupMessage(string Type, string PopupInfo)
+    {
+        // 这里，我们直接调用受保护的方法来触发事件  
+        PopupReceived(Type, PopupInfo);
+    }
+}
+#endregion
+
+#region 定义弹窗关闭事件发布  
+public class PopupClosePublisher
+{
+    private static PopupClosePublisher _instance;
+
+    // 私有构造函数，实现单例模式  
+    private PopupClosePublisher() { }
+
+    // 单例访问器  
+    public static PopupClosePublisher Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = new PopupClosePublisher();
+            }
+            return _instance;
+        }
+    }
+
+    // 定义事件委托  
+    public delegate void PopupCloseHandler();
+
+    // 定义无参数事件  
+    public event PopupCloseHandler PopupCloseOccurred;
+
+    // 触发事件的方法  
+    protected virtual void OnPopupCloseOccurred()
+    {
+        // 检查是否有任何订阅者  
+        PopupCloseHandler handler = PopupCloseOccurred;
+        if (handler != null)
+        {
+            // 如果有，则调用它们  
+            handler();
+        }
+    }
+
+    // 公共方法，用于从类的外部请求触发事件  
+    public void ClosePopup()
+    {
+        // 直接调用受保护的方法来触发事件  
+        OnPopupCloseOccurred();
+    }
+}
+#endregion
+
+// 示例用法
+/*
+class Program
+{
+    static void Main(string[] args)
+    {
+        // 订阅事件  
+        PopupClosePublisher.Instance.PopupCloseOccurred += Instance_PopupCloseEventOccurred;
+
+        // 触发事件  
+        PopupClosePublisher.Instance.ClosePopup();
+
+        // 取消订阅（在实际应用中，这可能在某个地方根据需要进行）  
+        // PopupClosePublisher.Instance.PopupCloseEventOccurred -= Instance_PopupCloseEventOccurred;  
+    }
+
+    // 事件处理方法  
+    private static void Instance_PopupCloseEventOccurred()
+    {
+        Console.WriteLine("PopupCloseEventOccurred 事件被触发！");
+    }
+}*/
 
 #region INavigationService 接口定义  
 public interface INavigationService
@@ -164,7 +280,7 @@ public interface INavigationService
 public class ViewModelBase : ReactiveObject
 {
     // 实现INotifyPropertyChanged
-    // 虽然使用了CommunityToolkit，但是原有的ReactiveUI部分必须依赖ReactiveObject，不能删
+    // 虽然使用了CommunityToolkit，但是有一部分必须依赖ReactiveObject
     public event PropertyChangedEventHandler PropertyChanged;
 
     protected virtual void OnPropertyChanged(string propertyName)
