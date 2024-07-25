@@ -685,23 +685,40 @@ Warning:This part uses machine translation, the Chinese part shall prevail.
 简体中文：
 在GPL v3.0的基础上，附加如下条款：
 第一条 对于采用本软件源码及其修改版本，且与本软件无明显功能差异的项目，特别地：
-  1、禁止售卖、充值、广告等商业性行为（不包括无偿赞助）。
-  2、不允许申请专利与商标。
+  1、禁止任何形式的售卖、充值服务、嵌入广告等直接或间接的商业性利用，但无偿赞助除外。
+  2、禁止就该软件及其衍生作品申请专利与商标，但本条款不阻止第三方对其独立创新部分申请专利或商标。
   3、必须完整使用GPL v3.0及本附加条款作为开源协议。
 第二条 对于采用本软件UI部分源码及其修改版本，且与本软件有明显功能差异的项目，可以自由选择开源协议。
 第三条 对于参考了本软件UI设计，但未使用源码的项目，与本软件无法律关系。
-第四条 禁止在未经原开发者允许的情况下，私自将本软件源代码托管至任何代码托管平台，尤其禁止冒充原开发者进行托管。
+第四条 严禁私自托管本软件的90%及以上原始源代码至任何代码托管平台，除非获得原开发者或团队的明确书面或口头许可。禁止任何个人、公司或团队冒充原开发者或团队，进行源代码托管、分发或其他相关活动。
 第五条 分发本软件时不得强制性收费，且必须附上本软件源代码仓库的URL。
 第六条 本附加条款内容与基本条款GPL v3.0有冲突的，以本附加条款为准。
+第七条 使用本软件源码，受本开源协议约束的项目的开发者可以视具体情况适当修改本附加条款中的适用主体，但不得曲解或篡改原附加条款的意义。
 
 English:
 On the basis of GPL v3.0, the following terms are added:
 Article 1: For projects that use the source code and its modified versions of this software, and have no significant functional differences from this software, specifically:
-  1. Selling, recharging, advertising and other commercial activities are prohibited (excluding free sponsorship).
-  2. Patent and trademark applications are not allowed.
-  3. GPL v3.0 and these additional terms must be fully used as the open source agreement.
+  1. Prohibit any form of direct or indirect commercial exploitation such as selling, charging for services, embedding advertisements, etc., with the exception of uncompensated sponsorships.
+  2. Prohibit the application for patents and trademarks related to the project and its derivative works, but this clause does not prevent third parties from applying for patents or trademarks for independently innovative portions.
+  3. The complete GPL v3.0 license along with these additional terms must be used as the open source license for the project.
 Article 2: For projects that use the UI source code and its modified versions of this software, and have significant functional differences from this software, they can freely choose the open source protocol.
 Article 3: For projects refers to the UI design of this software but does not use the source code, has no legal relationship with this software.
-Article 4: Hosting the source code of this software on any platform without the original developer's permission is prohibited, particularly impersonating the original developer for hosting.
+Article 4: It is strictly forbidden to host 90% or more of the original source code of this software on any code hosting platform without obtaining explicit written or verbal permission from the original developers or team. Any individual, company, or team is prohibited from impersonating the original developers or team for the purpose of source code hosting, distribution, or other related activities.
 Article 5: No mandatory fees are allowed when distributing this software, and the URL of the software source code repository must be attached.
 Article 6: In case of any conflict between the content of this additional clause and the basic clause GPL v3.0, this additional clause shall prevail.
+Article 7: Using the source code of this software, the developer of the project subject to this open source agreement may appropriately modify the applicable subjects in this additional terms according to the specific circumstances, but shall not distort or tamper with the meaning of the original additional terms.
+
+定义/Functions:
+Warning:This part uses machine translation, the Chinese part shall prevail.
+
+简体中文：
+主要功能：本软件的主要功能包括三项。一是对微软公司旗下Mojang Studios开发的Minecraft游戏服务端及其修改版本的下载与运行；二是提供相关MOD（游戏修改文件）的下载；三是支持这些组件的集成与管理。
+明显功能差异：明显功能差异指的是那些不直接涉及本软件上述三项主要功能中的任意一项的功能或特性。
+私自托管：私自托管指的是非原开发者或团队，在未经原开发者或团队明确书面或口头许可的情况下，擅自将本软件的90%及以上原始源代码托管至代码托管平台的行为。
+冒充原开发者：冒充原开发者是指任何个人、公司或团队，通过伪造、捏造或有意模仿原开发者或团队的名称、信息，对本软件进行源代码托管和分发的行为。
+
+English:
+Main Functions: The primary functions of this software encompass three areas: Firstly, downloading and running the server for the game Minecraft, developed by Mojang Studios under Microsoft, along with its modified versions; secondly, providing downloads of relevant MODs (files that modify the game); and thirdly, supporting the integration and management of these components.
+Significant Functional Differences: Significant functional differences refer to those features or characteristics that do not directly relate to any of the three primary functions outlined above for this software.
+Unauthorized Hosting: Unauthorized hosting refers to the act of non-original developers or teams hosting 90% or more of the original source code of this software on code hosting platforms without explicit written or verbal permission from the original developers or teams.
+Impersonating Original Developers: Impersonating original developers refers to any individual, company, or team that forges, fabricates, or intentionally mimics the name or information of the original developers or teams to host and distribute the source code of this software.
