@@ -15,11 +15,11 @@ public partial class MainWindow : Window
         PopupPublisher.Instance.PopupMessageReceived += HandlePopupMessageReceived;// 注册消息接收事件
         PopupClosePublisher.Instance.PopupCloseOccurred += PopupClosing;// 注册弹窗关闭事件
         //初始化配置文件，虽然放在这里有些不应该，但是App里面没有初始化相关代码，只能这么干了
-        ConfigurationManager.WriteInitialConfig();
+        ConfigManager.WriteInitialConfig();
     }
     private void MainWindow_Closing(object sender, CancelEventArgs e)
     {
-        bool EnableDaemon = (bool)ConfigurationManager.ReadConfig("daemon");
+        bool EnableDaemon = (bool)ConfigManager.ReadConfig("daemon");
         if (EnableDaemon == true)
         {
             e.Cancel = true;

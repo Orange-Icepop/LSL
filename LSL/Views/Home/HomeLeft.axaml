@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="600"
              x:Class="LSL.Views.Home.HomeLeft">
 	<DockPanel Width="350">
@@ -11,6 +12,6 @@
 			<Button Grid.Row="0" Grid.Column="1" Content="面板设置" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="50" Width="120" Command="{Binding PanelConfigCmd}"/>
 		</Grid>
 		<Button DockPanel.Dock="Bottom" Content="启动服务器" Classes="blue" Margin="0,0,0,20" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="60" Width="250"/>
-		<ComboBox DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="30" Width="250" Margin="0,0,0,20"></ComboBox>
+		<ComboBox Name="ServerList" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="30" Width="250" Margin="0,0,0,20"></ComboBox>
 	</DockPanel>
 </UserControl>

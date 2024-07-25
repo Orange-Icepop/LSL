@@ -13,8 +13,15 @@ class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
+        try
+        {
+            BuildAvaloniaApp()
+            .StartWithClassicDesktopLifetime(args);
+        }
+        catch (Exception ex)
+        {
+            PopupPublisher.Instance.PopupMessage("deadlyError", ex.Message);
+        }
     }
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()

@@ -38,7 +38,7 @@ namespace LSL.Services
             }
             else
             {
-                PopupPublisher.Instance.PopupMessage("deadlyError", $"{keyPath} 不存在。请备份并删除配置文件重试。");
+                throw new ArgumentException($"{keyPath} 不存在。请备份并删除配置文件重试。");
             }
 
 
@@ -60,7 +60,7 @@ namespace LSL.Services
 
             if (token == null)
             {
-                PopupPublisher.Instance.PopupMessage("deadlyError", $"{keyPath} not existed.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
+                throw new ArgumentException($"{keyPath} not existed.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
             }
 
             switch (token.Type)
@@ -72,8 +72,7 @@ namespace LSL.Services
                 case JTokenType.Boolean:
                     return token.Value<bool>();
                 default:
-                    PopupPublisher.Instance.PopupMessage("deadlyError", $"Key '{keyPath}' is not a string, number, or bool.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
-                    return null;
+                    throw new ArgumentException($"Key '{keyPath}' is not a string, number, or bool.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
             }
         }
         #endregion
@@ -83,23 +82,6 @@ namespace LSL.Services
         {
             string json = File.ReadAllText(filePath);
             JObject jObject = JObject.Parse(json);
-            /*
-            //鉴定类型
-            if (keyValue is bool boolValue)
-            {
-                jObject.Add(key, boolValue);
-            }
-            else if (keyValue is int intValue)
-            {
-                jObject.Add(key, intValue);
-            }
-            else if (keyValue is string stringValue)
-            {
-                jObject.Add(key, stringValue);
-            }
-            else { throw new FormatException($"{keyValue} is not an expected format"); }
-            */
-
             // 尝试找到路径的父对象或父数组  
             string[] pathParts = keyPath.Split('.');
             string lastPart = pathParts.Last();
@@ -107,31 +89,33 @@ namespace LSL.Services
 
             JToken parentToken = parentPath.Length > 0 ? jObject.SelectToken(parentPath) : jObject;
 
-            if (parentToken is null)
+            if (parentToken is not null)
             {
-                throw new ArgumentException("无法找到添加新值的JSON路径");
-            }
+                if (parentToken is JArray jArray)
+                {
+                    // 如果是数组，添加新项（注意：这里假设jsonToAdd可以直接转换为JToken或简单类型）  
+                    jArray.Add(JToken.FromObject(keyValue));
+                }
+                else if (parentToken is JObject jParentObject)
+                {
+                    // 如果是对象，添加新属性  
+                    jParentObject.Add(lastPart, JToken.FromObject(keyValue));
+                }
+                else
+                {
+                    throw new ArgumentException("指定的JSON路径不是对象或数组");
+                }
 
-            if (parentToken is JArray jArray)
-            {
-                // 如果是数组，添加新项（注意：这里假设jsonToAdd可以直接转换为JToken或简单类型）  
-                jArray.Add(JToken.FromObject(keyValue));
-            }
-            else if (parentToken is JObject jParentObject)
-            {
-                // 如果是对象，添加新属性  
-                jParentObject.Add(lastPart, JToken.FromObject(keyValue));
+                // 将修改后的JObject转换回字符串并写回文件  
+                string output = jObject.ToString();
+                File.WriteAllText(filePath, output);
+
+                Debug.WriteLine($"Key {keyPath} added successfully");
             }
             else
             {
-                throw new ArgumentException("指定的JSON路径不是对象或数组");
+                throw new ArgumentException("无法找到添加新值的JSON路径");
             }
-
-            // 将修改后的JObject转换回字符串并写回文件  
-            string output = jObject.ToString();
-            File.WriteAllText(filePath, output);
-
-            Debug.WriteLine($"Key {keyPath} added successfully");
 
         }
         #endregion
@@ -143,7 +127,7 @@ namespace LSL.Services
             // 检查文件路径是否有效  
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                PopupPublisher.Instance.PopupMessage("deadlyError", $"{nameof(filePath)}文件不存在。下一次启动时LSL将自动修复这个错误。");
+                throw new ArgumentException($"{nameof(filePath)}文件不存在。下一次启动时LSL将自动修复这个错误。");
             }
 
             // 确保文件路径的目录存在  
@@ -156,7 +140,7 @@ namespace LSL.Services
 
     }
     // 配置文件管理  
-    public class ConfigurationManager
+    public class ConfigManager
     {
 
         // 配置文件的路径  
@@ -166,7 +150,7 @@ namespace LSL.Services
         public static readonly string _serversPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Servers");
 
         // 初始化配置文件的路径  
-        static ConfigurationManager()
+        static ConfigManager()
         {
             // 确保LSL文件夹存在  
             Directory.CreateDirectory(Path.GetDirectoryName(_configFilePath)!);
@@ -174,7 +158,7 @@ namespace LSL.Services
             Directory.CreateDirectory(Path.GetDirectoryName(_javaConfigPath)!);
             Directory.CreateDirectory(Path.GetDirectoryName(_serversPath)!);
         }
-        private ConfigurationManager()
+        private ConfigManager()
         {
 
         }
@@ -227,7 +211,7 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 注册服务器
+        #region 注册服务器方法RegisterServer
         public static void RegisterServer(int id, string serverName)
         {
             if (!File.Exists(_serverConfigPath))
@@ -269,7 +253,7 @@ namespace LSL.Services
             }
             catch (Exception ex)
             {
-                PopupPublisher.Instance.PopupMessage("deadlyError", $"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。");
+                throw new ArgumentException($"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。");
             }
         }
 
@@ -283,8 +267,7 @@ namespace LSL.Services
             }
             catch (Exception ex)
             {
-                PopupPublisher.Instance.PopupMessage("deadlyError", $"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。");
-                return null;
+                throw new ArgumentException($"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。");
             }
         }
 
@@ -293,19 +276,21 @@ namespace LSL.Services
     public class JavaManager//java相关服务
     {
         JavaFetcher javaFetcher = new JavaFetcher();
-        //获取java列表
+
+        #region 获取java列表
         public async void DetectJava()
         {
             var JavaList = await javaFetcher.FetchAsync();//调用MinecraftLaunch的API查找JAVA
-            JsonHelper.ClearJson(ConfigurationManager._javaConfigPath);//清空Java记录
+            JsonHelper.ClearJson(ConfigManager._javaConfigPath);//清空Java记录
             //遍历写入Java信息
             int id = 1;
             foreach (JavaEntry javalist in JavaList)
             {
                 string writtenId = id.ToString();
-                JsonHelper.AddJson(ConfigurationManager._javaConfigPath, writtenId, new { version = javalist.JavaVersion, path = javalist.JavaPath });
+                JsonHelper.AddJson(ConfigManager._javaConfigPath, writtenId, new { version = javalist.JavaVersion, path = javalist.JavaPath });
                 id++;
             }
         }
+        #endregion
     }
 }

@@ -2,25 +2,29 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using LSL.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace LSL.Views
+namespace LSL.Controls
 {
+    public enum ColorType
+    {
+        Default,
+        Highlight
+    }
     public partial class MyButton : Button
     {
-        //定义title
-        private static readonly StyledProperty<string> TextProperty =
-            AvaloniaProperty.Register<MyCard, string>(nameof(Text), defaultBindingMode: BindingMode.OneWay);
+        public static readonly StyledProperty<ColorType> ColorTypeProperty =AvaloniaProperty.Register<MyButton, ColorType>(nameof(ColorType), ColorType.Default);
 
-        public string Text
+        public ColorType ColorType
         {
-            get => GetValue(TextProperty);
-            set => SetValue(TextProperty, value);
+            get => GetValue(ColorTypeProperty);
+            set => SetValue(ColorTypeProperty, value);
         }
-
         static MyButton()
         {
-
+            // 你可以在这里注册附加属性，如果需要的话  
         }
+
         public MyButton()
         {
             InitializeComponent();

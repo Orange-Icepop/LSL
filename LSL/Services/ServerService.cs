@@ -10,10 +10,12 @@ using System.Threading.Tasks;
 
 namespace LSL.Services
 {
-    public partial class DaemonService : BackgroundService
+    /*
+    public partial class ServerService : BackgroundService
     {
+        
         private readonly CancellationToken _cancellationToken;
-        public DaemonService(CancellationToken cancellationToken)
+        public ServerService(CancellationToken cancellationToken)
         {
             _cancellationToken = cancellationToken;
         }
@@ -30,7 +32,7 @@ namespace LSL.Services
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                Debug.WriteLine($"DaemonService error: {ex.Message}");
+                Debug.WriteLine($"ServerService error: {ex.Message}");
             }
         }
 
@@ -44,5 +46,8 @@ namespace LSL.Services
                 await Task.Delay(1000, stoppingToken); // 模拟长时间运行的任务  
             }
         }
-    }
+    }*/
+
+
+
 }

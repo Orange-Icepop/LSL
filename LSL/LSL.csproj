@@ -32,14 +32,19 @@
     <Compile Remove="ViewModels\SharedData.cs" />
   </ItemGroup>
 
+  
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
-    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+    <None Remove="Assets\SmileySans-Oblique.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.0.2" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.0.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.2" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.2" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.2" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="MinecraftLaunch" Version="3.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -93,5 +98,9 @@
 
   <ItemGroup>
     <UpToDateCheckInput Remove="Views\Server\ServerStat.axaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\Download\AddServer.axaml" />
   </ItemGroup>
 </Project>

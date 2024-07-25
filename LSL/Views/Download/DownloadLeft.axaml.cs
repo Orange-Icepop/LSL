@@ -22,6 +22,7 @@ namespace LSL.Views.Download
         {
             AutoDownButton.Classes.Remove("selLeft");
             ManualDownButton.Classes.Remove("selLeft");
+            AddServerButton.Classes.Remove("selLeft");
             ModDownButton.Classes.Remove("selLeft");
             switch (NowPage)
             {
@@ -31,9 +32,16 @@ namespace LSL.Views.Download
                 case "ManualDown":
                     ManualDownButton.Classes.Add("selLeft");
                     break;
+                case "AddServer":
+                    AddServerButton.Classes.Add("selLeft");
+                    break;
                 case "ModDown":
                     ModDownButton.Classes.Add("selLeft");
                     break;
+                case "AddCore":
+                    AddServerButton.Classes.Add("selLeft");
+                    break;
+
             }
             Debug.WriteLine("Left Color Switched:" + NowPage);
         }

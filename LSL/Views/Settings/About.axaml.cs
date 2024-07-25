@@ -7,7 +7,7 @@ namespace LSL.Views.Settings
 {
     public partial class About : UserControl
     {
-        //private ConfigurationManager configManager = new ConfigurationManager();
+        //private ConfigManager configManager = new ConfigManager();
         public About()
         {
             InitializeComponent();

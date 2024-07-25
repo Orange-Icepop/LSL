@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using LSL.Views.Download;
+using LSL.Views.Download.ASViews;
 using LSL.Views.Home;
 using LSL.Views.Server;
 using LSL.Views.Settings;
@@ -42,8 +43,13 @@ public static class ViewFactory
                 return new AutoDown();
             case "ManualDown":
                 return new ManualDown();
+            case "AddServer":
+                return new AddServer();
             case "ModDown":
                 return new ModDown();
+            //ASViews
+            case "AddCore":
+                return new AddCore();
             //Settings
             case "Common":
                 return new Common();
@@ -56,8 +62,7 @@ public static class ViewFactory
             case "About":
                 return new About();
             default:
-                PopupPublisher.Instance.PopupMessage("deadlyError", $"未找到视图: {viewName}，应用程序可能已经损坏。");
-                return null;
+                throw new ArgumentException($"未找到视图: {viewName}，应用程序可能已经损坏。");
         }
     }
 }

@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using System.Diagnostics;
 using LSL.Services;
+using System.Collections.ObjectModel;
 
 //导航部分开始
 public class MainViewModel : ViewModelBase, INavigationService
@@ -131,6 +132,5 @@ public class MainViewModel : ViewModelBase, INavigationService
         Debug.WriteLine("Right Page Switched:" + viewName);
     }
     #endregion
-
 
 }

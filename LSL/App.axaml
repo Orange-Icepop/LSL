@@ -9,6 +9,8 @@
 		<SolidColorBrush x:Key="OBlue" Color="#33e0e5"/>
 		<SolidColorBrush x:Key="OBlueLight" Color="#c7ffee"/>
 		<SolidColorBrush x:Key="OBlueBar" Color="#33f3e9"/>
+		<SolidColorBrush x:Key="OBlueWhite" Color="#e3fff7"/>
+		<FontFamily x:Key="SmileySans">avares://LSL/Assets/SmileySans.ttf#Smiley Sans</FontFamily>
 	</Application.Resources>
     
 	<Application.Styles>

@@ -1,8 +1,29 @@
 <Button xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		     xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
-             x:Class="LSL.Views.MyButton">
-	<TextBlock Text="{Binding $parent[0].Text}"/>
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
+        x:Class="LSL.Controls.MyButton">
+	<Button.Styles>
+		<Style Selector="local|MyButton">
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Border BorderBrush="{TemplateBinding BorderBrush}"
+							BorderThickness="{TemplateBinding BorderThickness}"
+							Background="{TemplateBinding Background}"
+							CornerRadius="5">
+						<ContentPresenter Content="{TemplateBinding Content}"
+										  ContentTemplate="{TemplateBinding ContentTemplate}"
+										  HorizontalAlignment="Center"
+										  VerticalAlignment="Center"/>
+					</Border>
+				</ControlTemplate>
+			</Setter>
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="Foreground" Value="Black"/>
+			<Setter Property="BorderThickness" Value="2"/>
+			<Setter	Property="BorderBrush" Value="Black"/>
+			<Setter Property="FontSize" Value="20"/>
+		</Style>
+	</Button.Styles>
 </Button>
