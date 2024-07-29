@@ -7,7 +7,34 @@
              x:Class="LSL.Views.Download.ASViews.AddCore">
 	<StackPanel>
 		<local:MyCard Text="从核心添加服务器">
-			
+			<StackPanel>
+				<DockPanel Margin="30,50,0,5">
+					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器名称</TextBlock>
+					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewServerName}"></TextBox>
+				</DockPanel>
+				<DockPanel Margin="30,10,0,5">
+					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">核心文件</TextBlock>
+					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding CorePath, Mode=TwoWay}"/>
+					<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" Click="OpenFileCmd" Width="100" Height="30" Margin="10,0,10,0">选择核心</local:MyButton>
+				</DockPanel>
+				<DockPanel Margin="30,10,0,5">
+					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">内存大小</TextBlock>
+					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Text="{Binding MinMemory}"/>
+					<TextBlock VerticalAlignment="Center" Margin="10,0,10,0">MB ~</TextBlock>
+					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Text="{Binding MaxMemory}"/>
+					<TextBlock VerticalAlignment="Center" Margin="10,0,10,0">MB</TextBlock>
+				</DockPanel>
+				<DockPanel Margin="30,10,0,5">
+					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">Java选择</TextBlock>
+					<ComboBox Name="Java" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" SelectedIndex="{Binding JavaId}"/>
+					<local:MyButton Name="GetJavaBtn" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Height="30" Margin="10,0,0,0" Command="{Binding SearchForJava}">搜索Java</local:MyButton>
+				</DockPanel>
+				<DockPanel Margin="30,10,0,5">
+					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">附加JVM参数（不明白者慎填）</TextBlock>
+					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding ExtJvm}"/>
+				</DockPanel>
+				<local:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Height="30" Margin="30,10,0,5" ColorType="Highlight" Command="{Binding ConfirmAddServer}">确认添加</local:MyButton>
+			</StackPanel>
 		</local:MyCard>
 	</StackPanel>
 </UserControl>

@@ -9,19 +9,20 @@
 		<TextBlock DockPanel.Dock="Top" Text="服务器列表" Margin="10,10,0,0" Foreground="Gray"/>
 		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10">
 		</ComboBox>
-		<Button Classes="rightblue"
+		<local:MyButton
 		Name="LaunchServerButton"
 		Command="{Binding LeftViewCmd}"
 		CommandParameter="DownloadLeft"
 		DockPanel.Dock="Top"
+		ColorType="Highlight"
 		VerticalAlignment="Center"
 		HorizontalAlignment="Center"
-		Width="120"
-		Height="30">启动服务器</Button>
+		Width="150"
+		Height="40">启动服务器</local:MyButton>
 		<Button Width="250" DockPanel.Dock="Top" Name="StatusButton" Content="状态" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ServerStat"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="TerminalButton" Content="终端" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ServerTerminal"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="ConfButton" Content="设置" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ServerConf"/>
-		<Button Classes="right"
+		<local:MyButton Classes="right"
 				Name="AddServerButton"
 				Command="{Binding LeftViewCmd}"
 				CommandParameter="DownloadLeft"
@@ -30,6 +31,6 @@
 				HorizontalAlignment="Center"
 				Margin="0,0,0,10"
 				Width="130"
-				Height="40">添加服务器</Button>
+				Height="40">添加服务器</local:MyButton>
 	</DockPanel>
 </UserControl>

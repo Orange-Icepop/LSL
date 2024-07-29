@@ -33,25 +33,24 @@ namespace LSL.ViewModels
         private bool autoUpdate;
         private bool betaUpdate;
         //可观测对象，最烦的一堆史
-        //communitytoolkit咋就不允许修改操作呢
-        public bool AutoEula { get => autoEula; set { autoEula = value; OnPropertyChanged(nameof(AutoEula)); ConfigManager.ModifyConfig("auto_eula", value); } }
-        public int AppPriority { get => appPriority; set { appPriority = value; OnPropertyChanged(nameof(AppPriority)); ConfigManager.ModifyConfig("app_priority", value); } }
-        public bool EndServerWhenClose { get => endServerWhenClose; set { endServerWhenClose = value; OnPropertyChanged(nameof(EndServerWhenClose)); ConfigManager.ModifyConfig("end_server_when_close", value); } }
-        public bool Daemon { get => daemon; set { daemon = value; OnPropertyChanged(nameof(Daemon)); ConfigManager.ModifyConfig("daemon", value); } }
-        public int JavaSelection { get => javaSelection; set { javaSelection = value; OnPropertyChanged(nameof(JavaSelection)); ConfigManager.ModifyConfig("java_selection", value); } }
-        public bool AutoFindJava { get => autoFindJava; set { autoFindJava = value; OnPropertyChanged(nameof(AutoFindJava)); ConfigManager.ModifyConfig("auto_find_java", value); } }
-        public int OutputEncode { get => outputEncode; set { outputEncode = value; OnPropertyChanged(nameof(OutputEncode)); ConfigManager.ModifyConfig("output_encode", value); } }
-        public int InputEncode { get => inputEncode; set { inputEncode = value; OnPropertyChanged(nameof(InputEncode)); ConfigManager.ModifyConfig("input_encode", value); } }
-        public bool ColoringTerminal { get => coloringTerminal; set { coloringTerminal = value; OnPropertyChanged(nameof(ColoringTerminal)); ConfigManager.ModifyConfig("coloring_terminal", value); } }
-        public int DownloadSource { get => downloadSource; set { downloadSource = value; OnPropertyChanged(nameof(DownloadSource)); ConfigManager.ModifyConfig("download_source", value); } }
-        public int DownloadThreads { get => downloadThreads; set { downloadThreads = value; OnPropertyChanged(nameof(DownloadThreads)); ConfigManager.ModifyConfig("download_threads", value); } }
-        public int DownloadLimit { get => downloadLimit; set { downloadLimit = value; OnPropertyChanged(nameof(DownloadLimit)); ConfigManager.ModifyConfig("download_limit", value); } }
-        public bool PanelEnable { get => panelEnable; set { panelEnable = value; OnPropertyChanged(nameof(PanelEnable)); ConfigManager.ModifyConfig("panel_enable", value); } }
-        public int PanelPort { get => panelPort; set { panelPort = value; OnPropertyChanged(nameof(PanelPort)); ConfigManager.ModifyConfig("panel_port", value); } }
-        public bool PanelMonitor { get => panelMonitor; set { panelMonitor = value; OnPropertyChanged(nameof(PanelMonitor)); ConfigManager.ModifyConfig("panel_monitor", value); } }
-        public bool PanelTerminal { get => panelTerminal; set { panelTerminal = value; OnPropertyChanged(nameof(PanelTerminal)); ConfigManager.ModifyConfig("panel_terminal", value); } }
-        public bool AutoUpdate { get => autoUpdate; set { autoUpdate = value; OnPropertyChanged(nameof(AutoUpdate)); ConfigManager.ModifyConfig("auto_update", value); } }
-        public bool BetaUpdate { get => betaUpdate; set { betaUpdate = value; OnPropertyChanged(nameof(BetaUpdate)); ConfigManager.ModifyConfig("auto_eula", value); } }
+        public bool AutoEula { get => autoEula; set { this.RaiseAndSetIfChanged(ref autoEula, value); ConfigManager.ModifyConfig("auto_eula", value); } }
+        public int AppPriority { get => appPriority; set { this.RaiseAndSetIfChanged(ref appPriority, value); ; ConfigManager.ModifyConfig("app_priority", value); } }
+        public bool EndServerWhenClose { get => endServerWhenClose; set { this.RaiseAndSetIfChanged(ref endServerWhenClose, value); ConfigManager.ModifyConfig("end_server_when_close", value); } }
+        public bool Daemon { get => daemon; set { this.RaiseAndSetIfChanged(ref daemon, value); ConfigManager.ModifyConfig("daemon", value); } }
+        public int JavaSelection { get => javaSelection; set { this.RaiseAndSetIfChanged(ref javaSelection, value); ConfigManager.ModifyConfig("java_selection", value); } }
+        public bool AutoFindJava { get => autoFindJava; set { this.RaiseAndSetIfChanged(ref autoFindJava, value); ConfigManager.ModifyConfig("auto_find_java", value); } }
+        public int OutputEncode { get => outputEncode; set { this.RaiseAndSetIfChanged(ref outputEncode, value); ConfigManager.ModifyConfig("output_encode", value); } }
+        public int InputEncode { get => inputEncode; set { this.RaiseAndSetIfChanged(ref inputEncode, value); ConfigManager.ModifyConfig("input_encode", value); } }
+        public bool ColoringTerminal { get => coloringTerminal; set { this.RaiseAndSetIfChanged(ref coloringTerminal, value); ConfigManager.ModifyConfig("coloring_terminal", value); } }
+        public int DownloadSource { get => downloadSource; set { this.RaiseAndSetIfChanged(ref downloadSource, value); ConfigManager.ModifyConfig("download_source", value); } }
+        public int DownloadThreads { get => downloadThreads; set { this.RaiseAndSetIfChanged(ref downloadThreads, value); ConfigManager.ModifyConfig("download_threads", value); } }
+        public int DownloadLimit { get => downloadLimit; set { this.RaiseAndSetIfChanged(ref downloadLimit, value); ConfigManager.ModifyConfig("download_limit", value); } }
+        public bool PanelEnable { get => panelEnable; set { this.RaiseAndSetIfChanged(ref panelEnable, value); ConfigManager.ModifyConfig("panel_enable", value); } }
+        public int PanelPort { get => panelPort; set { this.RaiseAndSetIfChanged(ref panelPort, value); ConfigManager.ModifyConfig("panel_port", value); } }
+        public bool PanelMonitor { get => panelMonitor; set { this.RaiseAndSetIfChanged(ref panelMonitor, value); ConfigManager.ModifyConfig("panel_monitor", value); } }
+        public bool PanelTerminal { get => panelTerminal; set { this.RaiseAndSetIfChanged(ref panelTerminal, value); ConfigManager.ModifyConfig("panel_terminal", value); } }
+        public bool AutoUpdate { get => autoUpdate; set { this.RaiseAndSetIfChanged(ref autoUpdate, value); ConfigManager.ModifyConfig("auto_update", value); } }
+        public bool BetaUpdate { get => betaUpdate; set { this.RaiseAndSetIfChanged(ref betaUpdate, value); ConfigManager.ModifyConfig("auto_eula", value); } }
         //缓冲验证变量
         private int appPriorityCache;
         private int javaSelectionCache;
@@ -63,9 +62,9 @@ namespace LSL.ViewModels
         private int panelPortCache;
         #endregion
 
-        public ConfigViewModel()
+        #region 读取配置文件
+        public void GetConfig()
         {
-            #region 读取配置文件
             try
             {
                 autoEula = (bool)ConfigManager.ReadConfig("auto_eula");
@@ -91,7 +90,10 @@ namespace LSL.ViewModels
             {
                 throw new ArgumentException("配置文件出错，请删除主程序目录下LSL文件夹中的config.json后重试。");
             }
-            #endregion
+        }
+        #endregion
+        public ConfigViewModel()
+        {
 
             #region 缓存验证
             if (appPriorityCache >= 0 && appPriorityCache <= 2)
@@ -128,10 +130,10 @@ namespace LSL.ViewModels
             #endregion
         }
 
-        JavaManager javaManager = new JavaManager();
+        GameManager gameManager = new GameManager();
         public void GetJava()
         {
-            javaManager.DetectJava();
+            gameManager.DetectJava();
         }
 
     }

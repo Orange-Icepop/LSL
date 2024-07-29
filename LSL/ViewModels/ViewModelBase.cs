@@ -284,12 +284,13 @@ public interface INavigationService
 
 public class ViewModelBase : ReactiveObject
 {
+    /*
     // 实现INotifyPropertyChanged
     // 虽然使用了CommunityToolkit，但是有一部分必须依赖ReactiveObject
-    public event PropertyChangedEventHandler PropertyChanged;
+    public new event PropertyChangedEventHandler PropertyChanged;
 
     protected virtual void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
+    }*/
 }

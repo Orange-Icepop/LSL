@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="600"
              x:Class="LSL.Views.Download.DownloadLeft">
 	<DockPanel Width="150">
@@ -11,6 +12,6 @@
 		<Button Width="150" DockPanel.Dock="Top" Name="AddServerButton" Content="导入服务器" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="AddServer"/>
 		<TextBlock DockPanel.Dock="Top" Text="其他资源" Margin="10,10,0,0" Foreground="Gray"/>
 		<Button Width="150" DockPanel.Dock="Top" Name="ModDownButton" Content="Mod下载" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ModDown"/>
-		<Button Classes="right" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" Width="130" Height="40" Command="{Binding DownloadConfigCmd}">下载源设置</Button>
+		<local:MyButton DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" Width="130" Height="40" Command="{Binding DownloadConfigCmd}">下载源设置</local:MyButton>
 	</DockPanel>
 </UserControl>

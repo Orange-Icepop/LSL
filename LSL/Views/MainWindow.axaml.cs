@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using System.ComponentModel;
 using LSL.ViewModels;
 using LSL.Services;
+using System;
 namespace LSL.Views;
 
 public partial class MainWindow : Window
@@ -10,12 +11,19 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        ConfigManager.Init();
         this.DataContext = new MainViewModel(); // 设置DataContext为MainViewModel的实例
         this.Closing += MainWindow_Closing;// 重定向关闭窗口事件
         PopupPublisher.Instance.PopupMessageReceived += HandlePopupMessageReceived;// 注册消息接收事件
         PopupClosePublisher.Instance.PopupCloseOccurred += PopupClosing;// 注册弹窗关闭事件
         //初始化配置文件，虽然放在这里有些不应该，但是App里面没有初始化相关代码，只能这么干了
         ConfigManager.WriteInitialConfig();
+        this.Loaded += InitializeViews;
+    }
+    private void InitializeViews(object sender, EventArgs e)
+    {
+        var mainViewModel = (MainViewModel)this.DataContext;
+        mainViewModel.InitializeMainWindow();
     }
     private void MainWindow_Closing(object sender, CancelEventArgs e)
     {

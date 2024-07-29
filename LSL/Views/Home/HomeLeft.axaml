@@ -8,10 +8,10 @@
 	<DockPanel Width="350">
 		<TextBlock DockPanel.Dock="Top" Text="欢迎回来" FontSize="30" HorizontalAlignment="Center" Margin="50"/>
 		<Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,*" Width="270" Margin="0,0,0,20" HorizontalAlignment="Center">
-			<Button Grid.Row="0" Grid.Column="0" Content="服务器设置" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="50" Width="120" Command="{Binding LeftViewCmd}" CommandParameter="ServerLeft"/>
-			<Button Grid.Row="0" Grid.Column="1" Content="面板设置" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="50" Width="120" Command="{Binding PanelConfigCmd}"/>
+			<local:MyButton Grid.Row="0" Grid.Column="0" FontSize="20" Content="服务器设置" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="50" Width="120" Command="{Binding LeftViewCmd}" CommandParameter="ServerLeft"/>
+			<local:MyButton Grid.Row="0" Grid.Column="1" FontSize="20" Content="面板设置" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="50" Width="120" Command="{Binding PanelConfigCmd}"/>
 		</Grid>
-		<Button DockPanel.Dock="Bottom" Content="启动服务器" Classes="blue" Margin="0,0,0,20" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="60" Width="250"/>
+		<local:MyButton DockPanel.Dock="Bottom" FontSize="20" Content="启动服务器" ColorType="Highlight" Margin="0,0,0,20" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="60" Width="250"/>
 		<ComboBox Name="ServerList" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="30" Width="250" Margin="0,0,0,20"></ComboBox>
 	</DockPanel>
 </UserControl>

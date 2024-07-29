@@ -13,8 +13,8 @@
 					<TextBox DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Center" Width="400"/>
 				</DockPanel>
 				<DockPanel Margin="30,0,0,20">
-					<Button Classes="rightblue" Width="100" Height="40" Margin="0,0,10,0">搜索</Button>
-					<Button Classes="right" Width="100" Height="40" Margin="0,0,10,0">清空条件</Button>
+					<local:MyButton HorizontalAlignment="Left" ColorType="Highlight" Width="100" Height="40" Margin="0,0,10,0">搜索</local:MyButton>
+					<local:MyButton HorizontalAlignment="Left" Width="100" Height="40" Margin="0,0,10,0">清空条件</local:MyButton>
 				</DockPanel>
 			</StackPanel>
 		</local:MyCard>

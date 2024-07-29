@@ -2,6 +2,7 @@
 using LSL.ViewModels;
 using Avalonia;
 using Avalonia.ReactiveUI;
+using LSL.Services;
 
 namespace LSL.Desktop;
 

@@ -5,6 +5,7 @@ using LSL.Views;
 using LSL.Views.Home;
 using LSL.Views.Server;
 using LSL.Views.Download;
+using LSL.Views.Download.ASViews;
 using LSL.Views.Settings;
 using ReactiveUI;
 using System;
@@ -15,6 +16,8 @@ using Avalonia.Markup.Xaml.MarkupExtensions;
 using System.Diagnostics;
 using LSL.Services;
 using System.Collections.ObjectModel;
+using Avalonia;
+using Avalonia.Interactivity;
 
 //导航部分开始
 public class MainViewModel : ViewModelBase, INavigationService
@@ -56,16 +59,11 @@ public class MainViewModel : ViewModelBase, INavigationService
     public ReactiveCommand<Unit, Unit> CommonConfigCmd { get; }
     //结束
 
+    public ICommand SelectCore { get; }//调用文件管理窗口选择服务器
     public MainViewModel()
     {
         LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
         RightViewCmd = ReactiveCommand.Create<string>(NavigateRightView);
-        //初始化
-        NavigateLeftView("HomeLeft");
-        NavigateRightView("HomeRight");
-        LeftWidth = 350;
-        CurrentLeftView = "HomeLeft";
-        CurrentRightView = "HomeRight";
 
         //多参数导航
         PanelConfigCmd = ReactiveCommand.Create(() =>
@@ -84,8 +82,20 @@ public class MainViewModel : ViewModelBase, INavigationService
             NavigateRightView("Common");
         });
 
+
+        SearchForJava = ReactiveCommand.Create(configViewModel.GetJava);
+        ConfirmAddServer = ReactiveCommand.Create(ConfirmCmd);
     }
 
+    public void InitializeMainWindow()
+    {
+        //初始化
+        NavigateLeftView("HomeLeft");
+        NavigateRightView("HomeRight");
+        LeftWidth = 350;
+        CurrentLeftView = "HomeLeft";
+        CurrentRightView = "HomeRight";
+    }
 
     #region 切换命令
     //左视图
@@ -133,4 +143,51 @@ public class MainViewModel : ViewModelBase, INavigationService
     }
     #endregion
 
+    //存储文件路径方法
+    public void SaveFilePath(string path, string targetValue)
+    {
+        switch(targetValue)
+        {
+            case "CorePath":
+                CorePath = path;
+                break;
+        }
+    }
+
+    ConfigViewModel configViewModel = new ConfigViewModel();
+
+    public ICommand SearchForJava { get; }
+    public ICommand ConfirmAddServer { get; }
+    public void ConfirmCmd()
+    {
+        SaveNewServer();
+        NavigateRightView("AddServer");
+    }
+
+
+
+    #region 新增服务器数据
+    private string _corePath = string.Empty;// 核心文件路径
+    public string CorePath { get => _corePath; set => this.RaiseAndSetIfChanged(ref _corePath, value); }
+
+    private string _newServerName = string.Empty;// 新增服务器名称
+    public string NewServerName { get => _newServerName; set => this.RaiseAndSetIfChanged(ref _newServerName, value); }
+
+    private int _minMemory = 0;// 新增服务器最小内存
+    public int MinMemory { get => _minMemory; set => this.RaiseAndSetIfChanged(ref _minMemory, value); }
+
+    private int _maxMemory = 0;// 新增服务器最大内存
+    public int MaxMemory { get => _maxMemory; set => this.RaiseAndSetIfChanged(ref _maxMemory, value); }
+
+    private int _javaId = 0;//Java编号
+    public int JavaId { get => _javaId; set => this.RaiseAndSetIfChanged(ref _javaId, value); }
+
+    private string _extJvm = string.Empty;
+    public string ExtJvm { get => _extJvm; set => this.RaiseAndSetIfChanged(ref _extJvm, value); }
+    public void SaveNewServer()
+    {
+        string JavaPath = GameManager.MatchJavaList(JavaId);
+        ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
+    }
+    #endregion
 }
