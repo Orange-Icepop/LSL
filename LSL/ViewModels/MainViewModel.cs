@@ -83,8 +83,13 @@ public class MainViewModel : ViewModelBase, INavigationService
         });
 
 
-        SearchForJava = ReactiveCommand.Create(configViewModel.GetJava);
-        ConfirmAddServer = ReactiveCommand.Create(ConfirmCmd);
+        SearchForJava = ReactiveCommand.Create(GameManager.DetectJava);
+        ConfirmAddServer = ReactiveCommand.Create(() =>
+        {
+            string JavaPath = GameManager.MatchJavaList(JavaId);
+            ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
+            NavigateRightView("AddServer");
+        });
     }
 
     public void InitializeMainWindow()
@@ -158,11 +163,6 @@ public class MainViewModel : ViewModelBase, INavigationService
 
     public ICommand SearchForJava { get; }
     public ICommand ConfirmAddServer { get; }
-    public void ConfirmCmd()
-    {
-        SaveNewServer();
-        NavigateRightView("AddServer");
-    }
 
 
 
@@ -184,10 +184,5 @@ public class MainViewModel : ViewModelBase, INavigationService
 
     private string _extJvm = string.Empty;
     public string ExtJvm { get => _extJvm; set => this.RaiseAndSetIfChanged(ref _extJvm, value); }
-    public void SaveNewServer()
-    {
-        string JavaPath = GameManager.MatchJavaList(JavaId);
-        ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
-    }
     #endregion
 }

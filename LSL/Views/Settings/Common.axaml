@@ -20,10 +20,8 @@
 				<CheckBox Margin="0,5,0,5" IsChecked="{Binding EndServerWhenClose}">关闭启动器时终止服务器进程</CheckBox>
 				<CheckBox Margin="0,5,0,5" IsChecked="{Binding Daemon}">保持后台进程开启</CheckBox>
 				<DockPanel Margin="0,5,0,5">
-					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="Java选择"/>
-					<ComboBox Name="JavaSelection" Margin="0,0,10,0" Width="400" SelectedIndex="{Binding JavaSelection}">
-						<ComboBoxItem Content="自动选择"/>
-					</ComboBox>
+					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="Java列表"/>
+					<ComboBox Name="JavaSelection" Margin="0,0,10,0" Width="400" SelectedIndex="{Binding JavaSelection}"/>
 					<local:MyButton ColorType="Highlight" HorizontalAlignment="Left" Margin="0,0,10,0" Width="100" Height="30" Command="{Binding GetJava}">查找可用Java</local:MyButton>
 					<local:MyButton HorizontalAlignment="Left" Margin="0,0,10,0" Width="100" Height="30">手动选择Java</local:MyButton>
 				</DockPanel>

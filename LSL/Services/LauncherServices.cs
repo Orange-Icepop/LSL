@@ -132,7 +132,7 @@ namespace LSL.Services
             // 检查文件路径是否有效  
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                throw new ArgumentException($"{nameof(filePath)}文件不存在。下一次启动时LSL将自动修复这个错误。");
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
             }
 
             // 确保文件路径的目录存在  
@@ -147,30 +147,11 @@ namespace LSL.Services
     // 配置文件管理  
     public class ConfigManager
     {
-        public static void Init() 
-        { 
-            // 确保LSL文件夹存在  
-            Directory.CreateDirectory(Path.GetDirectoryName(_configFilePath)!);
-            Directory.CreateDirectory(Path.GetDirectoryName(_serverConfigPath)!);
-            Directory.CreateDirectory(Path.GetDirectoryName(_javaConfigPath)!);
-            Directory.CreateDirectory(Path.GetDirectoryName(_serversPath)!);
-            ConfigViewModel configViewModel = new ConfigViewModel();
-            configViewModel.GetConfig();
-        }
         // 配置文件的路径  
         private static readonly string _configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "config.json");
         private static readonly string _serverConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "serverConfig.json");
-        public static readonly string _javaConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "javaConfig.json");
-        public static readonly string _serversPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Servers");
-
-        // 初始化配置文件的路径  
-        static ConfigManager()
-        {
-        }
-        private ConfigManager()
-        {
-
-        }
+        private static readonly string _javaConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "javaConfig.json");
+        private static readonly string _serversPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Servers");
 
         // 获取配置文件的路径  
         public static string ConfigFilePath => _configFilePath;
@@ -178,10 +159,24 @@ namespace LSL.Services
         public static string JavaConfigPath => _javaConfigPath;
         public static string ServersPath => _serversPath;
 
+        // 初始化配置文件的路径  
+        static ConfigManager()
+        {
+            // 确保LSL文件夹存在  
+            Directory.CreateDirectory(Path.GetDirectoryName(ConfigFilePath)!);
+            Directory.CreateDirectory(ServersPath);
+            //初始化配置文件，虽然放在这里有些不应该，但是App里面没有初始化相关代码，只能这么干了
+            WriteInitialConfig();
+        }
+        private ConfigManager()
+        {
+
+        }
+
         #region 初始化配置文件
         public static void WriteInitialConfig()
         {
-            if (!File.Exists(_configFilePath))
+            if (!File.Exists(ConfigFilePath))
             {
                 // 定义初始配置数据（json格式）
                 var initialConfig = new
@@ -223,10 +218,14 @@ namespace LSL.Services
         #region 注册服务器方法RegisterServer
         public static void RegisterServer(string serverName, string usingJava, string corePath, int minMem, int maxMem, string extJVM)
         {
-             // 连接服务器路径
-            string addedServerPath = Path.Combine(_serversPath, serverName);
+            if (!File.Exists(ServerConfigPath))
+            {
+                File.WriteAllText(ServerConfigPath, "{}");
+            }
+            // 连接服务器路径
+            string addedServerPath = Path.Combine(ServersPath, serverName);
             string addedConfigPath = Path.Combine(addedServerPath, "lslconfig.json");
-            Directory.CreateDirectory(Path.GetDirectoryName(addedConfigPath)!);
+            Directory.CreateDirectory(addedServerPath);
             // 初始化服务器配置文件
             var initialConfig = new
             {
@@ -237,6 +236,8 @@ namespace LSL.Services
                 max_memory = maxMem,
                 ext_jvm = extJVM
             };
+            string configs = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
+            File.WriteAllText(addedConfigPath, configs);// 写入服务器文件夹内的配置文件
 
             //找到空闲id
             int targetId = 0;
@@ -251,7 +252,7 @@ namespace LSL.Services
             }
             catch (Exception)
             {
-                JsonHelper.AddJson(ServerConfigPath, targetId.ToString(), initialConfig);
+                JsonHelper.AddJson(ServerConfigPath, targetId.ToString(), addedServerPath);// 在服务器列表文件中注册新服务器
             }
 
             Debug.WriteLine($"Server {serverName} registered, config file path {addedConfigPath}");
@@ -291,15 +292,19 @@ namespace LSL.Services
 
     public class GameManager//服务器相关服务
     {
-        JavaFetcher javaFetcher = new JavaFetcher();
 
         #region 获取java列表
-        public async void DetectJava()
+        public static async void DetectJava()
         {
+            if (!File.Exists(ConfigManager.JavaConfigPath))
+            {
+                File.WriteAllText(ConfigManager.JavaConfigPath, "{}");
+            }
+            JavaFetcher javaFetcher = new JavaFetcher();
             var JavaList = await javaFetcher.FetchAsync();//调用MinecraftLaunch的API查找JAVA
             JsonHelper.ClearJson(ConfigManager.JavaConfigPath);//清空Java记录
             //遍历写入Java信息
-            int id = 1;
+            int id = 0;
             foreach (JavaEntry javalist in JavaList)
             {
                 string writtenId = id.ToString();

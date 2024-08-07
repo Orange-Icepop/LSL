@@ -94,6 +94,7 @@ namespace LSL.ViewModels
         #endregion
         public ConfigViewModel()
         {
+            GetConfig();
 
             #region »º´æÑéÖ¤
             if (appPriorityCache >= 0 && appPriorityCache <= 2)
@@ -130,10 +131,9 @@ namespace LSL.ViewModels
             #endregion
         }
 
-        GameManager gameManager = new GameManager();
-        public void GetJava()
+        public static void GetJava()
         {
-            gameManager.DetectJava();
+            GameManager.DetectJava();
         }
 
     }
