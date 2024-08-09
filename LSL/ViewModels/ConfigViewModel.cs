@@ -94,6 +94,7 @@ namespace LSL.ViewModels
         #endregion
         public ConfigViewModel()
         {
+            ConfigManager.Initialize();
             GetConfig();
 
             #region ª∫¥Ê—È÷§

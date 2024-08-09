@@ -162,15 +162,18 @@ namespace LSL.Services
         // 初始化配置文件的路径  
         static ConfigManager()
         {
-            // 确保LSL文件夹存在  
-            Directory.CreateDirectory(Path.GetDirectoryName(ConfigFilePath)!);
-            Directory.CreateDirectory(ServersPath);
-            //初始化配置文件，虽然放在这里有些不应该，但是App里面没有初始化相关代码，只能这么干了
-            WriteInitialConfig();
         }
         private ConfigManager()
         {
 
+        }
+        public static void Initialize()
+        {
+            // 确保LSL文件夹存在  
+            Directory.CreateDirectory(Path.GetDirectoryName(ConfigFilePath)!);
+            Directory.CreateDirectory(ServersPath);
+            //初始化配置文件
+            WriteInitialConfig();
         }
 
         #region 初始化配置文件
@@ -209,8 +212,17 @@ namespace LSL.Services
                 // 序列化成JSON字符串并写入文件  
                 string configString = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
                 File.WriteAllText(_configFilePath, configString);
-
                 Debug.WriteLine("config.json initialized.");
+            }
+            if (!File.Exists(ServerConfigPath))
+            {
+                File.WriteAllText(ServerConfigPath, "{}");
+                Debug.WriteLine("serverConfig.json initialized.");
+            }
+            if (!File.Exists(JavaConfigPath))
+            {
+                File.WriteAllText(JavaConfigPath, "{}");
+                Debug.WriteLine("javaConfig.json initialized.");
             }
         }
         #endregion
@@ -286,11 +298,11 @@ namespace LSL.Services
             }
             catch (KeyNotFoundException)
             {
-                throw new ArgumentException($"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。");
+                throw new ArgumentException($"{ConfigFilePath}文件已损坏，请备份并删除该文件重试。");
             }
-            catch(FileNotFoundException)
+            catch (FileNotFoundException)
             {
-                throw new ArgumentException($"位于{ConfigFilePath} 的配置文件不存在，请重启LSL。若错误依旧，则LSL已经损坏，请重新下载。");
+                throw new ArgumentException($"位于{ConfigFilePath}的配置文件不存在，请重启LSL。若错误依旧，则LSL已经损坏，请重新下载。");
             }
         }
 
