@@ -49,7 +49,7 @@ namespace LSL.Views.Download.ASViews
         #region Java列表读取（从配置文件读取）
         public void ReadJavaList()
         {
-            int count = 1;
+            int count = 0;
             Java.Items.Clear();
             try
             {

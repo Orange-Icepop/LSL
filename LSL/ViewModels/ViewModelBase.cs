@@ -282,6 +282,11 @@ public interface INavigationService
 }
 #endregion
 
+public interface IUnifiedService
+{
+
+}
+
 public class ViewModelBase : ReactiveObject
 {
     /*

@@ -225,19 +225,21 @@ namespace LSL.Services
             // 连接服务器路径
             string addedServerPath = Path.Combine(ServersPath, serverName);
             string addedConfigPath = Path.Combine(addedServerPath, "lslconfig.json");
+            string trueCorePath = Path.Combine(addedServerPath, Path.GetFileName(corePath));
             Directory.CreateDirectory(addedServerPath);
+            File.Copy(corePath, trueCorePath, true);
             // 初始化服务器配置文件
             var initialConfig = new
             {
                 name = serverName,
                 using_java = usingJava,
-                core_path = corePath,
+                core_path = trueCorePath,
                 min_memory = minMem,
                 max_memory = maxMem,
                 ext_jvm = extJVM
             };
-            string configs = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
-            File.WriteAllText(addedConfigPath, configs);// 写入服务器文件夹内的配置文件
+            string serializedConfig = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
+            File.WriteAllText(addedConfigPath, serializedConfig);// 写入服务器文件夹内的配置文件
 
             //找到空闲id
             int targetId = 0;
@@ -282,9 +284,13 @@ namespace LSL.Services
             {
                 return JsonHelper.ReadJson(ConfigFilePath, keyPath);
             }
-            catch (Exception ex)
+            catch (KeyNotFoundException)
             {
                 throw new ArgumentException($"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。");
+            }
+            catch(FileNotFoundException)
+            {
+                throw new ArgumentException($"位于{ConfigFilePath} 的配置文件不存在，请重启LSL。若错误依旧，则LSL已经损坏，请重新下载。");
             }
         }
 

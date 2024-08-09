@@ -43,6 +43,14 @@
 				<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
 				<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
 			</Style>
+			<!--红色按钮样式定义-->
+			<Style Selector="^.red">
+				<Setter Property="Foreground" Value="Red"/>
+				<Setter	Property="BorderBrush" Value="Red"/>
+				<Style Selector="^:pointerover">
+					<Setter Property="Background" Value="#ffb3b3"/>
+				</Style>
+			</Style>
 		</Style>
 	</Button.Styles>
 </Button>

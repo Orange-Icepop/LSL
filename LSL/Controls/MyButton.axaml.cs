@@ -48,6 +48,9 @@ namespace LSL.Controls
                 case ColorType.Highlight:
                     this.Classes.Add("highlight");
                     break;
+                case ColorType.Red:
+                    this.Classes.Add("red");
+                    break;
                 default:
                     break;
             }

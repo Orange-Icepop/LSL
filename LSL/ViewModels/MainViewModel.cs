@@ -18,17 +18,33 @@ using LSL.Services;
 using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Interactivity;
+using Newtonsoft.Json.Linq;
+using System.IO;
 
 //导航部分开始
 public class MainViewModel : ViewModelBase, INavigationService
 {
-    #region 定义类，穷举写得依托答辩
+    ConfigViewModel configViewModel = new ConfigViewModel();
+
+    //初始化主窗口
+    public void InitializeMainWindow()
+    {
+        NavigateLeftView("HomeLeft");
+        NavigateRightView("HomeRight");
+        LeftWidth = 350;
+        CurrentLeftView = "HomeLeft";
+        CurrentRightView = "HomeRight";
+    }
+
+    #region 导航相关
     //原View
     private UserControl _leftView;
     private UserControl _rightView;
+
     //当前View
     public string CurrentLeftView { get; set; }
     public string CurrentRightView { get; set; }
+
     //创建两个可变动视图
     public UserControl LeftView
     {
@@ -40,14 +56,6 @@ public class MainViewModel : ViewModelBase, INavigationService
         get => _rightView;
         set => this.RaiseAndSetIfChanged(ref _rightView, value);
     }
-    //创建左栏宽度定义
-    private double _leftWidth;
-    public double LeftWidth
-    {
-        get => _leftWidth;
-        set => this.RaiseAndSetIfChanged(ref _leftWidth, value);
-    }
-    #endregion
 
     //创建切换触发方法
     public ICommand LeftViewCmd { get; }
@@ -57,50 +65,7 @@ public class MainViewModel : ViewModelBase, INavigationService
     public ReactiveCommand<Unit, Unit> PanelConfigCmd { get; }
     public ReactiveCommand<Unit, Unit> DownloadConfigCmd { get; }
     public ReactiveCommand<Unit, Unit> CommonConfigCmd { get; }
-    //结束
-
-    public ICommand SelectCore { get; }//调用文件管理窗口选择服务器
-    public MainViewModel()
-    {
-        LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
-        RightViewCmd = ReactiveCommand.Create<string>(NavigateRightView);
-
-        //多参数导航
-        PanelConfigCmd = ReactiveCommand.Create(() =>
-        {
-            NavigateLeftView("SettingsLeft");
-            NavigateRightView("PanelSettings");
-        });
-        DownloadConfigCmd = ReactiveCommand.Create(() =>
-        {
-            NavigateLeftView("SettingsLeft");
-            NavigateRightView("DownloadSettings");
-        });
-        CommonConfigCmd = ReactiveCommand.Create(() =>
-        {
-            NavigateLeftView("SettingsLeft");
-            NavigateRightView("Common");
-        });
-
-
-        SearchForJava = ReactiveCommand.Create(GameManager.DetectJava);
-        ConfirmAddServer = ReactiveCommand.Create(() =>
-        {
-            string JavaPath = GameManager.MatchJavaList(JavaId);
-            ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
-            NavigateRightView("AddServer");
-        });
-    }
-
-    public void InitializeMainWindow()
-    {
-        //初始化
-        NavigateLeftView("HomeLeft");
-        NavigateRightView("HomeRight");
-        LeftWidth = 350;
-        CurrentLeftView = "HomeLeft";
-        CurrentRightView = "HomeRight";
-    }
+    #endregion
 
     #region 切换命令
     //左视图
@@ -148,7 +113,17 @@ public class MainViewModel : ViewModelBase, INavigationService
     }
     #endregion
 
-    //存储文件路径方法
+    #region 左栏宽度定义
+    private double _leftWidth;
+    public double LeftWidth
+    {
+        get => _leftWidth;
+        set => this.RaiseAndSetIfChanged(ref _leftWidth, value);
+    }
+    #endregion
+
+
+    #region 存储文件路径方法
     public void SaveFilePath(string path, string targetValue)
     {
         switch(targetValue)
@@ -158,13 +133,7 @@ public class MainViewModel : ViewModelBase, INavigationService
                 break;
         }
     }
-
-    ConfigViewModel configViewModel = new ConfigViewModel();
-
-    public ICommand SearchForJava { get; }
-    public ICommand ConfirmAddServer { get; }
-
-
+    #endregion
 
     #region 新增服务器数据
     private string _corePath = string.Empty;// 核心文件路径
@@ -185,4 +154,88 @@ public class MainViewModel : ViewModelBase, INavigationService
     private string _extJvm = string.Empty;
     public string ExtJvm { get => _extJvm; set => this.RaiseAndSetIfChanged(ref _extJvm, value); }
     #endregion
+
+    public ICommand SearchForJava { get; }
+    public ICommand ConfirmAddServer { get; }
+
+    #region 全局获取服务器列表
+    //持久化服务器映射列表
+    private ObservableCollection<string> _serverIDs = new ObservableCollection<string>();
+    private ObservableCollection<string> _servernames = new ObservableCollection<string>();
+    public ObservableCollection<string> ServerIDs => _serverIDs;
+    public ObservableCollection<string> ServerNames => _servernames;
+    // 服务器列表读取（从配置文件读取）
+    public void ReadServerList()
+    {
+        string jsonContent = File.ReadAllText(ConfigManager.ServerConfigPath);
+        JObject jsonObj = JObject.Parse(jsonContent);
+        //遍历配置文件中的所有服务器ID
+        foreach (var item in jsonObj.Properties())
+        {
+            ServerIDs.Add(item.Name);
+        }
+        //根据服务器ID读取每个服务器的配置文件
+        foreach (var ServerID in ServerIDs)
+        {
+            string TargetedServerPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, $"$.{ServerID}");
+            string TargetedConfigPath = Path.Combine(TargetedServerPath, "lslconfig.json");
+            string KeyPath = "$.name";
+            ServerNames.Add((string)JsonHelper.ReadJson(TargetedConfigPath, KeyPath));
+        }
+    }
+
+    #endregion
+
+    #region 全局获取Java列表
+    //持久化服务器映射列表
+    private ObservableCollection<string> _javas = new ObservableCollection<string>();
+    public ObservableCollection<string> Javas => _serverIDs;
+    // 服务器列表读取（从配置文件读取）
+    public void ReadJavaList()
+    {
+        string jsonContent = File.ReadAllText(ConfigManager.JavaConfigPath);
+        JObject jsonObj = JObject.Parse(jsonContent);
+        //遍历配置文件中的所有Java
+        foreach (var item in jsonObj.Properties())
+        {
+            Javas.Add(item.Value.ToString());
+        }
+    }
+
+    #endregion
+
+
+    public MainViewModel()
+    {
+        LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
+        RightViewCmd = ReactiveCommand.Create<string>(NavigateRightView);
+
+        #region 多参数导航
+        PanelConfigCmd = ReactiveCommand.Create(() =>
+        {
+            NavigateLeftView("SettingsLeft");
+            NavigateRightView("PanelSettings");
+        });
+        DownloadConfigCmd = ReactiveCommand.Create(() =>
+        {
+            NavigateLeftView("SettingsLeft");
+            NavigateRightView("DownloadSettings");
+        });
+        CommonConfigCmd = ReactiveCommand.Create(() =>
+        {
+            NavigateLeftView("SettingsLeft");
+            NavigateRightView("Common");
+        });
+        #endregion
+
+        SearchForJava = ReactiveCommand.Create(GameManager.DetectJava);
+        ConfirmAddServer = ReactiveCommand.Create(() =>
+        {
+            string JavaPath = GameManager.MatchJavaList(JavaId);
+            ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
+            NavigateRightView("AddServer");
+        });
+
+        ReadServerList();
+    }
 }
