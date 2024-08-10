@@ -6,6 +6,7 @@ using Avalonia.Markup.Xaml;
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Net;
 using LSL.ViewModels;
 using LSL.Views;
 using static LSL.Controls.MyCard;
@@ -37,7 +38,7 @@ public partial class App : Application
                 DataContext = new MainViewModel()
             };
         }
-
+        ServicePointManager.DefaultConnectionLimit = 512;
         base.OnFrameworkInitializationCompleted();
     }
 

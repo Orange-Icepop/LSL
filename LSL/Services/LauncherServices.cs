@@ -9,14 +9,14 @@ using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using MinecraftLaunch.Components.Fetcher;
-using MinecraftLaunch.Classes.Models.Game;
 using LSL.ViewModels;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using LSL.Views;
 using Avalonia.Metadata;
 using ReactiveUI;
+using MinecraftLaunch.Components.Fetcher;
+using MinecraftLaunch.Classes.Models.Game;
 
 namespace LSL.Services
 {
