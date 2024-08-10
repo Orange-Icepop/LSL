@@ -7,7 +7,7 @@
              x:Class="LSL.Views.Server.ServerLeft">
 	<DockPanel Width="250">
 		<TextBlock DockPanel.Dock="Top" Text="服务器列表" Margin="10,10,0,0" Foreground="Gray"/>
-		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10">
+		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10" ItemsSource="{Binding ServerNames}">
 		</ComboBox>
 		<local:MyButton
 		Name="LaunchServerButton"

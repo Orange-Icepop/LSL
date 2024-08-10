@@ -148,15 +148,15 @@ namespace LSL.Services
     public class ConfigManager
     {
         // 配置文件的路径  
-        private static readonly string _configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "config.json");
-        private static readonly string _serverConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "serverConfig.json");
-        private static readonly string _javaConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "javaConfig.json");
+        private static readonly string _configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "Config.json");
+        private static readonly string _serverConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "ServersConfig.json");
+        private static readonly string _javaListPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "JavaList.json");
         private static readonly string _serversPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Servers");
 
         // 获取配置文件的路径  
         public static string ConfigFilePath => _configFilePath;
         public static string ServerConfigPath => _serverConfigPath;
-        public static string JavaConfigPath => _javaConfigPath;
+        public static string JavaListPath => _javaListPath;
         public static string ServersPath => _serversPath;
 
         // 初始化配置文件的路径  
@@ -219,10 +219,10 @@ namespace LSL.Services
                 File.WriteAllText(ServerConfigPath, "{}");
                 Debug.WriteLine("serverConfig.json initialized.");
             }
-            if (!File.Exists(JavaConfigPath))
+            if (!File.Exists(JavaListPath))
             {
-                File.WriteAllText(JavaConfigPath, "{}");
-                Debug.WriteLine("javaConfig.json initialized.");
+                File.WriteAllText(JavaListPath, "{}");
+                Debug.WriteLine("JavaList.json initialized.");
             }
         }
         #endregion
@@ -238,6 +238,7 @@ namespace LSL.Services
             string addedServerPath = Path.Combine(ServersPath, serverName);
             string addedConfigPath = Path.Combine(addedServerPath, "lslconfig.json");
             string trueCorePath = Path.Combine(addedServerPath, Path.GetFileName(corePath));
+            string coreName = Path.GetFileName(corePath);
             Directory.CreateDirectory(addedServerPath);
             File.Copy(corePath, trueCorePath, true);
             // 初始化服务器配置文件
@@ -245,7 +246,7 @@ namespace LSL.Services
             {
                 name = serverName,
                 using_java = usingJava,
-                core_path = trueCorePath,
+                core_name = coreName,
                 min_memory = minMem,
                 max_memory = maxMem,
                 ext_jvm = extJVM
@@ -284,7 +285,7 @@ namespace LSL.Services
             }
             catch (Exception ex)
             {
-                throw new ArgumentException($"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。");
+                throw new ArgumentException($"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。\r错误信息：{ex.Message}");
             }
         }
 
@@ -296,13 +297,13 @@ namespace LSL.Services
             {
                 return JsonHelper.ReadJson(ConfigFilePath, keyPath);
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                throw new ArgumentException($"{ConfigFilePath}文件已损坏，请备份并删除该文件重试。");
+                throw new ArgumentException($"{ConfigFilePath}文件已损坏，请备份并删除该文件重试。\r错误信息:{ex.Message}");
             }
-            catch (FileNotFoundException)
+            catch (FileNotFoundException ex)
             {
-                throw new ArgumentException($"位于{ConfigFilePath}的配置文件不存在，请重启LSL。若错误依旧，则LSL已经损坏，请重新下载。");
+                throw new ArgumentException($"位于{ConfigFilePath}的配置文件不存在，请重启LSL。若错误依旧，则LSL已经损坏，请重新下载。\r错误信息:{ex.Message}");
             }
         }
 
@@ -311,22 +312,23 @@ namespace LSL.Services
     public class GameManager//服务器相关服务
     {
 
-        #region 获取java列表
+        #region 获取Java列表
         public static async void DetectJava()
         {
-            if (!File.Exists(ConfigManager.JavaConfigPath))
+            if (!File.Exists(ConfigManager.JavaListPath))
             {
-                File.WriteAllText(ConfigManager.JavaConfigPath, "{}");
+                File.WriteAllText(ConfigManager.JavaListPath, "{}");
             }
+            Debug.WriteLine("开始获取Java列表");
             JavaFetcher javaFetcher = new JavaFetcher();
             var JavaList = await javaFetcher.FetchAsync();//调用MinecraftLaunch的API查找JAVA
-            JsonHelper.ClearJson(ConfigManager.JavaConfigPath);//清空Java记录
+            JsonHelper.ClearJson(ConfigManager.JavaListPath);//清空Java记录
             //遍历写入Java信息
             int id = 0;
             foreach (JavaEntry javalist in JavaList)
             {
                 string writtenId = id.ToString();
-                JsonHelper.AddJson(ConfigManager.JavaConfigPath, writtenId, new { version = javalist.JavaVersion, path = javalist.JavaPath });
+                JsonHelper.AddJson(ConfigManager.JavaListPath, writtenId, new { version = javalist.JavaVersion, path = javalist.JavaPath });
                 id++;
             }
         }
@@ -335,7 +337,7 @@ namespace LSL.Services
         #region 根据Java编号获取Java路径
         public static string MatchJavaList(int id)
         {
-            string javaPath = (string)JsonHelper.ReadJson(ConfigManager.JavaConfigPath, "$." + id.ToString() + ".path");
+            string javaPath = (string)JsonHelper.ReadJson(ConfigManager.JavaListPath, "$." + id.ToString() + ".path");
             return javaPath;
         }
         #endregion

@@ -18,7 +18,7 @@ namespace LSL.Views.Settings
                 while (true)
                 {
                     string KeyPath = $"$.{count}.version";
-                    Java.Items.Add(JsonHelper.ReadJson(ConfigManager.JavaConfigPath, KeyPath));
+                    Java.Items.Add(JsonHelper.ReadJson(ConfigManager.JavaListPath, KeyPath));
                     count++;
                 }
             }

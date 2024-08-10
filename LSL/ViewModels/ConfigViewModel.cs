@@ -92,10 +92,14 @@ namespace LSL.ViewModels
             }
         }
         #endregion
+
+        //private ICommand ReadJavaList { get; }
+
         public ConfigViewModel()
         {
             ConfigManager.Initialize();
             GetConfig();
+            //ReadJavaList = ReactiveCommand.Create(MainViewModel.ReadJavaList);
 
             #region »º´æÑéÖ¤
             if (appPriorityCache >= 0 && appPriorityCache <= 2)
@@ -132,10 +136,6 @@ namespace LSL.ViewModels
             #endregion
         }
 
-        public static void GetJava()
-        {
-            GameManager.DetectJava();
-        }
 
     }
 }

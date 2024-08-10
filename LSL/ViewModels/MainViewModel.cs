@@ -158,7 +158,7 @@ public class MainViewModel : ViewModelBase, INavigationService
     public ICommand SearchForJava { get; }
     public ICommand ConfirmAddServer { get; }
 
-    #region 全局获取服务器列表
+    #region 全局获取服务器列表ReadServerList => ServerNames
     //持久化服务器映射列表
     private ObservableCollection<string> _serverIDs = new ObservableCollection<string>();
     private ObservableCollection<string> _servernames = new ObservableCollection<string>();
@@ -186,14 +186,14 @@ public class MainViewModel : ViewModelBase, INavigationService
 
     #endregion
 
-    #region 全局获取Java列表
+    #region 全局获取Java列表ReadJavaList => Javas
     //持久化服务器映射列表
     private ObservableCollection<string> _javas = new ObservableCollection<string>();
     public ObservableCollection<string> Javas => _serverIDs;
     // 服务器列表读取（从配置文件读取）
     public void ReadJavaList()
     {
-        string jsonContent = File.ReadAllText(ConfigManager.JavaConfigPath);
+        string jsonContent = File.ReadAllText(ConfigManager.JavaListPath);
         JObject jsonObj = JObject.Parse(jsonContent);
         //遍历配置文件中的所有Java
         foreach (var item in jsonObj.Properties())
@@ -204,6 +204,7 @@ public class MainViewModel : ViewModelBase, INavigationService
 
     #endregion
 
+    public ICommand GetJava { get; }
 
     public MainViewModel()
     {
@@ -236,6 +237,14 @@ public class MainViewModel : ViewModelBase, INavigationService
             NavigateRightView("AddServer");
         });
 
+        GetJava = ReactiveCommand.Create(() =>
+        {
+            GameManager.DetectJava();
+            ReadJavaList();
+        });
+
+
         ReadServerList();
+        ReadJavaList();
     }
 }

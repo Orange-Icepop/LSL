@@ -15,7 +15,6 @@ namespace LSL.Views.Download.ASViews
         public AddCore()
         {
             InitializeComponent();
-            ReadJavaList();
         }
 
         #region 文件选择
@@ -43,25 +42,6 @@ namespace LSL.Views.Download.ASViews
                 string localPath = URI.LocalPath;
                 mainViewModel.SaveFilePath(localPath, "CorePath");
             }
-        }
-        #endregion
-
-        #region Java列表读取（从配置文件读取）
-        public void ReadJavaList()
-        {
-            int count = 0;
-            Java.Items.Clear();
-            try
-            {
-                while (true)
-                {
-                    string KeyPath = $"$.{count}.version";
-                    Java.Items.Add(JsonHelper.ReadJson(ConfigManager.JavaConfigPath, KeyPath));
-                    count++;
-                }
-            }
-            catch { }
-            Java.SelectedIndex = 0;
         }
         #endregion
 
