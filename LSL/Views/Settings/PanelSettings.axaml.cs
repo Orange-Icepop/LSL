@@ -8,7 +8,7 @@ namespace LSL.Views.Settings
         public PanelSettings()
         {
             InitializeComponent();
-            this.DataContext = new ConfigViewModel();
+            
         }
     }
 }

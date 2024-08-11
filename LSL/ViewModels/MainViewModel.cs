@@ -22,10 +22,8 @@ using Newtonsoft.Json.Linq;
 using System.IO;
 
 //导航部分开始
-public class MainViewModel : ViewModelBase, INavigationService
+public partial class MainViewModel : ViewModelBase, INavigationService
 {
-    ConfigViewModel configViewModel = new ConfigViewModel();
-
     //初始化主窗口
     public void InitializeMainWindow()
     {
@@ -126,7 +124,7 @@ public class MainViewModel : ViewModelBase, INavigationService
     #region 存储文件路径方法
     public void SaveFilePath(string path, string targetValue)
     {
-        switch(targetValue)
+        switch (targetValue)
         {
             case "CorePath":
                 CorePath = path;
@@ -187,10 +185,10 @@ public class MainViewModel : ViewModelBase, INavigationService
     #endregion
 
     #region 全局获取Java列表ReadJavaList => Javas
-    //持久化服务器映射列表
+    //持久化Java映射列表
     private ObservableCollection<string> _javas = new ObservableCollection<string>();
     public ObservableCollection<string> Javas => _serverIDs;
-    // 服务器列表读取（从配置文件读取）
+    // Java列表读取（从配置文件读取）
     public void ReadJavaList()
     {
         string jsonContent = File.ReadAllText(ConfigManager.JavaListPath);
@@ -198,13 +196,17 @@ public class MainViewModel : ViewModelBase, INavigationService
         //遍历配置文件中的所有Java
         foreach (var item in jsonObj.Properties())
         {
-            Javas.Add(item.Value.ToString());
+            JToken versionObject = item.Value["version"];
+            if (versionObject != null && versionObject.Type == JTokenType.String)
+            {
+                Javas.Add(versionObject.ToString());
+            }
         }
     }
 
     #endregion
 
-    public ICommand GetJava { get; }
+    public ICommand GetJava { get; set; }
 
     public MainViewModel()
     {
@@ -234,6 +236,7 @@ public class MainViewModel : ViewModelBase, INavigationService
         {
             string JavaPath = GameManager.MatchJavaList(JavaId);
             ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
+            ReadServerList();
             NavigateRightView("AddServer");
         });
 
@@ -246,5 +249,43 @@ public class MainViewModel : ViewModelBase, INavigationService
 
         ReadServerList();
         ReadJavaList();
+
+        ConfigManager.Initialize();
+        GetConfig();
+
+        #region 缓存验证
+        if (appPriorityCache >= 0 && appPriorityCache <= 2)
+            appPriority = appPriorityCache;
+        else ConfigManager.ModifyConfig("app_priority", 1);
+
+        if (javaSelectionCache >= 0)
+            javaSelection = javaSelectionCache;
+        else ConfigManager.ModifyConfig("java_selection", 0);
+
+        if (outputEncodeCache >= 1 && outputEncodeCache <= 2)
+            outputEncode = outputEncodeCache;
+        else ConfigManager.ModifyConfig("output_encode", 1);
+
+        if (inputEncodeCache >= 0 && inputEncodeCache <= 2)
+            inputEncode = inputEncodeCache;
+        else ConfigManager.ModifyConfig("input_encode", 0);
+
+        if (downloadSourceCache >= 0 && downloadSourceCache <= 1)
+            downloadSource = downloadSourceCache;
+        else ConfigManager.ModifyConfig("download_source", 0);
+
+        if (downloadThreadsCache >= 1 && downloadThreadsCache <= 128)
+            downloadThreads = downloadThreadsCache;
+        else ConfigManager.ModifyConfig("download_threads", 16);
+
+        if (downloadLimitCache >= 0 && downloadLimitCache <= 1000)
+            downloadLimit = downloadLimitCache;
+        else ConfigManager.ModifyConfig("download_limit", 0);
+
+        if (panelPortCache >= 8080 && panelPortCache <= 65535)
+            panelPort = panelPortCache;
+        else ConfigManager.ModifyConfig("panel_port", 25000);
+        #endregion
+
     }
 }

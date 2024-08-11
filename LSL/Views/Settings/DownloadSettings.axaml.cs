@@ -8,7 +8,7 @@ namespace LSL.Views.Settings
         public DownloadSettings()
         {
             InitializeComponent();
-            this.DataContext = new ConfigViewModel();
+            
         }
     }
 }

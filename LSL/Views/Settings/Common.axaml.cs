@@ -12,7 +12,7 @@ namespace LSL.Views.Settings
         public Common()
         {
             InitializeComponent();
-            this.DataContext = new ConfigViewModel();
+            
         }
     }
 }
