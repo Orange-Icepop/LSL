@@ -120,94 +120,6 @@ public partial class MainViewModel : ViewModelBase, INavigationService
     }
     #endregion
 
-
-    #region 存储文件路径方法
-    public void SaveFilePath(string path, string targetValue)
-    {
-        switch (targetValue)
-        {
-            case "CorePath":
-                CorePath = path;
-                break;
-        }
-    }
-    #endregion
-
-    #region 新增服务器数据
-    private string _corePath = string.Empty;// 核心文件路径
-    public string CorePath { get => _corePath; set => this.RaiseAndSetIfChanged(ref _corePath, value); }
-
-    private string _newServerName = string.Empty;// 新增服务器名称
-    public string NewServerName { get => _newServerName; set => this.RaiseAndSetIfChanged(ref _newServerName, value); }
-
-    private int _minMemory = 0;// 新增服务器最小内存
-    public int MinMemory { get => _minMemory; set => this.RaiseAndSetIfChanged(ref _minMemory, value); }
-
-    private int _maxMemory = 0;// 新增服务器最大内存
-    public int MaxMemory { get => _maxMemory; set => this.RaiseAndSetIfChanged(ref _maxMemory, value); }
-
-    private int _javaId = 0;//Java编号
-    public int JavaId { get => _javaId; set => this.RaiseAndSetIfChanged(ref _javaId, value); }
-
-    private string _extJvm = string.Empty;
-    public string ExtJvm { get => _extJvm; set => this.RaiseAndSetIfChanged(ref _extJvm, value); }
-    #endregion
-
-    public ICommand SearchForJava { get; }
-    public ICommand ConfirmAddServer { get; }
-
-    #region 全局获取服务器列表ReadServerList => ServerNames
-    //持久化服务器映射列表
-    private ObservableCollection<string> _serverIDs = new ObservableCollection<string>();
-    private ObservableCollection<string> _servernames = new ObservableCollection<string>();
-    public ObservableCollection<string> ServerIDs => _serverIDs;
-    public ObservableCollection<string> ServerNames => _servernames;
-    // 服务器列表读取（从配置文件读取）
-    public void ReadServerList()
-    {
-        string jsonContent = File.ReadAllText(ConfigManager.ServerConfigPath);
-        JObject jsonObj = JObject.Parse(jsonContent);
-        //遍历配置文件中的所有服务器ID
-        foreach (var item in jsonObj.Properties())
-        {
-            ServerIDs.Add(item.Name);
-        }
-        //根据服务器ID读取每个服务器的配置文件
-        foreach (var ServerID in ServerIDs)
-        {
-            string TargetedServerPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, $"$.{ServerID}");
-            string TargetedConfigPath = Path.Combine(TargetedServerPath, "lslconfig.json");
-            string KeyPath = "$.name";
-            ServerNames.Add((string)JsonHelper.ReadJson(TargetedConfigPath, KeyPath));
-        }
-    }
-
-    #endregion
-
-    #region 全局获取Java列表ReadJavaList => Javas
-    //持久化Java映射列表
-    private ObservableCollection<string> _javas = new ObservableCollection<string>();
-    public ObservableCollection<string> Javas => _serverIDs;
-    // Java列表读取（从配置文件读取）
-    public void ReadJavaList()
-    {
-        string jsonContent = File.ReadAllText(ConfigManager.JavaListPath);
-        JObject jsonObj = JObject.Parse(jsonContent);
-        //遍历配置文件中的所有Java
-        foreach (var item in jsonObj.Properties())
-        {
-            JToken versionObject = item.Value["version"];
-            if (versionObject != null && versionObject.Type == JTokenType.String)
-            {
-                Javas.Add(versionObject.ToString());
-            }
-        }
-    }
-
-    #endregion
-
-    public ICommand GetJava { get; set; }
-
     public MainViewModel()
     {
         LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
@@ -231,27 +143,37 @@ public partial class MainViewModel : ViewModelBase, INavigationService
         });
         #endregion
 
-        SearchForJava = ReactiveCommand.Create(GameManager.DetectJava);
         ConfirmAddServer = ReactiveCommand.Create(() =>
         {
-            string JavaPath = GameManager.MatchJavaList(JavaId);
+            string JavaPath = GameManager.MatchJavaList(JavaSelection.ToString());
             ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
             ReadServerList();
             NavigateRightView("AddServer");
-        });
+        });// 添加服务器命令-实现
 
-        GetJava = ReactiveCommand.Create(() =>
+        DeleteServer = ReactiveCommand.Create(() =>
+        {
+            string serverId = ServerIDs[SelectedServerIndex];
+            ConfigManager.DeleteServer(serverId);
+            ReadServerList();
+            SelectedServerIndex = 0;
+            Debug.WriteLine("Server Deleted:" + serverId);
+        });// 删除服务器命令-实现
+
+        SearchJava = ReactiveCommand.Create(() =>
         {
             GameManager.DetectJava();
             ReadJavaList();
-        });
+        });// 搜索Java命令-实现
 
+        StartServerCmd = ReactiveCommand.Create(StartServer);// 启动服务器命令-实现
 
-        ReadServerList();
-        ReadJavaList();
-
+        // 初始化
         ConfigManager.Initialize();
         GetConfig();
+        ReadServerList();
+        ReadJavaList();
+        SelectedServerIndex = 0;
 
         #region 缓存验证
         if (appPriorityCache >= 0 && appPriorityCache <= 2)

@@ -24,11 +24,15 @@ namespace LSL.Views.Server
         //设置Left按钮样式方法
         private void ChangeLeftColor(string NowPage)
         {
+            GeneralButton.Classes.Remove("selLeft");
             StatusButton.Classes.Remove("selLeft");
             TerminalButton.Classes.Remove("selLeft");
             ConfButton.Classes.Remove("selLeft");
             switch (NowPage)
             {
+                case "ServerGeneral":
+                    GeneralButton.Classes.Add("selLeft");
+                    break;
                 case "ServerStat":
                     StatusButton.Classes.Add("selLeft");
                     break;

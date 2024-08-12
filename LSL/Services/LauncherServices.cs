@@ -17,6 +17,7 @@ using Avalonia.Metadata;
 using ReactiveUI;
 using MinecraftLaunch.Components.Fetcher;
 using MinecraftLaunch.Classes.Models.Game;
+using System.Collections;
 
 namespace LSL.Services
 {
@@ -65,7 +66,7 @@ namespace LSL.Services
 
             if (token == null)
             {
-                throw new ArgumentException($"{keyPath} not existed.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
+                throw new Exception($"{keyPath} not existed.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
             }
 
             switch (token.Type)
@@ -122,6 +123,23 @@ namespace LSL.Services
                 throw new ArgumentException("无法找到添加新值的JSON路径");
             }
 
+        }
+        #endregion
+
+        #region 删除键值基本方法DeleteJsonKey
+        public static void DeleteJsonKey(string filePath, string keyPath)
+        {
+            JObject jObject = JObject.Parse(File.ReadAllText(filePath));
+            JToken token = jObject.SelectToken(keyPath);
+            if (token != null)
+            {
+                token.Remove();
+                File.WriteAllText(filePath, jObject.ToString());
+            }
+            else
+            {
+                throw new FileNotFoundException($"指定的JSON路径{keyPath}不存在");
+            }
         }
         #endregion
 
@@ -262,6 +280,10 @@ namespace LSL.Services
                 {
                     string idString = targetId.ToString();
                     var verifyObject = JsonHelper.ReadJson(ServerConfigPath, idString);
+                    if (verifyObject == null || verifyObject.ToString() == "{}")
+                    {
+                        throw new Exception();
+                    }
                     targetId++;
                 }
             }
@@ -274,7 +296,19 @@ namespace LSL.Services
         }
         #endregion
 
-        // 修改配置键值
+        #region 删除服务器方法DeleteServer
+        public static void DeleteServer(string serverId)
+        {
+            string serverPath = (string)JsonHelper.ReadJson(ServerConfigPath, serverId);
+            if (serverPath != null && Directory.Exists(serverPath))
+            {
+                JsonHelper.DeleteJsonKey(ServerConfigPath, serverId);// 在服务器列表文件中删除服务器
+                Directory.Delete(serverPath, true);// 删除服务器文件夹
+            }
+        }
+        #endregion
+
+        #region 修改配置键值
 
         public static void ModifyConfig(string key, object keyValue)
         {
@@ -288,8 +322,9 @@ namespace LSL.Services
                 throw new ArgumentException($"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。\r错误信息：{ex.Message}");
             }
         }
+        #endregion
 
-        //读取配置键值
+        #region 读取配置键值
         public static object ReadConfig(string key)
         {
             string keyPath = "$." + key;
@@ -306,7 +341,7 @@ namespace LSL.Services
                 throw new ArgumentException($"位于{ConfigFilePath}的配置文件不存在，请重启LSL。若错误依旧，则LSL已经损坏，请重新下载。\r错误信息:{ex.Message}");
             }
         }
-
+        #endregion
     }
 
     public class GameManager//服务器相关服务
@@ -335,10 +370,45 @@ namespace LSL.Services
         #endregion
 
         #region 根据Java编号获取Java路径
-        public static string MatchJavaList(int id)
+        public static string MatchJavaList(string id)
         {
-            string javaPath = (string)JsonHelper.ReadJson(ConfigManager.JavaListPath, "$." + id.ToString() + ".path");
+            string javaPath = (string)JsonHelper.ReadJson(ConfigManager.JavaListPath, "$." + id + ".path");
             return javaPath;
+        }
+        #endregion
+
+        #region 启动服务器
+        public static void StartServer(string serverId)
+        {
+            string serverPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, serverId);
+            string configPath = Path.Combine(serverPath, "lslconfig.json");
+            string corePath = Path.Combine(serverPath, (string)JsonHelper.ReadJson(configPath, "$.core_name"));
+            string javaPath = (string)JsonHelper.ReadJson(configPath, "$.using_java");
+            string MinMem = JsonHelper.ReadJson(configPath, "$.min_memory").ToString();
+            string MaxMem = JsonHelper.ReadJson(configPath, "$.max_memory").ToString();
+            string arguments = $"-Xms{MinMem}M -Xmx{MaxMem}M -jar {corePath}";// TODO:在内置终端部分完成后添加-nogui参数
+
+            ProcessStartInfo startInfo = new()// 提供服务器信息
+            {
+                FileName = javaPath,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = false// TODO:创建无窗口进程
+            };
+            // 启动服务器
+            using (Process process = Process.Start(startInfo))
+            {
+                // 读取Java程序的输出（如果需要）  
+                using (StreamReader reader = process.StandardOutput)
+                {
+                    string result = reader.ReadToEnd();
+                    Debug.WriteLine(result);
+                }
+
+                // 等待Java程序执行完成  
+                //process.WaitForExit();
+            }
         }
         #endregion
     }

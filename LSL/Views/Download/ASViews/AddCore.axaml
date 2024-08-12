@@ -27,7 +27,7 @@
 				<DockPanel Margin="30,10,0,5">
 					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">Java选择</TextBlock>
 					<ComboBox Name="Java" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding Javas}" SelectedIndex="{Binding JavaId}"/>
-					<local:MyButton Name="GetJavaBtn" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Height="30" Margin="10,0,0,0" Command="{Binding SearchForJava}">搜索Java</local:MyButton>
+					<local:MyButton Name="GetJavaBtn" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Height="30" Margin="10,0,0,0" Command="{Binding SearchJava}">搜索Java</local:MyButton>
 				</DockPanel>
 				<DockPanel Margin="30,10,0,5">
 					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">附加JVM参数（不明白者慎填）</TextBlock>

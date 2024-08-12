@@ -8,7 +8,6 @@ namespace LSL.Views.Settings
         public PanelSettings()
         {
             InitializeComponent();
-            
         }
     }
 }

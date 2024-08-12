@@ -32,6 +32,8 @@ public static class ViewFactory
             case "HomeRight":
                 return new HomeRight();
             //Server
+            case "ServerGeneral":
+                return new ServerGeneral();
             case "ServerStat":
                 return new ServerStat();
             case "ServerTerminal":

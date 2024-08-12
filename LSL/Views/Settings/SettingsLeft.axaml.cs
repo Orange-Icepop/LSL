@@ -10,8 +10,6 @@ namespace LSL.Views.Settings
         {
             InitializeComponent();
             LeftChangedPublisher.Instance.LeftMessageReceived += HandleLeftChangeReceived;
-            MainViewModel mainViewModel = new MainViewModel();
-            mainViewModel.GetConfig();
         }
         private void HandleLeftChangeReceived(string navigateTarget)
         {

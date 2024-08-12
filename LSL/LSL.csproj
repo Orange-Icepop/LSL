@@ -114,4 +114,8 @@
   <ItemGroup>
     <UpToDateCheckInput Remove="Views\Download\AddServer.axaml" />
   </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\Server\ServerGeneral.axaml" />
+  </ItemGroup>
 </Project>
