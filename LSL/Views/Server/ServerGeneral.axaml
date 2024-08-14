@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerGeneral">
 	<StackPanel>
-		<local:MyCard>
+		<local:MyCard Text="服务器概览">
 			
 		</local:MyCard>
 	</StackPanel>

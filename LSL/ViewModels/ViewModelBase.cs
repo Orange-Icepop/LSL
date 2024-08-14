@@ -253,6 +253,51 @@ public class PopupClosePublisher
 }
 #endregion
 
+#region 定义公共事件发布
+public class EventPublisher
+{
+    private static EventPublisher _instance;
+
+    private EventPublisher() { }
+
+    public static EventPublisher Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = new EventPublisher();
+            }
+            return _instance;
+        }
+    }
+    // 定义事件委托  
+    public delegate void MainEventHandler(string type, string info);
+
+    // 定义事件  
+    public event MainEventHandler EventMessageReceived;
+
+    // 触发事件的方法  
+    protected virtual void EventReceived(string type, string info)
+    {
+        // 检查是否有任何订阅者  
+        MainEventHandler handler = EventMessageReceived;
+        if (handler != null)
+        {
+            // 如果有，则调用它们  
+            handler(type, info);
+        }
+    }
+
+    // 一个公共方法，用于从类的外部请求触发事件  
+    public void EventPublishMessage(string type, string info)
+    {
+        EventReceived(type, info);
+    }
+}
+#endregion
+
+
 // 示例用法
 /*
 class Program

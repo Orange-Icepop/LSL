@@ -21,7 +21,8 @@
 				<TextBlock Name="Head" DockPanel.Dock="Top" Margin="10" FontWeight="Bold" FontSize="17"/>
 				<TextBlock Name="Intro" DockPanel.Dock="Top" Margin="10"/>
 				<TextBlock Name="Message" DockPanel.Dock="Top" Margin="10"/>
-				<Button Name="CloseIt" Classes="right" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Width="130" Height="30"/>
+				<Button Name="Confirm" Classes="right" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Width="130" Height="30"/>
+				<Button Name="Cancel" Classes="right" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Width="130" Height="30"/>
 			</DockPanel>
 		</Border>
 	</Grid>

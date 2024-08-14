@@ -166,10 +166,10 @@ namespace LSL.ViewModels
 
         #endregion
 
-        #region 全局获取Java列表ReadJavaList => Javas
+        #region 全局获取Java列表ReadJavaList => JavaVersions
         //持久化Java映射列表
-        private ObservableCollection<string> _javas = [];
-        public ObservableCollection<string> Javas => _javas;
+        private ObservableCollection<string> _javaVersions = [];
+        public ObservableCollection<string> JavaVersions => _javaVersions;
         // Java列表读取（从配置文件读取）
         public void ReadJavaList()
         {
@@ -181,7 +181,7 @@ namespace LSL.ViewModels
                 JToken versionObject = item.Value["version"];
                 if (versionObject != null && versionObject.Type == JTokenType.String)
                 {
-                    Javas.Add(versionObject.ToString());
+                    JavaVersions.Add(versionObject.ToString());
                 }
             }
         }
