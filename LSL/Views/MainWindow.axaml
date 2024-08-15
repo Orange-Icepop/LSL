@@ -15,14 +15,7 @@
 
 	<Grid>
 		<views:MainView/>
-		<TransitioningContentControl>
-			<TransitioningContentControl.PageTransition>
-				<CompositePageTransition>
-					<CrossFade Duration="0:00:00.3"/>
-				</CompositePageTransition>
-			</TransitioningContentControl.PageTransition>
-			<views:Popup IsVisible="False" Name="Popup"/>
-		</TransitioningContentControl>
+		<views:Popup Name="Popup"/>
 	</Grid>
 </Window>
 

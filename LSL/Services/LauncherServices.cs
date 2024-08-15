@@ -130,16 +130,8 @@ namespace LSL.Services
         public static void DeleteJsonKey(string filePath, string keyPath)
         {
             JObject jObject = JObject.Parse(File.ReadAllText(filePath));
-            JToken token = jObject.SelectToken(keyPath);
-            if (token != null)
-            {
-                token.Remove();
-                File.WriteAllText(filePath, jObject.ToString());
-            }
-            else
-            {
-                throw new FileNotFoundException($"指定的JSON路径{keyPath}不存在");
-            }
+            jObject.Remove(keyPath);
+            File.WriteAllText(filePath, jObject.ToString());
         }
         #endregion
 
@@ -300,13 +292,14 @@ namespace LSL.Services
         #endregion
 
         #region 删除服务器方法DeleteServer
-        public static void DeleteServer(string serverId)
+        public static async void DeleteServer(string serverId)
         {
             string serverPath = (string)JsonHelper.ReadJson(ServerConfigPath, serverId);
             if (serverPath != null && Directory.Exists(serverPath))
             {
                 JsonHelper.DeleteJsonKey(ServerConfigPath, serverId);// 在服务器列表文件中删除服务器
                 Directory.Delete(serverPath, true);// 删除服务器文件夹
+                Debug.WriteLine("Server Deleted:" + serverId);
             }
         }
         #endregion

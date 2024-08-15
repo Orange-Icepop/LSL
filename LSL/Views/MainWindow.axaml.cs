@@ -13,8 +13,10 @@ public partial class MainWindow : Window
         InitializeComponent();
         this.DataContext = new MainViewModel(); // 设置DataContext为MainViewModel的实例
         this.Closing += MainWindow_Closing;// 重定向关闭窗口事件
+        /*
         PopupPublisher.Instance.PopupMessageReceived += HandlePopupMessageReceived;// 注册消息接收事件
         PopupClosePublisher.Instance.PopupCloseOccurred += PopupClosing;// 注册弹窗关闭事件
+        */
         this.Loaded += InitializeViews;
     }
     private void InitializeViews(object sender, EventArgs e)
@@ -35,7 +37,7 @@ public partial class MainWindow : Window
             e.Cancel = false;
         }
     }
-
+    /*
     private void HandlePopupMessageReceived(string type, string message)
     {
         Popup.IsVisible = true;
@@ -45,4 +47,5 @@ public partial class MainWindow : Window
     {
         Popup.IsVisible = false;
     }
+    */
 }

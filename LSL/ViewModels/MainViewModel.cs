@@ -20,6 +20,7 @@ using Avalonia;
 using Avalonia.Interactivity;
 using Newtonsoft.Json.Linq;
 using System.IO;
+using System.Threading.Tasks;
 
 //导航部分开始
 public partial class MainViewModel : ViewModelBase, INavigationService
@@ -151,13 +152,13 @@ public partial class MainViewModel : ViewModelBase, INavigationService
             NavigateRightView("AddServer");
         });// 添加服务器命令-实现
 
-        DeleteServer = ReactiveCommand.Create(() =>
+        DeleteServer = ReactiveCommand.Create(async () =>
         {
             string serverId = ServerIDs[SelectedServerIndex];
             ConfigManager.DeleteServer(serverId);
             ReadServerList();
+            await Task.Delay(100);
             SelectedServerIndex = 0;
-            Debug.WriteLine("Server Deleted:" + serverId);
         });// 删除服务器命令-实现
 
         SearchJava = ReactiveCommand.Create(() =>
@@ -168,12 +169,23 @@ public partial class MainViewModel : ViewModelBase, INavigationService
 
         StartServerCmd = ReactiveCommand.Create(StartServer);// 启动服务器命令-实现
 
+        PopupConfirm = ReactiveCommand.Create(() =>
+        {
+            PopupResponse = "true";
+        });
+        PopupCancel = ReactiveCommand.Create(() =>
+        { 
+            PopupResponse = "false"; 
+        });
+
+
         // 初始化
-        ConfigManager.Initialize();
-        GetConfig();
-        ReadServerList();
-        ReadJavaList();
-        SelectedServerIndex = 0;
+        ConfigManager.Initialize();// 初始化配置
+        GetConfig();// 获取配置
+        ReadServerList();// 读取服务器列表
+        ReadJavaList();// 读取Java列表
+        SelectedServerIndex = 0;// 初始化服务器选择
+        RestorePopup();// 初始化弹窗
 
         #region 缓存验证
         if (appPriorityCache >= 0 && appPriorityCache <= 2)

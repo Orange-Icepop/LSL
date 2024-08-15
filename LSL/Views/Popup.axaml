@@ -8,21 +8,22 @@
 		<SolidColorBrush x:Key="PopupColor"/>
 	</UserControl.Resources>
 	<Grid>
-		<Grid Name="Cover" Background="Red" Opacity="0.3"/>
+		<Grid Name="Cover" Background="{Binding popupColor}" Opacity="0.3"/>
 		<Border Width="600"
 				Name="PopupBorder"
 				Padding="10"
 				VerticalAlignment="Center"
 				Background="White"
 				BorderThickness="4"
-				BorderBrush="Red"
+				BorderBrush="{Binding popupColor}"
 				CornerRadius="10">
 			<DockPanel>
-				<TextBlock Name="Head" DockPanel.Dock="Top" Margin="10" FontWeight="Bold" FontSize="17"/>
-				<TextBlock Name="Intro" DockPanel.Dock="Top" Margin="10"/>
-				<TextBlock Name="Message" DockPanel.Dock="Top" Margin="10"/>
-				<Button Name="Confirm" Classes="right" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Width="130" Height="30"/>
-				<Button Name="Cancel" Classes="right" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Width="130" Height="30"/>
+				<TextBlock Name="Head" DockPanel.Dock="Top" Margin="10" FontWeight="Bold" FontSize="17" Text="{Binding popupTitle}"/>
+				<TextBlock Name="Message" DockPanel.Dock="Top" Margin="10" Text="{Binding popupContent}"/>
+				<DockPanel DockPanel.Dock="Bottom" Margin="0">
+					<Button Name="Confirm" Classes="right" DockPanel.Dock="Right" HorizontalAlignment="Right" Width="100" Height="30" Margin="5" Content="确认" Command="{Binding PopupConfirm}"/>
+					<Button Name="Cancel" Classes="right" DockPanel.Dock="Right" HorizontalAlignment="Right" Width="100" Height="30" Margin="5" Content="取消" IsVisible="{Binding cancelShow}" Command="{Binding PopupCancel}"/>
+				</DockPanel>
 			</DockPanel>
 		</Border>
 	</Grid>

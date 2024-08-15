@@ -37,7 +37,7 @@ namespace LSL.ViewModels
         private bool betaUpdate;
         //可观测对象，最烦的一堆史
         public bool AutoEula { get => autoEula; set { this.RaiseAndSetIfChanged(ref autoEula, value); ConfigManager.ModifyConfig("auto_eula", value); } }
-        public int AppPriority { get => appPriority; set { this.RaiseAndSetIfChanged(ref appPriority, value); ; ConfigManager.ModifyConfig("app_priority", value); } }
+        public int AppPriority { get => appPriority; set { this.RaiseAndSetIfChanged(ref appPriority, value); ConfigManager.ModifyConfig("app_priority", value); } }
         public bool EndServerWhenClose { get => endServerWhenClose; set { this.RaiseAndSetIfChanged(ref endServerWhenClose, value); ConfigManager.ModifyConfig("end_server_when_close", value); } }
         public bool Daemon { get => daemon; set { this.RaiseAndSetIfChanged(ref daemon, value); ConfigManager.ModifyConfig("daemon", value); } }
         public int JavaSelection { get => javaSelection; set { this.RaiseAndSetIfChanged(ref javaSelection, value); ConfigManager.ModifyConfig("java_selection", value); } }
