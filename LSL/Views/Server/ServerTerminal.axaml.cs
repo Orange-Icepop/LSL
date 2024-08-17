@@ -1,4 +1,7 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
+using LSL.ViewModels;
+using System.Diagnostics;
 
 namespace LSL.Views.Server
 {

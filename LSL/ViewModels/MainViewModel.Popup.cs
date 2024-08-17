@@ -17,11 +17,7 @@ namespace LSL.ViewModels
         public string PopupResponse
         {
             get => _popupResponse;
-            set
-            {
-                _popupResponse = value;
-                this.RaiseAndSetIfChanged(ref _popupResponse, value);
-            }
+            set => this.RaiseAndSetIfChanged(ref _popupResponse, value);
         }
         // 等待Popup回复的任务
         public async Task WaitPopupResponse()

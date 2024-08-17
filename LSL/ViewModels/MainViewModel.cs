@@ -144,6 +144,7 @@ public partial class MainViewModel : ViewModelBase, INavigationService
         });
         #endregion
 
+        #region 命令实现
         ConfirmAddServer = ReactiveCommand.Create(() =>
         {
             string JavaPath = GameManager.MatchJavaList(JavaSelection.ToString());
@@ -174,10 +175,12 @@ public partial class MainViewModel : ViewModelBase, INavigationService
             PopupResponse = "true";
         });
         PopupCancel = ReactiveCommand.Create(() =>
-        { 
-            PopupResponse = "false"; 
+        {
+            PopupResponse = "false";
         });
+        #endregion
 
+        EventBus.Instance.Subscribe<TerminalOutputArgs>(ReceiveStdOutPut);
 
         // 初始化
         ConfigManager.Initialize();// 初始化配置

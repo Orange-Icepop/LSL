@@ -12,6 +12,16 @@
 			</local:MyCard>
 			<local:MyCard DockPanel.Dock="Right"/>
 		</DockPanel>
-		<local:MyCard Text="终端"/>
+		<local:MyCard Text="终端">
+				<TextBlock TextWrapping="Wrap"
+						 VerticalAlignment="Top"
+						 HorizontalAlignment="Left" 
+						 Width="880" 
+						 Height="440"
+						 Margin="30,60,30,20"
+						 Name="TerminalOutput"
+						 Foreground="Black"
+						 Text="{Binding ServerTerminalText, Mode=TwoWay}"/>
+		</local:MyCard>
 	</DockPanel>
 </UserControl>

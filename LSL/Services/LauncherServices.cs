@@ -9,20 +9,22 @@ using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using LSL.Views;
 using LSL.ViewModels;
+using LSL.Services;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using LSL.Views;
 using Avalonia.Metadata;
 using ReactiveUI;
 using MinecraftLaunch.Components.Fetcher;
 using MinecraftLaunch.Classes.Models.Game;
 using System.Collections;
+using Avalonia.Threading;
 
 namespace LSL.Services
 {
     //JSON基本操作类
-    public class JsonHelper
+    public static class JsonHelper
     {
         #region 修改键值基本方法ModifyJson
         public static void ModifyJson(string filePath, string keyPath, object keyValue)
@@ -351,7 +353,7 @@ namespace LSL.Services
                 File.WriteAllText(ConfigManager.JavaListPath, "{}");
             }
             Debug.WriteLine("开始获取Java列表");
-            JavaFetcher javaFetcher = new JavaFetcher();
+            JavaFetcher javaFetcher = new();
             var JavaList = await javaFetcher.FetchAsync();//调用MinecraftLaunch的API查找JAVA
             JsonHelper.ClearJson(ConfigManager.JavaListPath);//清空Java记录
             //遍历写入Java信息
@@ -374,7 +376,7 @@ namespace LSL.Services
         #endregion
 
         #region 启动服务器
-        public static void StartServer(string serverId)
+        public static async Task StartServer(string serverId)
         {
             string serverPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, serverId);
             string configPath = Path.Combine(serverPath, "lslconfig.json");
@@ -390,18 +392,27 @@ namespace LSL.Services
                 Arguments = arguments,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
-                CreateNoWindow = false// TODO:创建无窗口进程
+                CreateNoWindow = true
             };
             // 启动服务器
             using (Process process = Process.Start(startInfo))
             {
-                // 读取Java程序的输出（如果需要）  
+                // 读取Java程序的输出  
                 using (StreamReader reader = process.StandardOutput)
                 {
-                    string result = reader.ReadToEnd();
-                    Debug.WriteLine(result);
+                    string line;
+                    while ((line = await reader.ReadLineAsync()) != null)
+                    {
+                        EventBus.Instance.Publish(new TerminalOutputArgs { Output = line });
+                        /*
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            var terminal = new Views.Server.ServerTerminal();
+                            terminal.AddTerminalText(line + Environment.NewLine);
+                        });
+                        */
+                    }
                 }
-
                 // 等待Java程序执行完成  
                 //process.WaitForExit();
             }

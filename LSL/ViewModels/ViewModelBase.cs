@@ -17,55 +17,35 @@ public static class ViewFactory
 {
     public static UserControl CreateView(string viewName)
     {
-        switch (viewName)
+        return viewName switch
         {
             //Bar
-            case "HomeLeft":
-                return new HomeLeft();
-            case "ServerLeft":
-                return new ServerLeft();
-            case "DownloadLeft":
-                return new DownloadLeft();
-            case "SettingsLeft":
-                return new SettingsLeft();
+            "HomeLeft" => new HomeLeft(),
+            "ServerLeft" => new ServerLeft(),
+            "DownloadLeft" => new DownloadLeft(),
+            "SettingsLeft" => new SettingsLeft(),
             //Home
-            case "HomeRight":
-                return new HomeRight();
+            "HomeRight" => new HomeRight(),
             //Server
-            case "ServerGeneral":
-                return new ServerGeneral();
-            case "ServerStat":
-                return new ServerStat();
-            case "ServerTerminal":
-                return new ServerTerminal();
-            case "ServerConf":
-                return new ServerConf();
+            "ServerGeneral" => new ServerGeneral(),
+            "ServerStat" => new ServerStat(),
+            "ServerTerminal" => new ServerTerminal(),
+            "ServerConf" => new ServerConf(),
             //Download
-            case "AutoDown":
-                return new AutoDown();
-            case "ManualDown":
-                return new ManualDown();
-            case "AddServer":
-                return new AddServer();
-            case "ModDown":
-                return new ModDown();
+            "AutoDown" => new AutoDown(),
+            "ManualDown" => new ManualDown(),
+            "AddServer" => new AddServer(),
+            "ModDown" => new ModDown(),
             //ASViews
-            case "AddCore":
-                return new AddCore();
+            "AddCore" => new AddCore(),
             //Settings
-            case "Common":
-                return new Common();
-            case "DownloadSettings":
-                return new DownloadSettings();
-            case "PanelSettings":
-                return new PanelSettings();
-            case "StyleSettings":
-                return new StyleSettings();
-            case "About":
-                return new About();
-            default:
-                throw new ArgumentException($"未找到视图: {viewName}，应用程序可能已经损坏。");
-        }
+            "Common" => new Common(),
+            "DownloadSettings" => new DownloadSettings(),
+            "PanelSettings" => new PanelSettings(),
+            "StyleSettings" => new StyleSettings(),
+            "About" => new About(),
+            _ => throw new ArgumentException($"未找到视图: {viewName}，应用程序可能已经损坏。"),
+        };
     }
 }
 #endregion
@@ -252,51 +232,6 @@ public class PopupClosePublisher
     }
 }
 #endregion
-
-#region 定义公共事件发布
-public class EventPublisher
-{
-    private static EventPublisher _instance;
-
-    private EventPublisher() { }
-
-    public static EventPublisher Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = new EventPublisher();
-            }
-            return _instance;
-        }
-    }
-    // 定义事件委托  
-    public delegate void MainEventHandler(string type, string info);
-
-    // 定义事件  
-    public event MainEventHandler EventMessageReceived;
-
-    // 触发事件的方法  
-    protected virtual void EventReceived(string type, string info)
-    {
-        // 检查是否有任何订阅者  
-        MainEventHandler handler = EventMessageReceived;
-        if (handler != null)
-        {
-            // 如果有，则调用它们  
-            handler(type, info);
-        }
-    }
-
-    // 一个公共方法，用于从类的外部请求触发事件  
-    public void EventPublishMessage(string type, string info)
-    {
-        EventReceived(type, info);
-    }
-}
-#endregion
-
 
 // 示例用法
 /*
