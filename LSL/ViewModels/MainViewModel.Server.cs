@@ -19,34 +19,42 @@ namespace LSL.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedServerIndex, value);
         }
 
-        private StringBuilder _serverTerminalText = new();// 服务器终端的文本
-        public string ServerTerminalText// 公共字符串
+        public Dictionary<string, StringBuilder> TerminalTexts = new();// 服务器终端输出
+        public string ServerTerminalText// 终端文本
         {
-            get => _serverTerminalText.ToString();
+            get
+            {
+                string serverId = ServerIDs[SelectedServerIndex];
+                return TerminalTexts[serverId].ToString();
+            }
             set
             {
-                _serverTerminalText.Clear();
-                _serverTerminalText.AppendLine(value);
+                string serverId = ServerIDs[SelectedServerIndex];
+                TerminalTexts[serverId].Clear();
+                TerminalTexts[serverId].AppendLine(value);
                 this.RaisePropertyChanged(nameof(ServerTerminalText));
             }
         }
-        public void AddTerminalText(string text)// 添加服务器终端文本
+        public void AddTerminalText(string serverId, string text)// 添加服务器终端文本
         {
-            _serverTerminalText.AppendLine(text);
+            TerminalTexts[serverId].AppendLine(text);
             this.RaisePropertyChanged(nameof(ServerTerminalText));
         }
-        public void ReceiveStdOutPut(TerminalOutputArgs e)
+        public void ReceiveStdOutPut(TerminalOutputArgs e)// 接收标准输出
         {
-            AddTerminalText(e.Output);
+            AddTerminalText(e.ServerId, e.Output);
         }
 
         public ICommand StartServerCmd { get; set; }// 启动服务器命令
 
-        public void StartServer()
+        public void StartServer()//启动服务器方法
         {
             string serverId = ServerIDs[SelectedServerIndex];
+            TerminalTexts.Add(serverId, new StringBuilder());
+            NavigateLeftView("ServerLeft");
             NavigateRightView("ServerTerminal");
-            Task RunServer = Task.Run(() => GameManager.StartServer(serverId));
+            ServerHost SH = new();
+            Task RunServer = Task.Run(() => SH.StartServer(serverId));
         }
     }
 }

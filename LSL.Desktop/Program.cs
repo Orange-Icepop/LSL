@@ -3,6 +3,7 @@ using LSL.ViewModels;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using LSL.Services;
+using ReactiveUI;
 
 namespace LSL.Desktop;
 
@@ -21,7 +22,7 @@ class Program
         }
         catch (Exception ex)
         {
-            PopupPublisher.Instance.PopupMessage("deadlyError", ex.Message);
+            EventBus.Instance.Publish(new PopupMessageArgs { Type = "deadlyError", Message = ex.Message });
         }
     }
     // Avalonia configuration, don't remove; also used by visual designer.

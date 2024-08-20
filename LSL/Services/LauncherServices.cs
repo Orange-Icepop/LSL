@@ -294,7 +294,7 @@ namespace LSL.Services
         #endregion
 
         #region 删除服务器方法DeleteServer
-        public static async void DeleteServer(string serverId)
+        public static void DeleteServer(string serverId)
         {
             string serverPath = (string)JsonHelper.ReadJson(ServerConfigPath, serverId);
             if (serverPath != null && Directory.Exists(serverPath))
@@ -342,7 +342,7 @@ namespace LSL.Services
         #endregion
     }
 
-    public class GameManager//服务器相关服务
+    public static class JavaManager//Java相关服务
     {
 
         #region 获取Java列表
@@ -375,49 +375,6 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 启动服务器
-        public static async Task StartServer(string serverId)
-        {
-            string serverPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, serverId);
-            string configPath = Path.Combine(serverPath, "lslconfig.json");
-            string corePath = Path.Combine(serverPath, (string)JsonHelper.ReadJson(configPath, "$.core_name"));
-            string javaPath = (string)JsonHelper.ReadJson(configPath, "$.using_java");
-            string MinMem = JsonHelper.ReadJson(configPath, "$.min_memory").ToString();
-            string MaxMem = JsonHelper.ReadJson(configPath, "$.max_memory").ToString();
-            string arguments = $"-Xms{MinMem}M -Xmx{MaxMem}M -jar {corePath}";// TODO:在内置终端部分完成后添加-nogui参数
-
-            ProcessStartInfo startInfo = new()// 提供服务器信息
-            {
-                FileName = javaPath,
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true
-            };
-            // 启动服务器
-            using (Process process = Process.Start(startInfo))
-            {
-                // 读取Java程序的输出  
-                using (StreamReader reader = process.StandardOutput)
-                {
-                    string line;
-                    while ((line = await reader.ReadLineAsync()) != null)
-                    {
-                        EventBus.Instance.Publish(new TerminalOutputArgs { Output = line });
-                        /*
-                        await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
-                            var terminal = new Views.Server.ServerTerminal();
-                            terminal.AddTerminalText(line + Environment.NewLine);
-                        });
-                        */
-                    }
-                }
-                // 等待Java程序执行完成  
-                //process.WaitForExit();
-            }
-        }
-        #endregion
     }
 
 }

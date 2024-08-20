@@ -13,7 +13,8 @@
 			<local:MyCard DockPanel.Dock="Right"/>
 		</DockPanel>
 		<local:MyCard Text="终端">
-				<TextBlock TextWrapping="Wrap"
+				<TextBox TextWrapping="Wrap"
+						 IsReadOnly="True"
 						 VerticalAlignment="Top"
 						 HorizontalAlignment="Left" 
 						 Width="880" 
