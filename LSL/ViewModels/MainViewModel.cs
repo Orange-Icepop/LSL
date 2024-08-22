@@ -1,24 +1,14 @@
 ﻿namespace LSL.ViewModels;
 
-using Avalonia.Controls;
-using LSL.Views;
-using LSL.Views.Home;
-using LSL.Views.Server;
-using LSL.Views.Download;
-using LSL.Views.Download.ASViews;
-using LSL.Views.Settings;
 using ReactiveUI;
 using System;
-using System.Windows.Input;
-using System.Reactive;
 using System.Collections.Generic;
-using Avalonia.Markup.Xaml.MarkupExtensions;
 using System.Diagnostics;
 using LSL.Services;
 using System.Collections.ObjectModel;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -103,7 +93,6 @@ public partial class MainViewModel : ViewModelBase
         #endregion
 
         EventBus.Instance.Subscribe<TerminalOutputArgs>(ReceiveStdOutPut);
-
 
         #region 缓存验证
         if (appPriorityCache >= 0 && appPriorityCache <= 2)

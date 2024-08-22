@@ -13,7 +13,7 @@ namespace LSL.Services
 {
     public interface IServerHost
     {
-        Task StartServer(string serverId);
+        Task RunServer(string serverId);
         Task SendCommand(string serverId, string command);
         void EndServer(string serverId);
         void EndAllServers();
@@ -73,8 +73,8 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 启动服务器StartServer(string serverId)
-        public async Task StartServer(string serverId)
+        #region 启动服务器RunServer(string serverId)
+        public async Task RunServer(string serverId)
         {
             string serverPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, serverId);
             string configPath = Path.Combine(serverPath, "lslconfig.json");

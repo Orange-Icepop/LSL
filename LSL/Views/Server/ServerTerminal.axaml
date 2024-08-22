@@ -8,21 +8,31 @@
 	<DockPanel Width="950" Height="600">
 		<DockPanel DockPanel.Dock="Bottom" Height="70">
 			<local:MyCard DockPanel.Dock="Right" Width="200">
-				
+				<Grid Margin="20,0,20,0" VerticalAlignment="Center" HorizontalAlignment="Center">
+					<Button BorderThickness="0" VerticalAlignment="Center">
+						<Image Source="avares://LSL/Assets/ButtonIcons/PowerButton.png" Width="25" Height="25"/>
+					</Button>
+					<Button BorderThickness="0" VerticalAlignment="Center">
+						<Image Source="avares://LSL/Assets/ButtonIcons/Save.png" Width="25" Height="25"/>
+					</Button>
+					<Button BorderThickness="0" VerticalAlignment="Center">
+						<Image Source="avares://LSL/Assets/ButtonIcons/Cross.png" Width="25" Height="25"/>
+					</Button>
+				</Grid>
 			</local:MyCard>
 			<local:MyCard DockPanel.Dock="Right"/>
 		</DockPanel>
 		<local:MyCard Text="终端">
-				<TextBox TextWrapping="Wrap"
-						 IsReadOnly="True"
-						 VerticalAlignment="Top"
-						 HorizontalAlignment="Left" 
-						 Width="880" 
-						 Height="440"
-						 Margin="30,60,30,20"
-						 Name="TerminalOutput"
-						 Foreground="Black"
-						 Text="{Binding ServerTerminalText, Mode=TwoWay}"/>
+			<TextBox TextWrapping="Wrap"
+					 IsReadOnly="True"
+					 VerticalAlignment="Top"
+					 HorizontalAlignment="Left"
+					 Width="880"
+					 Height="440"
+					 Margin="30,60,30,20"
+					 Name="TerminalOutput"
+					 Foreground="Black"
+					 Text="{Binding ServerTerminalText}"/>
 		</local:MyCard>
 	</DockPanel>
 </UserControl>

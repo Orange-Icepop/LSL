@@ -11,5 +11,8 @@ namespace LSL.Views.Server
         {
             InitializeComponent();
         }
+        public void TurnToEnd()
+        {
+        }
     }
 }

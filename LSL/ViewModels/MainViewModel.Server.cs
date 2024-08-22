@@ -1,8 +1,11 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media.Imaging;
 using LSL.Services;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +22,7 @@ namespace LSL.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedServerIndex, value);
         }
 
+        #region 终端信息
         public Dictionary<string, StringBuilder> TerminalTexts = new();// 服务器终端输出
         public string ServerTerminalText// 终端文本
         {
@@ -44,9 +48,9 @@ namespace LSL.ViewModels
         {
             AddTerminalText(e.ServerId, e.Output);
         }
+        #endregion
 
         public ICommand StartServerCmd { get; set; }// 启动服务器命令
-
         public void StartServer()//启动服务器方法
         {
             string serverId = ServerIDs[SelectedServerIndex];
@@ -54,7 +58,7 @@ namespace LSL.ViewModels
             NavigateLeftView("ServerLeft");
             NavigateRightView("ServerTerminal");
             ServerHost SH = new();
-            Task RunServer = Task.Run(() => SH.StartServer(serverId));
+            Task RunServer = Task.Run(() => SH.RunServer(serverId));
         }
     }
 }
