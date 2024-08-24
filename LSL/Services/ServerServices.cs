@@ -76,6 +76,7 @@ namespace LSL.Services
         #region 启动服务器RunServer(string serverId)
         public async Task RunServer(string serverId)
         {
+            //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
             string serverPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, serverId);
             string configPath = Path.Combine(serverPath, "lslconfig.json");
             string corePath = Path.Combine(serverPath, (string)JsonHelper.ReadJson(configPath, "$.core_name"));

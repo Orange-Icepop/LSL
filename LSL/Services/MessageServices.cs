@@ -107,15 +107,19 @@ namespace LSL.Services
     #endregion
 
     #region 事件类
-    public class TerminalOutputArgs : EventArgs
+    public class TerminalOutputArgs : EventArgs// 终端输出事件
     {
         public string ServerId { get; set; }
         public string Output { get; set; }
     }
-    public class PopupMessageArgs : EventArgs
+    public class PopupMessageArgs : EventArgs// 弹窗事件
     {
         public string Type { get; set; }
         public string Message { get; set; }
+    }
+    public class UpdateTerminalArgs : EventArgs// 更新终端文本事件
+    {
+        public string Type { get; set; }
     }
     #endregion
 }

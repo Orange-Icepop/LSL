@@ -23,16 +23,18 @@
 			<local:MyCard DockPanel.Dock="Right"/>
 		</DockPanel>
 		<local:MyCard Text="终端">
-			<TextBox TextWrapping="Wrap"
-					 IsReadOnly="True"
-					 VerticalAlignment="Top"
-					 HorizontalAlignment="Left"
-					 Width="880"
-					 Height="440"
-					 Margin="30,60,30,20"
-					 Name="TerminalOutput"
-					 Foreground="Black"
-					 Text="{Binding ServerTerminalText}"/>
+			<ScrollViewer VerticalAlignment="Top"
+						  HorizontalAlignment="Left"
+						  Width="880"
+						  Height="440"
+						  Margin="30,60,30,20"
+						  Name="TerminalScroll">
+				<TextBlock TextWrapping="Wrap"
+						   IsEnabled="True"
+						 Name="TerminalOutput"
+						 Foreground="Black"
+						 Text="{Binding ServerTerminalText}"/>
+			</ScrollViewer>
 		</local:MyCard>
 	</DockPanel>
 </UserControl>

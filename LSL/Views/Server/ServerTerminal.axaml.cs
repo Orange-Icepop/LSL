@@ -1,18 +1,34 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
+using Avalonia.ReactiveUI;
+using LSL.Services;
 using LSL.ViewModels;
+using ReactiveUI;
+using System;
 using System.Diagnostics;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
 
 namespace LSL.Views.Server
 {
-    public partial class ServerTerminal : UserControl
+    public partial class ServerTerminal : ReactiveUserControl<MainViewModel>
     {
         public ServerTerminal()
         {
             InitializeComponent();
+            this.WhenActivated(disposables =>
+            {
+                this.ViewModel.ScrollTerminal
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(_ => TurnToEnd())
+                .DisposeWith(disposables);
+            });
         }
         public void TurnToEnd()
         {
+            double tolerance = 10.0;
+            if(Math.Abs(TerminalScroll.Offset.Y + TerminalScroll.Viewport.Height - TerminalScroll.Extent.Height) < tolerance) TerminalScroll.ScrollToEnd();
         }
     }
 }
