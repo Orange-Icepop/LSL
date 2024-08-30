@@ -81,6 +81,9 @@ public partial class MainViewModel : ViewModelBase
         });// 搜索Java命令-实现
 
         StartServerCmd = ReactiveCommand.Create(StartServer);// 启动服务器命令-实现
+        StopServerCmd = ReactiveCommand.Create(() => SendServerCommand("stop"));// 停止服务器命令-实现
+        SaveServerCmd = ReactiveCommand.Create(() => SendServerCommand("save-all"));// 保存服务器命令-实现
+        ShutServerCmd = ReactiveCommand.Create(() => SH.EndServer(SelectedServerId));// 结束服务器进程命令-实现
 
         PopupConfirm = ReactiveCommand.Create(() =>
         {

@@ -20,12 +20,15 @@ namespace LSL.ViewModels
 {
     public partial class MainViewModel
     {
+        private ServerHost SH = new();
         private int _selectedServerIndex;// 当前选中的服务器
         public int SelectedServerIndex
         {
             get => _selectedServerIndex;
             set => this.RaiseAndSetIfChanged(ref _selectedServerIndex, value);
         }
+
+        public string SelectedServerId => ServerIDs[SelectedServerIndex];
 
         #region 终端信息
         public ConcurrentDictionary<string, StringBuilder> TerminalTexts = new();// 服务器终端输出
@@ -71,14 +74,20 @@ namespace LSL.ViewModels
         #endregion
 
         public ICommand StartServerCmd { get; set; }// 启动服务器命令
+        public ICommand StopServerCmd { get; set; }// 停止服务器命令
+        public ICommand SaveServerCmd { get; set; }// 保存服务器命令
+        public ICommand ShutServerCmd { get; set; }// 结束服务器进程命令
         public void StartServer()//启动服务器方法
         {
-            string serverId = ServerIDs[SelectedServerIndex];
-            TerminalTexts.TryAdd(serverId, new StringBuilder());
+            //string serverId = ServerIDs[SelectedServerIndex];
+            TerminalTexts.TryAdd(SelectedServerId, new StringBuilder());
             NavigateLeftView("ServerLeft");
             NavigateRightView("ServerTerminal");
-            ServerHost SH = new();
-            Task RunServer = Task.Run(() => SH.RunServer(serverId));
+            Task RunServer = Task.Run(() => SH.RunServer(SelectedServerId));
+        }
+        public async void SendServerCommand(string message)//停止服务器方法
+        {
+            await Task.Run(() => SH.SendCommand(SelectedServerId, message));
         }
     }
 }

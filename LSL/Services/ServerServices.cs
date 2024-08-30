@@ -14,7 +14,7 @@ namespace LSL.Services
     public interface IServerHost
     {
         Task RunServer(string serverId);
-        Task SendCommand(string serverId, string command);
+        void SendCommand(string serverId, string command);
         void EndServer(string serverId);
         void EndAllServers();
     }
@@ -76,6 +76,7 @@ namespace LSL.Services
         #region 启动服务器RunServer(string serverId)
         public async Task RunServer(string serverId)
         {
+            EnsureExited(serverId);
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
             string serverPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, serverId);
             string configPath = Path.Combine(serverPath, "lslconfig.json");
@@ -91,34 +92,33 @@ namespace LSL.Services
                 Arguments = arguments,
                 WorkingDirectory = serverPath,
                 UseShellExecute = false,
+                RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 CreateNoWindow = true
             };
             // 启动服务器
-            using (Process process = Process.Start(startInfo))
+            using Process process = Process.Start(startInfo);
+            LoadServer(serverId, process);
+            process.EnableRaisingEvents = true;
+            process.Exited += (sender, e) =>
             {
-                LoadServer(serverId, process);
-                process.EnableRaisingEvents = true;
-                process.Exited += (sender, e) =>
+                // 移除进程的实例
+                UnloadServer(serverId);
+            };
+            // 读取Java程序的输出  
+            using (StreamReader reader = process.StandardOutput)
+            {
+                string line;
+                while ((line = await reader.ReadLineAsync()) != null)
                 {
-                    // 移除进程的实例
-                    UnloadServer(serverId);
-                };
-                // 读取Java程序的输出  
-                using (StreamReader reader = process.StandardOutput)
-                {
-                    string line;
-                    while ((line = await reader.ReadLineAsync()) != null)
-                    {
-                        EventBus.Instance.Publish(new TerminalOutputArgs { ServerId = serverId, Output = line });
-                    }
+                    EventBus.Instance.Publish(new TerminalOutputArgs { ServerId = serverId, Output = line });
                 }
             }
         }
         #endregion
 
         #region 发送命令SendCommand(string serverId, string command)
-        public async Task SendCommand(string serverId, string command)
+        public async void SendCommand(string serverId, string command)
         {
             Process server = GetServer(serverId);
             if (server != null && !server.HasExited)
@@ -161,6 +161,22 @@ namespace LSL.Services
                 }
             }
             _runningServers.Clear();
+        }
+        #endregion
+
+        #region 确保进程退出命令EnsureExited(string serverId)
+        public void EnsureExited(string serverId)
+        {
+            Process server = GetServer(serverId);
+            if (!server.HasExited)
+            {
+                server.Kill();
+                server.Dispose();
+            }
+            if (server != null)
+            {
+                UnloadServer(serverId);
+            }
         }
         #endregion
     }
