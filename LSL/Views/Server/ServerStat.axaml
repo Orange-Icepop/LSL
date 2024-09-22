@@ -5,8 +5,8 @@
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
 			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
              x:Class="LSL.Views.Server.ServerStat">
-	<StackPanel>
-		<local:MyCard Text="资源占用">
+	<DockPanel>
+		<local:MyCard Text="资源占用" DockPanel.Dock="Top" Height="200">
 			<Grid Margin="30,50,10,10" ColumnDefinitions="*,*,*">
 				<StackPanel Grid.Column="0">
 					<TextBlock Text="CPU占用" FontSize="12"/>
@@ -19,5 +19,11 @@
 				</StackPanel>
 			</Grid>
 		</local:MyCard>
-	</StackPanel>
+		<local:MyCard Text="玩家列表" DockPanel.Dock="Left" Width="250">
+			<ListBox Width="200" Height="300"></ListBox>
+		</local:MyCard>
+		<local:MyCard Text="玩家消息" DockPanel.Dock="Left">
+			
+		</local:MyCard>
+	</DockPanel>
 </UserControl>

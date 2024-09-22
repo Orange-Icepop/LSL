@@ -193,36 +193,8 @@ namespace LSL.Services
         {
             if (!File.Exists(ConfigFilePath))
             {
-                // 定义初始配置数据（json格式）
-                var initialConfig = new
-                {
-                    //Common
-                    auto_eula = false,
-                    app_priority = 1,
-                    end_server_when_close = false,
-                    daemon = true,
-                    java_selection = 0,
-                    auto_find_java = true,
-                    output_encode = 0,
-                    input_encode = 0,
-                    coloring_terminal = true,
-                    //Download
-                    download_source = 0,
-                    download_threads = 16,
-                    download_limit = 0,
-                    //Panel
-                    panel_enable = true,
-                    panel_port = 25000,
-                    panel_monitor = true,
-                    panel_terminal = true,
-                    //Style:off
-                    //About
-                    auto_update = true,
-                    beta_update = false
-                };
-
-                // 序列化成JSON字符串并写入文件  
-                string configString = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
+                // 将初始配置字典序列化成JSON字符串并写入文件  
+                string configString = JsonConvert.SerializeObject(DefaultConfigs, Formatting.Indented);
                 File.WriteAllText(_configFilePath, configString);
                 Debug.WriteLine("config.json initialized.");
             }
@@ -323,6 +295,99 @@ namespace LSL.Services
         #endregion
 
         #region 读取配置键值
+        // 使用的键的列表
+        public static readonly List<string> ConfigKeys =
+        [
+            //Common
+            "auto_eula",
+            "app_priority",
+            "end_server_when_close",
+            "daemon",
+            "java_selection",
+            "auto_find_java",
+            "output_encode",
+            "input_encode",
+            "coloring_terminal",
+            //Download
+            "download_source",
+            "download_threads",
+            "download_limit",
+            //Panel
+            "panel_enable",
+            "panel_port",
+            "panel_monitor",
+            "panel_terminal",
+            //About
+            "auto_update",
+            "beta_update"
+        ];
+        // 默认配置字典
+        public static readonly Dictionary<string, object> DefaultConfigs = new()
+        {
+            //Common
+            { "auto_eula", true },
+            { "app_priority", 1 },
+            { "end_server_when_close", false },
+            { "daemon", true },
+            { "java_selection", 0 },
+            { "auto_find_java", true },
+            { "output_encode", 0 },
+            { "input_encode", 0 },
+            { "coloring_terminal", true },
+            //Download
+            { "download_source", 0 },
+            { "download_threads", 16 },
+            { "download_limit", 0 },
+            //Panel
+            { "panel_enable", false },
+            { "panel_port", 25000 },
+            { "panel_monitor", true },
+            { "panel_terminal", true },
+            //Style:off
+            //About
+            { "auto_update", true },
+            { "beta_update", false }
+        };
+        // 当前配置字典
+        public Dictionary<string, object> CurrentConfigs = new();
+
+        public void LoadConfig()
+        {
+            CurrentConfigs.Clear();
+            JObject configs = JObject.Parse(File.ReadAllText(ConfigFilePath));
+            List<string> keysNeedToRepair = new();
+            foreach (var key in ConfigKeys)
+            {
+                JToken config = configs[key];
+                if (config == null)
+                {
+                    CurrentConfigs[key] = DefaultConfigs[key];
+                    keysNeedToRepair.Add(key);
+                }
+                else
+                {
+                    CurrentConfigs[key] = config.ToObject<object>();
+                }
+            }
+            if (keysNeedToRepair.Count > 0)
+            {
+                foreach (var key in keysNeedToRepair)
+                {
+                    if (configs.ContainsKey(key))
+                    {
+                        configs[key] = (JToken?)DefaultConfigs[key];
+                    }
+                    else
+                    {
+                        configs.Add(key, JToken.FromObject(DefaultConfigs[key]));
+                    }
+                }
+                File.WriteAllText(ConfigFilePath, configs.ToString());
+                Debug.WriteLine("Config.json repaired.");
+            }
+            Debug.WriteLine("Config.json loaded.");
+        }
+
         public static object ReadConfig(string key)
         {
             string keyPath = "$." + key;

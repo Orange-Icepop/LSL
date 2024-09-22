@@ -66,6 +66,7 @@ namespace LSL.Services
             {
                 return _runningServers[serverId];
             }
+            catch { return null; }
             finally
             {
                 _lock.ExitReadLock();
@@ -99,11 +100,13 @@ namespace LSL.Services
             // 启动服务器
             using Process process = Process.Start(startInfo);
             LoadServer(serverId, process);
+            EventBus.Instance.Publish(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器正在启动，请稍后......." });
             process.EnableRaisingEvents = true;
             process.Exited += (sender, e) =>
             {
                 // 移除进程的实例
                 UnloadServer(serverId);
+                EventBus.Instance.Publish(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器已关闭" });
             };
             // 读取Java程序的输出  
             using (StreamReader reader = process.StandardOutput)
@@ -168,7 +171,8 @@ namespace LSL.Services
         public void EnsureExited(string serverId)
         {
             Process server = GetServer(serverId);
-            if (!server.HasExited)
+            if(server == null) { return; }
+            else if (!server.HasExited)
             {
                 server.Kill();
                 server.Dispose();
@@ -179,5 +183,21 @@ namespace LSL.Services
             }
         }
         #endregion
+    }
+
+    public class OutputHandler
+    {
+        public OutputHandler()
+        {
+            EventBus.Instance.Subscribe<TerminalOutputArgs>(HandleOutput);
+        }
+
+        private async void HandleOutput(TerminalOutputArgs args)
+        {
+            if (args.Output.Contains("joined the game"))
+            {
+
+            }
+        }
     }
 }

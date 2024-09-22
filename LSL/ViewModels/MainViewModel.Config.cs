@@ -158,7 +158,7 @@ namespace LSL.ViewModels
                 string KeyPath = "$.name";
                 ServerNames.Add((string)JsonHelper.ReadJson(TargetedConfigPath, KeyPath));
             }
-            if (SelectedServerIndex >= ServerNames.Count)
+            if (SelectedServerIndex > ServerNames.Count)
             {
                 SelectedServerIndex = 0;
             }

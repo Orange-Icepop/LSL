@@ -15,6 +15,8 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using MCQuery;
+using System.IO;
 
 namespace LSL.ViewModels
 {
@@ -25,10 +27,29 @@ namespace LSL.ViewModels
         public int SelectedServerIndex
         {
             get => _selectedServerIndex;
-            set => this.RaiseAndSetIfChanged(ref _selectedServerIndex, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedServerIndex, value);
+                ReadProperties();
+            }
         }
-
         public string SelectedServerId => ServerIDs[SelectedServerIndex];
+        public ICommand StartServerCmd { get; set; }// 启动服务器命令
+        public ICommand StopServerCmd { get; set; }// 停止服务器命令
+        public ICommand SaveServerCmd { get; set; }// 保存服务器命令
+        public ICommand ShutServerCmd { get; set; }// 结束服务器进程命令
+        public void StartServer()//启动服务器方法
+        {
+            //string serverId = ServerIDs[SelectedServerIndex];
+            TerminalTexts.TryAdd(SelectedServerId, new StringBuilder());
+            NavigateLeftView("ServerLeft");
+            NavigateRightView("ServerTerminal");
+            Task RunServer = Task.Run(() => SH.RunServer(SelectedServerId));
+        }
+        public async void SendServerCommand(string message)// 发送服务器命令
+        {
+            await Task.Run(() => SH.SendCommand(SelectedServerId, message));
+        }
 
         #region 终端信息
         public ConcurrentDictionary<string, StringBuilder> TerminalTexts = new();// 服务器终端输出
@@ -67,27 +88,47 @@ namespace LSL.ViewModels
             _scrollTerminal.OnNext(Unit.Default);
             //EventBus.Instance.Publish(new UpdateTerminalArgs { Type = "set" });
         }
-        public void ReceiveStdOutPut(TerminalOutputArgs e)// 接收标准输出
+        public void ReceiveStdOutPut(TerminalOutputArgs args)// 接收标准输出
         {
-            AddTerminalText(e.ServerId, e.Output);
+            AddTerminalText(args.ServerId, args.Output);
         }
         #endregion
 
-        public ICommand StartServerCmd { get; set; }// 启动服务器命令
-        public ICommand StopServerCmd { get; set; }// 停止服务器命令
-        public ICommand SaveServerCmd { get; set; }// 保存服务器命令
-        public ICommand ShutServerCmd { get; set; }// 结束服务器进程命令
-        public void StartServer()//启动服务器方法
+        #region 当前服务器配置文件字典
+        public Dictionary<string, object> CurrentServerProperty = new();// 当前服务器server.properties字典
+        public bool ReadProperties()
         {
-            //string serverId = ServerIDs[SelectedServerIndex];
-            TerminalTexts.TryAdd(SelectedServerId, new StringBuilder());
-            NavigateLeftView("ServerLeft");
-            NavigateRightView("ServerTerminal");
-            Task RunServer = Task.Run(() => SH.RunServer(SelectedServerId));
+            try
+            {
+                var text = File.ReadAllLines(Path.Combine((string)JsonHelper.ReadJson(ConfigManager.ConfigFilePath, SelectedServerId), "server.properties"));
+                CurrentServerProperty.Clear();
+                foreach (var line in text)
+                {
+                    if (line.StartsWith("#")) continue;
+                    var keyValue = line.Split('=');
+                    if (keyValue.Length == 2)
+                    {
+                        CurrentServerProperty.Add(keyValue[0], keyValue[1]);
+                    }
+                }
+                return true;
+            }
+            catch (FileNotFoundException)
+            {
+                return false;
+            }
         }
-        public async void SendServerCommand(string message)//停止服务器方法
+        #endregion
+
+        #region 查询服务器玩家列表与消息列表
+        public List<string> ServerPlayers = new();// 服务器玩家列表
+        private static string address = "127.0.0.1";
+        private int port = new();
+        public async void QueryServerPlayers()
         {
-            await Task.Run(() => SH.SendCommand(SelectedServerId, message));
+            int.TryParse(CurrentServerProperty["query.port"].ToString(), out port);
+            MCServer server = new(address, port);
         }
+        #endregion
     }
 }

@@ -32,7 +32,6 @@ public partial class MainViewModel : ViewModelBase
         GetConfig();// 获取配置
         ReadServerList();// 读取服务器列表
         ReadJavaList();// 读取Java列表
-        SelectedServerIndex = 0;// 初始化服务器选择
         RestorePopup();// 初始化弹窗
 
         LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
@@ -67,8 +66,7 @@ public partial class MainViewModel : ViewModelBase
 
         DeleteServer = ReactiveCommand.Create(async () =>
         {
-            string serverId = ServerIDs[SelectedServerIndex];
-            ConfigManager.DeleteServer(serverId);
+            ConfigManager.DeleteServer(SelectedServerId);
             ReadServerList();
             await Task.Delay(100);
             SelectedServerIndex = 0;
@@ -81,7 +79,11 @@ public partial class MainViewModel : ViewModelBase
         });// 搜索Java命令-实现
 
         StartServerCmd = ReactiveCommand.Create(StartServer);// 启动服务器命令-实现
-        StopServerCmd = ReactiveCommand.Create(() => SendServerCommand("stop"));// 停止服务器命令-实现
+        StopServerCmd = ReactiveCommand.Create(() =>
+        {
+            SendServerCommand("stop");
+            AddTerminalText(SelectedServerId, "[LSL 消息]: 关闭服务器命令已发出，请等待");
+        });// 停止服务器命令-实现
         SaveServerCmd = ReactiveCommand.Create(() => SendServerCommand("save-all"));// 保存服务器命令-实现
         ShutServerCmd = ReactiveCommand.Create(() => SH.EndServer(SelectedServerId));// 结束服务器进程命令-实现
 
