@@ -70,24 +70,24 @@ namespace LSL.ViewModels
         {
             try
             {
-                autoEula = (bool)ConfigManager.ReadConfig("auto_eula");
-                appPriorityCache = (int)ConfigManager.ReadConfig("app_priority");
-                endServerWhenClose = (bool)ConfigManager.ReadConfig("end_server_when_close");
-                daemon = (bool)ConfigManager.ReadConfig("daemon");
-                javaSelectionCache = (int)ConfigManager.ReadConfig("java_selection");
-                autoFindJava = (bool)ConfigManager.ReadConfig("auto_find_java");
-                outputEncodeCache = (int)ConfigManager.ReadConfig("output_encode");
-                inputEncodeCache = (int)ConfigManager.ReadConfig("input_encode");
-                coloringTerminal = (bool)ConfigManager.ReadConfig("coloring_terminal");
-                downloadSourceCache = (int)ConfigManager.ReadConfig("download_source");
-                downloadThreadsCache = (int)ConfigManager.ReadConfig("download_threads");
-                downloadLimitCache = (int)ConfigManager.ReadConfig("download_limit");
-                panelEnable = (bool)ConfigManager.ReadConfig("panel_enable");
-                panelPortCache = (int)ConfigManager.ReadConfig("panel_port");
-                panelMonitor = (bool)ConfigManager.ReadConfig("panel_monitor");
-                panelTerminal = (bool)ConfigManager.ReadConfig("panel_terminal");
-                autoUpdate = (bool)ConfigManager.ReadConfig("auto_update");
-                betaUpdate = (bool)ConfigManager.ReadConfig("beta_update");
+                autoEula = (bool)ConfigManager.CurrentConfigs["auto_eula"];
+                appPriorityCache = (int)ConfigManager.CurrentConfigs["app_priority"];
+                endServerWhenClose = (bool)ConfigManager.CurrentConfigs["end_server_when_close"];
+                daemon = (bool)ConfigManager.CurrentConfigs["daemon"];
+                javaSelectionCache = (int)ConfigManager.CurrentConfigs["java_selection"];
+                autoFindJava = (bool)ConfigManager.CurrentConfigs["auto_find_java"];
+                outputEncodeCache = (int)ConfigManager.CurrentConfigs["output_encode"];
+                inputEncodeCache = (int)ConfigManager.CurrentConfigs["input_encode"];
+                coloringTerminal = (bool)ConfigManager.CurrentConfigs["coloring_terminal"];
+                downloadSourceCache = (int)ConfigManager.CurrentConfigs["download_source"];
+                downloadThreadsCache = (int)ConfigManager.CurrentConfigs["download_threads"];
+                downloadLimitCache = (int)ConfigManager.CurrentConfigs["download_limit"];
+                panelEnable = (bool)ConfigManager.CurrentConfigs["panel_enable"];
+                panelPortCache = (int)ConfigManager.CurrentConfigs["panel_port"];
+                panelMonitor = (bool)ConfigManager.CurrentConfigs["panel_monitor"];
+                panelTerminal = (bool)ConfigManager.CurrentConfigs["panel_terminal"];
+                autoUpdate = (bool)ConfigManager.CurrentConfigs["auto_update"];
+                betaUpdate = (bool)ConfigManager.CurrentConfigs["beta_update"];
             }
             catch (Exception)
             {

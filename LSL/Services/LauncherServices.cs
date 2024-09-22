@@ -186,6 +186,7 @@ namespace LSL.Services
             Directory.CreateDirectory(ServersPath);
             //初始化配置文件
             WriteInitialConfig();
+            LoadConfig();
         }
 
         #region 初始化配置文件
@@ -412,9 +413,9 @@ namespace LSL.Services
 
         #region 读取配置键值
         // 当前配置字典
-        public Dictionary<string, object> CurrentConfigs = new();
+        public static Dictionary<string, object> CurrentConfigs = new();
 
-        public void LoadConfig()
+        public static void LoadConfig()
         {
             CurrentConfigs.Clear();
             JObject configs = JObject.Parse(File.ReadAllText(ConfigFilePath));
