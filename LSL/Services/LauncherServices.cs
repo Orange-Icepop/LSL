@@ -278,24 +278,7 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 修改配置键值
-
-        public static void ModifyConfig(string key, object keyValue)
-        {
-            string keyPath = "$." + key;
-            try
-            {
-                JsonHelper.ModifyJson(ConfigFilePath, keyPath, keyValue);
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException($"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。\r错误信息：{ex.Message}");
-            }
-        }
-        #endregion
-
-        #region 读取配置键值
-        // 使用的键的列表
+        #region 使用的键的列表
         public static readonly List<string> ConfigKeys =
         [
             //Common
@@ -321,7 +304,9 @@ namespace LSL.Services
             "auto_update",
             "beta_update"
         ];
-        // 默认配置字典
+        #endregion
+
+        #region 默认配置字典
         public static readonly Dictionary<string, object> DefaultConfigs = new()
         {
             //Common
@@ -348,6 +333,84 @@ namespace LSL.Services
             { "auto_update", true },
             { "beta_update", false }
         };
+        #endregion
+
+        #region 校验配置方法 VerifyConfig(string key, object value)
+        private static bool VerifyConfig(string key, object value)
+        {
+            try
+            {
+                switch (key)
+                {
+                    //Common
+                    case "auto_eula":
+                        if (value is not bool) return false; break;
+                    case "app_priority":
+                        if (value is not int || (int)value > 2 || (int)value < 0) return false; break;
+                    case "end_server_when_close":
+                        if (value is not bool) return false; break;
+                    case "daemon":
+                        if (value is not bool) return false; break;
+                    case "java_selection":// TODO: 把它删了
+                        if (value is not int) return false; break;
+                    case "auto_find_java":
+                        if (value is not bool) return false; break;
+                    case "output_encode":
+                        if (value is not int || (int)value > 1 || (int)value < 0) return false; break;
+                    case "input_encode":
+                        if (value is not int || (int)value > 2 || (int)value < 0) return false; break;
+                    case "coloring_terminal":
+                        if (value is not bool) return false; break;
+                    //Download
+                    case "download_source":// TODO: 开发多源下载
+                        if (value is not int) return false; break;
+                    case "download_threads":// TODO: 开发多线程下载（不知道有没有必要）
+                        if (value is not int || (int)value > 128 || (int)value < 1) return false; break;
+                    case "download_limit":// TODO: 开发下载限速
+                        if (value is not int || (int)value < 0) return false; break;
+                    //Panel
+                    case "panel_enable":
+                        if (value is not bool) return false; break;
+                    case "panel_port":
+                        if (value is not int || (int)value < 0 || (int)value > 65535) return false; break;
+                    case "panel_monitor":
+                        if (value is not bool) return false; break;
+                    case "panel_terminal":
+                        if (value is not bool) return false; break;
+                    //About
+                    case "auto_update":
+                        if (value is not bool) return false; break;
+                    case "beta_update":
+                        if (value is not bool) return false; break;
+                    default:
+                        return false;
+                }
+            }
+            catch (InvalidCastException)
+            {
+                return false;
+            }
+            return true;
+        }
+        #endregion
+
+        #region 修改配置键值
+
+        public static void ModifyConfig(string key, object keyValue)
+        {
+            string keyPath = "$." + key;
+            try
+            {
+                JsonHelper.ModifyJson(ConfigFilePath, keyPath, keyValue);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。\r错误信息：{ex.Message}");
+            }
+        }
+        #endregion
+
+        #region 读取配置键值
         // 当前配置字典
         public Dictionary<string, object> CurrentConfigs = new();
 
@@ -359,14 +422,30 @@ namespace LSL.Services
             foreach (var key in ConfigKeys)
             {
                 JToken config = configs[key];
-                if (config == null)
+                object keyValue = null;
+                switch (config.Type)
+                {
+                    case JTokenType.Boolean:
+                        keyValue = config.Value<bool>();
+                        break;
+                    case JTokenType.Integer:
+                        keyValue = config.Value<int>();
+                        break;
+                    case JTokenType.String:
+                        keyValue = config.Value<string>();
+                        break;
+                    default:
+                        keyValue = null;
+                        break;
+                }
+                if (keyValue == null || !VerifyConfig(key, keyValue))
                 {
                     CurrentConfigs[key] = DefaultConfigs[key];
                     keysNeedToRepair.Add(key);
                 }
                 else
                 {
-                    CurrentConfigs[key] = config.ToObject<object>();
+                    CurrentConfigs[key] = keyValue;
                 }
             }
             if (keysNeedToRepair.Count > 0)
