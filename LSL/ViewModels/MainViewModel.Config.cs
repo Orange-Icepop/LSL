@@ -68,31 +68,25 @@ namespace LSL.ViewModels
         #region 读取配置文件
         public void GetConfig()
         {
-            try
-            {
-                autoEula = (bool)ConfigManager.CurrentConfigs["auto_eula"];
-                appPriorityCache = (int)ConfigManager.CurrentConfigs["app_priority"];
-                endServerWhenClose = (bool)ConfigManager.CurrentConfigs["end_server_when_close"];
-                daemon = (bool)ConfigManager.CurrentConfigs["daemon"];
-                javaSelectionCache = (int)ConfigManager.CurrentConfigs["java_selection"];
-                autoFindJava = (bool)ConfigManager.CurrentConfigs["auto_find_java"];
-                outputEncodeCache = (int)ConfigManager.CurrentConfigs["output_encode"];
-                inputEncodeCache = (int)ConfigManager.CurrentConfigs["input_encode"];
-                coloringTerminal = (bool)ConfigManager.CurrentConfigs["coloring_terminal"];
-                downloadSourceCache = (int)ConfigManager.CurrentConfigs["download_source"];
-                downloadThreadsCache = (int)ConfigManager.CurrentConfigs["download_threads"];
-                downloadLimitCache = (int)ConfigManager.CurrentConfigs["download_limit"];
-                panelEnable = (bool)ConfigManager.CurrentConfigs["panel_enable"];
-                panelPortCache = (int)ConfigManager.CurrentConfigs["panel_port"];
-                panelMonitor = (bool)ConfigManager.CurrentConfigs["panel_monitor"];
-                panelTerminal = (bool)ConfigManager.CurrentConfigs["panel_terminal"];
-                autoUpdate = (bool)ConfigManager.CurrentConfigs["auto_update"];
-                betaUpdate = (bool)ConfigManager.CurrentConfigs["beta_update"];
-            }
-            catch (Exception)
-            {
-                throw new ArgumentException("配置文件出错，请删除主程序目录下LSL文件夹中的config.json后重试。");
-            }
+            ConfigManager.LoadConfig();
+            autoEula = (bool)ConfigManager.CurrentConfigs["auto_eula"];
+            appPriorityCache = (int)ConfigManager.CurrentConfigs["app_priority"];
+            endServerWhenClose = (bool)ConfigManager.CurrentConfigs["end_server_when_close"];
+            daemon = (bool)ConfigManager.CurrentConfigs["daemon"];
+            javaSelectionCache = (int)ConfigManager.CurrentConfigs["java_selection"];
+            autoFindJava = (bool)ConfigManager.CurrentConfigs["auto_find_java"];
+            outputEncodeCache = (int)ConfigManager.CurrentConfigs["output_encode"];
+            inputEncodeCache = (int)ConfigManager.CurrentConfigs["input_encode"];
+            coloringTerminal = (bool)ConfigManager.CurrentConfigs["coloring_terminal"];
+            downloadSourceCache = (int)ConfigManager.CurrentConfigs["download_source"];
+            downloadThreadsCache = (int)ConfigManager.CurrentConfigs["download_threads"];
+            downloadLimitCache = (int)ConfigManager.CurrentConfigs["download_limit"];
+            panelEnable = (bool)ConfigManager.CurrentConfigs["panel_enable"];
+            panelPortCache = (int)ConfigManager.CurrentConfigs["panel_port"];
+            panelMonitor = (bool)ConfigManager.CurrentConfigs["panel_monitor"];
+            panelTerminal = (bool)ConfigManager.CurrentConfigs["panel_terminal"];
+            autoUpdate = (bool)ConfigManager.CurrentConfigs["auto_update"];
+            betaUpdate = (bool)ConfigManager.CurrentConfigs["beta_update"];
         }
         #endregion
 

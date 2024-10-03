@@ -417,14 +417,22 @@ namespace LSL.Services
 
         public static void LoadConfig()
         {
-            CurrentConfigs.Clear();
-            JObject configs = JObject.Parse(File.ReadAllText(ConfigFilePath));
-            List<string> keysNeedToRepair = new();
+            JObject configs;
+            try
+            {
+                configs = JObject.Parse(File.ReadAllText(ConfigFilePath));
+            }
+            catch (JsonReaderException)
+            {
+                throw new ArgumentException($"{ConfigFilePath} 文件已损坏：格式错误，请备份并删除该文件重试。");
+            }
+            List<string> keysNeedToRepair = new();// 需要修复的键
+            CurrentConfigs.Clear();// 清空当前配置字典
             foreach (var key in ConfigKeys)
             {
                 JToken config = configs[key];
                 object keyValue = null;
-                switch (config.Type)
+                switch (config.Type)// 根据值类型读取
                 {
                     case JTokenType.Boolean:
                         keyValue = config.Value<bool>();
@@ -441,21 +449,34 @@ namespace LSL.Services
                 }
                 if (keyValue == null || !VerifyConfig(key, keyValue))
                 {
-                    CurrentConfigs[key] = DefaultConfigs[key];
+                    CurrentConfigs.Add(key, DefaultConfigs[key]);
                     keysNeedToRepair.Add(key);
                 }
                 else
                 {
-                    CurrentConfigs[key] = keyValue;
+                    CurrentConfigs.Add(key, keyValue);
                 }
             }
-            if (keysNeedToRepair.Count > 0)
+            if (keysNeedToRepair.Count > 0)// 修复配置
             {
                 foreach (var key in keysNeedToRepair)
                 {
                     if (configs.ContainsKey(key))
                     {
-                        configs[key] = (JToken?)DefaultConfigs[key];
+                        object defaultConfig = DefaultConfigs[key];
+                        Type type = defaultConfig.GetType();
+                        if (type == typeof(bool))
+                        {
+                            configs[key] = (bool)defaultConfig;
+                        }
+                        else if (type == typeof(int))
+                        {
+                            configs[key] = (int)defaultConfig;
+                        }
+                        else if (type == typeof(string))
+                        {
+                            configs[key] = (string)defaultConfig;
+                        }
                     }
                     else
                     {

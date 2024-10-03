@@ -44,6 +44,8 @@ public static class ViewFactory
             "PanelSettings" => new PanelSettings(),
             "StyleSettings" => new StyleSettings(),
             "About" => new About(),
+            //Blank
+            "blank" => new UserControl(),
             _ => throw new ArgumentException($"未找到视图: {viewName}，应用程序可能已经损坏。"),
         };
     }

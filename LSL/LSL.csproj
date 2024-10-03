@@ -60,10 +60,8 @@
     <PackageReference Include="Avalonia.Win32" Version="11.1.3" />
     <PackageReference Include="AvaloniaEdit.TextMate" Version="11.1.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-    <PackageReference Include="MCQuery" Version="2022.7.13.192844" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-    <PackageReference Include="MinecraftConnection" Version="2.1.0" />
     <PackageReference Include="MinecraftLaunch" Version="3.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>

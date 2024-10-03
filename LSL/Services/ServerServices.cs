@@ -8,11 +8,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using LSL.Services;
 
 namespace LSL.Services
 {
     public interface IServerHost
     {
+
         Task RunServer(string serverId);
         void SendCommand(string serverId, string command);
         void EndServer(string serverId);
@@ -114,7 +116,7 @@ namespace LSL.Services
                 string line;
                 while ((line = await reader.ReadLineAsync()) != null)
                 {
-                    EventBus.Instance.Publish(new TerminalOutputArgs { ServerId = serverId, Output = line });
+                    if (line != null && line != "") EventBus.Instance.Publish(new TerminalOutputArgs { ServerId = serverId, Output = line });
                 }
             }
         }
@@ -192,11 +194,47 @@ namespace LSL.Services
             EventBus.Instance.Subscribe<TerminalOutputArgs>(HandleOutput);
         }
 
-        private async void HandleOutput(TerminalOutputArgs args)
+        private void HandleOutput(TerminalOutputArgs args)
         {
-            if (args.Output.Contains("joined the game"))
-            {
+            Task.Run(() => OutputProcessor(args.ServerId, args.Output));
+        }
 
+        private async void OutputProcessor(string ServerId, string Output)
+        {
+            bool isUserMessage;
+            if (Output.Length >= 18 && Output[17] == '<')
+            {
+                isUserMessage = true;
+            }
+            else 
+            {
+                isUserMessage = false;
+            }
+
+            List<string> keyWords =
+                [
+                    "INFO",
+                    "WARN",
+                ];
+
+            if (isUserMessage)
+            {
+                string Message = Output.Substring(17);
+                EventBus.Instance.Publish(new PlayerMessageArgs { ServerId = ServerId, Message = Message });
+            }
+            else
+            {
+                if (Output.Contains("joined the game"))
+                {
+                    string PlayerName = AlgoServices.GetSubstringBeforeNextSpace(Output, 17);
+                    EventBus.Instance.Publish(new PlayerUpdateArgs { ServerId = ServerId, PlayerName = PlayerName, Entering = true });
+                }
+
+                if (Output.Contains("left the game"))
+                {
+                    string PlayerName = AlgoServices.GetSubstringBeforeNextSpace(Output, 17);
+                    EventBus.Instance.Publish(new PlayerUpdateArgs { ServerId = ServerId, PlayerName = PlayerName, Entering = false });
+                }
             }
         }
     }

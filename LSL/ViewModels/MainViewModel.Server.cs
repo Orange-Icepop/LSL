@@ -15,7 +15,6 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using MCQuery;
 using System.IO;
 
 namespace LSL.ViewModels
@@ -30,6 +29,7 @@ namespace LSL.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _selectedServerIndex, value);
+                RefreshRightView();
                 ReadProperties();
             }
         }
@@ -57,14 +57,12 @@ namespace LSL.ViewModels
         {
             get
             {
-                string serverId = ServerIDs[SelectedServerIndex];
-                return TerminalTexts[serverId].ToString();
+                return TerminalTexts.GetOrAdd(SelectedServerId, new StringBuilder()).ToString();
             }
             set
             {
-                string serverId = ServerIDs[SelectedServerIndex];
-                TerminalTexts[serverId].Clear();
-                TerminalTexts[serverId].AppendLine(value);
+                TerminalTexts[SelectedServerId].Clear();
+                TerminalTexts[SelectedServerId].AppendLine(value);
                 this.RaisePropertyChanged(nameof(ServerTerminalText));
             }
         }
@@ -74,7 +72,7 @@ namespace LSL.ViewModels
 
         public void AddTerminalText(string serverId, string text)// 添加服务器终端文本
         {
-            if (text == null || text == "") return;
+            //if (text == null || text == "") return;
             //EventBus.Instance.Publish(new UpdateTerminalArgs { Type = "get" });
             TerminalTexts.AddOrUpdate(serverId,
                 new StringBuilder(text),
@@ -92,6 +90,49 @@ namespace LSL.ViewModels
         {
             AddTerminalText(args.ServerId, args.Output);
         }
+        #endregion
+
+        #region 服务器玩家列表与消息列表
+        public ConcurrentDictionary<string, List<string>> ServerPlayers = new();// 服务器玩家列表
+        public ConcurrentDictionary<string, StringBuilder> ServerMessages = new();// 服务器消息列表
+
+        public void ReceivePlayerUpdate(PlayerUpdateArgs args)// 接收服务器玩家列表
+        {
+            ServerPlayers.AddOrUpdate(args.ServerId,
+                new List<string> { args.PlayerName },
+                (key, existing) =>
+                {
+                    existing.Add(args.PlayerName + "\r\n");
+                    return existing; // 返回更新后的 List 实例
+                });
+        }
+
+        public void ReceiveMessage(PlayerMessageArgs args)// 接收服务器消息
+        {
+            ServerMessages.AddOrUpdate(args.ServerId,
+                new StringBuilder(args.Message),
+                (key, existing) =>
+                {
+                    existing.AppendLine(args.Message);
+                    return existing;
+                });
+        }
+        // 访问器
+        public List<string> PlayerList
+        {
+            get
+            {
+                return ServerPlayers.GetOrAdd(SelectedServerId, new List<string>());
+            }
+        }
+        public string PlayerMessage
+        {
+            get
+            {
+                return ServerMessages.GetOrAdd(SelectedServerId, new StringBuilder()).ToString();
+            }
+        }
+
         #endregion
 
         #region 当前服务器配置文件字典
@@ -117,17 +158,6 @@ namespace LSL.ViewModels
             {
                 return false;
             }
-        }
-        #endregion
-
-        #region 查询服务器玩家列表与消息列表
-        public List<string> ServerPlayers = new();// 服务器玩家列表
-        private static string address = "127.0.0.1";
-        private int port = new();
-        public async void QueryServerPlayers()
-        {
-            int.TryParse(CurrentServerProperty["query.port"].ToString(), out port);
-            MCServer server = new(address, port);
         }
         #endregion
     }

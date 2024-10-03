@@ -21,8 +21,6 @@ public partial class MainViewModel : ViewModelBase
         NavigateLeftView("HomeLeft");
         NavigateRightView("HomeRight");
         LeftWidth = 350;
-        CurrentLeftView = "HomeLeft";
-        CurrentRightView = "HomeRight";
     }
 
     public MainViewModel()

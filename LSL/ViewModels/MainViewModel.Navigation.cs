@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Reactive;
 using System.Windows.Input;
 using ReactiveUI;
+using System.Threading.Tasks;
 
 namespace LSL.ViewModels
 {
@@ -84,6 +85,13 @@ namespace LSL.ViewModels
             }
             LeftChangedPublisher.Instance.LeftPublishMessage(viewName);
             Debug.WriteLine("Right Page Switched:" + viewName);
+        }
+        // Ç¿ÖÆË¢ÐÂ
+        public void RefreshRightView()
+        {
+            string original = CurrentRightView;
+            NavigateRightView("blank");
+            NavigateRightView(original);
         }
         #endregion
 
