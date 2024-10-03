@@ -20,10 +20,10 @@
 			</Grid>
 		</local:MyCard>
 		<local:MyCard Text="玩家列表" DockPanel.Dock="Left" Width="250">
-			<ListBox Width="200" Height="300"></ListBox>
+			<ListBox Width="200" Height="300" ItemsSource="{Binding PlayerList}"></ListBox>
 		</local:MyCard>
 		<local:MyCard Text="玩家消息" DockPanel.Dock="Left">
-			
+			<TextBlock Text="{Binding PlayerMessage}"/>
 		</local:MyCard>
 	</DockPanel>
 </UserControl>

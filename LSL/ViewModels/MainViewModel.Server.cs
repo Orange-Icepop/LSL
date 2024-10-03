@@ -116,6 +116,8 @@ namespace LSL.ViewModels
                     existing.AppendLine(args.Message);
                     return existing;
                 });
+            this.RaisePropertyChanged(nameof(PlayerList));
+            this.RaisePropertyChanged(nameof(PlayerMessage));
         }
         // 访问器
         public List<string> PlayerList
