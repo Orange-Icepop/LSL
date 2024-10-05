@@ -126,7 +126,7 @@ namespace LSL.Services
         public async void SendCommand(string serverId, string command)
         {
             Process server = GetServer(serverId);
-            if (server != null && !server.HasExited)
+            if (CheckProcess(server))
             {
                 using (StreamWriter writer = server.StandardInput)
                 {
@@ -141,7 +141,7 @@ namespace LSL.Services
         public void EndServer(string serverId)
         {
             Process serverProcess = GetServer(serverId);
-            if (serverProcess != null && !serverProcess.HasExited)
+            if (CheckProcess(serverProcess))
             {
                 serverProcess.Kill();
                 serverProcess.Dispose();
@@ -185,21 +185,33 @@ namespace LSL.Services
             }
         }
         #endregion
+
+        #region 检查服务器进程是否存在CheckProcess(string serverId)
+        public bool CheckProcess(Process process)
+        {
+            try
+            {
+                if (process != null && !process.HasExited) return true;
+                else return false;
+            }
+            catch (InvalidOperationException) { return false; }
+        }
+        #endregion
     }
 
     public class OutputHandler
     {
-        public OutputHandler()
+        static OutputHandler()
         {
             EventBus.Instance.Subscribe<TerminalOutputArgs>(HandleOutput);
         }
 
-        private void HandleOutput(TerminalOutputArgs args)
+        public static void HandleOutput(TerminalOutputArgs args)
         {
             Task.Run(() => OutputProcessor(args.ServerId, args.Output));
         }
 
-        private async void OutputProcessor(string ServerId, string Output)
+        private static async void OutputProcessor(string ServerId, string Output)
         {
             bool isUserMessage;
             if (Output.Length >= 18 && Output[17] == '<')
@@ -234,6 +246,16 @@ namespace LSL.Services
                 {
                     string PlayerName = AlgoServices.GetSubstringBeforeNextSpace(Output, 17);
                     EventBus.Instance.Publish(new PlayerUpdateArgs { ServerId = ServerId, PlayerName = PlayerName, Entering = false });
+                }
+
+                if (Output.Contains("Done") && Output.IndexOf("Done") == 17)
+                {
+                    EventBus.Instance.Publish(new ServerStatusArgs { ServerId = ServerId, Status = true });
+                }
+
+                if (Output.Contains("Stopping the server") && Output.IndexOf("Stopping the server") == 17)
+                {
+                    EventBus.Instance.Publish(new ServerStatusArgs { ServerId = ServerId, Status = false });
                 }
             }
         }

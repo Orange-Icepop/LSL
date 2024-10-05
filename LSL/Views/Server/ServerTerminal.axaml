@@ -9,14 +9,39 @@
 		<DockPanel DockPanel.Dock="Bottom" Height="70">
 			<local:MyCard DockPanel.Dock="Right" Width="200">
 				<Grid Margin="20,0,20,0" VerticalAlignment="Center" HorizontalAlignment="Center" ColumnDefinitions="*,*,*">
-					<Button BorderThickness="0" VerticalAlignment="Center" Grid.Column="0" Margin="5" Command="{Binding StopServerCmd}">
-						<Image Source="avares://LSL/Assets/ButtonIcons/PowerButton.png" Width="25" Height="25"/>
+					<Button BorderThickness="2"
+							VerticalAlignment="Center"
+							Grid.Column="0" Margin="2"
+							Command="{Binding StopServerCmd}"
+							IsEnabled="{Binding EnableOperation}"
+							Content="关闭">
+						<TextBlock Text="关闭"
+								   HorizontalAlignment="Center"
+								   VerticalAlignment="Center"
+								   Margin="8,5"
+								   FontSize="14"/>
 					</Button>
-					<Button BorderThickness="0" VerticalAlignment="Center" Grid.Column="1" Margin="5" Command="{Binding SaveServerCmd}">
-						<Image Source="avares://LSL/Assets/ButtonIcons/Save.png" Width="25" Height="25"/>
+					<Button BorderThickness="2"
+							VerticalAlignment="Center"
+							Grid.Column="1" Margin="2"
+							Command="{Binding SaveServerCmd}"
+							IsEnabled="{Binding EnableOperation}">
+						<TextBlock Text="保存"
+								   HorizontalAlignment="Center"
+								   VerticalAlignment="Center"
+								   Margin="8,5"
+								   FontSize="14"/>
 					</Button>
-					<Button BorderThickness="0" VerticalAlignment="Center" Grid.Column="2" Margin="5" Command="{Binding ShutServerCmd}">
-						<Image Source="avares://LSL/Assets/ButtonIcons/Cross.png" Width="25" Height="25"/>
+					<Button BorderThickness="2"
+							VerticalAlignment="Center"
+							Grid.Column="2" Margin="2"
+							Command="{Binding ShutServerCmd}"
+							IsEnabled="{Binding EnableOperation}">
+						<TextBlock Text="终止"
+								   HorizontalAlignment="Center"
+								   VerticalAlignment="Center"
+								   Margin="8,5"
+								   FontSize="14"/>
 					</Button>
 				</Grid>
 			</local:MyCard>

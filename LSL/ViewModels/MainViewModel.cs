@@ -12,7 +12,6 @@ using Avalonia.Interactivity;
 using System.IO;
 using System.Threading.Tasks;
 
-//导航部分开始
 public partial class MainViewModel : ViewModelBase
 {
     //初始化主窗口
@@ -31,6 +30,7 @@ public partial class MainViewModel : ViewModelBase
         ReadServerList();// 读取服务器列表
         ReadJavaList();// 读取Java列表
         RestorePopup();// 初始化弹窗
+        OutputHandler outputHandler = new();// 初始化输出处理
 
         LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
         RightViewCmd = ReactiveCommand.Create<string>(NavigateRightView);
@@ -96,6 +96,9 @@ public partial class MainViewModel : ViewModelBase
         #endregion
 
         EventBus.Instance.Subscribe<TerminalOutputArgs>(ReceiveStdOutPut);
+        EventBus.Instance.Subscribe<PlayerUpdateArgs>(ReceivePlayerUpdate);
+        EventBus.Instance.Subscribe<PlayerMessageArgs>(ReceiveMessage);
+        EventBus.Instance.Subscribe<ServerStatusArgs>(ReceiveServerStatus);
 
         #region 缓存验证
         if (appPriorityCache >= 0 && appPriorityCache <= 2)

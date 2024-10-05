@@ -52,8 +52,8 @@ namespace LSL.ViewModels
         }
 
         #region 终端信息
-        public ConcurrentDictionary<string, StringBuilder> TerminalTexts = new();// 服务器终端输出
-        public string ServerTerminalText// 终端文本
+        private ConcurrentDictionary<string, StringBuilder> TerminalTexts = new();// 服务器终端输出
+        public string ServerTerminalText// 终端文本访问器
         {
             get
             {
@@ -93,10 +93,10 @@ namespace LSL.ViewModels
         #endregion
 
         #region 服务器玩家列表与消息列表
-        public ConcurrentDictionary<string, List<string>> ServerPlayers = new();// 服务器玩家列表
-        public ConcurrentDictionary<string, StringBuilder> ServerMessages = new();// 服务器消息列表
+        private ConcurrentDictionary<string, List<string>> ServerPlayers = new();// 服务器玩家列表
+        private ConcurrentDictionary<string, StringBuilder> ServerMessages = new();// 服务器消息列表
 
-        public void ReceivePlayerUpdate(PlayerUpdateArgs args)// 接收服务器玩家列表
+        private void ReceivePlayerUpdate(PlayerUpdateArgs args)// 接收服务器玩家列表
         {
             ServerPlayers.AddOrUpdate(args.ServerId,
                 new List<string> { args.PlayerName },
@@ -107,7 +107,7 @@ namespace LSL.ViewModels
                 });
         }
 
-        public void ReceiveMessage(PlayerMessageArgs args)// 接收服务器消息
+        private void ReceiveMessage(PlayerMessageArgs args)// 接收服务器消息
         {
             ServerMessages.AddOrUpdate(args.ServerId,
                 new StringBuilder(args.Message),
@@ -133,6 +133,33 @@ namespace LSL.ViewModels
             {
                 return ServerMessages.GetOrAdd(SelectedServerId, new StringBuilder()).ToString();
             }
+        }
+
+        #endregion
+
+        #region 服务器状态
+        public ConcurrentDictionary<string, bool> ServerStatus = new();// 服务器状态
+        public void ReceiveServerStatus(ServerStatusArgs args)// 接收服务器状态
+        {
+            if (args.Status)
+            {
+                ServerStatus.AddOrUpdate(args.ServerId, true, (key, existing) => true);
+            }
+            else
+            {
+                ServerStatus.AddOrUpdate(args.ServerId, false, (key, existing) => false);
+            }
+            this.RaisePropertyChanged(nameof(EnableOperation));
+        }
+        // 访问器
+        public bool ServerStatusValue(string serverId)
+        {
+            return ServerStatus.GetOrAdd(serverId, false);
+        }
+
+        public bool EnableOperation
+        {
+            get => ServerStatusValue(SelectedServerId);
         }
 
         #endregion

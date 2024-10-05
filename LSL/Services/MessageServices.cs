@@ -136,5 +136,11 @@ namespace LSL.Services
         public required string PlayerName { get; set; }
         public required bool Entering { get; set; }
     }
+
+    public class ServerStatusArgs : EventArgs// 服务器状态更新事件
+    {
+        public required string ServerId { get; set; }
+        public required bool Status { get; set; }
+    }
     #endregion
 }
