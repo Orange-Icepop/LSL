@@ -52,51 +52,6 @@ public static class ViewFactory
 }
 #endregion
 
-#region 定义导航栏改变事件发布
-public class BarChangedPublisher
-{
-    private static BarChangedPublisher _instance;
-
-    private BarChangedPublisher() { }
-
-    public static BarChangedPublisher Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = new BarChangedPublisher();
-            }
-            return _instance;
-        }
-    }
-    // 定义事件委托  
-    public delegate void BarChangedEventHandler(string navigateTarget);
-
-    // 定义事件  
-    public event BarChangedEventHandler BarMessageReceived;
-
-    // 触发事件的方法  
-    protected virtual void BarChangedReceived(string navigateTarget)
-    {
-        // 检查是否有任何订阅者  
-        BarChangedEventHandler handler = BarMessageReceived;
-        if (handler != null)
-        {
-            // 如果有，则调用它们  
-            handler(navigateTarget);
-        }
-    }
-
-    // 一个公共方法，用于从类的外部请求触发事件  
-    public void PublishMessage(string navigateTarget)
-    {
-        // 这里，我们直接调用受保护的方法来触发事件  
-        BarChangedReceived(navigateTarget);
-    }
-}
-#endregion
-
 #region 定义左栏改变事件发布
 public class LeftChangedPublisher
 {
@@ -257,14 +212,6 @@ class Program
         Console.WriteLine("PopupCloseEventOccurred 事件被触发！");
     }
 }*/
-
-#region INavigationService 接口定义  
-public interface INavigationService
-{
-    void NavigateLeftView(string viewName);
-    void NavigateRightView(string viewName);
-}
-#endregion
 
 public class ViewModelBase : ReactiveObject
 {

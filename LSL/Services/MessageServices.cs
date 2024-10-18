@@ -20,7 +20,19 @@ namespace LSL.Services
         private EventBus() { }
 
         // 单例属性  
-        public static EventBus Instance { get; } = new EventBus();
+        private static EventBus _instance;
+
+        public static EventBus Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = new EventBus();
+                }
+                return _instance;
+            }
+        }
 
         // 订阅事件（在构造函数中使用）
         public void Subscribe<TEvent>(Action<TEvent> handler) where TEvent : EventArgs
@@ -75,9 +87,30 @@ namespace LSL.Services
                     // 使用委托的DynamicInvoke方法来避免显式类型转换  
                     foreach (var handler in handlers.Cast<Action<TEvent>>())
                     {
-                        // 可以在这里使用Task.Run来异步执行事件处理器  
+                        // 使用PublishAsync可以异步处理事件，避免阻塞主线程
+                        // 比较适用于把东西一丢就不管的情况
                         // 但请注意，这并不会改变事件处理的顺序，只是并行执行  
-                        // handler(e); // 同步执行  
+                        handler(e); // 同步执行  
+                    }
+                }
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
+        }
+        // 异步发布事件（其实比较常用）
+        public void PublishAsync<TEvent>(TEvent e) where TEvent : EventArgs
+        {
+            _lock.EnterReadLock();
+            try
+            {
+                if (_handlers.TryGetValue(typeof(TEvent), out var handlers))
+                {
+                    // 使用委托的DynamicInvoke方法来避免显式类型转换  
+                    foreach (var handler in handlers.Cast<Action<TEvent>>())
+                    {
+                        // 同步执行请用Publish方法
                         Task.Run(() => handler(e)); // 异步执行  
                     }
                 }
@@ -98,7 +131,7 @@ namespace LSL.Services
         public 【参数类型】 【参数名称】 { get; set; }
     }
     2. 发布事件
-    EventBus.Instance.Publish(new 【事件类名】 { 【事件参数名称】 = 【值】 });
+    EventBus.Instance.PublishAsync(new 【事件类名】 { 【事件参数名称】 = 【值】 });
     3. 事件处理器类（可选）
     事件处理器可以统一设置，也可以在需要的地方单独设置
     如果是统一设置的非静态事件处理器，需要引入该类的实例
@@ -109,6 +142,16 @@ namespace LSL.Services
     */
 
     #region 事件类
+    public class BarChangedEventArgs : EventArgs// 导航栏改变事件
+    {
+        public required string NavigateTarget { get; set; }
+    }
+
+    public class LeftChangedArgs : EventArgs// 左侧栏改变事件
+    {
+        public required string LeftTarget { get; set; }
+    }
+
     public class TerminalOutputArgs : EventArgs// 终端输出事件
     {
         public required string ServerId { get; set; }

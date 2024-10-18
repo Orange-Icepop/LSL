@@ -102,13 +102,13 @@ namespace LSL.Services
             // 启动服务器
             using Process process = Process.Start(startInfo);
             LoadServer(serverId, process);
-            EventBus.Instance.Publish(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器正在启动，请稍后......." });
+            EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器正在启动，请稍后......." });
             process.EnableRaisingEvents = true;
             process.Exited += (sender, e) =>
             {
                 // 移除进程的实例
                 UnloadServer(serverId);
-                EventBus.Instance.Publish(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器已关闭" });
+                EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器已关闭" });
             };
             // 读取Java程序的输出  
             using (StreamReader reader = process.StandardOutput)
@@ -116,7 +116,7 @@ namespace LSL.Services
                 string line;
                 while ((line = await reader.ReadLineAsync()) != null)
                 {
-                    if (line != null && line != "") EventBus.Instance.Publish(new TerminalOutputArgs { ServerId = serverId, Output = line });
+                    if (line != null && line != "") EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = line });
                 }
             }
         }
@@ -232,30 +232,30 @@ namespace LSL.Services
             if (isUserMessage)
             {
                 string Message = Output.Substring(17);
-                EventBus.Instance.Publish(new PlayerMessageArgs { ServerId = ServerId, Message = Message });
+                EventBus.Instance.PublishAsync(new PlayerMessageArgs { ServerId = ServerId, Message = Message });
             }
             else
             {
                 if (Output.Contains("joined the game"))
                 {
                     string PlayerName = AlgoServices.GetSubstringBeforeNextSpace(Output, 17);
-                    EventBus.Instance.Publish(new PlayerUpdateArgs { ServerId = ServerId, PlayerName = PlayerName, Entering = true });
+                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, PlayerName = PlayerName, Entering = true });
                 }
 
                 if (Output.Contains("left the game"))
                 {
                     string PlayerName = AlgoServices.GetSubstringBeforeNextSpace(Output, 17);
-                    EventBus.Instance.Publish(new PlayerUpdateArgs { ServerId = ServerId, PlayerName = PlayerName, Entering = false });
+                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, PlayerName = PlayerName, Entering = false });
                 }
 
                 if (Output.Contains("Done") && Output.IndexOf("Done") == 17)
                 {
-                    EventBus.Instance.Publish(new ServerStatusArgs { ServerId = ServerId, Status = true });
+                    EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Status = true });
                 }
 
                 if (Output.Contains("Stopping the server") && Output.IndexOf("Stopping the server") == 17)
                 {
-                    EventBus.Instance.Publish(new ServerStatusArgs { ServerId = ServerId, Status = false });
+                    EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Status = false });
                 }
             }
         }

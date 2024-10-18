@@ -9,6 +9,7 @@ using LSL.ViewModels;
 using System;
 using System.Diagnostics;
 using System.Windows.Input;
+using LSL.Services;
 
 namespace LSL.Views
 {
@@ -20,11 +21,12 @@ namespace LSL.Views
             //这里不需要初始化最初的高亮按钮，因为MainViewModel初始化时会调用一次这个方法
             //以防万一，这里放一个备用的初始化方法
             //Home.Classes.Add("selected");
-            BarChangedPublisher.Instance.BarMessageReceived += HandleBarChangeReceived;
+            EventBus.Instance.Subscribe<BarChangedEventArgs>(BarChange);
         }
-        private void HandleBarChangeReceived(string navigateTarget)
+
+        private void BarChange(BarChangedEventArgs e)
         {
-            ChangeBarColor(navigateTarget);
+            ChangeBarColor(e.NavigateTarget);
         }
 
         //设置Bar按钮样式方法

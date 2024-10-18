@@ -33,7 +33,7 @@ public partial class MainViewModel : ViewModelBase
         OutputHandler outputHandler = new();// 初始化输出处理
 
         LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
-        RightViewCmd = ReactiveCommand.Create<string>(NavigateRightView);
+        RightViewCmd = ReactiveCommand.Create<string>(INavigateRight);
 
         #region 多参数导航
         PanelConfigCmd = ReactiveCommand.Create(() =>

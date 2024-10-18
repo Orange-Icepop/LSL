@@ -160,10 +160,10 @@ namespace LSL.Services
     public class ConfigManager
     {
         // 配置文件的路径  
-        private static readonly string _configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "Config.json");
-        private static readonly string _serverConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "ServersConfig.json");
-        private static readonly string _javaListPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "JavaList.json");
-        private static readonly string _serversPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Servers");
+        private static readonly string _configFilePath = Path.Combine("LSL", "Config.json");
+        private static readonly string _serverConfigPath = Path.Combine("LSL", "ServersConfig.json");
+        private static readonly string _javaListPath = Path.Combine("LSL", "JavaList.json");
+        private static readonly string _serversPath = Path.Combine("Servers");
 
         // 获取配置文件的路径  
         public static string ConfigFilePath => _configFilePath;

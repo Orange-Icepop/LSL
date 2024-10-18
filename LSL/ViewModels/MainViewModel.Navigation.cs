@@ -6,10 +6,11 @@ using System.Reactive;
 using System.Windows.Input;
 using ReactiveUI;
 using System.Threading.Tasks;
+using LSL.Services;
 
 namespace LSL.ViewModels
 {
-	public partial class MainViewModel : ViewModelBase, INavigationService
+	public partial class MainViewModel : ViewModelBase
 	{
         #region 导航相关
         //原View
@@ -70,15 +71,16 @@ namespace LSL.ViewModels
                         break;
                 }
                 CurrentLeftView = viewName;
-                BarChangedPublisher.Instance.PublishMessage(viewName);//通知导航栏按钮样式更改
+                EventBus.Instance.Publish(new BarChangedEventArgs { NavigateTarget = viewName });//通知主要视图更改
                 Debug.WriteLine("Left Page Switched:" + viewName);
             }
         }
         //右视图
-        public void NavigateRightView(string viewName)
+        public void INavigateRight(string viewName) { NavigateRightView(viewName); }
+        public void NavigateRightView(string viewName, bool force = false)
         {
             UserControl newView = ViewFactory.CreateView(viewName);
-            if (newView != null && viewName != CurrentRightView)
+            if (newView != null && (viewName != CurrentRightView || force))
             {
                 RightView = newView;
                 CurrentRightView = viewName;
@@ -90,8 +92,7 @@ namespace LSL.ViewModels
         public void RefreshRightView()
         {
             string original = CurrentRightView;
-            NavigateRightView("blank");
-            NavigateRightView(original);
+            NavigateRightView(original, true);
         }
         #endregion
 

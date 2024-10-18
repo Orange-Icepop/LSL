@@ -27,7 +27,7 @@ class Program
         }
         catch (Exception ex)
         {
-            EventBus.Instance.Publish(new PopupMessageArgs { Type = "deadlyError", Message = ex.Message });
+            EventBus.Instance.PublishAsync(new PopupMessageArgs { Type = "deadlyError", Message = ex.Message });
             Debug.WriteLine(ex.ToString());
         }*/
     }

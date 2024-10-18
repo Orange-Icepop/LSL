@@ -73,7 +73,7 @@ namespace LSL.ViewModels
         public void AddTerminalText(string serverId, string text)// 添加服务器终端文本
         {
             //if (text == null || text == "") return;
-            //EventBus.Instance.Publish(new UpdateTerminalArgs { Type = "get" });
+            //EventBus.Instance.PublishAsync(new UpdateTerminalArgs { Type = "get" });
             TerminalTexts.AddOrUpdate(serverId,
                 new StringBuilder(text),
                 (key, existing) =>
@@ -84,7 +84,7 @@ namespace LSL.ViewModels
                 });
             this.RaisePropertyChanged(nameof(ServerTerminalText));
             _scrollTerminal.OnNext(Unit.Default);
-            //EventBus.Instance.Publish(new UpdateTerminalArgs { Type = "set" });
+            //EventBus.Instance.PublishAsync(new UpdateTerminalArgs { Type = "set" });
         }
         public void ReceiveStdOutPut(TerminalOutputArgs args)// 接收标准输出
         {
