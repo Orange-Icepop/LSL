@@ -85,7 +85,7 @@ namespace LSL.ViewModels
                 RightView = newView;
                 CurrentRightView = viewName;
             }
-            LeftChangedPublisher.Instance.LeftPublishMessage(viewName);
+            EventBus.Instance.Publish(new LeftChangedEventArgs { LeftTarget = viewName });
             Debug.WriteLine("Right Page Switched:" + viewName);
         }
         // Ç¿ÖÆË¢ÐÂ

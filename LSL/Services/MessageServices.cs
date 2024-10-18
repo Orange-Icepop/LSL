@@ -147,7 +147,7 @@ namespace LSL.Services
         public required string NavigateTarget { get; set; }
     }
 
-    public class LeftChangedArgs : EventArgs// 左侧栏改变事件
+    public class LeftChangedEventArgs : EventArgs// 左侧栏改变事件
     {
         public required string LeftTarget { get; set; }
     }

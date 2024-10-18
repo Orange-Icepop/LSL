@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using LSL.Services;
 using LSL.ViewModels;
 using System.Diagnostics;
 
@@ -9,11 +10,11 @@ namespace LSL.Views.Settings
         public SettingsLeft()
         {
             InitializeComponent();
-            LeftChangedPublisher.Instance.LeftMessageReceived += HandleLeftChangeReceived;
+            EventBus.Instance.Subscribe<LeftChangedEventArgs>(LeftChangeHandler);
         }
-        private void HandleLeftChangeReceived(string navigateTarget)
+        private void LeftChangeHandler(LeftChangedEventArgs args)
         {
-            ChangeLeftColor(navigateTarget);
+            ChangeLeftColor(args.LeftTarget);
         }
 
         //设置Left按钮样式方法

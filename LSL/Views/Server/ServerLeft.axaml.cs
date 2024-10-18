@@ -13,12 +13,12 @@ namespace LSL.Views.Server
         public ServerLeft()
         {
             InitializeComponent();
-            LeftChangedPublisher.Instance.LeftMessageReceived += HandleLeftChangeReceived;
+            EventBus.Instance.Subscribe<LeftChangedEventArgs>(LeftChangeHandler);
             ReadServerList();
         }
-        private void HandleLeftChangeReceived(string navigateTarget)
+        private void LeftChangeHandler(LeftChangedEventArgs args)
         {
-            ChangeLeftColor(navigateTarget);
+            ChangeLeftColor(args.LeftTarget);
         }
 
         //设置Left按钮样式方法

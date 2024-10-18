@@ -51,6 +51,9 @@
 			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
 			<Setter Property="Background" Value="{DynamicResource OBlueLight}"/>
 		</Style>
+		<Style Selector="^:disabled">
+			<Setter Property="Background" Value="gray"/>
+		</Style>
 		<!--右栏(RightView)按钮样式微调-->
 		<Style Selector="^.rightblue">
 			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
