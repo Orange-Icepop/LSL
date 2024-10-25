@@ -24,6 +24,21 @@ namespace LSL.Services
 
     public class ServerHost : IServerHost
     {
+        private ServerHost() { }
+        private static ServerHost _instance;
+        public static ServerHost Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = new ServerHost();
+                }
+                return _instance;
+            }
+
+        }
+
         // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在MainViewModel中将列表项解析为ServerId
 
         private Dictionary<string, Process> _runningServers = new();// 存储正在运行的服务器实例
@@ -97,6 +112,7 @@ namespace LSL.Services
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 CreateNoWindow = true
             };
             // 启动服务器
@@ -112,6 +128,15 @@ namespace LSL.Services
             };
             // 读取Java程序的输出  
             using (StreamReader reader = process.StandardOutput)
+            {
+                string line;
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    if (line != null && line != "") EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = line });
+                }
+            }
+            // 读取Java程序的错误输出
+            using (StreamReader reader = process.StandardError)
             {
                 string line;
                 while ((line = await reader.ReadLineAsync()) != null)

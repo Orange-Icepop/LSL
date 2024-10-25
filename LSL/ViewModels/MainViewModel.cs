@@ -83,7 +83,7 @@ public partial class MainViewModel : ViewModelBase
             AddTerminalText(SelectedServerId, "[LSL 消息]: 关闭服务器命令已发出，请等待");
         });// 停止服务器命令-实现
         SaveServerCmd = ReactiveCommand.Create(() => SendServerCommand("save-all"));// 保存服务器命令-实现
-        ShutServerCmd = ReactiveCommand.Create(() => SH.EndServer(SelectedServerId));// 结束服务器进程命令-实现
+        ShutServerCmd = ReactiveCommand.Create(() => ServerHost.Instance.EndServer(SelectedServerId));// 结束服务器进程命令-实现
 
         PopupConfirm = ReactiveCommand.Create(() =>
         {

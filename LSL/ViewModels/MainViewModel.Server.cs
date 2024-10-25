@@ -21,7 +21,6 @@ namespace LSL.ViewModels
 {
     public partial class MainViewModel
     {
-        private ServerHost SH = new();
         private int _selectedServerIndex;// 当前选中的服务器
         public int SelectedServerIndex
         {
@@ -44,11 +43,11 @@ namespace LSL.ViewModels
             TerminalTexts.TryAdd(SelectedServerId, new StringBuilder());
             NavigateLeftView("ServerLeft");
             NavigateRightView("ServerTerminal");
-            Task RunServer = Task.Run(() => SH.RunServer(SelectedServerId));
+            Task RunServer = Task.Run(() => ServerHost.Instance.RunServer(SelectedServerId));
         }
         public async void SendServerCommand(string message)// 发送服务器命令
         {
-            await Task.Run(() => SH.SendCommand(SelectedServerId, message));
+            await Task.Run(() => ServerHost.Instance.SendCommand(SelectedServerId, message));
         }
 
         #region 终端信息
