@@ -99,40 +99,11 @@ public partial class MainViewModel : ViewModelBase
         EventBus.Instance.Subscribe<PlayerUpdateArgs>(ReceivePlayerUpdate);
         EventBus.Instance.Subscribe<PlayerMessageArgs>(ReceiveMessage);
         EventBus.Instance.Subscribe<ServerStatusArgs>(ReceiveServerStatus);
+        EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
+    }
 
-        #region 缓存验证
-        if (appPriorityCache >= 0 && appPriorityCache <= 2)
-            appPriority = appPriorityCache;
-        else ConfigManager.ModifyConfig("app_priority", 1);
-
-        if (javaSelectionCache >= 0)
-            javaSelection = javaSelectionCache;
-        else ConfigManager.ModifyConfig("java_selection", 0);
-
-        if (outputEncodeCache >= 1 && outputEncodeCache <= 2)
-            outputEncode = outputEncodeCache;
-        else ConfigManager.ModifyConfig("output_encode", 1);
-
-        if (inputEncodeCache >= 0 && inputEncodeCache <= 2)
-            inputEncode = inputEncodeCache;
-        else ConfigManager.ModifyConfig("input_encode", 0);
-
-        if (downloadSourceCache >= 0 && downloadSourceCache <= 1)
-            downloadSource = downloadSourceCache;
-        else ConfigManager.ModifyConfig("download_source", 0);
-
-        if (downloadThreadsCache >= 1 && downloadThreadsCache <= 128)
-            downloadThreads = downloadThreadsCache;
-        else ConfigManager.ModifyConfig("download_threads", 16);
-
-        if (downloadLimitCache >= 0 && downloadLimitCache <= 1000)
-            downloadLimit = downloadLimitCache;
-        else ConfigManager.ModifyConfig("download_limit", 0);
-
-        if (panelPortCache >= 8080 && panelPortCache <= 65535)
-            panelPort = panelPortCache;
-        else ConfigManager.ModifyConfig("panel_port", 25000);
-        #endregion
-
+    public void QuitHandler(ClosingArgs args)// 退出事件处理
+    {
+        ConfigManager.ConfirmConfig(ViewConfigs);
     }
 }

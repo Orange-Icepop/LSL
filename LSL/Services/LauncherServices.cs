@@ -171,14 +171,19 @@ namespace LSL.Services
         public static string JavaListPath => _javaListPath;
         public static string ServersPath => _serversPath;
 
-        // 初始化配置文件的路径  
-        static ConfigManager()
+        private static ConfigManager _instance;
+        public static ConfigManager Instance
         {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = new ConfigManager();
+                }
+                return _instance;
+            }
         }
-        private ConfigManager()
-        {
-
-        }
+        private ConfigManager() { }
         public static void Initialize()
         {
             // 确保LSL文件夹存在  
@@ -378,6 +383,7 @@ namespace LSL.Services
                         if (value is not bool) return false; break;
                     case "panel_terminal":
                         if (value is not bool) return false; break;
+                    //Style:off
                     //About
                     case "auto_update":
                         if (value is not bool) return false; break;
@@ -395,7 +401,21 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 修改配置键值
+        #region 修改配置方法 ConfirmConfig(Dictionary<string, object> confs)
+        public static void ConfirmConfig(Dictionary<string, object> confs)
+        {
+            foreach (var conf in confs)
+            {
+                if (VerifyConfig(conf.Key, conf.Value))
+                {
+                    CurrentConfigs[conf.Key] = conf.Value;
+                }
+            }
+            File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(CurrentConfigs, Formatting.Indented));
+        }
+        #endregion
+
+        #region 修改单个配置键值
 
         public static void ModifyConfig(string key, object keyValue)
         {

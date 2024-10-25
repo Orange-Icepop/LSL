@@ -185,5 +185,7 @@ namespace LSL.Services
         public required string ServerId { get; set; }
         public required bool Status { get; set; }
     }
+
+    public class ClosingArgs : EventArgs { }// 窗体关闭事件
     #endregion
 }

@@ -10,8 +10,8 @@ using LSL.Services;
 
 namespace LSL.ViewModels
 {
-	public partial class MainViewModel : ViewModelBase
-	{
+    public partial class MainViewModel : ViewModelBase
+    {
         #region 导航相关
         //原View
         private UserControl _leftView;
@@ -50,6 +50,7 @@ namespace LSL.ViewModels
             UserControl newView = ViewFactory.CreateView(viewName);
             if (newView != null && viewName != CurrentLeftView)
             {
+                if (viewName == "SettingsLeft") GetConfig();
                 LeftView = newView;
                 switch (viewName)
                 {
@@ -83,10 +84,11 @@ namespace LSL.ViewModels
             if (newView != null && (viewName != CurrentRightView || force))
             {
                 RightView = newView;
+                if (CurrentLeftView == "SettingsLeft") ConfigManager.ConfirmConfig(ViewConfigs);
                 CurrentRightView = viewName;
+                EventBus.Instance.Publish(new LeftChangedEventArgs { LeftTarget = viewName });
+                Debug.WriteLine("Right Page Switched:" + viewName);
             }
-            EventBus.Instance.Publish(new LeftChangedEventArgs { LeftTarget = viewName });
-            Debug.WriteLine("Right Page Switched:" + viewName);
         }
         // 强制刷新
         public void RefreshRightView()

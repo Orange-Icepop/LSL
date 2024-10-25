@@ -26,6 +26,7 @@ public partial class MainWindow : Window
     }
     private void MainWindow_Closing(object sender, CancelEventArgs e)
     {
+        EventBus.Instance.Publish<ClosingArgs>(new ClosingArgs());
         bool EnableDaemon = (bool)ConfigManager.CurrentConfigs["daemon"];
         if (EnableDaemon == true)
         {
