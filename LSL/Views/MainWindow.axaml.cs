@@ -4,6 +4,7 @@ using System.ComponentModel;
 using LSL.ViewModels;
 using LSL.Services;
 using System;
+using System.Diagnostics;
 namespace LSL.Views;
 
 public partial class MainWindow : Window
@@ -11,13 +12,9 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        this.DataContext = new MainViewModel(); // 设置DataContext为MainViewModel的实例
         this.Closing += MainWindow_Closing;// 重定向关闭窗口事件
-        /*
-        PopupPublisher.Instance.PopupMessageReceived += HandlePopupMessageReceived;// 注册消息接收事件
-        PopupClosePublisher.Instance.PopupCloseOccurred += PopupClosing;// 注册弹窗关闭事件
-        */
         this.Loaded += InitializeViews;
+        EventBus.Instance.Subscribe<ViewBroadcastArgs>(BroadcastHandler);
     }
     private void InitializeViews(object sender, EventArgs e)
     {
@@ -26,7 +23,7 @@ public partial class MainWindow : Window
     }
     private void MainWindow_Closing(object sender, CancelEventArgs e)
     {
-        EventBus.Instance.Publish<ClosingArgs>(new ClosingArgs());
+        EventBus.Instance.Publish(new ClosingArgs());
         bool EnableDaemon = (bool)ConfigManager.CurrentConfigs["daemon"];
         if (EnableDaemon == true)
         {
@@ -38,15 +35,12 @@ public partial class MainWindow : Window
             e.Cancel = false;
         }
     }
-    /*
-    private void HandlePopupMessageReceived(string type, string message)
-    {
-        Popup.IsVisible = true;
-    }
 
-    private void PopupClosing()
+    private void BroadcastHandler(ViewBroadcastArgs args)
     {
-        Popup.IsVisible = false;
+        if (args.Message == "ShowMainWindow")
+        {
+            this.Show();
+        }
     }
-    */
 }

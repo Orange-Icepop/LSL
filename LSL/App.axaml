@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="LSL.App"
 			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
+			 xmlns:LSL="clr-namespace:LSL"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 	<!--全局颜色资源定义-->
@@ -25,10 +26,12 @@
 					  ToolTipText="Lime Server Launcher">
 				<TrayIcon.Menu>
 					<NativeMenu>
-						<NativeMenuItem Header="唤出主窗口"/>
-						<NativeMenuItem Header="正常关闭所有服务器"/>
+						<NativeMenuItem Header="唤出主窗口" Command="{Binding ShowMainWindowCmd}"/>
+						<!--
+						<NativeMenuItem Header="强制关闭所有服务器"/>
+						-->
 						<NativeMenuItemSeparator />
-						<NativeMenuItem Header="关闭应用程序"/>
+						<NativeMenuItem Header="关闭应用程序" Command="{Binding QuitCmd}"/>
 						<!--示例，NativeMenu可以嵌套
 						<NativeMenuItem Header="Settings">
 							<NativeMenu>

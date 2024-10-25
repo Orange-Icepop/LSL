@@ -11,6 +11,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using System.IO;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 public partial class MainViewModel : ViewModelBase
 {
@@ -34,6 +35,8 @@ public partial class MainViewModel : ViewModelBase
 
         LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
         RightViewCmd = ReactiveCommand.Create<string>(INavigateRight);
+        ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
+        QuitCmd = ReactiveCommand.Create(Quit);
 
         #region 多参数导航
         PanelConfigCmd = ReactiveCommand.Create(() =>
@@ -106,4 +109,14 @@ public partial class MainViewModel : ViewModelBase
     {
         ConfigManager.ConfirmConfig(ViewConfigs);
     }
+
+    public ICommand ShowMainWindowCmd { get; }// 显示主窗口命令
+    public ICommand QuitCmd { get; }// 退出命令
+
+    public static void ShowMainWindow()
+    {
+        EventBus.Instance.Publish(new ViewBroadcastArgs { Message = "ShowMainWindow" });
+    }
+    public static void Quit() { Environment.Exit(0); }
+
 }

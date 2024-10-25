@@ -39,6 +39,9 @@
     <None Remove="Assets\ButtonIcons\Save.png" />
     <None Remove="Assets\Fonts\SourceHanSansHWSC-Regular.otf" />
     <None Remove="Assets\SmileySans-Oblique.ttf" />
+    <None Remove="Config.json" />
+    <None Remove="JavaList.json" />
+    <None Remove="ServersConfig.json" />
   </ItemGroup>
 
   <ItemGroup>

@@ -12,6 +12,8 @@ using LSL.Views;
 using static LSL.Controls.MyCard;
 using LSL.Services;
 using System.Threading;
+using System.Windows.Input;
+using ReactiveUI;
 
 namespace LSL;
 public partial class App : Application
@@ -42,5 +44,9 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
+    public App()
+    {
+        this.DataContext = new MainViewModel();
+    }
 
 }

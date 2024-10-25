@@ -1,0 +1,20 @@
+{
+  "auto_eula": true,
+  "app_priority": 1,
+  "end_server_when_close": false,
+  "daemon": true,
+  "java_selection": 0,
+  "auto_find_java": true,
+  "output_encode": 0,
+  "input_encode": 0,
+  "coloring_terminal": true,
+  "download_source": 0,
+  "download_threads": 16,
+  "download_limit": 0,
+  "panel_enable": false,
+  "panel_port": 25000,
+  "panel_monitor": true,
+  "panel_terminal": true,
+  "auto_update": true,
+  "beta_update": false
+}

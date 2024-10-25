@@ -131,7 +131,7 @@ namespace LSL.Services
         public 【参数类型】 【参数名称】 { get; set; }
     }
     2. 发布事件
-    EventBus.Instance.PublishAsync(new 【事件类名】 { 【事件参数名称】 = 【值】 });
+    EventBus.Instance.Publish(new 【事件类名】 { 【事件参数名称】 = 【值】 });
     3. 事件处理器类（可选）
     事件处理器可以统一设置，也可以在需要的地方单独设置
     如果是统一设置的非静态事件处理器，需要引入该类的实例
@@ -187,5 +187,10 @@ namespace LSL.Services
     }
 
     public class ClosingArgs : EventArgs { }// 窗体关闭事件
+
+    public class ViewBroadcastArgs : EventArgs// 广播事件
+    {
+        public required string Message { get; set; }
+    }
     #endregion
 }
