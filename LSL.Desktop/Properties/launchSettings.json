@@ -1,11 +1,14 @@
 {
   "profiles": {
     "LSL.Desktop": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "remoteDebugEnabled": true
     },
     "WSL": {
       "commandName": "WSL2",
-      "distributionName": ""
+      "workingDirectory": "/home/icepop/LSL/bin/Debug/net8.0",
+      "distributionName": "",
+      "remoteDebugEnabled": true
     }
   }
 }
