@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-			 xmlns:local="clr-namespace:LSL.Controls;assembly=LSL"
+			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              x:Class="LSL.Views.Download.ASViews.AddCore">
 	<StackPanel>
 		<local:MyCard Text="从核心添加服务器">

@@ -1,10 +1,8 @@
 ﻿using System.Runtime.Versioning;
 using System.Threading.Tasks;
-
 using Avalonia;
 using Avalonia.Browser;
 using Avalonia.ReactiveUI;
-
 using LSL;
 
 [assembly: SupportedOSPlatform("browser")]

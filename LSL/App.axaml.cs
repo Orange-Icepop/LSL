@@ -9,7 +9,7 @@ using System.Text.Json;
 using System.Net;
 using LSL.ViewModels;
 using LSL.Views;
-using static LSL.Controls.MyCard;
+using static LSL.Components.MyCard;
 using LSL.Services;
 using System.Threading;
 using System.Windows.Input;

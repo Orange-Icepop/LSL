@@ -1,13 +1,13 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
-using LSL.Controls;
+using LSL.Components;
 using LSL.ViewModels;
 using Avalonia.Media;
 using System.Diagnostics;
 using System;
 
-namespace LSL.Controls
+namespace LSL.Components
 {
     public enum ColorType
     {
