@@ -172,7 +172,6 @@ public class ViewModelBase : ReactiveObject
 {
     /*
     // 实现INotifyPropertyChanged
-    // 虽然使用了CommunityToolkit，但是有一部分必须依赖ReactiveObject
     public new event PropertyChangedEventHandler PropertyChanged;
 
     protected virtual void OnPropertyChanged(string propertyName)

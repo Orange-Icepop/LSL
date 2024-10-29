@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using LSL.Controls;
 using LSL.ViewModels;
-using CommunityToolkit.Mvvm.ComponentModel;
 using Avalonia.Media;
 using System.Diagnostics;
 using System;
