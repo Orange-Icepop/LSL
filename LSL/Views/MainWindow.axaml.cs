@@ -38,7 +38,7 @@ public partial class MainWindow : Window
 
     private void BroadcastHandler(ViewBroadcastArgs args)
     {
-        if (args.Message == "ShowMainWindow")
+        if (args.Target == "MainWindow.axaml.cs" && args.Message == "Show")
         {
             this.Show();
         }

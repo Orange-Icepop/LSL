@@ -120,30 +120,33 @@ namespace LSL.Services
             LoadServer(serverId, process);
             EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器正在启动，请稍后......." });
             process.EnableRaisingEvents = true;
+
+            process.OutputDataReceived += (sender, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                {
+                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
+                }
+            };
+
+            process.ErrorDataReceived += (sender, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                {
+                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
+                }
+            };
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
             process.Exited += (sender, e) =>
             {
                 // 移除进程的实例
                 UnloadServer(serverId);
                 EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器已关闭" });
             };
-            // 读取Java程序的输出  
-            using (StreamReader reader = process.StandardOutput)
-            {
-                string line;
-                while ((line = await reader.ReadLineAsync()) != null)
-                {
-                    if (line != null && line != "") EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = line });
-                }
-            }
-            // 读取Java程序的错误输出
-            using (StreamReader reader = process.StandardError)
-            {
-                string line;
-                while ((line = await reader.ReadLineAsync()) != null)
-                {
-                    if (line != null && line != "") EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = line });
-                }
-            }
+
+            process.WaitForExit();
         }
         #endregion
 

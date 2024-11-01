@@ -115,7 +115,7 @@ public partial class MainViewModel : ViewModelBase
 
     public static void ShowMainWindow()
     {
-        EventBus.Instance.Publish(new ViewBroadcastArgs { Message = "ShowMainWindow" });
+        EventBus.Instance.Publish(new ViewBroadcastArgs { Target = "MainWindow.axaml.cs", Message = "Show" });
     }
     public static void Quit() { Environment.Exit(0); }
 

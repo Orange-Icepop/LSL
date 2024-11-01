@@ -24,11 +24,19 @@ namespace LSL.Views.Server
                 .Subscribe(_ => TurnToEnd())
                 .DisposeWith(disposables);
             });
+            EventBus.Instance.Subscribe<ViewBroadcastArgs>(ForceScroll);
         }
         public void TurnToEnd()
         {
             double tolerance = 10.0;
-            if(Math.Abs(TerminalScroll.Offset.Y + TerminalScroll.Viewport.Height - TerminalScroll.Extent.Height) < tolerance) TerminalScroll.ScrollToEnd();
+            if (Math.Abs(TerminalScroll.Offset.Y + TerminalScroll.Viewport.Height - TerminalScroll.Extent.Height) < tolerance) TerminalScroll.ScrollToEnd();
+        }
+        public void ForceScroll(ViewBroadcastArgs args)
+        {
+            if (args.Target == "ServerTerminal.axaml.cs" && args.Message == "ScrollToEnd")
+            {
+                TerminalScroll.ScrollToEnd();
+            }
         }
     }
 }

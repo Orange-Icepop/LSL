@@ -190,6 +190,7 @@ namespace LSL.Services
 
     public class ViewBroadcastArgs : EventArgs// 广播事件
     {
+        public required string Target { get; set; }
         public required string Message { get; set; }
     }
     #endregion

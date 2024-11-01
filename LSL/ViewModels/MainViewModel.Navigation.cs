@@ -95,6 +95,7 @@ namespace LSL.ViewModels
         {
             string original = CurrentRightView;
             NavigateRightView(original, true);
+            EventBus.Instance.Publish(new ViewBroadcastArgs{ Target = "ServerTerminal.axaml.cs", Message = "ScrollToEnd" });
         }
         #endregion
 
