@@ -27,6 +27,7 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         // 初始化
+        ResetPopup();// 重置弹出窗口
         ConfigManager.Initialize();// 初始化配置
         GetConfig();// 获取配置
         ReadServerList();// 读取服务器列表
@@ -88,7 +89,7 @@ public partial class MainViewModel : ViewModelBase
         StartServerCmd = ReactiveCommand.Create(StartServer);// 启动服务器命令-实现
         StopServerCmd = ReactiveCommand.Create(async () =>
         {
-            string result = await Popup.Instance.Show(2, "警告", "确定关闭此服务器吗？你的存档将被保存。");
+            string result = await ShowPopup(2, "警告", "确定关闭此服务器吗？你的存档将被保存。");
             if (result == "Yes")
             {
                 SendServerCommand("stop");
@@ -100,6 +101,7 @@ public partial class MainViewModel : ViewModelBase
         // 服务器相关命令-end
 
         // Popup相关命令-start
+        // 正常情况下，这些命令被调用时PopupTcs不为null
         PopupConfirm = ReactiveCommand.Create(() => PopupTcs.TrySetResult("confirm"));
         PopupCancel = ReactiveCommand.Create(() => PopupTcs.TrySetResult("cancel"));
         PopupYes = ReactiveCommand.Create(() => PopupTcs.TrySetResult("yes"));

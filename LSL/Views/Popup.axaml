@@ -4,18 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
              x:Class="LSL.Views.Popup">
-	<UserControl.Resources>
-		<SolidColorBrush x:Key="PopupColor" Color="Black"/>
-	</UserControl.Resources>
 	<Grid>
-		<Grid Name="Cover" Background="{Binding	popupColor}" Opacity="0.3"/>
+		<Grid Name="Cover" Background="{Binding	PopupColor}" Opacity="0.3"/>
 		<Border Width="600"
 				Name="PopupBorder"
 				Padding="10"
 				VerticalAlignment="Center"
 				Background="White"
 				BorderThickness="4"
-				BorderBrush="{Binding popupColor}"
+				BorderBrush="{Binding PopupColor}"
 				CornerRadius="10">
 			<DockPanel>
 				<TextBlock Name="Head" DockPanel.Dock="Top" Margin="10" FontWeight="Bold" FontSize="17" />
