@@ -16,6 +16,9 @@ using LSL.Views;
 
 public partial class MainViewModel : ViewModelBase
 {
+    // 不要忘了每次发布Release时更新版本号！！！
+    public static string CurrentVersion = "v0.06";
+
     //初始化主窗口
     public void InitializeMainWindow()
     {
