@@ -12,6 +12,7 @@ using Avalonia.Interactivity;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using LSL.Views;
 
 public partial class MainViewModel : ViewModelBase
 {
@@ -30,7 +31,6 @@ public partial class MainViewModel : ViewModelBase
         GetConfig();// 获取配置
         ReadServerList();// 读取服务器列表
         ReadJavaList();// 读取Java列表
-        RestorePopup();// 初始化弹窗
         OutputHandler outputHandler = new();// 初始化输出处理
 
         LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
@@ -57,6 +57,8 @@ public partial class MainViewModel : ViewModelBase
         #endregion
 
         #region 命令实现
+        // 配置相关命令-start
+
         ConfirmAddServer = ReactiveCommand.Create(() =>
         {
             string JavaPath = JavaManager.MatchJavaList(JavaSelection.ToString());
@@ -79,23 +81,31 @@ public partial class MainViewModel : ViewModelBase
             ReadJavaList();
         });// 搜索Java命令-实现
 
+        // 配置相关命令-end
+
+        // 服务器相关命令-start
+
         StartServerCmd = ReactiveCommand.Create(StartServer);// 启动服务器命令-实现
-        StopServerCmd = ReactiveCommand.Create(() =>
+        StopServerCmd = ReactiveCommand.Create(async () =>
         {
-            SendServerCommand("stop");
-            AddTerminalText(SelectedServerId, "[LSL 消息]: 关闭服务器命令已发出，请等待");
+            string result = await Popup.Instance.Show(2, "警告", "确定关闭此服务器吗？你的存档将被保存。");
+            if (result == "Yes")
+            {
+                SendServerCommand("stop");
+            }
         });// 停止服务器命令-实现
         SaveServerCmd = ReactiveCommand.Create(() => SendServerCommand("save-all"));// 保存服务器命令-实现
         ShutServerCmd = ReactiveCommand.Create(() => ServerHost.Instance.EndServer(SelectedServerId));// 结束服务器进程命令-实现
 
-        PopupConfirm = ReactiveCommand.Create(() =>
-        {
-            PopupResponse = "true";
-        });
-        PopupCancel = ReactiveCommand.Create(() =>
-        {
-            PopupResponse = "false";
-        });
+        // 服务器相关命令-end
+
+        // Popup相关命令-start
+        PopupConfirm = ReactiveCommand.Create(() => PopupTcs.TrySetResult("confirm"));
+        PopupCancel = ReactiveCommand.Create(() => PopupTcs.TrySetResult("cancel"));
+        PopupYes = ReactiveCommand.Create(() => PopupTcs.TrySetResult("yes"));
+        PopupNo = ReactiveCommand.Create(() => PopupTcs.TrySetResult("no"));
+        // Popup相关命令-end
+
         #endregion
 
         EventBus.Instance.Subscribe<TerminalOutputArgs>(ReceiveStdOutPut);

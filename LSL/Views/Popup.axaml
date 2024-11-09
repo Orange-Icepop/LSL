@@ -5,10 +5,10 @@
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
              x:Class="LSL.Views.Popup">
 	<UserControl.Resources>
-		<SolidColorBrush x:Key="PopupColor"/>
+		<SolidColorBrush x:Key="PopupColor" Color="Black"/>
 	</UserControl.Resources>
 	<Grid>
-		<Grid Name="Cover" Background="{Binding popupColor}" Opacity="0.3"/>
+		<Grid Name="Cover" Background="{Binding	popupColor}" Opacity="0.3"/>
 		<Border Width="600"
 				Name="PopupBorder"
 				Padding="10"
@@ -18,11 +18,45 @@
 				BorderBrush="{Binding popupColor}"
 				CornerRadius="10">
 			<DockPanel>
-				<TextBlock Name="Head" DockPanel.Dock="Top" Margin="10" FontWeight="Bold" FontSize="17" Text="{Binding popupTitle}"/>
-				<TextBlock Name="Message" DockPanel.Dock="Top" Margin="10" Text="{Binding popupContent}"/>
+				<TextBlock Name="Head" DockPanel.Dock="Top" Margin="10" FontWeight="Bold" FontSize="17" />
+				<TextBlock Name="Message" DockPanel.Dock="Top" Margin="10" />
 				<DockPanel DockPanel.Dock="Bottom" Margin="0">
-					<Button Name="Confirm" Classes="right" DockPanel.Dock="Right" HorizontalAlignment="Right" Width="100" Height="30" Margin="5" Content="确认" Command="{Binding PopupConfirm}"/>
-					<Button Name="Cancel" Classes="right" DockPanel.Dock="Right" HorizontalAlignment="Right" Width="100" Height="30" Margin="5" Content="取消" IsVisible="{Binding cancelShow}" Command="{Binding PopupCancel}"/>
+					<Button Name="Confirm"
+							Classes="right"
+							DockPanel.Dock="Right"
+							HorizontalAlignment="Right"
+							Width="100"
+							Height="30"
+							Margin="5"
+							Command="{Binding PopupConfirm}"
+							Content="确认" />
+					<Button Name="Cancel"
+							Classes="right"
+							DockPanel.Dock="Right"
+							HorizontalAlignment="Right"
+							Width="100"
+							Height="30"
+							Margin="5"
+							Command="{Binding PopupCancel}"
+							Content="取消" />
+					<Button Name="No"
+							Classes="right"
+							DockPanel.Dock="Right"
+							HorizontalAlignment="Right"
+							Width="100"
+							Height="30"
+							Margin="5"
+							Command="{Binding PopupNo}"
+							Content="否" />
+					<Button Name="Yes"
+							Classes="right"
+							DockPanel.Dock="Right"
+							HorizontalAlignment="Right"
+							Width="100"
+							Height="30"
+							Margin="5"
+							Command="{Binding PopupYes}"
+							Content="是" />
 				</DockPanel>
 			</DockPanel>
 		</Border>

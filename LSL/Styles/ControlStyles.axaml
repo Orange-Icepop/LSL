@@ -1,0 +1,35 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:local="clr-namespace:LSL.Components;assembly=LSL">
+	<Design.PreviewWith>
+		<Border Padding="20">
+			<!-- Add Controls for Previewer Here -->
+		</Border>
+	</Design.PreviewWith>
+	<FluentTheme/>
+
+	<!--顶栏(Bar)按钮样式定义-->
+	<Style Selector="Button.bar">
+		<Setter Property="Foreground" Value="White"/>
+		<Setter	Property="BorderThickness" Value="0"/>
+		<Setter Property="Background" Value="{DynamicResource OBlue}"/>
+		<Setter Property="Width" Value="70"/>
+		<Setter Property="Height" Value="35"/>
+		<Setter Property="Margin" Value="5"/>
+		<Setter Property="FontSize" Value="20"/>
+		<!--顶栏按钮悬停样式定义-->
+		<Style Selector="^:pointerover">
+			<Setter Property="Background" Value="{DynamicResource OBlueBar}"/>
+			<Setter Property="FontSize" Value="20"/>
+		</Style>
+		<!--顶栏按钮选中样式定义-->
+		<Style Selector="^.selected">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+			<Setter Property="FontSize" Value="20"/>
+		</Style>
+	</Style>
+
+
+
+</Styles>

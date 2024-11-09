@@ -143,6 +143,7 @@ namespace LSL.Services
             {
                 // 移除进程的实例
                 UnloadServer(serverId);
+                EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Status = false });
                 EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器已关闭" });
             };
 
@@ -156,11 +157,19 @@ namespace LSL.Services
             Process server = GetServer(serverId);
             if (CheckProcess(server))
             {
+                if (command == "stop")
+                {
+                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 关闭服务器命令已发出，请等待......" });
+                }
                 using (StreamWriter writer = server.StandardInput)
                 {
                     await writer.WriteLineAsync(command);
                     await writer.FlushAsync();
                 }
+            }
+            else
+            {
+                EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 错误]: 服务器未启动，消息无法发送" });
             }
         }
         #endregion

@@ -18,6 +18,7 @@
     
 	<Application.Styles>
 		<StyleInclude Source="/Styles/GlobalStyles.axaml"/>
+		<StyleInclude Source="/Styles/ControlStyles.axaml"/>
 	</Application.Styles>
 	<!--托盘图标-->
 	<TrayIcon.Icons>
