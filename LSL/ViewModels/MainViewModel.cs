@@ -102,10 +102,10 @@ public partial class MainViewModel : ViewModelBase
 
         // Popup相关命令-start
         // 正常情况下，这些命令被调用时PopupTcs不为null
-        PopupConfirm = ReactiveCommand.Create(() => PopupTcs.TrySetResult("confirm"));
-        PopupCancel = ReactiveCommand.Create(() => PopupTcs.TrySetResult("cancel"));
-        PopupYes = ReactiveCommand.Create(() => PopupTcs.TrySetResult("yes"));
-        PopupNo = ReactiveCommand.Create(() => PopupTcs.TrySetResult("no"));
+        PopupConfirm = ReactiveCommand.Create(() => PopupTcs.TrySetResult("Confirm"));
+        PopupCancel = ReactiveCommand.Create(() => PopupTcs.TrySetResult("Cancel"));
+        PopupYes = ReactiveCommand.Create(() => PopupTcs.TrySetResult("Yes"));
+        PopupNo = ReactiveCommand.Create(() => PopupTcs.TrySetResult("No"));
         // Popup相关命令-end
 
         #endregion

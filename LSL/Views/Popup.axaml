@@ -15,8 +15,8 @@
 				BorderBrush="{Binding PopupColor}"
 				CornerRadius="10">
 			<DockPanel>
-				<TextBlock Name="Head" DockPanel.Dock="Top" Margin="10" FontWeight="Bold" FontSize="17" />
-				<TextBlock Name="Message" DockPanel.Dock="Top" Margin="10" />
+				<TextBlock Name="Head" DockPanel.Dock="Top" Margin="10" FontWeight="Bold" FontSize="17" Text="{Binding PopupTitle}" />
+				<TextBlock Name="Message" DockPanel.Dock="Top" Margin="10" Text="{Binding PopupContent}" TextWrapping="Wrap" />
 				<DockPanel DockPanel.Dock="Bottom" Margin="0">
 					<Button Name="Confirm"
 							Classes="right"
@@ -25,6 +25,7 @@
 							Width="100"
 							Height="30"
 							Margin="5"
+							IsVisible="{Binding ConfirmButton}"
 							Command="{Binding PopupConfirm}"
 							Content="确认" />
 					<Button Name="Cancel"
@@ -34,6 +35,7 @@
 							Width="100"
 							Height="30"
 							Margin="5"
+							IsVisible="{Binding CancelButton}"
 							Command="{Binding PopupCancel}"
 							Content="取消" />
 					<Button Name="No"
@@ -43,6 +45,7 @@
 							Width="100"
 							Height="30"
 							Margin="5"
+							IsVisible="{Binding NoButton}"
 							Command="{Binding PopupNo}"
 							Content="否" />
 					<Button Name="Yes"
@@ -52,10 +55,16 @@
 							Width="100"
 							Height="30"
 							Margin="5"
+							IsVisible="{Binding YesButton}"
 							Command="{Binding PopupYes}"
 							Content="是" />
 				</DockPanel>
 			</DockPanel>
 		</Border>
 	</Grid>
+	<UserControl.Transitions>
+		<Transitions>
+			<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+		</Transitions>
+	</UserControl.Transitions>
 </UserControl>

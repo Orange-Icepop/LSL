@@ -30,7 +30,6 @@ namespace LSL.ViewModels
                 this.RaiseAndSetIfChanged(ref _selectedServerIndex, value);
                 RefreshRightView();
                 ReadProperties();
-                
             }
         }
         public string SelectedServerId => ServerIDs[SelectedServerIndex];

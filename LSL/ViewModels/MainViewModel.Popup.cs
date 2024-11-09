@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Threading;
 using ReactiveUI;
 
 namespace LSL.ViewModels
@@ -17,7 +19,7 @@ namespace LSL.ViewModels
         private SolidColorBrush popupColor;
         private int popupType;
         private bool popupVisible;
-        private bool cancelShow;
+        private double popupOpacity;
 
         private bool confirmButton;
         private bool cancelButton;
@@ -50,10 +52,10 @@ namespace LSL.ViewModels
             get => popupVisible;
             set => this.RaiseAndSetIfChanged(ref popupVisible, value);
         }
-        public bool CancelShow
+        public double PopupOpacity
         {
-            get => cancelShow;
-            set => this.RaiseAndSetIfChanged(ref cancelShow, value);
+            get => popupOpacity;
+            set => this.RaiseAndSetIfChanged(ref popupOpacity, value);
         }
         public bool ConfirmButton
         {
@@ -77,18 +79,24 @@ namespace LSL.ViewModels
         }
         #endregion
 
-        public void ResetPopup()
+        public async void ResetPopup()
         {
+            PopupOpacity = 0;
+            await Task.Delay(200);
+            Task.Run(ResetPopupS2);
+        }
+
+        public void ResetPopupS2()
+        {
+            PopupVisible = false;
             PopupTitle = "";
             PopupContent = "";
             PopupColor = new SolidColorBrush(Colors.Black);
-            PopupVisible = false;
 
             ConfirmButton = false;
             CancelButton = false;
             YesButton = false;
             NoButton = false;
-            this.RaisePropertyChanged(nameof(popupVisible));
         }
 
         private TaskCompletionSource<string> PopupTcs;// 创建一个TaskCompletionSource，这是最核心的东西，它能够等待用户操作
@@ -104,22 +112,28 @@ namespace LSL.ViewModels
                     PopupTitle = "提示";
                     PopupContent = message;
                     PopupColor = new SolidColorBrush(Color.Parse("#33e0e5"));
+                    ConfirmButton = true;
                     break;
                 case 1:
                     PopupTitle = "警告";
                     PopupContent = message;
                     PopupColor = new SolidColorBrush(Colors.Yellow);
-                    CancelShow = true;
+                    CancelButton = true;
+                    YesButton = true;
+                    NoButton = true;
                     break;
                 case 2:
                     PopupTitle = "警告";
                     PopupContent = message;
                     PopupColor = new SolidColorBrush(Colors.Yellow);
+                    YesButton = true;
+                    NoButton = true;
                     break;
                 case 3:
-                    PopupTitle = "致命错误";
+                    PopupTitle = "错误";
                     PopupContent = $"LSL发生了一个错误。\r {message}";
                     PopupColor = new SolidColorBrush(Colors.Red);
+                    ConfirmButton = true;
                     break;
                 default:
                     Debug.WriteLine("Unknown popup type");
@@ -130,6 +144,7 @@ namespace LSL.ViewModels
                 PopupTitle = title;
             }
             PopupVisible = true;
+            PopupOpacity = 1;
             var result = await PopupTcs.Task;
             ResetPopup();
             return result;

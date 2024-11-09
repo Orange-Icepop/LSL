@@ -15,7 +15,7 @@
 
 	<Grid>
 		<views:MainView/>
-		<views:Popup Name="Popup" IsVisible="{Binding PopupVisible}"/>
+		<views:Popup Name="Popup" IsVisible="{Binding PopupVisible}" Opacity="{Binding PopupOpacity}"/>
 	</Grid>
 </Window>
 
