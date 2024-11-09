@@ -63,10 +63,12 @@ public partial class MainViewModel : ViewModelBase
         #region 命令实现
         // 配置相关命令-start
 
-        ConfirmAddServer = ReactiveCommand.Create(() =>
+        ConfirmAddServer = ReactiveCommand.Create(async () =>
         {
             string JavaPath = JavaManager.MatchJavaList(JavaSelection.ToString());
-            ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
+            string confirmResult = await ShowPopup(2, "确定添加此服务器吗？", $"服务器信息：\r名称：{NewServerName}\rJava路径：{JavaPath}\r核心文件路径：{CorePath}\r内存范围：{MinMemory} ~ {MaxMemory}\r附加JVM参数：{ExtJvm}（默认为空）");
+            if (confirmResult == "Yes")
+                ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
             ReadServerList();
             NavigateRightView("AddServer");
         });// 添加服务器命令-实现
@@ -92,14 +94,24 @@ public partial class MainViewModel : ViewModelBase
         StartServerCmd = ReactiveCommand.Create(StartServer);// 启动服务器命令-实现
         StopServerCmd = ReactiveCommand.Create(async () =>
         {
-            string result = await ShowPopup(2, "警告", "确定关闭此服务器吗？你的存档将被保存。");
+            string result = await ShowPopup(2, "确定关闭此服务器吗？", "你的存档将被保存。");
             if (result == "Yes")
             {
                 SendServerCommand("stop");
             }
         });// 停止服务器命令-实现
-        SaveServerCmd = ReactiveCommand.Create(() => SendServerCommand("save-all"));// 保存服务器命令-实现
-        ShutServerCmd = ReactiveCommand.Create(() => ServerHost.Instance.EndServer(SelectedServerId));// 结束服务器进程命令-实现
+        SaveServerCmd = ReactiveCommand.Create(async() =>
+        {
+            SendServerCommand("save-all");
+        });// 保存服务器命令-实现
+        ShutServerCmd = ReactiveCommand.Create(async () =>
+        {
+            string result = await ShowPopup(3, "确定强制关闭此服务器吗？", "这将直接结束服务器进程，你所做的最新操作可能不会被保存！");
+            if (result == "Yes")
+            {
+                ServerHost.Instance.EndServer(SelectedServerId);
+            }
+        });// 结束服务器进程命令-实现
 
         // 服务器相关命令-end
 
