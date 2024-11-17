@@ -156,6 +156,7 @@ namespace LSL.ViewModels
         {
             string jsonContent = File.ReadAllText(ConfigManager.JavaListPath);
             JObject jsonObj = JObject.Parse(jsonContent);
+            JavaVersions.Clear();
             //遍历配置文件中的所有Java
             foreach (var item in jsonObj.Properties())
             {

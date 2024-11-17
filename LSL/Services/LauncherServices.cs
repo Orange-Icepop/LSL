@@ -20,6 +20,7 @@ using MinecraftLaunch.Components.Fetcher;
 using MinecraftLaunch.Classes.Models.Game;
 using System.Collections;
 using Avalonia.Threading;
+using System.Runtime.InteropServices;
 
 namespace LSL.Services
 {
@@ -539,15 +540,16 @@ namespace LSL.Services
                 File.WriteAllText(ConfigManager.JavaListPath, "{}");
             }
             Debug.WriteLine("开始获取Java列表");
-            JavaFetcher javaFetcher = new();
-            var JavaList = await javaFetcher.FetchAsync();//调用MinecraftLaunch的API查找JAVA
+            //JavaFetcher javaFetcher = new();
+            //var JavaList = await javaFetcher.FetchAsync();//调用MinecraftLaunch的API查找JAVA
+            var javaList = await Task.Run(JavaFinder.GetInstalledJavaInfosAsync);//调用JavaFinder查找JAVA
             JsonHelper.ClearJson(ConfigManager.JavaListPath);//清空Java记录
             //遍历写入Java信息
             int id = 0;
-            foreach (JavaEntry javalist in JavaList)
+            foreach (JavaInfo javainfo in javaList)
             {
                 string writtenId = id.ToString();
-                JsonHelper.AddJson(ConfigManager.JavaListPath, writtenId, new { version = javalist.JavaVersion, path = javalist.JavaPath });
+                JsonHelper.AddJson(ConfigManager.JavaListPath, writtenId, new { version = javainfo.Vendor + " " + javainfo.Version, path = javainfo.Path, architecture = javainfo.Architecture });
                 id++;
             }
         }
@@ -562,5 +564,6 @@ namespace LSL.Services
         #endregion
 
     }
-
 }
+
+
