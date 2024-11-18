@@ -1,14 +1,6 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Media.Imaging;
-using LSL.Services;
-using LSL.Views.Server;
-using ReactiveUI;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -16,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.IO;
+using ReactiveUI;
+using LSL.Services;
 
 namespace LSL.ViewModels
 {

@@ -1,32 +1,20 @@
-﻿using Avalonia.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using LSL.Views;
-using LSL.ViewModels;
-using LSL.Services;
-using Avalonia.Interactivity;
-using Avalonia.Platform.Storage;
-using Avalonia.Metadata;
-using ReactiveUI;
-using MinecraftLaunch.Components.Fetcher;
-using MinecraftLaunch.Classes.Models.Game;
-using System.Collections;
-using Avalonia.Threading;
-using System.Runtime.InteropServices;
 
 namespace LSL.Services
 {
     //JSON基本操作类
     public static class JsonHelper
     {
+        // 注意：
+        // 1、本类中所有方法均假设Json文件结构正确，否则将抛出异常
+        // 2、除非必须要单独修改某个键值，否则不要使用ModifyJson，从而减小文件操作次数
         #region 修改键值基本方法ModifyJson
         public static void ModifyJson(string filePath, string keyPath, object keyValue)
         {
@@ -161,15 +149,17 @@ namespace LSL.Services
     public class ConfigManager
     {
         // 配置文件的路径  
-        private static readonly string _configFilePath = Path.Combine("LSL", "Config.json");
-        private static readonly string _serverConfigPath = Path.Combine("LSL", "ServersConfig.json");
-        private static readonly string _javaListPath = Path.Combine("LSL", "JavaList.json");
-        private static readonly string _serversPath = Path.Combine("Servers");
+        private static readonly string _configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "Config.json");
+        private static readonly string _serverConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "ServersConfig.json");
+        private static readonly string _javaListPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "JavaList.json");
+        private static readonly string _cJavaListPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "CustomJavaList.json");
+        private static readonly string _serversPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Servers");
 
         // 获取配置文件的路径  
         public static string ConfigFilePath => _configFilePath;
         public static string ServerConfigPath => _serverConfigPath;
         public static string JavaListPath => _javaListPath;
+        public static string CJavaListPath => _cJavaListPath;
         public static string ServersPath => _serversPath;
 
         private static ConfigManager _instance;
@@ -214,6 +204,11 @@ namespace LSL.Services
             {
                 File.WriteAllText(JavaListPath, "{}");
                 Debug.WriteLine("JavaList.json initialized.");
+            }
+            if (!File.Exists(CJavaListPath))
+            {
+                File.WriteAllText(CJavaListPath, "{}");
+                Debug.WriteLine("CustomJavaList.json initialized.");
             }
         }
         #endregion
@@ -549,7 +544,7 @@ namespace LSL.Services
             foreach (JavaInfo javainfo in javaList)
             {
                 string writtenId = id.ToString();
-                JsonHelper.AddJson(ConfigManager.JavaListPath, writtenId, new { version = javainfo.Vendor + " " + javainfo.Version, path = javainfo.Path, architecture = javainfo.Architecture });
+                JsonHelper.AddJson(ConfigManager.JavaListPath, writtenId, new { version = javainfo.Version, path = javainfo.Path, vendor = javainfo.Vendor , architecture = javainfo.Architecture });
                 id++;
             }
         }

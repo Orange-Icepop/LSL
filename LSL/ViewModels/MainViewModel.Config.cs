@@ -1,11 +1,8 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using LSL.ViewModels;
 using LSL.Services;
 using ReactiveUI;
-using System.Configuration;
-using System.Diagnostics;
 using System.Windows.Input;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;

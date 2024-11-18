@@ -1,11 +1,6 @@
 ﻿using System;
-using LSL.ViewModels;
 using Avalonia;
 using Avalonia.ReactiveUI;
-using LSL.Services;
-using ReactiveUI;
-using System.Diagnostics.Tracing;
-using System.Diagnostics;
 
 namespace LSL.Desktop;
 

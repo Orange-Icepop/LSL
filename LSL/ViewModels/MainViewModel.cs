@@ -1,18 +1,10 @@
-﻿namespace LSL.ViewModels;
-
-using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using LSL.Services;
-using System.Collections.ObjectModel;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Interactivity;
-using System.IO;
+﻿using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using LSL.Views;
+using ReactiveUI;
+using LSL.Services;
+
+namespace LSL.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {

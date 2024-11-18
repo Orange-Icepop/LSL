@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Generic;
-using Avalonia.Controls;
 using System.Diagnostics;
 using System.Reactive;
 using System.Windows.Input;
+using Avalonia.Controls;
 using ReactiveUI;
-using System.Threading.Tasks;
 using LSL.Services;
 
 namespace LSL.ViewModels
