@@ -136,13 +136,6 @@ namespace LSL.Services
                         string vendor = "Unknown";
                         string architecture = "Unknown";
 
-                        // get version
-                        string versionLine = lines[0];
-                        var versionParts = versionLine.Split(' ');
-                        if (versionParts.Length >= 3)
-                        {
-                            version = versionParts[2].Trim('"');
-                        }
                         // get vendor
                         string vendorLine = lines[1];
                         var vendorParts = vendorLine.Split(' ');
@@ -177,6 +170,17 @@ namespace LSL.Services
                                 vendor = "Zulu";
                             }
                         }
+                        // get version
+                        string versionLine = lines[0];
+                        var versionParts = versionLine.Split(' ');
+                        if (versionParts.Length >= 3)
+                        {
+                            version = versionParts[2].Trim('"');
+                        }
+                        if (vendor == "Oracle" && version.StartsWith("1."))
+                        {
+                            version = version.Substring(2);
+                        }
                         // get architecture
                         string architectureLine = lines[2];
                         if (architectureLine.Contains("64-Bit"))
@@ -187,13 +191,7 @@ namespace LSL.Services
                         {
                             architecture = "32-Bit";
                         }
-                        return new JavaInfo
-                        {
-                            Path = javaPath,
-                            Version = version,
-                            Vendor = vendor,
-                            Architecture = architecture
-                        };
+                        return new JavaInfo(javaPath, version, vendor, architecture);
                     }
                 }
             }
@@ -229,10 +227,17 @@ namespace LSL.Services
 
     public class JavaInfo
     {
-        public required string Path { get; set; }
-        public required string Version { get; set; }
-        public required string Vendor { get; set; }
-        public required string Architecture { get; set; }
+        public string Path { get; set; }
+        public string Version { get; set; }
+        public string Vendor { get; set; }
+        public string Architecture { get; set; }
+        public JavaInfo( string path, string version, string vendor, string architecture)
+        {
+            Path = path;
+            Version = version;
+            Vendor = vendor;
+            Architecture = architecture;
+        }
     }
 
 }

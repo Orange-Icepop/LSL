@@ -19,15 +19,39 @@
 				</DockPanel>
 				<CheckBox Margin="0,5,0,5" IsChecked="{Binding EndServerWhenClose}">关闭启动器时终止服务器进程</CheckBox>
 				<CheckBox Margin="0,5,0,5" IsChecked="{Binding Daemon}">保持后台进程开启</CheckBox>
+			</StackPanel>
+		</local:MyCard>
+
+		<local:MyCard Text="Java设置">
+			<StackPanel Margin="30,40,0,15">
+				<DataGrid Margin="0,5,0,5"
+						  ItemsSource="{Binding JavaVersions}"
+						  CanUserReorderColumns="False"
+						  CanUserResizeColumns="False"
+						  SelectionMode="Single"
+						  IsReadOnly="True"
+						  Width="800"
+						  HorizontalAlignment="Left">
+					<DataGrid.Styles>
+						<Style Selector="TextBlock">
+							<Setter Property="TextWrapping" Value="Wrap"/>
+						</Style>
+					</DataGrid.Styles>
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="版本" Binding="{Binding Version}" Width="100"/>
+						<DataGridTextColumn Header="路径" Binding="{Binding Path}" Width="500"/>
+						<DataGridTextColumn Header="提供商" Binding="{Binding Vendor}" Width="100"/>
+						<DataGridTextColumn Header="架构" Binding="{Binding Architecture}" Width="100"/>
+					</DataGrid.Columns>
+				</DataGrid>
 				<DockPanel Margin="0,5,0,5">
-					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="Java列表"/>
-					<ComboBox Name="Java" Margin="0,0,10,0" Width="400" ItemsSource="{Binding JavaVersions}" SelectedIndex="{Binding JavaSelection}"/>
 					<local:MyButton ColorType="Highlight" HorizontalAlignment="Left" Margin="0,0,10,0" Width="100" Height="30" Command="{Binding SearchJava}">查找可用Java</local:MyButton>
 					<local:MyButton HorizontalAlignment="Left" Margin="0,0,10,0" Width="100" Height="30">手动选择Java</local:MyButton>
 				</DockPanel>
 				<CheckBox Margin="0,5,0,5" IsChecked="{Binding AutoFindJava}">启动时自动刷新Java列表</CheckBox>
 			</StackPanel>
 		</local:MyCard>
+
 		<local:MyCard Text="终端设置">
 			<StackPanel Margin="30,40,0,15">
 				<DockPanel Margin="0,10,0,5">
@@ -48,6 +72,6 @@
 				<CheckBox Margin="0,5,0,5" IsChecked="{Binding ColoringTerminal}">终端分层设色</CheckBox>
 			</StackPanel>
 		</local:MyCard>
-		
+
 	</StackPanel>
 </UserControl>

@@ -146,8 +146,12 @@ namespace LSL.ViewModels
 
         #region 全局获取Java列表ReadJavaList => JavaVersions
         //持久化Java映射列表
-        private ObservableCollection<string> _javaVersions = [];
-        public ObservableCollection<string> JavaVersions => _javaVersions;
+        private ObservableCollection<JavaInfo> _javaVersions = [];
+        public ObservableCollection<JavaInfo> JavaVersions
+        {
+            get => _javaVersions;
+            set => this.RaiseAndSetIfChanged(ref _javaVersions, value);
+        }
         // Java列表读取（从配置文件读取）
         public void ReadJavaList()
         {
@@ -158,9 +162,19 @@ namespace LSL.ViewModels
             foreach (var item in jsonObj.Properties())
             {
                 JToken versionObject = item.Value["version"];
-                if (versionObject != null && versionObject.Type == JTokenType.String)
+                JToken pathObject = item.Value["path"];
+                JToken vendorObject = item.Value["vendor"];
+                JToken archObject = item.Value["architecture"];
+                if (versionObject != null &&
+                    pathObject != null &&
+                    vendorObject != null &&
+                    archObject != null &&
+                    versionObject.Type == JTokenType.String &&
+                    pathObject.Type == JTokenType.String &&
+                    vendorObject.Type == JTokenType.String &&
+                    archObject.Type == JTokenType.String)
                 {
-                    JavaVersions.Add(versionObject.ToString());
+                    JavaVersions.Add( new JavaInfo((string)pathObject, (string)versionObject, (string)vendorObject, (string)archObject) );
                 }
             }
         }
