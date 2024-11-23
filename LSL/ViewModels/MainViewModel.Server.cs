@@ -10,6 +10,8 @@ using System.Windows.Input;
 using System.IO;
 using ReactiveUI;
 using LSL.Services;
+using System.Collections.ObjectModel;
+using DynamicData.Binding;
 
 namespace LSL.ViewModels
 {
@@ -82,18 +84,41 @@ namespace LSL.ViewModels
         #endregion
 
         #region 服务器玩家列表与消息列表
-        private ConcurrentDictionary<string, List<string>> ServerPlayers = new();// 服务器玩家列表
+        private ConcurrentDictionary<string, Dictionary<string, string>> ServerPlayers = new();// 服务器玩家列表
+        public class UUID_Player
+        {
+            public string UUID { get; set; }
+            public string Player { get; set; }
+            public UUID_Player(string uuid, string player)
+            {
+                UUID = uuid;
+                Player = player;
+            }
+        }
         private ConcurrentDictionary<string, StringBuilder> ServerMessages = new();// 服务器消息列表
 
         private void ReceivePlayerUpdate(PlayerUpdateArgs args)// 接收服务器玩家列表
         {
-            ServerPlayers.AddOrUpdate(args.ServerId,
-                new List<string> { args.PlayerName },
-                (key, existing) =>
-                {
-                    existing.Add(args.PlayerName + "\r\n");
-                    return existing; // 返回更新后的 List 实例
-                });
+            if (args.Entering == true)
+            {
+                ServerPlayers.AddOrUpdate(args.ServerId,
+                    new Dictionary<string, string> { { args.PlayerName, args.UUID } },
+                    (key, existing) =>
+                    {
+                        existing.Add(args.UUID, args.PlayerName);
+                        return existing; // 返回更新后的 ObservableCollection 实例
+                    });
+            }
+            else
+            {
+                ServerPlayers.AddOrUpdate(args.ServerId,
+                    new Dictionary<string, string>(),
+                    (key, existing) =>
+                    {
+                        existing.Remove(args.PlayerName);
+                        return existing;
+                    });
+            }
         }
 
         private void ReceiveMessage(PlayerMessageArgs args)// 接收服务器消息
@@ -105,18 +130,24 @@ namespace LSL.ViewModels
                     existing.AppendLine(args.Message);
                     return existing;
                 });
-            this.RaisePropertyChanged(nameof(PlayerList));
-            this.RaisePropertyChanged(nameof(PlayerMessage));
+            this.RaisePropertyChanged(nameof(CurrentPlayerList));
+            this.RaisePropertyChanged(nameof(CurrentPlayerMessage));
         }
         // 访问器
-        public List<string> PlayerList
+        public ObservableCollection<UUID_Player> CurrentPlayerList
         {
             get
             {
-                return ServerPlayers.GetOrAdd(SelectedServerId, new List<string>());
+                var dictValue = ServerPlayers.GetOrAdd(SelectedServerId, new Dictionary<string, string>());
+                ObservableCollection<UUID_Player> value = new();
+                foreach (var item in dictValue)
+                {
+                    value.Add(new UUID_Player(item.Value, item.Key));
+                }
+                return value;
             }
         }
-        public string PlayerMessage
+        public string CurrentPlayerMessage
         {
             get
             {

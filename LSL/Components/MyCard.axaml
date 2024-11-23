@@ -4,7 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              x:Class="LSL.Components.MyCard">
-	
+	<Panel.Styles>
+		<Style Selector="local|MyCard">
+			<!--Any continuous styles-->
+		</Style>
+	</Panel.Styles>
 	<Border Margin="10" Background="White" Padding="20,0,20,40" BorderThickness="0" CornerRadius="10">
 		<StackPanel Background="White">
 			<TextBlock Name="titleText"

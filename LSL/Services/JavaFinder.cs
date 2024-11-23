@@ -231,7 +231,7 @@ namespace LSL.Services
         public string Version { get; set; }
         public string Vendor { get; set; }
         public string Architecture { get; set; }
-        public JavaInfo( string path, string version, string vendor, string architecture)
+        public JavaInfo(string path, string version, string vendor, string architecture)
         {
             Path = path;
             Version = version;

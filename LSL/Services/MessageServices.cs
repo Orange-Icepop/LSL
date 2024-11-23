@@ -175,6 +175,7 @@ namespace LSL.Services
     public class PlayerUpdateArgs : EventArgs// 玩家列表更新事件
     {
         public required string ServerId { get; set; }
+        public required string UUID { get; set; }
         public required string PlayerName { get; set; }
         public required bool Entering { get; set; }
     }

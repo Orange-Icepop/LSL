@@ -248,6 +248,8 @@ namespace LSL.Services
             Task.Run(() => OutputProcessor(args.ServerId, args.Output));
         }
 
+        private static Dictionary<string,string> PlayerPool = new Dictionary<string, string>();
+
         private static async void OutputProcessor(string ServerId, string Output)
         {
             bool isUserMessage;
@@ -273,16 +275,19 @@ namespace LSL.Services
             }
             else
             {
-                if (Output.Contains("joined the game"))
+                string Message = Output.Substring(17);
+                var MessagePieces = Message.Split(' ');
+                if (Output.Contains("UUID of player"))
                 {
-                    string PlayerName = AlgoServices.GetSubstringBeforeNextSpace(Output, 17);
-                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, PlayerName = PlayerName, Entering = true });
+                    string PlayerName = MessagePieces[4];
+                    string uuid = MessagePieces[6];
+                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = uuid, PlayerName = PlayerName, Entering = true });
                 }
 
                 if (Output.Contains("left the game"))
                 {
-                    string PlayerName = AlgoServices.GetSubstringBeforeNextSpace(Output, 17);
-                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, PlayerName = PlayerName, Entering = false });
+                    string PlayerName = MessagePieces[0];
+                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID="lefting", PlayerName = PlayerName, Entering = false });
                 }
 
                 if (Output.Contains("Done") && Output.IndexOf("Done") == 17)

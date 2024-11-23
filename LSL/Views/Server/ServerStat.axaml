@@ -20,10 +20,25 @@
 			</Grid>
 		</local:MyCard>
 		<local:MyCard Text="玩家列表" DockPanel.Dock="Left" Width="250">
-			<ListBox Width="200" Height="300" ItemsSource="{Binding PlayerList}"></ListBox>
+			<ScrollViewer VerticalScrollBarVisibility="Auto" Height="{Binding $parent[0].Height}">
+				<DataGrid Width="200"
+						  Margin="0,50,0,0"
+						  ItemsSource="{Binding CurrentPlayerList}">
+					<DataGrid.Styles>
+						<Style Selector="TextBlock">
+							<Setter Property="FontSize" Value="10"/>
+							<Setter Property="TextWrapping" Value="Wrap"/>
+						</Style>
+					</DataGrid.Styles>
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="玩家名" Width="80" Binding="{Binding Player}"/>
+						<DataGridTextColumn Header="UUID" Width="120" Binding="{Binding UUID}"/>
+					</DataGrid.Columns>
+				</DataGrid>
+			</ScrollViewer>
 		</local:MyCard>
 		<local:MyCard Text="玩家消息" DockPanel.Dock="Left">
-			<TextBlock Text="{Binding PlayerMessage}"/>
+			<TextBlock Text="{Binding CurrentPlayerMessage}"/>
 		</local:MyCard>
 	</DockPanel>
 </UserControl>
