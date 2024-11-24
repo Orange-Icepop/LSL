@@ -1,0 +1,10 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	<SolidColorBrush x:Key="OBlue" Color="#33e0e5"/>
+	<SolidColorBrush x:Key="OBlueLight" Color="#c7ffee"/>
+	<SolidColorBrush x:Key="OBlueBar" Color="#33f3e9"/>
+	<SolidColorBrush x:Key="OBlueWhite" Color="#e3fff7"/>
+	<FontFamily x:Key="SmileySans">avares://LSL/Assets/Fonts/SmileySans.ttf#Smiley Sans</FontFamily>
+	<FontFamily x:Key="SourceHanSans">avares://LSL/Assets/Fonts/SourceHanSansHWSC-Regular.otf#Source Han Sans HW SC</FontFamily>
+	<FontFamily x:Key="JetBrainsMono">avares://LSL/Assets/Fonts/JetBrainsMonoNerdFont-Medium.ttf#JetBrainsMono NF Medium</FontFamily>
+</ResourceDictionary>

@@ -1,23 +1,48 @@
-<Panel xmlns="https://github.com/avaloniaui"
+<Grid xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
-             x:Class="LSL.Components.MyCard">
-	<Panel.Styles>
+             x:Class="LSL.Components.MyCard"
+			 PointerEntered="OnPointerEnter"
+			 PointerExited="OnPointerLeave">
+	<Grid.Resources>
+		<SolidColorBrush x:Key="TransWhite"/>
+		<SolidColorBrush x:Key="HeadTextColor"/>
+	</Grid.Resources>
+	<Grid.Styles>
 		<Style Selector="local|MyCard">
-			<!--Any continuous styles-->
+			<Style Selector="^ > Border">
+				<Setter Property="Background" Value="{DynamicResource TransWhite}"/>
+				<Setter Property="Transitions">
+					<Transitions>
+						<BrushTransition Property="Background" Duration="0:0:0.2"/>
+					</Transitions>
+				</Setter>
+
+				<Style Selector="^ TextBlock#titleText">
+					<Setter Property="Foreground" Value="{DynamicResource HeadTextColor}"/>
+					<Setter Property="Transitions">
+						<Transitions>
+							<BrushTransition Property="Foreground" Duration="0:0:0.2"/>
+						</Transitions>
+					</Setter>
+				</Style>
+			</Style>
 		</Style>
-	</Panel.Styles>
-	<Border Margin="10" Background="White" Padding="20,0,20,40" BorderThickness="0" CornerRadius="10">
-		<StackPanel Background="White">
+	</Grid.Styles>
+	<Border Margin="10"
+			Padding="20,0,20,40"
+			BorderThickness="0"
+			CornerRadius="10"
+			BoxShadow="3 3 3 0 DarkGray">
+		<StackPanel Background="Transparent">
 			<TextBlock Name="titleText"
 					   Text="{Binding $parent[2].Text}"
 					   FontSize="15"
 					   FontWeight="Bold"
-					   Foreground="Black"
 					   Margin="0,15,0,15"/>
 			<!-- 这里可以放置你的子元素，或者使用 ContentControl 来绑定 Content -->
 		</StackPanel>
 	</Border>
-</Panel>
+</Grid>

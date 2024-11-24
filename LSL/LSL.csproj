@@ -19,9 +19,9 @@
   <ItemGroup>
     <AvaloniaXaml Remove="Assets\GStyle.axaml" />
     <AvaloniaXaml Remove="Services\MyCard.axaml" />
-    <AvaloniaXaml Remove="Styles\GlobalStyles.axaml" />
-    <AvaloniaXaml Remove="Styles\MyButtonStyles.axaml" />
-    <AvaloniaXaml Remove="Styles\MyCardStyles.axaml" />
+    <AvaloniaXaml Remove="Assets\Dictionaries\GlobalStyles.axaml" />
+    <AvaloniaXaml Remove="Assets\Dictionaries\MyButtonStyles.axaml" />
+    <AvaloniaXaml Remove="Assets\Dictionaries\MyCardStyles.axaml" />
   </ItemGroup>
 
   
@@ -98,10 +98,6 @@
 
   <ItemGroup>
     <UpToDateCheckInput Remove="ViewModels\MyCard.axaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AvaloniaResource Include="Styles\GlobalStyles.axaml" />
   </ItemGroup>
 
   <ItemGroup>
