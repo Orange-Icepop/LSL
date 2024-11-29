@@ -288,7 +288,6 @@ namespace LSL.Services
             "app_priority",
             "end_server_when_close",
             "daemon",
-            "java_selection",
             "auto_find_java",
             "output_encode",
             "input_encode",
@@ -316,7 +315,6 @@ namespace LSL.Services
             { "app_priority", 1 },
             { "end_server_when_close", false },
             { "daemon", true },
-            { "java_selection", 0 },
             { "auto_find_java", true },
             { "output_encode", 0 },
             { "input_encode", 0 },
@@ -353,8 +351,6 @@ namespace LSL.Services
                         if (value is not bool) return false; break;
                     case "daemon":
                         if (value is not bool) return false; break;
-                    case "java_selection":// TODO: 把它删了
-                        if (value is not int) return false; break;
                     case "auto_find_java":
                         if (value is not bool) return false; break;
                     case "output_encode":

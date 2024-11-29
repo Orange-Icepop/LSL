@@ -57,7 +57,7 @@ public partial class MainViewModel : ViewModelBase
 
         ConfirmAddServer = ReactiveCommand.Create(async () =>
         {
-            string JavaPath = JavaManager.MatchJavaList(JavaSelection.ToString());
+            string JavaPath = JavaManager.MatchJavaList(JavaId.ToString());
             string confirmResult = await ShowPopup(2, "确定添加此服务器吗？", $"服务器信息：\r名称：{NewServerName}\rJava路径：{JavaPath}\r核心文件路径：{CorePath}\r内存范围：{MinMemory} ~ {MaxMemory}\r附加JVM参数：{ExtJvm}（默认为空）");
             if (confirmResult == "Yes")
                 ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);

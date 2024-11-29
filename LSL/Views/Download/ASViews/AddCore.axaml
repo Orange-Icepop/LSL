@@ -26,7 +26,7 @@
 				</DockPanel>
 				<DockPanel Margin="30,10,0,5">
 					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">Java选择</TextBlock>
-					<ComboBox Name="Java" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding JavaVersions}" SelectedIndex="{Binding JavaId}"/>
+					<ComboBox Name="Java" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding AddingJavaList}" SelectedIndex="{Binding JavaId}"/>
 					<local:MyButton Name="GetJavaBtn" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Height="30" Margin="10,0,0,0" Command="{Binding SearchJava}">搜索Java</local:MyButton>
 				</DockPanel>
 				<DockPanel Margin="30,10,0,5">

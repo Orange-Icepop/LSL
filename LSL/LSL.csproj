@@ -1,122 +1,122 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
-    <OutputType>Library</OutputType>
-    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
-    <UseWindowsForms>False</UseWindowsForms>
-    <UseWPF>False</UseWPF>
-    <StartupObject></StartupObject>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<OutputType>Library</OutputType>
+		<ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+		<UseWindowsForms>False</UseWindowsForms>
+		<UseWPF>False</UseWPF>
+		<StartupObject></StartupObject>
+	</PropertyGroup>
 
-  
-  <ItemGroup>
-    <AvaloniaResource Include="Assets\**" />
-  </ItemGroup>
 
-  
-  <ItemGroup>
-    <AvaloniaXaml Remove="Assets\GStyle.axaml" />
-    <AvaloniaXaml Remove="Services\MyCard.axaml" />
-    <AvaloniaXaml Remove="Assets\Dictionaries\GlobalStyles.axaml" />
-    <AvaloniaXaml Remove="Assets\Dictionaries\MyButtonStyles.axaml" />
-    <AvaloniaXaml Remove="Assets\Dictionaries\MyCardStyles.axaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\**" />
+	</ItemGroup>
 
-  
-  <ItemGroup>
-    <Compile Remove="Assets\MyCard.cs" />
-    <Compile Remove="Services\MyCard.axaml.cs" />
-    <Compile Remove="ViewModels\ErrorPopupViewModel.cs" />
-    <Compile Remove="ViewModels\SharedData.cs" />
-  </ItemGroup>
 
-  
-  <ItemGroup>
-    <None Remove="Assets\ButtonIcons\Cross.png" />
-    <None Remove="Assets\ButtonIcons\PowerButton.png" />
-    <None Remove="Assets\ButtonIcons\Save.png" />
-    <None Remove="Assets\Fonts\SourceHanSansHWSC-Regular.otf" />
-    <None Remove="Assets\SmileySans-Oblique.ttf" />
-    <None Remove="Config.json" />
-    <None Remove="JavaList.json" />
-    <None Remove="ServersConfig.json" />
-  </ItemGroup>
+	<ItemGroup>
+		<AvaloniaXaml Remove="Assets\GStyle.axaml" />
+		<AvaloniaXaml Remove="Services\MyCard.axaml" />
+		<AvaloniaXaml Remove="Assets\Dictionaries\GlobalStyles.axaml" />
+		<AvaloniaXaml Remove="Assets\Dictionaries\MyButtonStyles.axaml" />
+		<AvaloniaXaml Remove="Assets\Dictionaries\MyCardStyles.axaml" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.2.0" />
-    <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.1.0" />
-    <PackageReference Include="Avalonia.BuildServices" Version="0.0.31" />
-    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.2.0" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.0" />
-    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.4" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.2.0" />
-    <PackageReference Include="Avalonia.FreeDesktop" Version="11.2.0" />
-    <PackageReference Include="Avalonia.Native" Version="11.2.0" />
-    <PackageReference Include="Avalonia.Remote.Protocol" Version="11.2.0" />
-    <PackageReference Include="Avalonia.Skia" Version="11.2.0" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.0" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.0" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.0" />
-    <PackageReference Include="Avalonia.Win32" Version="11.2.0" />
-    <PackageReference Include="AvaloniaEdit.TextMate" Version="11.1.0" />
-    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Views\Settings\SettingsLeft.axaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="Assets\MyCard.cs" />
+		<Compile Remove="Services\MyCard.axaml.cs" />
+		<Compile Remove="ViewModels\ErrorPopupViewModel.cs" />
+		<Compile Remove="ViewModels\SharedData.cs" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Views\Popup.axaml.cs">
-      <DependentUpon>Popup.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\Home\HomeLeft.axaml.cs">
-      <DependentUpon>HomeLeft.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\Home\HomeRight.axaml.cs">
-      <DependentUpon>HomeRight.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\Server\Monitors\CpuStat.axaml.cs">
-      <DependentUpon>CpuStat.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\Settings\StyleSettings.axaml.cs">
-      <DependentUpon>StyleSettings.axaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
 
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Views\Settings\Common.axaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="Assets\ButtonIcons\Cross.png" />
+		<None Remove="Assets\ButtonIcons\PowerButton.png" />
+		<None Remove="Assets\ButtonIcons\Save.png" />
+		<None Remove="Assets\Fonts\SourceHanSansHWSC-Regular.otf" />
+		<None Remove="Assets\SmileySans-Oblique.ttf" />
+		<None Remove="Config.json" />
+		<None Remove="JavaList.json" />
+		<None Remove="ServersConfig.json" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Views\Download\ManualDown.axaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="11.2.0" />
+		<PackageReference Include="Avalonia.AvaloniaEdit" Version="11.1.0" />
+		<PackageReference Include="Avalonia.BuildServices" Version="0.0.31" />
+		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.4" />
+		<PackageReference Include="Avalonia.Diagnostics" Version="11.2.0" />
+		<PackageReference Include="Avalonia.FreeDesktop" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Native" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Remote.Protocol" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Skia" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.0" />
+		<PackageReference Include="Avalonia.ReactiveUI" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Win32" Version="11.2.0" />
+		<PackageReference Include="AvaloniaEdit.TextMate" Version="11.1.0" />
+		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <UpToDateCheckInput Remove="ViewModels\MyCard.axaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<UpToDateCheckInput Remove="Views\Settings\SettingsLeft.axaml" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Views\MyButton.axaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Update="Views\Popup.axaml.cs">
+			<DependentUpon>Popup.axaml</DependentUpon>
+		</Compile>
+		<Compile Update="Views\Home\HomeLeft.axaml.cs">
+			<DependentUpon>HomeLeft.axaml</DependentUpon>
+		</Compile>
+		<Compile Update="Views\Home\HomeRight.axaml.cs">
+			<DependentUpon>HomeRight.axaml</DependentUpon>
+		</Compile>
+		<Compile Update="Views\Server\Monitors\CpuStat.axaml.cs">
+			<DependentUpon>CpuStat.axaml</DependentUpon>
+		</Compile>
+		<Compile Update="Views\Settings\StyleSettings.axaml.cs">
+			<DependentUpon>StyleSettings.axaml</DependentUpon>
+		</Compile>
+	</ItemGroup>
 
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Views\Download\AutoDown.axaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<UpToDateCheckInput Remove="Views\Settings\Common.axaml" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Views\Server\ServerStat.axaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<UpToDateCheckInput Remove="Views\Download\ManualDown.axaml" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Views\Download\AddServer.axaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<UpToDateCheckInput Remove="ViewModels\MyCard.axaml" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Views\Server\ServerGeneral.axaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<UpToDateCheckInput Remove="Views\MyButton.axaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<UpToDateCheckInput Remove="Views\Download\AutoDown.axaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<UpToDateCheckInput Remove="Views\Server\ServerStat.axaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<UpToDateCheckInput Remove="Views\Download\AddServer.axaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<UpToDateCheckInput Remove="Views\Server\ServerGeneral.axaml" />
+	</ItemGroup>
 </Project>

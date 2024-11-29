@@ -5,7 +5,7 @@
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerTerminal">
-	<DockPanel Width="950" Height="600">
+	<DockPanel>
 		<DockPanel DockPanel.Dock="Bottom" Height="70">
 			<local:MyCard DockPanel.Dock="Right" Width="200">
 				<Grid Margin="20,0,20,0" VerticalAlignment="Center" HorizontalAlignment="Center" ColumnDefinitions="*,*,*">
@@ -50,8 +50,7 @@
 		<local:MyCard Text="终端">
 			<ScrollViewer VerticalAlignment="Top"
 						  HorizontalAlignment="Left"
-						  Width="880"
-						  Height="440"
+						  Width="{Binding $parent[0].Width}"
 						  Margin="30,60,30,20"
 						  Name="TerminalScroll">
 				<TextBlock TextWrapping="Wrap"

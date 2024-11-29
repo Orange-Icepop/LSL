@@ -18,7 +18,6 @@ namespace LSL.ViewModels
         public int AppPriority { get => (int)ViewConfigs["app_priority"]; set { CacheConfig("app_priority", value); } }
         public bool EndServerWhenClose { get => (bool)ViewConfigs["end_server_when_close"]; set { CacheConfig("end_server_when_close", value); } }
         public bool Daemon { get => (bool)ViewConfigs["daemon"]; set { CacheConfig("daemon", value); } }
-        public int JavaSelection { get => (int)ViewConfigs["java_selection"]; set { CacheConfig("java_selection", value); } }
         public bool AutoFindJava { get => (bool)ViewConfigs["auto_find_java"]; set { CacheConfig("auto_find_java", value); } }
         public int OutputEncode { get => (int)ViewConfigs["output_encode"]; set { CacheConfig("output_encode", value); } }
         public int InputEncode { get => (int)ViewConfigs["input_encode"]; set { CacheConfig("input_encode", value); } }
@@ -41,26 +40,6 @@ namespace LSL.ViewModels
         {
             ConfigManager.LoadConfig();
             ViewConfigs = new Dictionary<string, object>( ConfigManager.CurrentConfigs );
-            /*
-            autoEula = (bool)ViewConfigs["auto_eula"];
-            appPriorityCache = (int)ViewConfigs["app_priority"];
-            endServerWhenClose = (bool)ViewConfigs["end_server_when_close"];
-            daemon = (bool)ViewConfigs["daemon"];
-            javaSelectionCache = (int)ViewConfigs["java_selection"];
-            autoFindJava = (bool)ViewConfigs["auto_find_java"];
-            outputEncodeCache = (int)ViewConfigs["output_encode"];
-            inputEncodeCache = (int)ViewConfigs["input_encode"];
-            coloringTerminal = (bool)ViewConfigs["coloring_terminal"];
-            downloadSourceCache = (int)ViewConfigs["download_source"];
-            downloadThreadsCache = (int)ViewConfigs["download_threads"];
-            downloadLimitCache = (int)ViewConfigs["download_limit"];
-            panelEnable = (bool)ViewConfigs["panel_enable"];
-            panelPortCache = (int)ViewConfigs["panel_port"];
-            panelMonitor = (bool)ViewConfigs["panel_monitor"];
-            panelTerminal = (bool)ViewConfigs["panel_terminal"];
-            autoUpdate = (bool)ViewConfigs["auto_update"];
-            betaUpdate = (bool)ViewConfigs["beta_update"];
-            */
         }
 
         public void CacheConfig(string key, object value)// œÚª∫¥Ê◊÷µ‰÷––¥»Î–¬≈‰÷√
