@@ -10,13 +10,14 @@
 			<Grid HorizontalAlignment="Left" Margin="20,50,10,20" ColumnDefinitions="*,*,*">
 				<DockPanel Grid.Column="0">
 					<Image DockPanel.Dock="Left" Source="/Assets/mc.png" Width="32" Height="32" Margin="10"/>
-					<TextBlock DockPanel.Dock="Top" Text="1201" FontSize="20" FontWeight="Bold" HorizontalAlignment="Left" Margin="0,5,0,0"/>
-					<TextBlock DockPanel.Dock="Top" Text="Minecraft 1.20.1,Forge 47.10.0" FontSize="15" Foreground="Gray" HorizontalAlignment="Left"/>
+					<TextBlock DockPanel.Dock="Top" Text="{Binding CurrentServerName}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+					<TextBlock DockPanel.Dock="Top" Text="{Binding CurrentServerPath}" FontSize="15" Foreground="Gray" HorizontalAlignment="Left" TextWrapping="Wrap"/>
 				</DockPanel>
 				<local:MyButton Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" ColorType="Highlight" Height="30" Width="100" Margin="10">打开文件夹</local:MyButton>
 				<local:MyButton Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" ColorType="Red" Height="30" Width="100" Margin="10" Command="{Binding DeleteServer}">删除服务器</local:MyButton>
 			</Grid>
 		</local:MyCard>
+		<!--
 		<local:MyCard Text="服务器常规设置">
 			<StackPanel Margin="20,50,20,10">
 				<DockPanel Margin="0,5,0,5">
@@ -33,6 +34,6 @@
 					<RadioButton FontSize="14" Margin="0,0,10,0">手动指定最大值</RadioButton>
 				</DockPanel>
 			</StackPanel>
-		</local:MyCard>
+		</local:MyCard>-->
 	</StackPanel>
 </UserControl>

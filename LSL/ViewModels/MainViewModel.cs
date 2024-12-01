@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ReactiveUI;
 using LSL.Services;
+using LSL.Views;
 
 namespace LSL.ViewModels;
 
@@ -14,6 +15,7 @@ public partial class MainViewModel : ViewModelBase
     //初始化主窗口
     public void InitializeMainWindow()
     {
+        BarView = new Bar();
         NavigateLeftView("HomeLeft");
         NavigateRightView("HomeRight");
         LeftWidth = 350;
@@ -29,25 +31,30 @@ public partial class MainViewModel : ViewModelBase
         ReadJavaList();// 读取Java列表
         OutputHandler outputHandler = new();// 初始化输出处理
 
-        LeftViewCmd = ReactiveCommand.Create<string>(NavigateLeftView);
+        LeftViewCmd = ReactiveCommand.Create<string>(INavigateLeft);
         RightViewCmd = ReactiveCommand.Create<string>(INavigateRight);
+        FullViewCmd = ReactiveCommand.Create<string>(NavigateFullScreenView);
+        FullViewBackCmd = ReactiveCommand.Create(async() =>
+        {
+            await ShowPopup(4, "不应出现的命令错误", "当您看见该弹窗时，说明表单填充时用于返回的命令在未进入全屏表单时被触发了。如果您没有对LSL进行修改，这通常意味着LSL出现了一个Bug，请在LSL的源码仓库中提交一份关于该Bug的issue。");
+        });
         ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
         QuitCmd = ReactiveCommand.Create(Quit);
 
         #region 多参数导航
         PanelConfigCmd = ReactiveCommand.Create(() =>
         {
-            NavigateLeftView("SettingsLeft");
+            NavigateLeftView("SettingsLeft", true);
             NavigateRightView("PanelSettings");
         });
         DownloadConfigCmd = ReactiveCommand.Create(() =>
         {
-            NavigateLeftView("SettingsLeft");
+            NavigateLeftView("SettingsLeft", true);
             NavigateRightView("DownloadSettings");
         });
         CommonConfigCmd = ReactiveCommand.Create(() =>
         {
-            NavigateLeftView("SettingsLeft");
+            NavigateLeftView("SettingsLeft", true);
             NavigateRightView("Common");
         });
         #endregion
@@ -62,15 +69,18 @@ public partial class MainViewModel : ViewModelBase
             if (confirmResult == "Yes")
                 ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
             ReadServerList();
-            NavigateRightView("AddServer");
+            //NavigateRightView("AddServer");
+            FullViewBackCmd.Execute(null);
         });// 添加服务器命令-实现
 
-        DeleteServer = ReactiveCommand.Create(async () =>
+        DeleteServer = ReactiveCommand.Create(async() =>
         {
-            ConfigManager.DeleteServer(SelectedServerId);
-            ReadServerList();
-            await Task.Delay(100);
-            SelectedServerIndex = 0;
+            string confirmResult = await ShowPopup(2, "确定删除此服务器吗？", "该操作不可逆！");
+            if (confirmResult == "Yes")
+            {
+                ConfigManager.DeleteServer(SelectedServerId);
+                ReadServerList();
+            }
         });// 删除服务器命令-实现
 
         SearchJava = ReactiveCommand.Create(() =>

@@ -7,7 +7,7 @@
              x:Class="LSL.Views.Download.ASViews.AddCore">
 	<StackPanel>
 		<local:MyCard Text="从核心添加服务器">
-			<StackPanel>
+			<StackPanel Margin="25,10,25,15">
 				<DockPanel Margin="30,50,0,5">
 					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器名称</TextBlock>
 					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewServerName}"></TextBox>

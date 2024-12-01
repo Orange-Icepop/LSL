@@ -5,7 +5,7 @@
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerTerminal">
-	<DockPanel>
+	<DockPanel LastChildFill="True" Width="950" Height="590">
 		<DockPanel DockPanel.Dock="Bottom" Height="70">
 			<local:MyCard DockPanel.Dock="Right" Width="200">
 				<Grid Margin="20,0,20,0" VerticalAlignment="Center" HorizontalAlignment="Center" ColumnDefinitions="*,*,*">

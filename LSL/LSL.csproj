@@ -35,6 +35,7 @@
 
 	<ItemGroup>
 		<None Remove="Assets\ButtonIcons\Cross.png" />
+		<None Remove="Assets\ButtonIcons\LArrow.png" />
 		<None Remove="Assets\ButtonIcons\PowerButton.png" />
 		<None Remove="Assets\ButtonIcons\Save.png" />
 		<None Remove="Assets\Fonts\SourceHanSansHWSC-Regular.otf" />
@@ -51,6 +52,7 @@
 		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.2.0" />
 		<PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.0" />
 		<PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.4" />
+		<PackageReference Include="Avalonia.Controls.TreeDataGrid" Version="11.0.10" />
 		<PackageReference Include="Avalonia.Diagnostics" Version="11.2.0" />
 		<PackageReference Include="Avalonia.FreeDesktop" Version="11.2.0" />
 		<PackageReference Include="Avalonia.Native" Version="11.2.0" />
@@ -71,6 +73,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Compile Update="Views\FSBar.axaml.cs">
+		  <SubType>Code</SubType>
+		  <DependentUpon>FSBar.axaml</DependentUpon>
+		</Compile>
 		<Compile Update="Views\Popup.axaml.cs">
 			<DependentUpon>Popup.axaml</DependentUpon>
 		</Compile>
@@ -118,5 +124,11 @@
 
 	<ItemGroup>
 		<UpToDateCheckInput Remove="Views\Server\ServerGeneral.axaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <AvaloniaXaml Update="Views\FSBar.axaml">
+	    <SubType>Designer</SubType>
+	  </AvaloniaXaml>
 	</ItemGroup>
 </Project>

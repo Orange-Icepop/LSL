@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using LSL.Views;
 using LSL.Views.Download;
 using LSL.Views.Download.ASViews;
 using LSL.Views.Home;
@@ -20,6 +21,10 @@ public static class ViewFactory
         return viewName switch
         {
             //Bar
+            "Bar" => new Bar(),
+            "FSBar" => new FSBar(),
+
+            //Top
             "HomeLeft" => new HomeLeft(),
             "ServerLeft" => new ServerLeft(),
             "DownloadLeft" => new DownloadLeft(),
@@ -44,8 +49,6 @@ public static class ViewFactory
             "PanelSettings" => new PanelSettings(),
             "StyleSettings" => new StyleSettings(),
             "About" => new About(),
-            //Blank
-            "blank" => new UserControl(),
             _ => throw new ArgumentException($"未找到视图: {viewName}，应用程序可能已经损坏。"),
         };
     }

@@ -143,8 +143,9 @@ namespace LSL.Services
             {
                 // 移除进程的实例
                 UnloadServer(serverId);
+                string status = process.ExitCode == 0 ? "已正常关闭" : $"异常关闭，进程退出码{process.ExitCode}";
                 EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Status = false });
-                EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器已关闭" });
+                EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器" + status });
             };
 
             process.WaitForExit();
@@ -210,7 +211,7 @@ namespace LSL.Services
         public void EnsureExited(string serverId)
         {
             Process server = GetServer(serverId);
-            if(server == null) { return; }
+            if (server == null) { return; }
             else if (!server.HasExited)
             {
                 server.Kill();
@@ -248,16 +249,16 @@ namespace LSL.Services
             Task.Run(() => OutputProcessor(args.ServerId, args.Output));
         }
 
-        private static Dictionary<string,string> PlayerPool = new Dictionary<string, string>();
+        private static Dictionary<string, string> PlayerPool = new Dictionary<string, string>();
 
         private static async void OutputProcessor(string ServerId, string Output)
         {
             bool isUserMessage;
-            if (Output.Length >= 18 && Output[17] == '<')
+            if (Output.Length > 18 && Output[17] == '<')
             {
                 isUserMessage = true;
             }
-            else 
+            else
             {
                 isUserMessage = false;
             }
@@ -287,7 +288,7 @@ namespace LSL.Services
                 if (Output.Contains("left the game"))
                 {
                     string PlayerName = MessagePieces[0];
-                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID="lefting", PlayerName = PlayerName, Entering = false });
+                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = "lefting", PlayerName = PlayerName, Entering = false });
                 }
 
                 if (Output.Contains("Done") && Output.IndexOf("Done") == 17)

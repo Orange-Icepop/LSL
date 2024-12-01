@@ -7,7 +7,6 @@ namespace LSL.Views.Server
         public ServerConf()
         {
             InitializeComponent();
-            JavaSelection.SelectedIndex = 0;
         }
     }
 }

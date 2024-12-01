@@ -15,7 +15,23 @@
 
 	<!--主页面的模板-->
 	<DockPanel Background="#c7ffee">
-		<views:Bar Height="50" DockPanel.Dock="Top"/>
+		<!--<views:Bar Height="50" DockPanel.Dock="Top"/>-->
+		<Border Height="50" DockPanel.Dock="Top" Background="{StaticResource OBlueBar}">
+			<TransitioningContentControl Name="BarContent"
+							Content="{Binding BarView}">
+				<TransitioningContentControl.PageTransition>
+					<CompositePageTransition>
+						<CrossFade Duration="0:00:00.3"/>
+					</CompositePageTransition>
+				</TransitioningContentControl.PageTransition>
+			</TransitioningContentControl>
+			<Border.Transitions>
+				<Transitions>
+					<DoubleTransition Property="Width" Duration="0:0:0.3" Easing="CubicEaseInOut"/>
+				</Transitions>
+			</Border.Transitions>
+		</Border>
+
 		<!--左侧的内容-->
 		<!--为了防止背景被纳入过渡，加入一个Border包住内容-->
 		<Border Background="White" Width="{Binding LeftWidth}">
@@ -35,7 +51,7 @@
 			</Border.Transitions>
 		</Border>
 		<!--右侧的内容-->
-		<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+		<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 			<TransitioningContentControl Name="RightContent"
 										 Content="{Binding RightView}">
 				<TransitioningContentControl.PageTransition>

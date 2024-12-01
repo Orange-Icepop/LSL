@@ -12,6 +12,8 @@ using ReactiveUI;
 using LSL.Services;
 using System.Collections.ObjectModel;
 using DynamicData.Binding;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LSL.ViewModels
 {
@@ -185,6 +187,21 @@ namespace LSL.ViewModels
         #endregion
 
         #region 当前服务器配置文件字典
+        public Dictionary<string, object> CurrentServerConfig
+        {
+            get
+            {
+                string TargetedServerPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, $"$.{SelectedServerId}");
+                string TargetedConfigPath = Path.Combine(TargetedServerPath, "lslconfig.json");
+                var config = File.ReadAllText(TargetedConfigPath);
+                JObject json = JObject.Parse(config);
+                return (json.ToObject<Dictionary<string, object>>());
+            }
+        }
+        public string CurrentServerName { get => CurrentServerConfig["name"].ToString(); }
+        public string CurrentServerPath { get => (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, $"$.{SelectedServerId}"); }
+        public string CurrentServerJava { get => CurrentServerConfig["using_java"].ToString(); }
+
         public Dictionary<string, object> CurrentServerProperty = new();// 当前服务器server.properties字典
         public bool ReadProperties()
         {
