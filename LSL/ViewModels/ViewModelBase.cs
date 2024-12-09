@@ -36,6 +36,7 @@ public static class ViewFactory
             "ServerStat" => new ServerStat(),
             "ServerTerminal" => new ServerTerminal(),
             "ServerConf" => new ServerConf(),
+            "EditSC" => new EditSC(),
             //Download
             "AutoDown" => new AutoDown(),
             "ManualDown" => new ManualDown(),

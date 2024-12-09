@@ -86,6 +86,10 @@
 		<Compile Update="Views\Home\HomeRight.axaml.cs">
 			<DependentUpon>HomeRight.axaml</DependentUpon>
 		</Compile>
+		<Compile Update="Views\Server\EditSC.axaml.cs">
+		  <SubType>Code</SubType>
+		  <DependentUpon>EditSC.axaml</DependentUpon>
+		</Compile>
 		<Compile Update="Views\Server\Monitors\CpuStat.axaml.cs">
 			<DependentUpon>CpuStat.axaml</DependentUpon>
 		</Compile>
@@ -128,6 +132,9 @@
 
 	<ItemGroup>
 	  <AvaloniaXaml Update="Views\FSBar.axaml">
+	    <SubType>Designer</SubType>
+	  </AvaloniaXaml>
+	  <AvaloniaXaml Update="Views\Server\EditSC.axaml">
 	    <SubType>Designer</SubType>
 	  </AvaloniaXaml>
 	</ItemGroup>

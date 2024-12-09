@@ -10,7 +10,7 @@ namespace LSL.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     // 不要忘了每次发布Release时更新版本号！！！
-    public static string CurrentVersion = "v0.06";
+    public static readonly string CurrentVersion = "v0.07";
 
     //初始化主窗口
     public void InitializeMainWindow()
@@ -61,16 +61,17 @@ public partial class MainViewModel : ViewModelBase
 
         #region 命令实现
         // 配置相关命令-start
-
         ConfirmAddServer = ReactiveCommand.Create(async () =>
         {
             string JavaPath = JavaManager.MatchJavaList(JavaId.ToString());
             string confirmResult = await ShowPopup(2, "确定添加此服务器吗？", $"服务器信息：\r名称：{NewServerName}\rJava路径：{JavaPath}\r核心文件路径：{CorePath}\r内存范围：{MinMemory} ~ {MaxMemory}\r附加JVM参数：{ExtJvm}（默认为空）");
             if (confirmResult == "Yes")
-                ConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
-            ReadServerList();
-            //NavigateRightView("AddServer");
-            FullViewBackCmd.Execute(null);
+            {
+                ServerConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, MinMemory, MaxMemory, ExtJvm);
+                ReadServerList();
+                //NavigateRightView("AddServer");
+                FullViewBackCmd.Execute(null);
+            }
         });// 添加服务器命令-实现
 
         DeleteServer = ReactiveCommand.Create(async() =>
@@ -78,21 +79,33 @@ public partial class MainViewModel : ViewModelBase
             string confirmResult = await ShowPopup(2, "确定删除此服务器吗？", "该操作不可逆！");
             if (confirmResult == "Yes")
             {
-                ConfigManager.DeleteServer(SelectedServerId);
+                ServerConfigManager.DeleteServer(SelectedServerId);
                 ReadServerList();
             }
         });// 删除服务器命令-实现
+
+        EditServer = ReactiveCommand.Create(async() =>
+        {
+            string JavaPath = JavaManager.MatchJavaList(SelectedServerId.ToString());
+            string confirmResult = await ShowPopup(1, "编辑服务器", $"服务器信息：\r名称：{NewServerName}\rJava路径：{JavaPath}\r核心文件路径：{CorePath}\r内存范围：{MinMemory} ~ {MaxMemory}\r附加JVM参数：{ExtJvm}（默认为空）");
+            if (confirmResult == "Yes")
+            {
+                ServerConfigManager.EditServer(SelectedServerId, NewServerName, JavaPath, MinMemory, MaxMemory, ExtJvm);
+                ReadServerList();
+                FullViewBackCmd.Execute(null);
+            }
+        });// 编辑服务器命令-实现
 
         SearchJava = ReactiveCommand.Create(() =>
         {
             JavaManager.DetectJava();
             ReadJavaList();
         });// 搜索Java命令-实现
-
         // 配置相关命令-end
 
-        // 服务器相关命令-start
 
+
+        // 服务器相关命令-start
         StartServerCmd = ReactiveCommand.Create(StartServer);// 启动服务器命令-实现
         StopServerCmd = ReactiveCommand.Create(async () =>
         {
@@ -114,8 +127,9 @@ public partial class MainViewModel : ViewModelBase
                 ServerHost.Instance.EndServer(SelectedServerId);
             }
         });// 结束服务器进程命令-实现
-
         // 服务器相关命令-end
+
+
 
         // Popup相关命令-start
         // 正常情况下，这些命令被调用时PopupTcs不为null

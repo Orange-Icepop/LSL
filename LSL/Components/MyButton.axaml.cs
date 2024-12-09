@@ -53,7 +53,6 @@ namespace LSL.Components
                 default:
                     break;
             }
-            Debug.WriteLine("UpdateStyles");
         }
     }
 }

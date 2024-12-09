@@ -4,9 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
-             x:Class="LSL.Views.Download.ASViews.AddCore">
+             x:Class="LSL.Views.Server.EditSC">
 	<StackPanel>
-		<local:MyCard Text="从核心添加服务器">
+		<local:MyCard Text="修改服务器配置">
 			<StackPanel Margin="25,10,25,15">
 				<DockPanel Margin="30,50,0,5">
 					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器名称</TextBlock>
@@ -14,8 +14,7 @@
 				</DockPanel>
 				<DockPanel Margin="30,10,0,5">
 					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">核心文件</TextBlock>
-					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding CorePath, Mode=TwoWay}"/>
-					<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" Click="OpenFileCmd" Width="100" Height="30" Margin="10,0,10,0">选择核心</local:MyButton>
+					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" IsEnabled="False" Text="{Binding CorePath, Mode=OneWayToSource}"/>
 				</DockPanel>
 				<DockPanel Margin="30,10,0,5">
 					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">内存大小</TextBlock>
@@ -33,7 +32,7 @@
 					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">附加JVM参数（慎填）</TextBlock>
 					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding ExtJvm}"/>
 				</DockPanel>
-				<local:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Height="30" Margin="30,10,0,5" ColorType="Highlight" Command="{Binding ConfirmAddServer}">确认添加</local:MyButton>
+				<local:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Height="30" Margin="30,10,0,5" ColorType="Highlight" Command="{Binding EditServer}">确认修改</local:MyButton>
 			</StackPanel>
 		</local:MyCard>
 	</StackPanel>

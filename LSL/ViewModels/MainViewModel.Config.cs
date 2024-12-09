@@ -11,9 +11,8 @@ namespace LSL.ViewModels
 {
     public partial class MainViewModel
     {
+        // 启动器配置文件板块
         #region 配置变量
-        //用ReactiveUI的办法真的是太烦了
-        //但是又不能用ObservableProperty，因为要自定义更改后的操作
         public bool AutoEula { get => (bool)ViewConfigs["auto_eula"]; set { CacheConfig("auto_eula", value); } }
         public int AppPriority { get => (int)ViewConfigs["app_priority"]; set { CacheConfig("app_priority", value); } }
         public bool EndServerWhenClose { get => (bool)ViewConfigs["end_server_when_close"]; set { CacheConfig("end_server_when_close", value); } }
@@ -39,7 +38,7 @@ namespace LSL.ViewModels
         public void GetConfig()
         {
             ConfigManager.LoadConfig();
-            ViewConfigs = new Dictionary<string, object>( ConfigManager.CurrentConfigs );
+            ViewConfigs = new Dictionary<string, object>(ConfigManager.CurrentConfigs);
         }
 
         public void CacheConfig(string key, object value)// 向缓存字典中写入新配置
@@ -50,9 +49,10 @@ namespace LSL.ViewModels
             }
         }
 
-        
+
         #endregion
 
+        // 服务器管理板块
         #region 存储文件路径方法
         public void SaveFilePath(string path, string targetValue)
         {
@@ -65,29 +65,37 @@ namespace LSL.ViewModels
         }
         #endregion
 
-        #region 新增服务器数据
+        #region 服务器数据
+
+        private string _newServerName = string.Empty;// 服务器名称
+        public string NewServerName { get => _newServerName; set => this.RaiseAndSetIfChanged(ref _newServerName, value); }
+
         private string _corePath = string.Empty;// 核心文件路径
         public string CorePath { get => _corePath; set => this.RaiseAndSetIfChanged(ref _corePath, value); }
 
-        private string _newServerName = string.Empty;// 新增服务器名称
-        public string NewServerName { get => _newServerName; set => this.RaiseAndSetIfChanged(ref _newServerName, value); }
-
-        private int _minMemory = 0;// 新增服务器最小内存
+        private int _minMemory = 0;// 服务器最小内存
         public int MinMemory { get => _minMemory; set => this.RaiseAndSetIfChanged(ref _minMemory, value); }
 
-        private int _maxMemory = 0;// 新增服务器最大内存
+        private int _maxMemory = 0;// 服务器最大内存
         public int MaxMemory { get => _maxMemory; set => this.RaiseAndSetIfChanged(ref _maxMemory, value); }
 
         private int _javaId = 0;//Java编号
         public int JavaId { get => _javaId; set => this.RaiseAndSetIfChanged(ref _javaId, value); }
 
-        private string _extJvm = string.Empty;
+        private string _extJvm = string.Empty;// 附加JVM参数
         public string ExtJvm { get => _extJvm; set => this.RaiseAndSetIfChanged(ref _extJvm, value); }
+
+        public void ReadServerConfig(string serverID)
+        {
+            string serverPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, serverID);
+            string serverConf = File.ReadAllText(Path.Combine(serverPath, "lslconfig.json"));
+        }
         #endregion
 
         public ICommand SearchJava { get; }// 搜索Java命令
         public ICommand ConfirmAddServer { get; }// 确认新增服务器命令
         public ICommand DeleteServer { get; }// 删除服务器命令
+        public ICommand EditServer { get; }// 编辑服务器命令
 
         #region 全局获取服务器列表ReadServerList => ServerNames
         //持久化服务器映射列表
@@ -123,6 +131,7 @@ namespace LSL.ViewModels
 
         #endregion
 
+        // Java板块
         #region 全局获取Java列表ReadJavaList => JavaVersions
         //持久化Java映射列表
         private ObservableCollection<JavaInfo> _javaVersions = [];
@@ -153,7 +162,7 @@ namespace LSL.ViewModels
                     vendorObject.Type == JTokenType.String &&
                     archObject.Type == JTokenType.String)
                 {
-                    JavaVersions.Add( new JavaInfo((string)pathObject, (string)versionObject, (string)vendorObject, (string)archObject) );
+                    JavaVersions.Add(new JavaInfo((string)pathObject, (string)versionObject, (string)vendorObject, (string)archObject));
                 }
             }
         }

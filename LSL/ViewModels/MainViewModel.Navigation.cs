@@ -12,6 +12,7 @@ namespace LSL.ViewModels
 {
     public partial class MainViewModel : ViewModelBase
     {
+
         #region 导航相关
         //View原件
         private UserControl _leftView;
@@ -111,7 +112,8 @@ namespace LSL.ViewModels
             string originalRightView = new string(CurrentRightView);
             Dictionary<string, string> TitleMatcher = new()
             {
-                { "AddCore", "从核心添加服务器" }
+                { "AddCore", "从核心添加服务器" },
+                { "ModifyConf", "修改服务器配置" },
             };
             FSTitle = TitleMatcher.TryGetValue(viewName, out string? value) ? value : viewName;
             FullViewBackCmd = ReactiveCommand.Create(() =>
