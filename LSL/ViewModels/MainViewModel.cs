@@ -4,6 +4,7 @@ using System.Windows.Input;
 using ReactiveUI;
 using LSL.Services;
 using LSL.Views;
+using System.Diagnostics;
 
 namespace LSL.ViewModels;
 
@@ -11,6 +12,28 @@ public partial class MainViewModel : ViewModelBase
 {
     // 不要忘了每次发布Release时更新版本号！！！
     public static readonly string CurrentVersion = "v0.07";
+
+    #region About页面的相关内容
+    public ICommand OpenWebPageCmd { get; }
+    public async void OpenWebPage(string url)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(url);
+            //if (url.IndexOf("http://") != 1 && url.IndexOf("https://") != 1) throw new ArgumentException("URL格式错误");
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (System.ComponentModel.Win32Exception noBrowser)
+        {
+            if (noBrowser.ErrorCode == -2147467259)
+                await ShowPopup(4, "打开网页失败", $"LSL未能成功打开网页{url}，请检查您的系统是否设置了默认浏览器。\r错误内容：{noBrowser.Message}");
+        }
+        catch (Exception ex)
+        {
+            await ShowPopup(4, "打开网页失败", $"LSL未能成功打开网页{url}，这是由于非浏览器配置错误造成的。\r如果这是在自定义主页中发生的，请检查您的自定义主页是否正确配置了网址；否则，这可能是一个Bug，请您提交一个issue反馈。\r错误内容：{ex.Message}");
+        }
+    }
+    #endregion
 
     //初始化主窗口
     public void InitializeMainWindow()
@@ -31,10 +54,11 @@ public partial class MainViewModel : ViewModelBase
         ReadJavaList();// 读取Java列表
         OutputHandler outputHandler = new();// 初始化输出处理
 
+        // 视图命令
         LeftViewCmd = ReactiveCommand.Create<string>(INavigateLeft);
         RightViewCmd = ReactiveCommand.Create<string>(INavigateRight);
         FullViewCmd = ReactiveCommand.Create<string>(NavigateFullScreenView);
-        FullViewBackCmd = ReactiveCommand.Create(async() =>
+        FullViewBackCmd = ReactiveCommand.Create(async () =>
         {
             await ShowPopup(4, "不应出现的命令错误", "当您看见该弹窗时，说明表单填充时用于返回的命令在未进入全屏表单时被触发了。如果您没有对LSL进行修改，这通常意味着LSL出现了一个Bug，请在LSL的源码仓库中提交一份关于该Bug的issue。");
         });
@@ -59,8 +83,7 @@ public partial class MainViewModel : ViewModelBase
         });
         #endregion
 
-        #region 命令实现
-        // 配置相关命令-start
+        #region 配置相关命令实现
         ConfirmAddServer = ReactiveCommand.Create(async () =>
         {
             string JavaPath = JavaManager.MatchJavaList(JavaId.ToString());
@@ -74,7 +97,7 @@ public partial class MainViewModel : ViewModelBase
             }
         });// 添加服务器命令-实现
 
-        DeleteServer = ReactiveCommand.Create(async() =>
+        DeleteServer = ReactiveCommand.Create(async () =>
         {
             string confirmResult = await ShowPopup(2, "确定删除此服务器吗？", "该操作不可逆！");
             if (confirmResult == "Yes")
@@ -84,7 +107,7 @@ public partial class MainViewModel : ViewModelBase
             }
         });// 删除服务器命令-实现
 
-        EditServer = ReactiveCommand.Create(async() =>
+        EditServer = ReactiveCommand.Create(async () =>
         {
             string JavaPath = JavaManager.MatchJavaList(SelectedServerId.ToString());
             string confirmResult = await ShowPopup(1, "编辑服务器", $"服务器信息：\r名称：{NewServerName}\rJava路径：{JavaPath}\r核心文件路径：{CorePath}\r内存范围：{MinMemory} ~ {MaxMemory}\r附加JVM参数：{ExtJvm}（默认为空）");
@@ -101,11 +124,9 @@ public partial class MainViewModel : ViewModelBase
             JavaManager.DetectJava();
             ReadJavaList();
         });// 搜索Java命令-实现
-        // 配置相关命令-end
+        #endregion
 
-
-
-        // 服务器相关命令-start
+        #region 服务器相关命令实现
         StartServerCmd = ReactiveCommand.Create(StartServer);// 启动服务器命令-实现
         StopServerCmd = ReactiveCommand.Create(async () =>
         {
@@ -115,7 +136,7 @@ public partial class MainViewModel : ViewModelBase
                 SendServerCommand("stop");
             }
         });// 停止服务器命令-实现
-        SaveServerCmd = ReactiveCommand.Create(async() =>
+        SaveServerCmd = ReactiveCommand.Create(async () =>
         {
             SendServerCommand("save-all");
         });// 保存服务器命令-实现
@@ -127,20 +148,21 @@ public partial class MainViewModel : ViewModelBase
                 ServerHost.Instance.EndServer(SelectedServerId);
             }
         });// 结束服务器进程命令-实现
-        // 服务器相关命令-end
+        #endregion
 
-
-
-        // Popup相关命令-start
+        #region Popup相关命令实现
         // 正常情况下，这些命令被调用时PopupTcs不为null
         PopupConfirm = ReactiveCommand.Create(() => PopupTcs.TrySetResult("Confirm"));
         PopupCancel = ReactiveCommand.Create(() => PopupTcs.TrySetResult("Cancel"));
         PopupYes = ReactiveCommand.Create(() => PopupTcs.TrySetResult("Yes"));
         PopupNo = ReactiveCommand.Create(() => PopupTcs.TrySetResult("No"));
-        // Popup相关命令-end
-
         #endregion
 
+        #region 其它命令实现
+        OpenWebPageCmd = ReactiveCommand.Create<string>(OpenWebPage);// 打开网页命令-实现
+        #endregion
+
+        // 事件订阅
         EventBus.Instance.Subscribe<TerminalOutputArgs>(ReceiveStdOutPut);
         EventBus.Instance.Subscribe<PlayerUpdateArgs>(ReceivePlayerUpdate);
         EventBus.Instance.Subscribe<PlayerMessageArgs>(ReceiveMessage);
