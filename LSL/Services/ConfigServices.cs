@@ -209,12 +209,12 @@ namespace LSL.Services
                 // 将初始配置字典序列化成JSON字符串并写入文件  
                 string configString = JsonConvert.SerializeObject(DefaultConfigs, Formatting.Indented);
                 File.WriteAllText(_configFilePath, configString);
-                Debug.WriteLine("config.json initialized.");
+                Debug.WriteLine("Config.json initialized.");
             }
             if (!File.Exists(ServerConfigPath))
             {
                 File.WriteAllText(ServerConfigPath, "{}");
-                Debug.WriteLine("serverConfig.json initialized.");
+                Debug.WriteLine("ServerConfig.json initialized.");
             }
             if (!File.Exists(JavaListPath))
             {

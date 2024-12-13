@@ -118,10 +118,18 @@ namespace LSL.ViewModels
             ServerNames.Clear();
             foreach (var ServerID in ServerIDs)
             {
-                string TargetedServerPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, $"$.{ServerID}");
-                string TargetedConfigPath = Path.Combine(TargetedServerPath, "lslconfig.json");
-                string KeyPath = "$.name";
-                ServerNames.Add((string)JsonHelper.ReadJson(TargetedConfigPath, KeyPath));
+                try
+                {
+                    string TargetedServerPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, $"$.{ServerID}");
+                    string TargetedConfigPath = Path.Combine(TargetedServerPath, "lslconfig.json");
+                    string KeyPath = "$.name";
+                    ServerNames.Add((string)JsonHelper.ReadJson(TargetedConfigPath, KeyPath));
+                }
+                catch(DirectoryNotFoundException ex)
+                {
+                    ServerNames.Add($"NotExist server{ServerID}");
+                    //throw new Exception($"服务器 {ServerID} 的路径不存在，请检查配置文件。\r错误消息：{ex.Message}");
+                }
             }
             if (SelectedServerIndex > ServerNames.Count)
             {

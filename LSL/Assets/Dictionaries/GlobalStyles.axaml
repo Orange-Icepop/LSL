@@ -129,4 +129,9 @@
 			</Transitions>
 		</Setter>
 	</Style>
+
+	<!--DataGrid控件样式定义-->
+	<Style Selector="DataGrid">
+		<Setter Property="Background" Value="Transparent"/>
+	</Style>
 </Styles>
