@@ -106,7 +106,7 @@ namespace LSL.Services
             }
         }
 
-        private static JavaInfo GetJavaInfo(string javaPath)// 使用java -version获取Java信息
+        public static JavaInfo? GetJavaInfo(string javaPath)// 使用java -version获取Java信息
         {
             try
             {
@@ -130,7 +130,7 @@ namespace LSL.Services
                 if (!string.IsNullOrEmpty(output))
                 {
                     var lines = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-                    if (lines.Length > 0)
+                    if (lines.Length > 1)
                     {
                         string version = "Unknown";
                         string vendor = "Unknown";
@@ -193,14 +193,14 @@ namespace LSL.Services
                         }
                         return new JavaInfo(javaPath, version, vendor, architecture);
                     }
+                    else return null;
                 }
+                else return null;
             }
             catch (Exception)
             {
-                // Handle exception if necessary
+                return null;
             }
-
-            return null;
         }
 
         private static string ExecuteCommand(string command, string args)

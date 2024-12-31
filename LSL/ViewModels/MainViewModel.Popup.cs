@@ -101,7 +101,7 @@ namespace LSL.ViewModels
         public async Task<string> ShowPopup(int type = 0, string title = "空弹窗", string message = "我是一个空的弹窗！")
         {
             PopupTcs = new TaskCompletionSource<string>();
-            // type定义：0-提示（只有确认），1-警告（是/否/取消），2-提示（是/否），3-警告（是/否），4-错误（确认，复制消息）
+            // type定义：0-提示（只有确认），1-警告（是/否/取消），2-提示（是/否），3-警告（是/否），4-内部错误（确认，复制消息），5-表单错误（确认，复制消息）
             switch (type)
             {
                 case 0:
@@ -134,7 +134,13 @@ namespace LSL.ViewModels
                     break;
                 case 4:
                     PopupTitle = "错误";
-                    PopupContent = $"LSL发生了一个错误。\r {message}";
+                    PopupContent = $"LSL发生了一个错误。\r{message}";
+                    PopupColor = new SolidColorBrush(Colors.Red);
+                    ConfirmButton = true;
+                    break;
+                case 5:
+                    PopupTitle = "错误";
+                    PopupContent = $"您提交的表单有误。\r{message}\r请重新确认表单无误后再提交。";
                     PopupColor = new SolidColorBrush(Colors.Red);
                     ConfirmButton = true;
                     break;

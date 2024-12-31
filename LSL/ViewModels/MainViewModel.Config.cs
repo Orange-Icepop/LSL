@@ -1,11 +1,14 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using LSL.Services;
 using ReactiveUI;
 using System.Windows.Input;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace LSL.ViewModels
 {
@@ -67,23 +70,33 @@ namespace LSL.ViewModels
 
         #region 服务器数据
 
-        private string _newServerName = string.Empty;// 服务器名称
-        public string NewServerName { get => _newServerName; set => this.RaiseAndSetIfChanged(ref _newServerName, value); }
+        private string _newServerName = "NewServer";// 服务器名称
+        [ServerNameValidator] public string NewServerName { get => _newServerName; set => this.RaiseAndSetIfChanged(ref _newServerName, value); }
 
         private string _corePath = string.Empty;// 核心文件路径
-        public string CorePath { get => _corePath; set => this.RaiseAndSetIfChanged(ref _corePath, value); }
+        [ServerCorePathValidator] public string CorePath { get => _corePath; set => this.RaiseAndSetIfChanged(ref _corePath, value); }
 
-        private int _minMemory = 0;// 服务器最小内存
-        public int MinMemory { get => _minMemory; set => this.RaiseAndSetIfChanged(ref _minMemory, value); }
+        private string _minMemory = "200";// 服务器最小内存
+        [MinMemValidator]
+        public string MinMemory
+        {
+            get => _minMemory.ToString();
+            set => this.RaiseAndSetIfChanged(ref _minMemory, value);
+        }
 
-        private int _maxMemory = 0;// 服务器最大内存
-        public int MaxMemory { get => _maxMemory; set => this.RaiseAndSetIfChanged(ref _maxMemory, value); }
+        private string _maxMemory = "200";// 服务器最大内存
+        [MaxMemValidator]
+        public string MaxMemory
+        {
+            get => _maxMemory.ToString();
+            set => this.RaiseAndSetIfChanged(ref _maxMemory, value);
+        }
 
         private int _javaId = 0;//Java编号
         public int JavaId { get => _javaId; set => this.RaiseAndSetIfChanged(ref _javaId, value); }
 
         private string _extJvm = string.Empty;// 附加JVM参数
-        public string ExtJvm { get => _extJvm; set => this.RaiseAndSetIfChanged(ref _extJvm, value); }
+        [ExtJvmValidator]public string ExtJvm { get => _extJvm; set => this.RaiseAndSetIfChanged(ref _extJvm, value); }
 
         public void ReadServerConfig(string serverID)
         {
@@ -125,9 +138,9 @@ namespace LSL.ViewModels
                     string KeyPath = "$.name";
                     ServerNames.Add((string)JsonHelper.ReadJson(TargetedConfigPath, KeyPath));
                 }
-                catch(DirectoryNotFoundException ex)
+                catch (DirectoryNotFoundException ex)
                 {
-                    ServerNames.Add($"NotExist server{ServerID}");
+                    ServerNames.Add($"NonExist server{ServerID}");
                     //throw new Exception($"服务器 {ServerID} 的路径不存在，请检查配置文件。\r错误消息：{ex.Message}");
                 }
             }
@@ -157,10 +170,10 @@ namespace LSL.ViewModels
             //遍历配置文件中的所有Java
             foreach (var item in jsonObj.Properties())
             {
-                JToken versionObject = item.Value["version"];
-                JToken pathObject = item.Value["path"];
-                JToken vendorObject = item.Value["vendor"];
-                JToken archObject = item.Value["architecture"];
+                JToken? versionObject = item.Value["version"];
+                JToken? pathObject = item.Value["path"];
+                JToken? vendorObject = item.Value["vendor"];
+                JToken? archObject = item.Value["architecture"];
                 if (versionObject != null &&
                     pathObject != null &&
                     vendorObject != null &&
@@ -170,7 +183,7 @@ namespace LSL.ViewModels
                     vendorObject.Type == JTokenType.String &&
                     archObject.Type == JTokenType.String)
                 {
-                    JavaVersions.Add(new JavaInfo((string)pathObject, (string)versionObject, (string)vendorObject, (string)archObject));
+                    JavaVersions.Add(new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(), archObject.ToString()));
                 }
             }
         }

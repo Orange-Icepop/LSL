@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using LSL.Components;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -22,7 +23,7 @@ namespace LSL.Services
             string jsonString = File.ReadAllText(filePath);
             JObject jsonObject = JObject.Parse(jsonString);
             //寻找指定的值
-            JToken token = jsonObject.SelectToken(keyPath);
+            JToken? token = jsonObject.SelectToken(keyPath);
             // 检查键是否存在  
             if (token != null && token.Type != JTokenType.Property)
             {
@@ -53,23 +54,25 @@ namespace LSL.Services
             //读取
             string jsonString = File.ReadAllText(filePath);
             JObject jsonObject = JObject.Parse(jsonString);
-            JToken token = jsonObject.SelectToken(keyPath);
+            JToken? token = jsonObject.SelectToken(keyPath);
 
             if (token == null)
             {
                 throw new Exception($"{keyPath} not existed.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
             }
-
-            switch (token.Type)
+            else
             {
-                case JTokenType.String:
-                    return token.Value<string>();
-                case JTokenType.Integer:
-                    return token.Value<int>();
-                case JTokenType.Boolean:
-                    return token.Value<bool>();
-                default:
-                    throw new ArgumentException($"Key '{keyPath}' is not a string, number, or bool.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
+                switch (token.Type)
+                {
+                    case JTokenType.String:
+                        return token.Value<string>();
+                    case JTokenType.Integer:
+                        return token.Value<int>();
+                    case JTokenType.Boolean:
+                        return token.Value<bool>();
+                    default:
+                        throw new ArgumentException($"Key '{keyPath}' is not a string, number, or bool.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
+                }
             }
         }
         #endregion
@@ -84,7 +87,7 @@ namespace LSL.Services
             string lastPart = pathParts.Last();
             string parentPath = string.Join(".", pathParts.Take(pathParts.Length - 1));
 
-            JToken parentToken = parentPath.Length > 0 ? jObject.SelectToken(parentPath) : jObject;
+            JToken? parentToken = parentPath.Length > 0 ? jObject.SelectToken(parentPath) : jObject;
 
             if (parentToken is not null)
             {
@@ -133,14 +136,18 @@ namespace LSL.Services
             // 检查文件路径是否有效  
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+                throw new FatalException($"文件路径不能为空：{filePath}");
             }
-
-            // 确保文件路径的目录存在  
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-
-            // 将文件内容替换为一个空的JSON对象  
-            File.WriteAllText(filePath, "{}");
+            else
+            {
+                string? directoryPath = Path.GetDirectoryName(filePath);
+                if (directoryPath != null && string.IsNullOrWhiteSpace(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+                // 将文件内容替换为一个空的JSON对象
+                File.WriteAllText(filePath, "{}");
+            }
         }
         #endregion
 
@@ -256,70 +263,12 @@ namespace LSL.Services
         ];
         #endregion
 
-        #region 校验配置方法 VerifyConfig(string key, object value)
-        private static bool VerifyConfig(string key, object value)
-        {
-            try
-            {
-                switch (key)
-                {
-                    //Common
-                    case "auto_eula":
-                        if (value is not bool) return false; break;
-                    case "app_priority":
-                        if (value is not int || (int)value > 2 || (int)value < 0) return false; break;
-                    case "end_server_when_close":
-                        if (value is not bool) return false; break;
-                    case "daemon":
-                        if (value is not bool) return false; break;
-                    case "auto_find_java":
-                        if (value is not bool) return false; break;
-                    case "output_encode":
-                        if (value is not int || (int)value > 1 || (int)value < 0) return false; break;
-                    case "input_encode":
-                        if (value is not int || (int)value > 2 || (int)value < 0) return false; break;
-                    case "coloring_terminal":
-                        if (value is not bool) return false; break;
-                    //Download
-                    case "download_source":// TODO: 开发多源下载
-                        if (value is not int) return false; break;
-                    case "download_threads":// TODO: 开发多线程下载（不知道有没有必要）
-                        if (value is not int || (int)value > 128 || (int)value < 1) return false; break;
-                    case "download_limit":// TODO: 开发下载限速
-                        if (value is not int || (int)value < 0) return false; break;
-                    //Panel
-                    case "panel_enable":
-                        if (value is not bool) return false; break;
-                    case "panel_port":
-                        if (value is not int || (int)value < 0 || (int)value > 65535) return false; break;
-                    case "panel_monitor":
-                        if (value is not bool) return false; break;
-                    case "panel_terminal":
-                        if (value is not bool) return false; break;
-                    //Style:off
-                    //About
-                    case "auto_update":
-                        if (value is not bool) return false; break;
-                    case "beta_update":
-                        if (value is not bool) return false; break;
-                    default:
-                        return false;
-                }
-            }
-            catch (InvalidCastException)
-            {
-                return false;
-            }
-            return true;
-        }
-        #endregion
-
         #region 集体修改配置方法 ConfirmConfig(Dictionary<string, object> confs)
         public static void ConfirmConfig(Dictionary<string, object> confs)
         {
             foreach (var conf in confs)
             {
-                if (VerifyConfig(conf.Key, conf.Value))
+                if (CheckService.VerifyConfig(conf.Key, conf.Value))
                 {
                     CurrentConfigs[conf.Key] = conf.Value;
                 }
@@ -357,14 +306,14 @@ namespace LSL.Services
             }
             catch (JsonReaderException)
             {
-                throw new ArgumentException($"{ConfigFilePath} 文件已损坏：格式错误，请备份并删除该文件重试。");
+                throw new ArgumentException($"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。");
             }
             List<string> keysNeedToRepair = new();// 需要修复的键
             CurrentConfigs.Clear();// 清空当前配置字典
             foreach (var key in ConfigKeys)
             {
                 JToken config = configs[key];
-                object keyValue = null;
+                object? keyValue;
                 switch (config.Type)// 根据值类型读取
                 {
                     case JTokenType.Boolean:
@@ -380,7 +329,7 @@ namespace LSL.Services
                         keyValue = null;
                         break;
                 }
-                if (keyValue == null || !VerifyConfig(key, keyValue))
+                if (keyValue == null || !CheckService.VerifyConfig(key, keyValue))
                 {
                     CurrentConfigs.Add(key, DefaultConfigs[key]);
                     keysNeedToRepair.Add(key);
@@ -456,7 +405,7 @@ namespace LSL.Services
             ];
 
         #region 注册服务器方法RegisterServer
-        public static void RegisterServer(string serverName, string usingJava, string corePath, int minMem, int maxMem, string extJVM)
+        public static void RegisterServer(string serverName, string usingJava, string corePath, uint minMem, uint maxMem, string extJVM)
         {
             if (!File.Exists(ConfigManager.ServerConfigPath))
             {
@@ -510,7 +459,7 @@ namespace LSL.Services
         #endregion
 
         #region 修改服务器方法EditServer
-        public static void EditServer(string serverId, string serverName, string usingJava, int minMem, int maxMem, string extJVM)
+        public static void EditServer(string serverId, string serverName, string usingJava, uint minMem, uint maxMem, string extJVM)
         {
             string serverPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, serverId);
             if (serverPath != null && Directory.Exists(serverPath))
