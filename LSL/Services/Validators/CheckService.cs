@@ -8,40 +8,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace LSL.Services
+namespace LSL.Services.Validators
 {
-    public static class CheckService
+    public static class CheckService // 适合被整体调用的校验方法
     {
-        #region 校验文件名-路径-合法Java
-
-        public static bool IsValidFileName(string? fileName) //校验文件名
-        {
-            if (string.IsNullOrWhiteSpace(fileName)) return false;
-            // 获取文件名中无效的字符
-            char[] invalidChars = Path.GetInvalidFileNameChars();
-
-            // 检查文件名是否包含任何无效字符
-            return !fileName.Any(c => invalidChars.Contains(c));
-        }
-
-        public static bool IsValidPath(string? path) //校验路径
-        {
-            if (string.IsNullOrWhiteSpace(path)) return false;
-            // 获取路径中无效的字符
-            char[] invalidChars = Path.GetInvalidPathChars();
-            return !path.Any(c => invalidChars.Contains(c));
-        }
-
-        public static bool IsValidJavaPath(string? javaPath) //校验Java路径
-        {
-            if (!IsValidPath(javaPath)) return false;
-            else if (!File.Exists(javaPath)) return false;
-            else if (JavaFinder.GetJavaInfo == null) return false;
-            else return true;
-        }
-
-        #endregion
-
         #region 校验LSL核心配置方法 VerifyConfig(string key, object value)
         public static bool VerifyConfig(string key, object value)
         {
@@ -100,7 +70,7 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 服务器配置验证器 VerifyServerConfig(Dictionary<string, object> config)
+        #region 服务器配置验证方法 VerifyServerConfig(Dictionary<string, object> config)
         public static List<VerifyResult> VerifyServerConfig(Dictionary<string, string> config)
         {
             var result = new List<VerifyResult>();
@@ -109,12 +79,12 @@ namespace LSL.Services
                 VerifyResult resCache;
                 switch (item.Key)
                 {
-                    case "ServerName": resCache = ServerName(item.Value); break;
-                    case "JavaPath": resCache = JavaPath(item.Value); break;
-                    case "CorePath": resCache = JavaPath(item.Value); break;
-                    case "MinMem": resCache = MinMem(item.Value); break;
-                    case "MaxMem": resCache = MinMem(item.Value); break;
-                    case "ExtJvm": resCache = ExtJvm(item.Value); break;
+                    case "ServerName": resCache = CheckComponents.ServerName(item.Value); break;
+                    case "JavaPath": resCache = CheckComponents.JavaPath(item.Value); break;
+                    case "CorePath": resCache = CheckComponents.JavaPath(item.Value); break;
+                    case "MinMem": resCache = CheckComponents.MinMem(item.Value); break;
+                    case "MaxMem": resCache = CheckComponents.MinMem(item.Value); break;
+                    case "ExtJvm": resCache = CheckComponents.ExtJvm(item.Value); break;
                     default: resCache = new VerifyResult(item.Key, false, "未知配置项"); break;
                 }
                 result.Add(resCache);
@@ -122,8 +92,43 @@ namespace LSL.Services
             return result;
         }
 
-        #region 验证器组件
-        // 为了组件化做的，让复用性提升
+        #endregion
+    }
+
+    public static class CheckComponents // 验证器组件
+    {
+
+        #region 校验文件名-路径-合法Java
+
+        public static bool IsValidFileName(string? fileName) //校验文件名
+        {
+            if (string.IsNullOrWhiteSpace(fileName)) return false;
+            // 获取文件名中无效的字符
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+
+            // 检查文件名是否包含任何无效字符
+            return !fileName.Any(c => invalidChars.Contains(c));
+        }
+
+        public static bool IsValidPath(string? path) //校验路径
+        {
+            if (string.IsNullOrWhiteSpace(path)) return false;
+            // 获取路径中无效的字符
+            char[] invalidChars = Path.GetInvalidPathChars();
+            return !path.Any(c => invalidChars.Contains(c));
+        }
+
+        public static bool IsValidJavaPath(string? javaPath) //校验Java路径
+        {
+            if (!IsValidPath(javaPath)) return false;
+            else if (!File.Exists(javaPath)) return false;
+            else if (JavaFinder.GetJavaInfo == null) return false;
+            else return true;
+        }
+
+        #endregion
+
+        #region 添加/修改服务器验证器组件
         public static VerifyResult ServerName(string? name)
         {
             if (!IsValidFileName(name)) return new VerifyResult("ServerName", false, "服务器名称不可为空或包含特殊字符");
@@ -157,7 +162,7 @@ namespace LSL.Services
                 string pattern = @"^\d+$";
                 if (!Regex.IsMatch(num, pattern))
                 {
-                    return new VerifyResult("MinMem", false, "必须是正整数");
+                    return new VerifyResult("MinMem", false, "最小内存必须是正整数");
                 }
                 else
                 {
@@ -180,7 +185,7 @@ namespace LSL.Services
                 string pattern = @"^\d+$";
                 if (!Regex.IsMatch(num, pattern))
                 {
-                    return new VerifyResult("MaxMem", false, "必须是正整数");
+                    return new VerifyResult("MaxMem", false, "最小内存必须是正整数");
                 }
                 else
                 {
@@ -208,93 +213,7 @@ namespace LSL.Services
         }
         #endregion
 
-        #endregion
     }
-
-    // 表单验证器
-
-    #region 服务器配置验证器
-    public class ServerNameValidator : ValidationAttribute // 服务器名称验证器
-    {
-        protected override ValidationResult IsValid(object? value, ValidationContext context)
-        {
-            var result = CheckService.ServerName(value.ToString());
-            if (result.Passed)
-            {
-                return ValidationResult.Success;
-            }
-            else
-            {
-                return new ValidationResult(result.Reason);
-            }
-        }
-    }
-
-    public class ServerCorePathValidator : ValidationAttribute // 服务器核心路径验证器
-    {
-        protected override ValidationResult IsValid(object? value, ValidationContext context)
-        {
-            var result = CheckService.CorePath(value.ToString());
-            if (result.Passed)
-            {
-                return ValidationResult.Success;
-            }
-            else
-            {
-                return new ValidationResult(result.Reason);
-            }
-        }
-    }
-
-    public class MinMemValidator : ValidationAttribute // 最小内存验证器
-    {
-        protected override ValidationResult IsValid(object? value, ValidationContext context)
-        {
-            var result = CheckService.MinMem(value.ToString());
-            if (result.Passed)
-            {
-                return ValidationResult.Success;
-            }
-            else
-            {
-                return new ValidationResult(result.Reason);
-            }
-        }
-    }
-
-    public class MaxMemValidator : ValidationAttribute // 最大内存验证器
-    {
-        protected override ValidationResult IsValid(object? value, ValidationContext context)
-        {
-            var result = CheckService.MaxMem(value.ToString());
-            if (result.Passed)
-            {
-                return ValidationResult.Success;
-            }
-            else
-            {
-                return new ValidationResult(result.Reason);
-            }
-        }
-    }
-
-    public class ExtJvmValidator : ValidationAttribute // 扩展参数验证器
-    {
-        protected override ValidationResult IsValid(object? value, ValidationContext context)
-        {
-            var result = CheckService.ExtJvm(value.ToString());
-            if (result.Passed)
-            {
-                return ValidationResult.Success;
-            }
-            else
-            {
-                return new ValidationResult(result.Reason);
-            }
-        }
-    }
-    #endregion
-
 
     public record VerifyResult(string Key, bool Passed, string? Reason);
 }
