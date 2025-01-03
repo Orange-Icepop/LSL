@@ -90,4 +90,37 @@ namespace LSL.Services.Validators
     }
     #endregion
 
+    #region 配置文件验证器
+    public class DownloadLimitValidator : ValidationAttribute // 下载限速验证器
+    {
+        protected override ValidationResult IsValid(object? value, ValidationContext context)
+        {
+            var result = CheckComponents.DownloadLimit(value.ToString());
+            if (result.Passed)
+            {
+                return ValidationResult.Success;
+            }
+            else
+            {
+                return new ValidationResult(result.Reason);
+            }
+        }
+    }
+
+    public class PanelPortValidator : ValidationAttribute // 控制面板端口验证器
+    {
+        protected override ValidationResult IsValid(object? value, ValidationContext context)
+        {
+            var result = CheckComponents.PanelPort(value.ToString());
+            if (result.Passed)
+            {
+                return ValidationResult.Success;
+            }
+            else
+            {
+                return new ValidationResult(result.Reason);
+            }
+        }
+    }
+    #endregion
 }

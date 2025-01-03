@@ -42,12 +42,12 @@ namespace LSL.Services.Validators
                     case "download_threads":// TODO: 开发多线程下载（不知道有没有必要）
                         if (value is not int || (int)value > 128 || (int)value < 1) return false; break;
                     case "download_limit":// TODO: 开发下载限速
-                        if (value is not int || (int)value < 0) return false; break;
+                        if (CheckComponents.DownloadLimit(value.ToString()).Passed == false) return false; break;
                     //Panel
                     case "panel_enable":
                         if (value is not bool) return false; break;
                     case "panel_port":
-                        if (value is not int || (int)value < 0 || (int)value > 65535) return false; break;
+                        if (CheckComponents.PanelPort(value.ToString()).Passed == false) return false; break;
                     case "panel_monitor":
                         if (value is not bool) return false; break;
                     case "panel_terminal":
@@ -164,6 +164,7 @@ namespace LSL.Services.Validators
                 {
                     return new VerifyResult("MinMem", false, "最小内存必须是正整数");
                 }
+                else if (num.Length > 7) return new VerifyResult("MinMem", false, "最小内存不可大于2TB");
                 else
                 {
                     var result = uint.Parse(num);
@@ -187,6 +188,7 @@ namespace LSL.Services.Validators
                 {
                     return new VerifyResult("MaxMem", false, "最小内存必须是正整数");
                 }
+                else if (num.Length > 7) return new VerifyResult("MaxMem", false, "最大内存不可大于2TB");
                 else
                 {
                     var result = uint.Parse(num);
@@ -213,6 +215,51 @@ namespace LSL.Services.Validators
         }
         #endregion
 
+        #region LSL核心配置验证器组件
+        public static VerifyResult DownloadLimit(string? value)
+        {
+            if (value == null || value.ToString() == "") return new VerifyResult("DownloadLimit", false, "下载限速不可为空");
+            else
+            {
+                string pattern = @"^\d+$";
+                if (!Regex.IsMatch(value, pattern))
+                {
+                    return new VerifyResult("DownloadLimit", false, "下载限速必须是整数");
+                }
+                else if (value.Length > 8) return new VerifyResult("DownloadLimit", false, "下载限速不可大于100Gbps（有这个带宽的还要限速干嘛）");
+                else if (int.Parse(value) == 0) return new VerifyResult("DownloadLimit", true, null);
+                else
+                {
+                    var result = uint.Parse(value);
+                    if (result < 1) return new VerifyResult("DownloadLimit", false, "下载限速不可小于1KB/s");
+                    else if (result > 13107200) return new VerifyResult("DownloadLimit", false, "下载限速不可大于100Gbps（有这个带宽的还要限速干嘛）");
+                    else return new VerifyResult("DownloadLimit", true, null);
+                }
+            }
+        }
+
+        public static VerifyResult PanelPort(string? value)
+        {
+            if (value == null || value.ToString() == "") return new VerifyResult("PanelPort", false, "面板端口不可为空");
+            else
+            {
+                string pattern = @"^\d+$";
+                if (!Regex.IsMatch(value, pattern))
+                {
+                    return new VerifyResult("PanelPort", false, "面板端口必须是正整数");
+                }
+                else if (value.Length > 5) return new VerifyResult("PanelPort", false, "面板端口不可大于65535");
+                else
+                {
+                    var result = uint.Parse(value);
+                    if (result < 30) return new VerifyResult("PanelPort", false, "为了安全考虑，面板端口不可小于30");
+                    else if (result > 65535) return new VerifyResult("PanelPort", false, "面板端口不可大于65535");
+                    else return new VerifyResult("PanelPort", true, null);
+                }
+            }
+        }
+
+        #endregion
     }
 
     public record VerifyResult(string Key, bool Passed, string? Reason);

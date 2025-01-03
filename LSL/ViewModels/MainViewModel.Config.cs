@@ -16,7 +16,7 @@ namespace LSL.ViewModels
     public partial class MainViewModel
     {
         // 启动器配置文件板块
-        #region 配置变量
+        #region 核心配置
         public bool AutoEula { get => (bool)ViewConfigs["auto_eula"]; set { CacheConfig("auto_eula", value); } }
         public int AppPriority { get => (int)ViewConfigs["app_priority"]; set { CacheConfig("app_priority", value); } }
         public bool EndServerWhenClose { get => (bool)ViewConfigs["end_server_when_close"]; set { CacheConfig("end_server_when_close", value); } }
@@ -27,9 +27,11 @@ namespace LSL.ViewModels
         public bool ColoringTerminal { get => (bool)ViewConfigs["coloring_terminal"]; set { CacheConfig("coloring_terminal", value); } }
         public int DownloadSource { get => (int)ViewConfigs["download_source"]; set { CacheConfig("download_source", value); } }
         public int DownloadThreads { get => (int)ViewConfigs["download_threads"]; set { CacheConfig("download_threads", value); } }
-        public int DownloadLimit { get => (int)ViewConfigs["download_limit"]; set { CacheConfig("download_limit", value); } }
+        [DownloadLimitValidator] 
+        public string? DownloadLimit { get => ViewConfigs["download_limit"].ToString(); set { CacheConfig("download_limit", value); } }
         public bool PanelEnable { get => (bool)ViewConfigs["panel_enable"]; set { CacheConfig("panel_enable", value); } }
-        public int PanelPort { get => (int)ViewConfigs["panel_port"]; set { CacheConfig("panel_port", value); } }
+        [PanelPortValidator]
+        public string? PanelPort { get => ViewConfigs["panel_port"].ToString(); set { CacheConfig("panel_port", value); } }
         public bool PanelMonitor { get => (bool)ViewConfigs["panel_monitor"]; set { CacheConfig("panel_monitor", value); } }
         public bool PanelTerminal { get => (bool)ViewConfigs["panel_terminal"]; set { CacheConfig("panel_terminal", value); } }
         public bool AutoUpdate { get => (bool)ViewConfigs["auto_update"]; set { CacheConfig("auto_update", value); } }
@@ -78,26 +80,16 @@ namespace LSL.ViewModels
         [ServerCorePathValidator] public string CorePath { get => _corePath; set => this.RaiseAndSetIfChanged(ref _corePath, value); }
 
         private string _minMemory = "200";// 服务器最小内存
-        [MinMemValidator]
-        public string MinMemory
-        {
-            get => _minMemory.ToString();
-            set => this.RaiseAndSetIfChanged(ref _minMemory, value);
-        }
+        [MinMemValidator] public string MinMemory { get => _minMemory.ToString(); set => this.RaiseAndSetIfChanged(ref _minMemory, value); }
 
         private string _maxMemory = "200";// 服务器最大内存
-        [MaxMemValidator]
-        public string MaxMemory
-        {
-            get => _maxMemory.ToString();
-            set => this.RaiseAndSetIfChanged(ref _maxMemory, value);
-        }
+        [MaxMemValidator] public string MaxMemory { get => _maxMemory.ToString(); set => this.RaiseAndSetIfChanged(ref _maxMemory, value); }
 
         private int _javaId = 0;//Java编号
         public int JavaId { get => _javaId; set => this.RaiseAndSetIfChanged(ref _javaId, value); }
 
         private string _extJvm = string.Empty;// 附加JVM参数
-        [ExtJvmValidator]public string ExtJvm { get => _extJvm; set => this.RaiseAndSetIfChanged(ref _extJvm, value); }
+        [ExtJvmValidator] public string ExtJvm { get => _extJvm; set => this.RaiseAndSetIfChanged(ref _extJvm, value); }
 
         public void ReadServerConfig(string serverID)
         {
