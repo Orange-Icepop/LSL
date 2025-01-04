@@ -228,6 +228,7 @@ namespace LSL.Services.Validators
                 }
                 else if (value.Length > 8) return new VerifyResult("DownloadLimit", false, "下载限速不可大于100Gbps（有这个带宽的还要限速干嘛）");
                 else if (int.Parse(value) == 0) return new VerifyResult("DownloadLimit", true, null);
+                else if (value.ToString().StartsWith('0') && value.ToString().Length > 1) return new VerifyResult("DownloadLimit", false, "下载限速数字格式错误");
                 else
                 {
                     var result = uint.Parse(value);

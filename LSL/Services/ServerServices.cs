@@ -102,7 +102,7 @@ namespace LSL.Services
             string javaPath = (string)JsonHelper.ReadJson(configPath, "$.using_java");
             string MinMem = JsonHelper.ReadJson(configPath, "$.min_memory").ToString();
             string MaxMem = JsonHelper.ReadJson(configPath, "$.max_memory").ToString();
-            string arguments = $"-server -XX:+UseG1GC -Xms{MinMem}M -Xmx{MaxMem}M -jar {corePath} nogui";
+            string arguments = $"-server -Xms{MinMem}M -Xmx{MaxMem}M -jar {corePath} nogui";
 
             ProcessStartInfo startInfo = new()// 提供服务器信息
             {
@@ -143,7 +143,7 @@ namespace LSL.Services
             {
                 // 移除进程的实例
                 UnloadServer(serverId);
-                string status = process.ExitCode == 0 ? "已正常关闭" : $"异常关闭，进程退出码{process.ExitCode}";
+                string status = $"已关闭，进程退出码为{process.ExitCode}";
                 EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Status = false });
                 EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器" + status });
             };
@@ -253,50 +253,50 @@ namespace LSL.Services
 
         private static async void OutputProcessor(string ServerId, string Output)
         {
-            bool isUserMessage;
-            if (Output.Length > 18 && Output[17] == '<')
+            bool isMsgWithTime;
+            string MsgWithoutTime;
+            // 检测消息是否带有时间戳
+            if (Output.StartsWith('['))
             {
-                isUserMessage = true;
+                isMsgWithTime = true;
+                MsgWithoutTime = Output.Substring(Output.IndexOf(']') + 3);
             }
             else
             {
-                isUserMessage = false;
+                isMsgWithTime = false;
+                MsgWithoutTime = Output;
             }
-
-            List<string> keyWords =
-                [
-                    "INFO",
-                    "WARN",
-                ];
-
-            if (isUserMessage)
+            // 检测消息是否为用户消息
+            if (isMsgWithTime && MsgWithoutTime.StartsWith('<'))
             {
-                string Message = Output.Substring(17);
-                EventBus.Instance.PublishAsync(new PlayerMessageArgs { ServerId = ServerId, Message = Message });
+                EventBus.Instance.PublishAsync(new PlayerMessageArgs { ServerId = ServerId, Message = MsgWithoutTime });
             }
             else
             {
-                string Message = Output.Substring(17);
-                var MessagePieces = Message.Split(' ');
-                if (Output.Contains("UUID of player"))
+                if (MsgWithoutTime.StartsWith('['))
+                {
+                    MsgWithoutTime = Output.Substring(MsgWithoutTime.IndexOf(':') + 3);
+                }
+                var MessagePieces = MsgWithoutTime.Split(' ');
+                if (MsgWithoutTime.Contains("UUID of player"))
                 {
                     string PlayerName = MessagePieces[4];
                     string uuid = MessagePieces[6];
                     EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = uuid, PlayerName = PlayerName, Entering = true });
                 }
 
-                if (Output.Contains("left the game"))
+                if (MsgWithoutTime.Contains("left the game"))
                 {
                     string PlayerName = MessagePieces[0];
                     EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = "lefting", PlayerName = PlayerName, Entering = false });
                 }
 
-                if (Output.Contains("Done") && Output.IndexOf("Done") == 17)
+                if (MsgWithoutTime.StartsWith("Done"))
                 {
                     EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Status = true });
                 }
 
-                if (Output.Contains("Stopping the server") && Output.IndexOf("Stopping the server") == 17)
+                if (MsgWithoutTime.StartsWith("Stopping the server"))
                 {
                     EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Status = false });
                 }
