@@ -27,7 +27,7 @@ namespace LSL.ViewModels
         public bool ColoringTerminal { get => (bool)ViewConfigs["coloring_terminal"]; set { CacheConfig("coloring_terminal", value); } }
         public int DownloadSource { get => (int)ViewConfigs["download_source"]; set { CacheConfig("download_source", value); } }
         public int DownloadThreads { get => (int)ViewConfigs["download_threads"]; set { CacheConfig("download_threads", value); } }
-        [DownloadLimitValidator] 
+        [DownloadLimitValidator]
         public string? DownloadLimit { get => ViewConfigs["download_limit"].ToString(); set { CacheConfig("download_limit", value); } }
         public bool PanelEnable { get => (bool)ViewConfigs["panel_enable"]; set { CacheConfig("panel_enable", value); } }
         [PanelPortValidator]
@@ -70,7 +70,7 @@ namespace LSL.ViewModels
             }
         }
         #endregion
-
+        // TODO:将初始值的设定交给切换页面的方法
         #region 服务器数据
 
         private string _newServerName = "NewServer";// 服务器名称
@@ -90,11 +90,12 @@ namespace LSL.ViewModels
 
         private string _extJvm = string.Empty;// 附加JVM参数
         [ExtJvmValidator] public string ExtJvm { get => _extJvm; set => this.RaiseAndSetIfChanged(ref _extJvm, value); }
-
+        //TODO:在修改配置时查找指定的Java，并自动填充JavaId
         public void ReadServerConfig(string serverID)
         {
-            string serverPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, serverID);
-            string serverConf = File.ReadAllText(Path.Combine(serverPath, "lslconfig.json"));
+            string serverName = ServerNames[ServerIDs.IndexOf(serverID)];
+            var ConfigDict = ServerConfigManager.ReadServerConfig(serverName);
+            if (ConfigDict != null) throw new Exception("读取服务器配置失败，指定的服务器配置文件不存在或已损坏");
         }
         #endregion
 
@@ -105,8 +106,8 @@ namespace LSL.ViewModels
 
         #region 全局获取服务器列表ReadServerList => ServerNames
         //持久化服务器映射列表
-        private ObservableCollection<string> _serverIDs = [];
-        private ObservableCollection<string> _servernames = [];
+        private ObservableCollection<string> _serverIDs = [];// 主配置文件中的服务器ID列表
+        private ObservableCollection<string> _servernames = [];// 服务器名称列表，以ServerID的顺序排列
         public ObservableCollection<string> ServerIDs => _serverIDs;
         public ObservableCollection<string> ServerNames => _servernames;
         // 服务器列表读取（从配置文件读取）
@@ -154,33 +155,15 @@ namespace LSL.ViewModels
             get => _javaVersions;
             set => this.RaiseAndSetIfChanged(ref _javaVersions, value);
         }
-        // Java列表读取（从配置文件读取）
+        // Java列表读取
         public void ReadJavaList()
         {
-            string jsonContent = File.ReadAllText(ConfigManager.JavaListPath);
-            JObject jsonObj = JObject.Parse(jsonContent);
-            JavaVersions.Clear();
-            //遍历配置文件中的所有Java
-            foreach (var item in jsonObj.Properties())
+            JavaManager.InitJavaDict();
+            foreach (var item in JavaManager.JavaDict)
             {
-                JToken? versionObject = item.Value["version"];
-                JToken? pathObject = item.Value["path"];
-                JToken? vendorObject = item.Value["vendor"];
-                JToken? archObject = item.Value["architecture"];
-                if (versionObject != null &&
-                    pathObject != null &&
-                    vendorObject != null &&
-                    archObject != null &&
-                    versionObject.Type == JTokenType.String &&
-                    pathObject.Type == JTokenType.String &&
-                    vendorObject.Type == JTokenType.String &&
-                    archObject.Type == JTokenType.String)
-                {
-                    JavaVersions.Add(new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(), archObject.ToString()));
-                }
+                JavaVersions.Add(item.Value);
             }
         }
-
         #endregion
 
     }

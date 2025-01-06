@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using LSL.Components;
 using LSL.Services.Validators;
@@ -392,7 +393,7 @@ namespace LSL.Services
 
     }
 
-    public static class ServerConfigManager//服务器配置相关服务
+    public class ServerConfigManager//服务器配置相关服务
     {
 
         public static readonly List<string> ServerConfigKeys =
@@ -404,6 +405,22 @@ namespace LSL.Services
                 "max_memory",
                 "ext_jvm"
             ];
+
+        #region 读取各个服务器的LSL配置文件ReadServerConfig
+        public static Dictionary<string, object>? ReadServerConfig(string serverName)
+        {
+            string serverConfigPath = Path.Combine(ConfigManager.ServersPath, serverName, "lslconfig.json");
+            if (!File.Exists(serverConfigPath)) return null;
+            var file = File.ReadAllText(serverConfigPath);
+            var configs = JsonConvert.DeserializeObject<Dictionary<string, object>>(file);
+            if (configs == null) return null;
+            foreach (var key in ServerConfigKeys)
+            {
+                if (!configs.ContainsKey(key)) return null;
+            }
+            return configs;
+        }
+        #endregion
 
         #region 注册服务器方法RegisterServer
         public static void RegisterServer(string serverName, string usingJava, string corePath, uint minMem, uint maxMem, string extJVM)
@@ -505,7 +522,36 @@ namespace LSL.Services
     public static class JavaManager//Java相关服务
     {
 
-        #region 获取Java列表
+        public static Dictionary<string, JavaInfo> JavaDict = new();// 目前读取的Java列表
+
+        #region 读取Java列表
+        public static void InitJavaDict()
+        {
+            var file = File.ReadAllText(ConfigManager.JavaListPath);
+            JObject jsonObj = JObject.Parse(file);
+            JavaDict.Clear();
+            foreach (var item in jsonObj.Properties())//遍历配置文件中的所有Java
+            {
+                JToken? versionObject = item.Value["version"];
+                JToken? pathObject = item.Value["path"];
+                JToken? vendorObject = item.Value["vendor"];
+                JToken? archObject = item.Value["architecture"];
+                if (versionObject != null &&
+                    pathObject != null &&
+                    vendorObject != null &&
+                    archObject != null &&
+                    versionObject.Type == JTokenType.String &&
+                    pathObject.Type == JTokenType.String &&
+                    vendorObject.Type == JTokenType.String &&
+                    archObject.Type == JTokenType.String)
+                {
+                    JavaDict.Add(item.Name, new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(), archObject.ToString()));
+                }
+            }
+        }
+        #endregion
+
+        #region 获取系统中的Java
         public static async void DetectJava()
         {
             if (!File.Exists(ConfigManager.JavaListPath))
@@ -525,14 +571,6 @@ namespace LSL.Services
                 JsonHelper.AddJson(ConfigManager.JavaListPath, writtenId, new { version = javainfo.Version, path = javainfo.Path, vendor = javainfo.Vendor, architecture = javainfo.Architecture });
                 id++;
             }
-        }
-        #endregion
-
-        #region 根据Java编号获取Java路径
-        public static string MatchJavaList(string id)
-        {
-            string javaPath = (string)JsonHelper.ReadJson(ConfigManager.JavaListPath, "$." + id + ".path");
-            return javaPath;
         }
         #endregion
 

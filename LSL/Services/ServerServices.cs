@@ -259,7 +259,7 @@ namespace LSL.Services
             if (Output.StartsWith('['))
             {
                 isMsgWithTime = true;
-                MsgWithoutTime = Output.Substring(Output.IndexOf(']') + 3);
+                MsgWithoutTime = Output.Substring(Output.IndexOf(']') + 2).Trim();
             }
             else
             {
@@ -275,7 +275,7 @@ namespace LSL.Services
             {
                 if (MsgWithoutTime.StartsWith('['))
                 {
-                    MsgWithoutTime = Output.Substring(MsgWithoutTime.IndexOf(':') + 3);
+                    MsgWithoutTime = Output.Substring(MsgWithoutTime.IndexOf(':') + 2).Trim();
                 }
                 var MessagePieces = MsgWithoutTime.Split(' ');
                 if (MsgWithoutTime.Contains("UUID of player"))

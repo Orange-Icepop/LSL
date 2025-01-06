@@ -88,7 +88,7 @@ public partial class MainViewModel : ViewModelBase
         #region 配置相关命令实现
         ConfirmAddServer = ReactiveCommand.Create(async () =>
         {
-            string JavaPath = JavaManager.MatchJavaList(JavaId.ToString());
+            string JavaPath = JavaManager.JavaDict[JavaId.ToString()].Path;
             Dictionary<string, string> ServerInfo = new()
             {
                 { "ServerName", NewServerName },
@@ -135,7 +135,7 @@ public partial class MainViewModel : ViewModelBase
 
         EditServer = ReactiveCommand.Create(async () =>
         {
-            string JavaPath = JavaManager.MatchJavaList(SelectedServerId.ToString());
+            string JavaPath = JavaManager.JavaDict[JavaId.ToString()].Path;
             string confirmResult = await ShowPopup(1, "编辑服务器", $"服务器信息：\r名称：{NewServerName}\rJava路径：{JavaPath}\r核心文件路径：{CorePath}\r内存范围：{MinMemory} ~ {MaxMemory}\r附加JVM参数：{ExtJvm}（默认为空）");
             if (confirmResult == "Yes")
             {
