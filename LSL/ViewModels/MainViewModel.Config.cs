@@ -132,6 +132,8 @@ namespace LSL.ViewModels
         public void ReadServerList()
         {
             ServerConfigManager.LoadServerConfigs();
+            ServerIDs.Clear();
+            ServerNames.Clear();
             foreach (var item in ServerConfigManager.ServerConfigs)
             {
                 ServerIDs.Add(item.Value.server_id);
