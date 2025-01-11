@@ -19,7 +19,7 @@ namespace LSL.ViewModels
 {
     public partial class MainViewModel
     {
-        private int _selectedServerIndex;// 当前选中的服务器
+        private int _selectedServerIndex;// 当前选中的服务器在列表中的位置，用于绑定到View
         public int SelectedServerIndex
         {
             get => _selectedServerIndex;
@@ -30,7 +30,7 @@ namespace LSL.ViewModels
                 ReadProperties();
             }
         }
-        public string SelectedServerId => ServerIDs[SelectedServerIndex];
+        public string SelectedServerId => ServerIDs[SelectedServerIndex];// 当前选中的服务器ID
         public ICommand StartServerCmd { get; set; }// 启动服务器命令
         public ICommand StopServerCmd { get; set; }// 停止服务器命令
         public ICommand SaveServerCmd { get; set; }// 保存服务器命令
@@ -186,24 +186,13 @@ namespace LSL.ViewModels
 
         #endregion
 
-        #region 当前服务器配置文件字典
-        public Dictionary<string, object> CurrentServerConfig
-        {
-            get
-            {
-                string TargetedServerPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, $"$.{SelectedServerId}");
-                string TargetedConfigPath = Path.Combine(TargetedServerPath, "lslconfig.json");
-                var config = File.ReadAllText(TargetedConfigPath);
-                JObject json = JObject.Parse(config);
-                return (json.ToObject<Dictionary<string, object>>());
-            }
-        }
-        public string CurrentServerName { get => CurrentServerConfig["name"].ToString(); }
-        public string CurrentServerPath { get => (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, $"$.{SelectedServerId}"); }
-        public string CurrentServerJava { get => CurrentServerConfig["using_java"].ToString(); }
+        #region 当前服务器配置文件
+        public string CurrentServerName { get => CurrentServerConfig.name; }
+        public string CurrentServerPath { get => CurrentServerConfig.server_path; }
+        public string CurrentServerJava { get => CurrentServerConfig.using_java; }
 
         public Dictionary<string, object> CurrentServerProperty = new();// 当前服务器server.properties字典
-        public bool ReadProperties()
+        public bool ReadProperties()// 读取当前服务器server.properties
         {
             try
             {

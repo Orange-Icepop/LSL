@@ -113,7 +113,7 @@ namespace LSL.ViewModels
             Dictionary<string, string> TitleMatcher = new()
             {
                 { "AddCore", "从核心添加服务器" },
-                { "ModifyConf", "修改服务器配置" },
+                { "EditSC", "修改服务器配置" },
             };
             FSTitle = TitleMatcher.TryGetValue(viewName, out string? value) ? value : viewName;
             FullViewBackCmd = ReactiveCommand.Create(() =>
@@ -125,6 +125,8 @@ namespace LSL.ViewModels
             });
             LeftWidth = 0;
             BarView = new FSBar();
+            if (viewName == "AddCore") LoadNewServerConfig();
+            if (viewName == "EditSC") LoadCurrentServerConfig();
             NavigateRightView(viewName);
         }
         // 强制刷新

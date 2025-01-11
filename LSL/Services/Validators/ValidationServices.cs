@@ -13,7 +13,7 @@ namespace LSL.Services.Validators
     {
         protected override ValidationResult IsValid(object? value, ValidationContext context)
         {
-            var result = CheckComponents.ServerName(value.ToString());
+            var result = CheckComponents.ServerName(value as string);
             if (result.Passed)
             {
                 return ValidationResult.Success;
@@ -29,7 +29,7 @@ namespace LSL.Services.Validators
     {
         protected override ValidationResult IsValid(object? value, ValidationContext context)
         {
-            var result = CheckComponents.CorePath(value.ToString());
+            var result = CheckComponents.CorePath(value as string);
             if (result.Passed)
             {
                 return ValidationResult.Success;
@@ -45,7 +45,7 @@ namespace LSL.Services.Validators
     {
         protected override ValidationResult IsValid(object? value, ValidationContext context)
         {
-            var result = CheckComponents.MinMem(value.ToString());
+            var result = CheckComponents.MinMem(value as string);
             if (result.Passed)
             {
                 return ValidationResult.Success;
@@ -61,7 +61,7 @@ namespace LSL.Services.Validators
     {
         protected override ValidationResult IsValid(object? value, ValidationContext context)
         {
-            var result = CheckComponents.MaxMem(value.ToString());
+            var result = CheckComponents.MaxMem(value as string);
             if (result.Passed)
             {
                 return ValidationResult.Success;
@@ -77,7 +77,7 @@ namespace LSL.Services.Validators
     {
         protected override ValidationResult IsValid(object? value, ValidationContext context)
         {
-            var result = CheckComponents.ExtJvm(value.ToString());
+            var result = CheckComponents.ExtJvm(value as string);
             if (result.Passed)
             {
                 return ValidationResult.Success;

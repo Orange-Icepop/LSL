@@ -2,7 +2,10 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia;
 using Avalonia.Media;
+using Avalonia.Threading;
+using LSL.Services;
 using ReactiveUI;
 
 namespace LSL.ViewModels
@@ -79,7 +82,7 @@ namespace LSL.ViewModels
         {
             PopupOpacity = 0;
             await Task.Delay(200);
-            Task.Run(ResetPopupS2);
+            Dispatcher.UIThread.Post(ResetPopupS2);
         }
 
         public void ResetPopupS2()
@@ -93,6 +96,12 @@ namespace LSL.ViewModels
             CancelButton = false;
             YesButton = false;
             NoButton = false;
+        }
+
+        //Popup外部访问器
+        public async void ReceivePopupMessage(PopupMessageArgs args)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => ShowPopup(args.Type, args.Title, args.Message));
         }
 
         private TaskCompletionSource<string> PopupTcs;// 创建一个TaskCompletionSource，这是最核心的东西，它能够等待用户操作
@@ -146,7 +155,7 @@ namespace LSL.ViewModels
                     break;
                 default:
                     Debug.WriteLine("Unknown popup type");
-                    return null;
+                    return "Unknown popup type";
             }
             if (title != "空弹窗")
             {

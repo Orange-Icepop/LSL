@@ -158,7 +158,8 @@ namespace LSL.Services
     }
     public class PopupMessageArgs : EventArgs// 弹窗事件
     {
-        public required string Type { get; set; }
+        public required int Type { get; set; }
+        public required string Title { get; set; }
         public required string Message { get; set; }
     }
     public class UpdateTerminalArgs : EventArgs// 更新终端文本事件
@@ -194,4 +195,21 @@ namespace LSL.Services
         public required string Message { get; set; }
     }
     #endregion
+
+    public class ErrorMessage// 快捷的非致命错误消息处理方式（手动狗头）
+    {
+        private static ErrorMessage _instance;
+        public static ErrorMessage Instance
+        {
+            get
+            {
+                _instance ??= new ErrorMessage();
+                return _instance;
+            }
+        }
+        public void ThrowError(string message)
+        {
+            EventBus.Instance.Publish<PopupMessageArgs>(new PopupMessageArgs { Type = 4, Title = "非致命错误", Message = message });
+        }
+    }
 }

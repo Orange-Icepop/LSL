@@ -189,6 +189,7 @@ public partial class MainViewModel : ViewModelBase
         #endregion
 
         // 事件订阅
+        EventBus.Instance.Subscribe<PopupMessageArgs>(ReceivePopupMessage);
         EventBus.Instance.Subscribe<TerminalOutputArgs>(ReceiveStdOutPut);
         EventBus.Instance.Subscribe<PlayerUpdateArgs>(ReceivePlayerUpdate);
         EventBus.Instance.Subscribe<PlayerMessageArgs>(ReceiveMessage);

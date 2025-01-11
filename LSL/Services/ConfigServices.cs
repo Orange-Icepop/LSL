@@ -395,6 +395,7 @@ namespace LSL.Services
 
     public class ServerConfigManager//服务器配置相关服务
     {
+        public static Dictionary<string, ServerConfig> ServerConfigs = new();
 
         public static readonly List<string> ServerConfigKeys =
             [
@@ -405,20 +406,81 @@ namespace LSL.Services
                 "max_memory",
                 "ext_jvm"
             ];
-
+        //TODO:自动检测目录下的未注册服务器
+        //TODO:对于读取失败的服务器丢出异常以警告用户进行处理
         #region 读取各个服务器的LSL配置文件ReadServerConfig
-        public static Dictionary<string, object>? ReadServerConfig(string serverName)
+        public static void LoadServerConfigs()
         {
-            string serverConfigPath = Path.Combine(ConfigManager.ServersPath, serverName, "lslconfig.json");
-            if (!File.Exists(serverConfigPath)) return null;
-            var file = File.ReadAllText(serverConfigPath);
-            var configs = JsonConvert.DeserializeObject<Dictionary<string, object>>(file);
-            if (configs == null) return null;
-            foreach (var key in ServerConfigKeys)
+            ServerConfigs = new();
+            List<string> NotfoundServers = new();
+            List<string> ConfigErrorServers = new();
+            // 读取服务器主配置文件
+            string mainFile = "";
+            try
             {
-                if (!configs.ContainsKey(key)) return null;
+                mainFile = File.ReadAllText(ConfigManager.ServerConfigPath);
+                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") throw new FileNotFoundException();
             }
-            return configs;
+            catch (FileNotFoundException)
+            {
+                ErrorMessage.Instance.ThrowError($"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。");
+            }
+            Dictionary<string, string> MainConfigs = new();
+            try
+            {
+                var configs = JsonConvert.DeserializeObject<Dictionary<string, string>>(mainFile);
+                if (configs == null) throw new JsonException();
+                else MainConfigs = configs;
+            }
+            catch (JsonException)
+            {
+                throw new FatalException($"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
+            }
+            // 读取各个服务器的LSL配置文件
+            foreach (var config in MainConfigs)
+            {
+                // 读取步骤
+                string targetPath = Path.Combine(ConfigManager.ServersPath, config.Value, "lslconfig.json");
+                string configFile = "";
+                try
+                {
+                    configFile = File.ReadAllText(targetPath);
+                    if (string.IsNullOrEmpty(configFile) || configFile == "{}") throw new FileNotFoundException();
+                }
+                catch (FileNotFoundException)
+                {
+                    NotfoundServers.Add(config.Value);
+                    continue;
+                }
+                // 解析步骤
+                Dictionary<string, string>? serverConfig = new();
+                try
+                {
+                    serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile);
+                    if (serverConfig == null) throw new JsonException();
+                    foreach (var item in ServerConfigKeys)
+                    {
+                        if (!serverConfig.ContainsKey(item)) throw new JsonException();
+                    }
+                    ServerConfigs.Add(config.Key, new ServerConfig(config.Key, config.Value, serverConfig["name"], serverConfig["using_java"], serverConfig["core_name"], uint.Parse(serverConfig["min_memory"]), uint.Parse(serverConfig["max_memory"]), serverConfig["ext_jvm"]));
+                }
+                catch (JsonException)
+                {
+                    ConfigErrorServers.Add(targetPath);
+                    continue;
+                }
+            }
+            // 检查错误
+            if (NotfoundServers.Count > 0 || ConfigErrorServers.Count > 0)
+            {
+                string ErrorContext = "LSL读取了服务器主配置文件，但是它包含了一些";
+                if (NotfoundServers.Count > 0 && ConfigErrorServers.Count > 0) ErrorContext += "不存在的服务器和格式错误的服务器配置文件。";
+                else if (NotfoundServers.Count > 0) ErrorContext += "不存在的服务器。";
+                else if (ConfigErrorServers.Count > 0) ErrorContext += "格式错误的服务器配置文件。";
+                if (NotfoundServers.Count > 0) ErrorContext += "\r不存在的服务器：" + string.Join(", \r", NotfoundServers) + "\r请确保" + ConfigManager.ServerConfigPath + "文件中的服务器名称与实际服务器文件夹名称一致。";
+                if (ConfigErrorServers.Count > 0) ErrorContext += "\r格式错误的服务器配置文件：" + string.Join(", \r", ConfigErrorServers) + "\r请确保这些配置文件的格式正确。";
+                ErrorMessage.Instance.ThrowError(ErrorContext);
+            }
         }
         #endregion
 
@@ -517,6 +579,29 @@ namespace LSL.Services
         }
         #endregion
 
+    }
+
+    public class ServerConfig// 服务器配置记录
+    {
+        public string server_id;
+        public string server_path;
+        public string name;
+        public string using_java;
+        public string core_name;
+        public uint min_memory;
+        public uint max_memory;
+        public string ext_jvm;
+        public ServerConfig(string ServerId, string ServerPath, string Name, string UsingJava, string CoreName, uint MinMemory, uint MaxMemory, string ExtJVM)
+        {
+            this.server_id = ServerId;
+            this.server_path = ServerPath;
+            this.name = Name;
+            this.using_java = UsingJava;
+            this.core_name = CoreName;
+            this.min_memory = MinMemory;
+            this.max_memory = MaxMemory;
+            this.ext_jvm = ExtJVM;
+        }
     }
 
     public static class JavaManager//Java相关服务

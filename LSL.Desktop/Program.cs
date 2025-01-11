@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.ReactiveUI;
+using LSL.Components;
+using LSL.Services;
 
 namespace LSL.Desktop;
 
@@ -12,19 +15,16 @@ class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        /*
         try
         {
-        */
             BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
-        /*
         }
-        catch (Exception ex)
+        catch (NonfatalException ex)
         {
-            EventBus.Instance.PublishAsync(new PopupMessageArgs { Type = "deadlyError", Message = ex.Message });
+            EventBus.Instance.PublishAsync(new PopupMessageArgs { Type = 4, Title = "非致命错误", Message = ex.Message });
             Debug.WriteLine(ex.ToString());
-        }*/
+        }
     }
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()

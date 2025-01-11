@@ -16,7 +16,7 @@ namespace LSL.ViewModels
     public partial class MainViewModel
     {
         // 启动器配置文件板块
-        #region 核心配置
+        #region 核心配置数据
         public bool AutoEula { get => (bool)ViewConfigs["auto_eula"]; set { CacheConfig("auto_eula", value); } }
         public int AppPriority { get => (int)ViewConfigs["app_priority"]; set { CacheConfig("app_priority", value); } }
         public bool EndServerWhenClose { get => (bool)ViewConfigs["end_server_when_close"]; set { CacheConfig("end_server_when_close", value); } }
@@ -73,36 +73,54 @@ namespace LSL.ViewModels
         // TODO:将初始值的设定交给切换页面的方法
         #region 服务器数据
 
-        private string _newServerName = "NewServer";// 服务器名称
+        private string _newServerName;// 服务器名称
         [ServerNameValidator] public string NewServerName { get => _newServerName; set => this.RaiseAndSetIfChanged(ref _newServerName, value); }
 
-        private string _corePath = string.Empty;// 核心文件路径
+        private string _corePath;// 核心文件路径
         [ServerCorePathValidator] public string CorePath { get => _corePath; set => this.RaiseAndSetIfChanged(ref _corePath, value); }
 
-        private string _minMemory = "200";// 服务器最小内存
+        private string _minMemory;// 服务器最小内存
         [MinMemValidator] public string MinMemory { get => _minMemory.ToString(); set => this.RaiseAndSetIfChanged(ref _minMemory, value); }
 
-        private string _maxMemory = "200";// 服务器最大内存
+        private string _maxMemory;// 服务器最大内存
         [MaxMemValidator] public string MaxMemory { get => _maxMemory.ToString(); set => this.RaiseAndSetIfChanged(ref _maxMemory, value); }
 
-        private int _javaId = 0;//Java编号
+        private int _javaId;//Java编号
         public int JavaId { get => _javaId; set => this.RaiseAndSetIfChanged(ref _javaId, value); }
 
-        private string _extJvm = string.Empty;// 附加JVM参数
+        private string _extJvm;// 附加JVM参数
         [ExtJvmValidator] public string ExtJvm { get => _extJvm; set => this.RaiseAndSetIfChanged(ref _extJvm, value); }
-        //TODO:在修改配置时查找指定的Java，并自动填充JavaId
-        public void ReadServerConfig(string serverID)
-        {
-            string serverName = ServerNames[ServerIDs.IndexOf(serverID)];
-            var ConfigDict = ServerConfigManager.ReadServerConfig(serverName);
-            if (ConfigDict != null) throw new Exception("读取服务器配置失败，指定的服务器配置文件不存在或已损坏");
-        }
         #endregion
+        //TODO:在修改配置时查找指定的Java，并自动填充JavaId
+        private void LoadNewServerConfig()
+        {
+            NewServerName = "NewServer";
+            CorePath = "";
+            MinMemory = "200";
+            MaxMemory = "500";
+            JavaId = 0;
+            ExtJvm = "";
+        }
+
+        private void LoadCurrentServerConfig()
+        {
+            NewServerName = new string(CurrentServerConfig.name);
+            CorePath = new string(CurrentServerConfig.core_name);
+            MinMemory = CurrentServerConfig.min_memory.ToString();
+            MaxMemory = CurrentServerConfig.max_memory.ToString();
+            JavaId = 0;
+            ExtJvm = new string(CurrentServerConfig.ext_jvm);
+        }
 
         public ICommand SearchJava { get; }// 搜索Java命令
         public ICommand ConfirmAddServer { get; }// 确认新增服务器命令
         public ICommand DeleteServer { get; }// 删除服务器命令
         public ICommand EditServer { get; }// 编辑服务器命令
+
+        public ServerConfig CurrentServerConfig // 当前服务器的LSL配置文件
+        {
+            get => ServerConfigManager.ServerConfigs[SelectedServerId];
+        }
 
         #region 全局获取服务器列表ReadServerList => ServerNames
         //持久化服务器映射列表
@@ -113,30 +131,11 @@ namespace LSL.ViewModels
         // 服务器列表读取（从配置文件读取）
         public void ReadServerList()
         {
-            string jsonContent = File.ReadAllText(ConfigManager.ServerConfigPath);
-            JObject jsonObj = JObject.Parse(jsonContent);
-            //遍历配置文件中的所有服务器ID
-            ServerIDs.Clear();
-            foreach (var item in jsonObj.Properties())
+            ServerConfigManager.LoadServerConfigs();
+            foreach (var item in ServerConfigManager.ServerConfigs)
             {
-                ServerIDs.Add(item.Name);
-            }
-            //根据服务器ID读取每个服务器的配置文件
-            ServerNames.Clear();
-            foreach (var ServerID in ServerIDs)
-            {
-                try
-                {
-                    string TargetedServerPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, $"$.{ServerID}");
-                    string TargetedConfigPath = Path.Combine(TargetedServerPath, "lslconfig.json");
-                    string KeyPath = "$.name";
-                    ServerNames.Add((string)JsonHelper.ReadJson(TargetedConfigPath, KeyPath));
-                }
-                catch (DirectoryNotFoundException ex)
-                {
-                    ServerNames.Add($"NonExist server{ServerID}");
-                    //throw new Exception($"服务器 {ServerID} 的路径不存在，请检查配置文件。\r错误消息：{ex.Message}");
-                }
+                ServerIDs.Add(item.Value.server_id);
+                ServerNames.Add(item.Value.name);
             }
             if (SelectedServerIndex > ServerNames.Count)
             {
