@@ -146,7 +146,69 @@
 				<BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
 			</Transitions>
 		</Setter>
-		<Style Selector="^:pointerover">
+		<Style Selector="^ /template/ Border#Background">
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Border.BorderBrush" Duration="0:0:0.1"/>
+					<BrushTransition Property="Border.Background" Duration="0:0:0.1"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<!--ComboBox控件悬停样式定义-->
+		<Style Selector="^:pointerover /template/ Border#Background">
+			<Setter Property="BorderBrush" Value="{DynamicResource OBlue}"/>
+			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+		</Style>
+	</Style>
+
+	<Style Selector="ComboBoxItem">
+		<Setter Property="Background" Value="Transparent"/>
+		<Setter Property="Foreground" Value="Black"/>
+		<Setter Property="BorderBrush" Value="Black"/>
+		<Setter Property="Transitions">
+			<Transitions>
+				<BrushTransition Property="Background" Duration="0:0:0.1"/>
+				<BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
+			</Transitions>
+		</Setter>
+		<Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Border.BorderBrush" Duration="0:0:0.1"/>
+					<BrushTransition Property="Border.Background" Duration="0:0:0.1"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<!--ComboBoxItem控件悬停样式定义-->
+		<Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="BorderBrush" Value="{DynamicResource OBlue}"/>
+			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+		</Style>
+		<!--ComboBoxItem控件选中样式定义-->
+		<Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="BorderBrush" Value="Black"/>
+			<Setter Property="Background" Value="{DynamicResource OBlue}"/>
+		</Style>
+	</Style>
+
+	<!--TextBox控件样式定义-->
+	<Style Selector="TextBox">
+		<Style Selector="^ /template/ Border#PART_BorderElement">
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Background" Duration="0:0:0.1"/>
+					<BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
+				</Transitions>
+			</Setter>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderBrush" Value="Black"/>
+		</Style>
+		<Style Selector="^:focus /template/ Border#PART_BorderElement">
+			<Setter Property="BorderBrush" Value="{DynamicResource OBlue}"/>
+			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+		</Style>
+		<!--TextBox控件悬停样式定义-->
+		<Style Selector="^:pointerover /template/ Border#PART_BorderElement">
 			<Setter Property="BorderBrush" Value="{DynamicResource OBlue}"/>
 			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
 		</Style>
