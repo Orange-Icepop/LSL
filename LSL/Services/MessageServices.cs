@@ -209,7 +209,7 @@ namespace LSL.Services
         }
         public void ThrowError(string message)
         {
-            EventBus.Instance.Publish<PopupMessageArgs>(new PopupMessageArgs { Type = 4, Title = "非致命错误", Message = message });
+            EventBus.Instance.Publish(new PopupMessageArgs { Type = 4, Title = "非致命错误", Message = message });
         }
     }
 }

@@ -134,4 +134,21 @@
 	<Style Selector="DataGrid">
 		<Setter Property="Background" Value="Transparent"/>
 	</Style>
+
+	<!--ComboBox控件样式定义-->
+	<Style Selector="ComboBox">
+		<Setter Property="Background" Value="Transparent"/>
+		<Setter Property="Foreground" Value="Black"/>
+		<Setter Property="BorderBrush" Value="Black"/>
+		<Setter Property="Transitions">
+			<Transitions>
+				<BrushTransition Property="Background" Duration="0:0:0.1"/>
+				<BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
+			</Transitions>
+		</Setter>
+		<Style Selector="^:pointerover">
+			<Setter Property="BorderBrush" Value="{DynamicResource OBlue}"/>
+			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+		</Style>
+	</Style>
 </Styles>
