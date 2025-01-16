@@ -196,18 +196,9 @@ namespace LSL.Services
     }
     #endregion
 
-    public class ErrorMessage// 快捷的非致命错误消息处理方式（手动狗头）
+    public static class ErrorMessage// 快捷的非致命错误消息处理方式（手动狗头）
     {
-        private static ErrorMessage _instance;
-        public static ErrorMessage Instance
-        {
-            get
-            {
-                _instance ??= new ErrorMessage();
-                return _instance;
-            }
-        }
-        public void ThrowError(string message)
+        public static void ThrowError(string message)
         {
             EventBus.Instance.Publish(new PopupMessageArgs { Type = 4, Title = "非致命错误", Message = message });
         }

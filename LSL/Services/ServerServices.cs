@@ -96,12 +96,13 @@ namespace LSL.Services
         {
             EnsureExited(serverId);
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
-            string serverPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, serverId);
+            ServerConfig config = ServerConfigManager.ServerConfigs[serverId];
+            string serverPath = config.server_path;
             string configPath = Path.Combine(serverPath, "lslconfig.json");
-            string corePath = Path.Combine(serverPath, (string)JsonHelper.ReadJson(configPath, "$.core_name"));
-            string javaPath = (string)JsonHelper.ReadJson(configPath, "$.using_java");
-            string MinMem = JsonHelper.ReadJson(configPath, "$.min_memory").ToString();
-            string MaxMem = JsonHelper.ReadJson(configPath, "$.max_memory").ToString();
+            string corePath = Path.Combine(serverPath, config.core_name);
+            string javaPath = config.using_java;
+            string MinMem = config.min_memory.ToString();
+            string MaxMem = config.max_memory.ToString();
             string arguments = $"-server -Xms{MinMem}M -Xmx{MaxMem}M -jar {corePath} nogui";
 
             ProcessStartInfo startInfo = new()// 提供服务器信息

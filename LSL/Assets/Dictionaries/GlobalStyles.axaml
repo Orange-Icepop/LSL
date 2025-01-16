@@ -131,9 +131,39 @@
 	</Style>
 
 	<!--DataGrid控件样式定义-->
-	<Style Selector="DataGrid">
+	<Style Selector="DataGridRow">
 		<Setter Property="Background" Value="Transparent"/>
+		<Setter Property="Transitions">
+			<Transitions>
+				<BrushTransition Property="Background" Duration="0:0:0.1"/>
+			</Transitions>
+		</Setter>
+		<Style Selector="^:pointerover">
+			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+		</Style>
 	</Style>
+	<Style Selector="DataGridCellsPresenter">
+		<Style Selector="^:pointerover">
+			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+		</Style>
+	</Style>
+	<Style Selector="DataGridColumnHeader">
+		<Setter Property="Background" Value="Transparent"/>
+		<Setter Property="Transitions">
+			<Transitions>
+				<BrushTransition Property="Background" Duration="0:0:0.1"/>
+			</Transitions>
+		</Setter>
+		<Style Selector="^:pointerover">
+			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+		</Style>
+	</Style>
+	<Style Selector="DataGridColumnHeadersPresenter">
+		<Style Selector="^:pointerover">
+			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+		</Style>
+	</Style>
+
 
 	<!--ComboBox控件样式定义-->
 	<Style Selector="ComboBox">
@@ -213,4 +243,6 @@
 			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
 		</Style>
 	</Style>
+	
+	
 </Styles>

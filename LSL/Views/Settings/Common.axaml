@@ -28,7 +28,8 @@
 						  ItemsSource="{Binding JavaVersions}"
 						  CanUserReorderColumns="False"
 						  CanUserResizeColumns="False"
-						  SelectionMode="Single"
+						  CanUserSortColumns="False"
+						  SelectionMode=""
 						  IsReadOnly="True"
 						  Width="800"
 						  HorizontalAlignment="Left">

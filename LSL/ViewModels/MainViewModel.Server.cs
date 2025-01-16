@@ -14,6 +14,7 @@ using System.Collections.ObjectModel;
 using DynamicData.Binding;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using LSL.Services.Validators;
 
 namespace LSL.ViewModels
 {
@@ -37,15 +38,36 @@ namespace LSL.ViewModels
         public ICommand ShutServerCmd { get; set; }// 结束服务器进程命令
         public void StartServer()//启动服务器方法
         {
+            var result = VerifyServerConfigBeforeStart(SelectedServerId);
+            if (result != null)
+            {
+                ErrorMessage.ThrowError(result);
+            }
             TerminalTexts.TryAdd(SelectedServerId, new StringBuilder());
             NavigateLeftView("ServerLeft");
             NavigateRightView("ServerTerminal");
             Task RunServer = Task.Run(() => ServerHost.Instance.RunServer(SelectedServerId));
         }
+
         public async void SendServerCommand(string message)// 发送服务器命令
         {
             await Task.Run(() => ServerHost.Instance.SendCommand(SelectedServerId, message));
         }
+
+        #region 启动前校验配置文件
+        public static string? VerifyServerConfigBeforeStart(string serverId)
+        {
+            var config = ServerConfigManager.ServerConfigs[serverId];
+            if (config == null) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件";
+            else if (!File.Exists(config.using_java)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在";
+            else
+            {
+                string configPath = Path.Combine(config.server_path, config.core_name);
+                if (!File.Exists(configPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的核心文件不存在";
+            }
+            return null;
+        }
+        #endregion
 
         #region 终端信息
         private ConcurrentDictionary<string, StringBuilder> TerminalTexts = new();// 服务器终端输出
