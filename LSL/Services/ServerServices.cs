@@ -276,7 +276,7 @@ namespace LSL.Services
             {
                 if (MsgWithoutTime.StartsWith('['))
                 {
-                    MsgWithoutTime = Output.Substring(MsgWithoutTime.IndexOf(':') + 2).Trim();
+                    MsgWithoutTime = MsgWithoutTime.Substring(MsgWithoutTime.IndexOf(':') + 1).Trim();
                 }
                 var MessagePieces = MsgWithoutTime.Split(' ');
                 if (MsgWithoutTime.Contains("UUID of player"))
