@@ -86,42 +86,7 @@ public partial class MainViewModel : ViewModelBase
         #endregion
 
         #region 配置相关命令实现
-        ConfirmAddServer = ReactiveCommand.Create(async () =>
-        {
-            string JavaPath = JavaManager.JavaDict[JavaId.ToString()].Path;
-            Dictionary<string, string> ServerInfo = new()
-            {
-                { "ServerName", NewServerName },
-                { "JavaPath", JavaPath },
-                { "CorePath", CorePath },
-                { "MinMem", MinMemory },
-                { "MaxMem", MaxMemory },
-                { "ExtJvm", ExtJvm }
-            };
-            var checkResult = CheckService.VerifyServerConfig(ServerInfo);
-            string ErrorInfo = "";
-            foreach (var item in checkResult)
-            {
-                if (item.Passed == false)
-                {
-                    ErrorInfo += $"{item.Reason}\r";
-                }
-                else continue;
-            }
-            if (ErrorInfo != "")
-            {
-                await ShowPopup(5, "服务器配置错误", ErrorInfo);
-                return;
-            }
-            string confirmResult = await ShowPopup(2, "确定添加此服务器吗？", $"服务器信息：\r名称：{NewServerName}\rJava路径：{JavaPath}\r核心文件路径：{CorePath}\r内存范围：{MinMemory} ~ {MaxMemory}\r附加JVM参数：{ExtJvm}（默认为空）");
-            if (confirmResult == "Yes")
-            {
-                ServerConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, uint.Parse(_minMemory), uint.Parse(_maxMemory), ExtJvm);
-                ReadServerList();
-                //NavigateRightView("AddServer");
-                FullViewBackCmd.Execute(null);
-            }
-        });// 添加服务器命令-实现
+        ConfirmAddServer = ReactiveCommand.Create(async () => await AddNewServer());// 添加服务器命令-实现
 
         DeleteServer = ReactiveCommand.Create(async () =>
         {

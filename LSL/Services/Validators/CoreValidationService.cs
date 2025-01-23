@@ -13,18 +13,28 @@ namespace LSL.Services.Validators
         public enum CoreType
         {
             Error,
-            Illegal,
             Unknown,
             Client,
             ForgeInstaller,
+            FabricInstaller,
             Forge,
+            Fabric,
             Server
         }
         public static CoreType Validate(string? filePath, out string ErrorMessage)
         {
             ErrorMessage = "";
-            if (string.IsNullOrEmpty(filePath)) return CoreType.Illegal;
-            if (!File.Exists(filePath)) return CoreType.Illegal;
+            if (string.IsNullOrEmpty(filePath))
+            {
+                ErrorMessage = "选定的路径为空";
+                return CoreType.Error;
+
+            }
+            if (!File.Exists(filePath))
+            {
+                ErrorMessage = "选定的文件/路径不存在";
+                return CoreType.Error;
+            }
             string? JarMainClass = GetMainClass(filePath);
             if (JarMainClass == null) return CoreType.Unknown;
             else if (JarMainClass.StartsWith("Access denied") || JarMainClass.StartsWith("Error"))
@@ -32,17 +42,19 @@ namespace LSL.Services.Validators
                 ErrorMessage = JarMainClass;
                 return CoreType.Error;
             }
-            else switch (JarMainClass)
+            else
+            {
+                return JarMainClass switch
                 {
-                    case "net.minecraft.server.MinecraftServer":
-                        return CoreType.Server;
-                    case "net.minecraft.client.Main":
-                        return CoreType.Client;
-                    case "net.minecraftforge.installer.SimpleInstaller":
-                        return CoreType.ForgeInstaller;
-                    default:
-                        return CoreType.Unknown;
-                }
+                    "net.minecraft.server.MinecraftServer" => CoreType.Server,
+                    "net.minecraft.bundler.Main" => CoreType.Server,
+                    "net.minecraft.client.Main" => CoreType.Client,
+                    "net.minecraftforge.installer.SimpleInstaller" => CoreType.ForgeInstaller,
+                    "net.fabricmc.installer.Main" => CoreType.FabricInstaller,
+                    "net.fabricmc.installer.ServerLauncher" => CoreType.Fabric,
+                    _ => CoreType.Unknown,
+                };
+            }
         }
         // the following code is taken from https://github.com/Orange-Icepop/JavaMainClassFinder
         public static string? GetMainClass(string jarFilePath)
@@ -52,7 +64,7 @@ namespace LSL.Services.Validators
                 using FileStream stream = new FileStream(jarFilePath, FileMode.Open);
                 using ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read);
                 ZipArchiveEntry? manifestEntry = archive.Entries.FirstOrDefault(entry => entry.FullName == "META-INF/MANIFEST.MF");
-                if (manifestEntry != null)
+                if (manifestEntry != null)// 对于较新版本的MC，MANIFEST.MF中应当包含Main-Class字段
                 {
                     using StreamReader reader = new StreamReader(manifestEntry.Open());
                     string manifestContent = reader.ReadToEnd();
@@ -89,6 +101,5 @@ namespace LSL.Services.Validators
             }
             return null;
         }
-
     }
 }
