@@ -9,7 +9,7 @@
 		<StackPanel>
 			<local:MyCard Text="导入服务器">
 				<StackPanel Margin="30,50">
-					<Button Classes="list" Content="从核心添加服务器" Width="1000" Height="30" Command="{Binding FullViewCmd}" CommandParameter="AddCore"/>
+					<local:MyListItem Content="从核心添加服务器" Height="30" Command="{Binding FullViewCmd}" CommandParameter="AddCore"/>
 				</StackPanel>
 			</local:MyCard>
 		</StackPanel>

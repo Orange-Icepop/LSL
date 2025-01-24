@@ -5,7 +5,10 @@
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              x:Class="LSL.Components.MyCard"
 			 PointerEntered="OnPointerEnter"
-			 PointerExited="OnPointerLeave">
+			 PointerExited="OnPointerLeave"
+			 HorizontalAlignment="Stretch"
+			 VerticalAlignment="Stretch"
+			 ColumnDefinitions="*">
 	<Grid.Resources>
 		<SolidColorBrush x:Key="TransWhite"/>
 		<SolidColorBrush x:Key="HeadTextColor"/>
