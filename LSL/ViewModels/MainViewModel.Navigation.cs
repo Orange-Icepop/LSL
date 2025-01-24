@@ -7,6 +7,8 @@ using ReactiveUI;
 using LSL.Services;
 using System.Collections.Generic;
 using LSL.Views;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace LSL.ViewModels
 {
@@ -122,6 +124,7 @@ namespace LSL.ViewModels
                 LeftWidth = originalLeftWidth;
                 NavigateLeftView(originalLeftView);
                 NavigateRightView(originalRightView);
+                EventBus.Instance.Publish(new BarChangedEventArgs { NavigateTarget = originalLeftView });
             });
             LeftWidth = 0;
             BarView = new FSBar();
