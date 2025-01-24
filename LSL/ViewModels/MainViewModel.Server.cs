@@ -58,12 +58,12 @@ namespace LSL.ViewModels
         public static string? VerifyServerConfigBeforeStart(string serverId)
         {
             var config = ServerConfigManager.ServerConfigs[serverId];
-            if (config == null) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件";
-            else if (!File.Exists(config.using_java)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在";
+            if (config == null) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
+            else if (!File.Exists(config.using_java)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
             else
             {
                 string configPath = Path.Combine(config.server_path, config.core_name);
-                if (!File.Exists(configPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的核心文件不存在";
+                if (!File.Exists(configPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的核心文件不存在。";
             }
             return null;
         }

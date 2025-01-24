@@ -142,7 +142,7 @@ namespace LSL.ViewModels
                     }
                 case CoreValidationService.CoreType.Unknown:
                     {
-                        validateResult = await ShowPopup(2, "未知的核心文件类型", "LSL无法确认您选择的文件是否为Minecraft服务端核心文件。\r这可能是由于LSL没有收集足够的关于服务器核心的辨识信息造成的。如果这是确实一个Minecraft服务端核心并且具有一定的知名度，请您前往LSL的仓库（https://github.com/Orange-Icepop/LSL）提交相关Issue。否则，您可以直接点击确认绕过校验，但是LSL及其开发团队不为因此造成的后果负任何义务或责任。");
+                        validateResult = await ShowPopup(2, "未知的核心文件类型", "LSL无法确认您选择的文件是否为Minecraft服务端核心文件。\r这可能是由于LSL没有收集足够的关于服务器核心的辨识信息造成的。如果这是确实一个Minecraft服务端核心并且具有一定的知名度，请您前往LSL的仓库（https://github.com/Orange-Icepop/LSL）提交相关Issue。\r您可以直接点击确认绕过校验，但是LSL及其开发团队不为因此造成的后果负任何义务或责任。");
                         break;
                     }
                 case CoreValidationService.CoreType.Client:
@@ -155,7 +155,7 @@ namespace LSL.ViewModels
                     break;
             }
             if (validateResult != "Yes") return;
-            string confirmResult = await ShowPopup(2, "确定添加此服务器吗？", $"服务器信息：\r名称：{NewServerName}\rJava路径：{JavaPath}\r核心文件路径：{CorePath}\r内存范围：{MinMemory} ~ {MaxMemory}\r附加JVM参数：{ExtJvm}（默认为空）");
+            string confirmResult = await ShowPopup(2, "确定添加此服务器吗？", $"服务器信息：\r名称：{NewServerName}\rJava路径：{JavaPath}\r核心文件路径：{CorePath}\r服务器类型：{coreResult}\r内存范围：{MinMemory} ~ {MaxMemory}\r附加JVM参数：{ExtJvm}");
             if (confirmResult == "Yes")
             {
                 ServerConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, uint.Parse(_minMemory), uint.Parse(_maxMemory), ExtJvm);
@@ -171,7 +171,7 @@ namespace LSL.ViewModels
             MinMemory = "200";
             MaxMemory = "500";
             JavaId = 0;
-            ExtJvm = "";
+            ExtJvm = "-Dlog4j2.formatMsgNoLookups=true";
         }
 
         private void LoadCurrentServerConfig()

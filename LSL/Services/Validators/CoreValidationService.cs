@@ -19,9 +19,17 @@ namespace LSL.Services.Validators
             FabricInstaller,
             Forge,
             Fabric,
-            Server
+            Arclight,
+            CatServer,
+            CraftBukkit,
+            Leaves,
+            LightFall,
+            Mohist,
+            Paper,
+            Vanilla,
+            Velocity,
         }
-        public static CoreType Validate(string? filePath, out string ErrorMessage)
+        public static CoreType Validate(string? filePath, out string ErrorMessage)// 校验核心类型
         {
             ErrorMessage = "";
             if (string.IsNullOrEmpty(filePath))
@@ -46,12 +54,24 @@ namespace LSL.Services.Validators
             {
                 return JarMainClass switch
                 {
-                    "net.minecraft.server.MinecraftServer" => CoreType.Server,
-                    "net.minecraft.bundler.Main" => CoreType.Server,
+                    "net.minecraft.server.MinecraftServer" => CoreType.Vanilla,
+                    "net.minecraft.bundler.Main" => CoreType.Vanilla,
                     "net.minecraft.client.Main" => CoreType.Client,
                     "net.minecraftforge.installer.SimpleInstaller" => CoreType.ForgeInstaller,
                     "net.fabricmc.installer.Main" => CoreType.FabricInstaller,
                     "net.fabricmc.installer.ServerLauncher" => CoreType.Fabric,
+                    "io.izzel.arclight.server.Launcher" => CoreType.Arclight,
+                    "catserver.server.CatServerLaunch" => CoreType.CatServer,
+                    "foxlaunch.FoxServerLauncher" => CoreType.CatServer,
+                    "org.bukkit.craftbukkit.Main" => CoreType.CraftBukkit,
+                    "org.bukkit.craftbukkit.bootstrap.Main" => CoreType.CraftBukkit,
+                    "io.papermc.paperclip.Main" => CoreType.Paper,
+                    "org.leavesmc.leavesclip.Main" => CoreType.Leaves,
+                    "net.md_5.bungee.Bootstrap" => CoreType.LightFall,
+                    "com.mohistmc.MohistMCStart" => CoreType.Mohist,
+                    "com.mohistmc.MohistMC" => CoreType.Mohist,
+                    "com.destroystokyo.paperclip.Paperclip" => CoreType.Paper,
+                    "com.velocitypowered.proxy.Velocity" => CoreType.Velocity,
                     _ => CoreType.Unknown,
                 };
             }
