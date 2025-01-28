@@ -3,9 +3,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using System.Linq;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace LSL.Components
@@ -29,8 +31,7 @@ namespace LSL.Components
         public MyCard()
         {
             InitializeComponent();
-            this.Resources["TransWhite"] = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255));
-            this.Resources["HeadTextColor"] = new SolidColorBrush(Colors.Black);
+            this.Loaded += MyCardLoaded;
         }
 
         private void OnPointerEnter(object sender, PointerEventArgs e)
@@ -43,6 +44,22 @@ namespace LSL.Components
         {
             this.Resources["TransWhite"] = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255));
             this.Resources["HeadTextColor"] = new SolidColorBrush(Colors.Black);
+        }
+
+        private void MyCardLoaded(object sender, RoutedEventArgs e)
+        {
+            this.Resources["TransWhite"] = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255));
+            this.Resources["HeadTextColor"] = new SolidColorBrush(Colors.Black);
+            /*
+            foreach (var item in this.Children.ToList())
+            {
+                if (item !=border)
+                {
+                    this.Children.Remove(item);
+                    stackpanel.Children.Add(item);
+                }
+            }
+            */
         }
     }
 }

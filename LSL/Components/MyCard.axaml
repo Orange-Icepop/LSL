@@ -34,12 +34,13 @@
 			</Style>
 		</Style>
 	</Grid.Styles>
-	<Border Margin="10"
+	<Border Name="border"
+			Margin="10"
 			Padding="20,0,20,40"
 			BorderThickness="0"
 			CornerRadius="10"
-			BoxShadow="3 3 3 0 DarkGray">
-		<StackPanel Background="Transparent">
+			BoxShadow="0 0 10 -2 Gray">
+		<StackPanel Background="Transparent" Name="stackpanel">
 			<TextBlock Name="titleText"
 					   Text="{Binding $parent[2].Text}"
 					   FontSize="15"

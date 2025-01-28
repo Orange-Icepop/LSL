@@ -13,6 +13,7 @@
 					<Border BorderBrush="Black"
 							BorderThickness="0"
 							Background="{TemplateBinding Background}"
+							Padding="{TemplateBinding Padding}"
 							CornerRadius="5">
 						<ContentPresenter Content="{TemplateBinding Content}"
 										  ContentTemplate="{TemplateBinding ContentTemplate}"
@@ -23,14 +24,17 @@
 			</Setter>
 			<Setter Property="Background" Value="Transparent"/>
 			<Setter Property="Foreground" Value="Black"/>
-			<Setter Property="Height" Value="30"/>
 			<Setter Property="FontSize" Value="15"/>
 			<Style Selector="^:pointerover">
 				<Setter Property="Background" Value="{StaticResource OBlueLight}"/>
 			</Style>
+			<Style Selector="^:pressed">
+				<Setter Property="RenderTransform" Value="scale(0.99)" />
+			</Style>
 			<Setter Property="Transitions">
 				<Transitions>
 					<BrushTransition Property="Background" Duration="0:0:0.2"/>
+					<TransformOperationsTransition Property="RenderTransform" Duration="0:0:.075" />
 				</Transitions>
 			</Setter>
 		</Style>

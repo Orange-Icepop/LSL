@@ -11,8 +11,10 @@
 					<Border BorderBrush="{TemplateBinding BorderBrush}"
 							BorderThickness="{TemplateBinding BorderThickness}"
 							Background="{TemplateBinding Background}"
+							Padding="{TemplateBinding Padding}"
 							CornerRadius="5">
-						<ContentPresenter Content="{TemplateBinding Content}"
+						<ContentPresenter x:Name="PART_ContentPresenter"
+										  Content="{TemplateBinding Content}"
 										  ContentTemplate="{TemplateBinding ContentTemplate}"
 										  HorizontalAlignment="Center"
 										  VerticalAlignment="Center"/>
@@ -30,8 +32,13 @@
 					<BrushTransition Property="Background" Duration="0:0:0.1"/>
 					<BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
 					<BrushTransition Property="Foreground" Duration="0:0:0.1"/>
+					<TransformOperationsTransition Property="RenderTransform" Duration="0:0:.075" />
 				</Transitions>
 			</Setter>
+			<!--鼠标按下样式定义-->
+			<Style Selector="^:pressed">
+				<Setter Property="RenderTransform" Value="scale(0.98)" />
+			</Style>
 			<!--普通按钮鼠标悬停样式定义-->
 			<Style Selector="^:pointerover">
 				<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
