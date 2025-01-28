@@ -238,7 +238,7 @@ namespace LSL.Services
         #endregion
     }
 
-    public class OutputHandler
+    public class OutputHandler// 服务端输出预处理
     {
         static OutputHandler()
         {
@@ -250,10 +250,11 @@ namespace LSL.Services
             Task.Run(() => OutputProcessor(args.ServerId, args.Output));
         }
 
-        private static Dictionary<string, string> PlayerPool = new Dictionary<string, string>();
+        private static Dictionary<string, string> PlayerPool = new();
 
         private static async void OutputProcessor(string ServerId, string Output)
         {
+            if (Output.Substring(1, 3) == "LSL") return;
             bool isMsgWithTime;
             string MsgWithoutTime;
             // 检测消息是否带有时间戳
@@ -294,6 +295,7 @@ namespace LSL.Services
 
                 if (MsgWithoutTime.StartsWith("Done"))
                 {
+                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId= ServerId, Output = "[LSL 消息]: 服务器启动成功！" });
                     EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Status = true });
                 }
 

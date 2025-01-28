@@ -82,20 +82,18 @@ namespace LSL.ViewModels
         {
             Dispatcher.UIThread.Post(() => PopupOpacity = 0);
             await Task.Delay(200);
-            Dispatcher.UIThread.Post(ResetPopupS2);
-        }
+            Dispatcher.UIThread.Post(()=>
+            {
+                PopupVisible = false;
+                PopupTitle = "";
+                PopupContent = "";
+                PopupColor = new SolidColorBrush(Colors.Black);
 
-        public void ResetPopupS2()
-        {
-            PopupVisible = false;
-            PopupTitle = "";
-            PopupContent = "";
-            PopupColor = new SolidColorBrush(Colors.Black);
-
-            ConfirmButton = false;
-            CancelButton = false;
-            YesButton = false;
-            NoButton = false;
+                ConfirmButton = false;
+                CancelButton = false;
+                YesButton = false;
+                NoButton = false;
+            });
         }
 
         //PopupÕ‚≤ø∑√Œ ∆˜

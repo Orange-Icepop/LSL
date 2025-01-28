@@ -47,6 +47,7 @@ namespace LSL.ViewModels
             NavigateLeftView("ServerLeft");
             NavigateRightView("ServerTerminal");
             Task RunServer = Task.Run(() => ServerHost.Instance.RunServer(SelectedServerId));
+            Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
         }
 
         public async void SendServerCommand(string message)// 发送服务器命令

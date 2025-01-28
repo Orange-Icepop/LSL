@@ -24,6 +24,7 @@ public partial class MainViewModel : ViewModelBase
             ArgumentNullException.ThrowIfNull(url);
             //if (url.IndexOf("http://") != 1 && url.IndexOf("https://") != 1) throw new ArgumentException("URL格式错误");
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            Notify(1, "成功打开了网页！", url);
         }
         catch (System.ComponentModel.Win32Exception noBrowser)
         {
@@ -151,6 +152,7 @@ public partial class MainViewModel : ViewModelBase
 
         #region 其它命令实现
         OpenWebPageCmd = ReactiveCommand.Create<string>(OpenWebPage);// 打开网页命令-实现
+        NotifyCommand = ReactiveCommand.Create(() => EventBus.Instance.Publish(new ViewBroadcastArgs { Target = "MainWindow.axaml.cs", Message = "Notify" }));// 通知命令-实现
         #endregion
 
         // 事件订阅
