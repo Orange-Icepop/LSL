@@ -297,7 +297,7 @@ namespace LSL.Services
 
         #region 读取配置键值
         // 当前配置字典
-        public static readonly Dictionary<string, object> CurrentConfigs = new();
+        public static readonly Dictionary<string, object> CurrentConfigs = [];
 
         public static void LoadConfig()
         {
@@ -310,27 +310,18 @@ namespace LSL.Services
             {
                 throw new ArgumentException($"{ConfigFilePath} 文件已损坏，请备份并删除该文件重试。");
             }
-            List<string> keysNeedToRepair = new();// 需要修复的键
+            List<string> keysNeedToRepair = [];// 需要修复的键
             CurrentConfigs.Clear();// 清空当前配置字典
             foreach (var key in ConfigKeys)
             {
                 JToken config = configs[key];
-                object? keyValue;
-                switch (config.Type)// 根据值类型读取
+                object? keyValue = config.Type switch// 根据值类型读取
                 {
-                    case JTokenType.Boolean:
-                        keyValue = config.Value<bool>();
-                        break;
-                    case JTokenType.Integer:
-                        keyValue = config.Value<int>();
-                        break;
-                    case JTokenType.String:
-                        keyValue = config.Value<string>();
-                        break;
-                    default:
-                        keyValue = null;
-                        break;
-                }
+                    JTokenType.Boolean => config.Value<bool>(),
+                    JTokenType.Integer => config.Value<int>(),
+                    JTokenType.String => config.Value<string>(),
+                    _ => null,
+                };
                 if (keyValue == null || !CheckService.VerifyConfig(key, keyValue))
                 {
                     CurrentConfigs.Add(key, DefaultConfigs[key]);
@@ -395,7 +386,7 @@ namespace LSL.Services
 
     public class ServerConfigManager//服务器配置相关服务
     {
-        public static Dictionary<string, ServerConfig> ServerConfigs = new();
+        public static Dictionary<string, ServerConfig> ServerConfigs = [];
 
         public static readonly List<string> ServerConfigKeys =
             [
@@ -411,9 +402,9 @@ namespace LSL.Services
         #region 读取各个服务器的LSL配置文件ReadServerConfig
         public static void LoadServerConfigs()
         {
-            ServerConfigs = new();
-            List<string> NotfoundServers = new();
-            List<string> ConfigErrorServers = new();
+            ServerConfigs = [];
+            List<string> NotfoundServers = [];
+            List<string> ConfigErrorServers = [];
             // 读取服务器主配置文件
             string mainFile = "";
             try
@@ -423,9 +414,9 @@ namespace LSL.Services
             }
             catch (FileNotFoundException)
             {
-                ErrorMessage.ThrowError($"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。");
+                QuickHandler.ThrowError($"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。");
             }
-            Dictionary<string, string> MainConfigs = new();
+            Dictionary<string, string> MainConfigs = [];
             try
             {
                 var configs = JsonConvert.DeserializeObject<Dictionary<string, string>>(mainFile);
@@ -453,7 +444,7 @@ namespace LSL.Services
                     continue;
                 }
                 // 解析步骤
-                Dictionary<string, string>? serverConfig = new();
+                Dictionary<string, string>? serverConfig = [];
                 try
                 {
                     serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile);
@@ -479,7 +470,7 @@ namespace LSL.Services
                 else if (ConfigErrorServers.Count > 0) ErrorContext += "格式错误的服务器配置文件。";
                 if (NotfoundServers.Count > 0) ErrorContext += "\r不存在的服务器：" + string.Join(", \r", NotfoundServers) + "\r请确保" + ConfigManager.ServerConfigPath + "文件中的服务器名称与实际服务器文件夹名称一致。";
                 if (ConfigErrorServers.Count > 0) ErrorContext += "\r格式错误的服务器配置文件：" + string.Join(", \r", ConfigErrorServers) + "\r请确保这些配置文件的格式正确。";
-                ErrorMessage.ThrowError(ErrorContext);
+                QuickHandler.ThrowError(ErrorContext);
             }
         }
         #endregion
@@ -607,7 +598,7 @@ namespace LSL.Services
     public static class JavaManager//Java相关服务
     {
 
-        public static Dictionary<string, JavaInfo> JavaDict = new();// 目前读取的Java列表
+        public static Dictionary<string, JavaInfo> JavaDict = [];// 目前读取的Java列表
 
         #region 读取Java列表
         public static void InitJavaDict()

@@ -41,7 +41,7 @@ namespace LSL.Services
             {
                 if (!_handlers.ContainsKey(typeof(TEvent)))
                 {
-                    _handlers[typeof(TEvent)] = new List<Delegate>();
+                    _handlers[typeof(TEvent)] = [];
                 }
 
                 _handlers[typeof(TEvent)].Add(handler);
@@ -204,11 +204,15 @@ namespace LSL.Services
     }
     #endregion
 
-    public static class ErrorMessage// 快捷的非致命错误消息处理方式（手动狗头）
+    public static class QuickHandler// 快捷的消息处理方式（手动狗头）
     {
         public static void ThrowError(string message)
         {
             EventBus.Instance.Publish(new PopupMessageArgs { Type = 4, Title = "非致命错误", Message = message });
+        }
+        public static void SendNotify(int type, string title, string message)
+        {
+            EventBus.Instance.Publish(new NotifyArgs { Type = type, Title = title, Message = message });
         }
     }
 }

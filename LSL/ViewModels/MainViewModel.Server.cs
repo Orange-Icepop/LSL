@@ -41,7 +41,7 @@ namespace LSL.ViewModels
             var result = VerifyServerConfigBeforeStart(SelectedServerId);
             if (result != null)
             {
-                ErrorMessage.ThrowError(result);
+                QuickHandler.ThrowError(result);
             }
             TerminalTexts.TryAdd(SelectedServerId, new StringBuilder());
             NavigateLeftView("ServerLeft");
@@ -164,7 +164,7 @@ namespace LSL.ViewModels
             get
             {
                 var dictValue = ServerPlayers.GetOrAdd(SelectedServerId, new Dictionary<string, string>());
-                ObservableCollection<UUID_Player> value = new();
+                ObservableCollection<UUID_Player> value = [];
                 foreach (var item in dictValue)
                 {
                     value.Add(new UUID_Player(item.Value, item.Key));
@@ -214,7 +214,7 @@ namespace LSL.ViewModels
         public string CurrentServerPath { get => CurrentServerConfig.server_path; }
         public string CurrentServerJava { get => CurrentServerConfig.using_java; }
 
-        public Dictionary<string, object> CurrentServerProperty = new();// 当前服务器server.properties字典
+        public Dictionary<string, object> CurrentServerProperty = [];// 当前服务器server.properties字典
         public bool ReadProperties()// 读取当前服务器server.properties
         {
             try
@@ -223,11 +223,13 @@ namespace LSL.ViewModels
                 CurrentServerProperty.Clear();
                 foreach (var line in text)
                 {
-                    if (line.StartsWith("#")) continue;
-                    var keyValue = line.Split('=');
-                    if (keyValue.Length == 2)
+                    if (!line.StartsWith('#'))
                     {
-                        CurrentServerProperty.Add(keyValue[0], keyValue[1]);
+                        var keyValue = line.Split('=');
+                        if (keyValue.Length == 2)
+                        {
+                            CurrentServerProperty.Add(keyValue[0], keyValue[1]);
+                        }
                     }
                 }
                 return true;

@@ -36,7 +36,7 @@ namespace LSL.Services
 
         // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在MainViewModel中将列表项解析为ServerId
 
-        private Dictionary<string, Process> _runningServers = new();// 存储正在运行的服务器实例
+        private Dictionary<string, Process> _runningServers = [];// 存储正在运行的服务器实例
 
         private readonly ReaderWriterLockSlim _lock = new();// 读写锁
 
@@ -112,39 +112,49 @@ namespace LSL.Services
                 CreateNoWindow = true
             };
             // 启动服务器
-            using Process process = Process.Start(startInfo);
-            LoadServer(serverId, process);
-            EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器正在启动，请稍后......." });
-            process.EnableRaisingEvents = true;
-
-            process.OutputDataReceived += (sender, e) =>
+            Process? process = Process.Start(startInfo);
+            if (process == null)
             {
-                if (!string.IsNullOrEmpty(e.Data))
+                EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器启动失败，请检查配置文件。" });
+            }
+            else
+            {
+                using (process)
                 {
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
+                    LoadServer(serverId, process);
+                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器正在启动，请稍后......" });
+                    process.EnableRaisingEvents = true;
+
+                    process.OutputDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
+                        }
+                    };
+
+                    process.ErrorDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
+                        }
+                    };
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
+
+                    process.Exited += (sender, e) =>
+                    {
+                        // 移除进程的实例
+                        UnloadServer(serverId);
+                        string status = $"已关闭，进程退出码为{process.ExitCode}";
+                        EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Status = false });
+                        EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器" + status });
+                    };
+
+                    process.WaitForExit();
                 }
-            };
-
-            process.ErrorDataReceived += (sender, e) =>
-            {
-                if (!string.IsNullOrEmpty(e.Data))
-                {
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
-                }
-            };
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            process.Exited += (sender, e) =>
-            {
-                // 移除进程的实例
-                UnloadServer(serverId);
-                string status = $"已关闭，进程退出码为{process.ExitCode}";
-                EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Status = false });
-                EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器" + status });
-            };
-
-            process.WaitForExit();
+            }
         }
         #endregion
 
@@ -246,7 +256,7 @@ namespace LSL.Services
             Task.Run(() => OutputProcessor(args.ServerId, args.Output));
         }
 
-        private static Dictionary<string, string> PlayerPool = new();
+        private static Dictionary<string, string> PlayerPool = [];
 
         private static async void OutputProcessor(string ServerId, string Output)
         {

@@ -5,10 +5,10 @@
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerTerminal">
-	<DockPanel LastChildFill="True" Width="950" Height="590">
+	<DockPanel LastChildFill="True" Height="590">
 		<DockPanel DockPanel.Dock="Bottom" Height="70">
 			<local:MyCard DockPanel.Dock="Right" Width="200">
-				<Grid Margin="0,10,0,0" VerticalAlignment="Center" HorizontalAlignment="Center" ColumnDefinitions="*,*,*">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" ColumnDefinitions="*,*,*">
 					<local:MyButton BorderThickness="2"
 							Padding="0"
 							VerticalAlignment="Center"
@@ -50,10 +50,10 @@
 			<local:MyCard DockPanel.Dock="Right"/>
 		</DockPanel>
 		<local:MyCard Text="终端">
-			<ScrollViewer VerticalAlignment="Top"
+			<ScrollViewer VerticalAlignment="Stretch"
 						  HorizontalAlignment="Left"
-						  Width="{Binding $parent[0].Width}"
 						  Margin="30,60,30,20"
+						  VerticalScrollBarVisibility="Auto"
 						  Name="TerminalScroll">
 				<TextBlock TextWrapping="Wrap"
 						   IsEnabled="True"
