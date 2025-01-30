@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -36,53 +37,26 @@ namespace LSL.Services
 
         // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在MainViewModel中将列表项解析为ServerId
 
-        private Dictionary<string, Process> _runningServers = [];// 存储正在运行的服务器实例
-
-        private readonly ReaderWriterLockSlim _lock = new();// 读写锁
+        private ConcurrentDictionary<string, Process> _runningServers = [];// 存储正在运行的服务器实例
 
         #region 存储服务器进程实例LoadServer(string serverId, Process process)
         public void LoadServer(string serverId, Process process)
         {
-            _lock.EnterWriteLock();
-            try
-            {
-                _runningServers.Add(serverId, process);
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
+            _runningServers.AddOrUpdate(serverId, process, (key, value) => process);
         }
         #endregion
 
         #region 移除服务器进程实例UnloadServer(string serverId)
         public void UnloadServer(string serverId)
         {
-            _lock.EnterWriteLock();
-            try
-            {
-                _runningServers.Remove(serverId);
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
+            _runningServers.TryRemove(serverId, out _);
         }
         #endregion
 
         #region 获取服务器进程实例GetServer(string serverId)
         public Process? GetServer(string serverId)
         {
-            _lock.EnterReadLock();
-            try
-            {
-                return _runningServers[serverId];
-            }
-            catch { return null; }
-            finally
-            {
-                _lock.ExitReadLock();
-            }
+            return _runningServers.TryGetValue(serverId, out Process? process) ? process : null;
         }
         #endregion
 
@@ -147,9 +121,17 @@ namespace LSL.Services
                     {
                         // 移除进程的实例
                         UnloadServer(serverId);
-                        string status = $"已关闭，进程退出码为{process.ExitCode}";
-                        EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Status = false });
-                        EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器" + status });
+                        string exitCode = "Unknown，因为服务端进程以异常的方式结束了";
+                        try
+                        {
+                            exitCode = process.ExitCode.ToString();
+                        }
+                        finally
+                        {
+                            string status = $"已关闭，进程退出码为{exitCode}";
+                            EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Status = false });
+                            EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器" + status });
+                        }
                     };
 
                     process.WaitForExit();
@@ -189,12 +171,8 @@ namespace LSL.Services
             {
                 serverProcess.Kill();
                 serverProcess.Dispose();
-                UnloadServer(serverId);
             }
-            else
-            {
-                UnloadServer(serverId);
-            }
+            UnloadServer(serverId);
         }
         #endregion
 
