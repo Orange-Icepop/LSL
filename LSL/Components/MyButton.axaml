@@ -45,6 +45,10 @@
 				<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
 				<Setter Property="Background" Value="{DynamicResource OBlueLight}"/>
 			</Style>
+			<!--禁用样式-->
+			<Style Selector="^:disabled">
+				<Setter Property="Background" Value="gray"/>
+			</Style>
 			<!--首选蓝色按钮样式定义-->
 			<Style Selector="^.highlight">
 				<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>

@@ -7,7 +7,7 @@
              x:Class="LSL.Views.Settings.StyleSettings">
 	<StackPanel>
 		<local:MyCard Text="个性化">
-			<StackPanel Margin="30,40,0,15">
+			<StackPanel Margin="25,40,23,15">
 				<TextBlock HorizontalAlignment="Center" FontSize="20" Text="该功能暂未开放！"/>
 			</StackPanel>
 		</local:MyCard>

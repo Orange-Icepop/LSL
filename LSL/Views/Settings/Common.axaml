@@ -7,7 +7,7 @@
              x:Class="LSL.Views.Settings.Common">
 	<StackPanel>
 		<local:MyCard Text="常规设置">
-			<StackPanel Margin="30,40,0,15">
+			<StackPanel Margin="25,40,23,15">
 				<CheckBox Margin="0,10,0,5" IsChecked="{Binding AutoEula}">自动同意EULA</CheckBox>
 				<DockPanel Margin="0,5,0,5">
 					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="进程优先级"/>
@@ -23,13 +23,12 @@
 		</local:MyCard>
 
 		<local:MyCard Text="Java设置">
-			<StackPanel Margin="30,40,0,15">
+			<StackPanel Margin="25,40,23,15">
 				<DataGrid Margin="0,5,0,5"
 						  ItemsSource="{Binding JavaVersions}"
 						  CanUserReorderColumns="False"
 						  CanUserResizeColumns="False"
 						  CanUserSortColumns="False"
-						  SelectionMode=""
 						  IsReadOnly="True"
 						  Width="800"
 						  HorizontalAlignment="Left">
@@ -46,15 +45,15 @@
 					</DataGrid.Columns>
 				</DataGrid>
 				<DockPanel Margin="0,5,0,5">
-					<local:MyButton ColorType="Highlight" HorizontalAlignment="Left" Margin="0,0,10,0" Width="100" Height="30" Command="{Binding SearchJava}">查找可用Java</local:MyButton>
-					<local:MyButton HorizontalAlignment="Left" Margin="0,0,10,0" Width="100" Height="30">手动选择Java</local:MyButton>
+					<local:MyButton ColorType="Highlight" HorizontalAlignment="Left" Margin="0,0,10,0" Width="120" Height="30" Command="{Binding SearchJava}">查找可用Java</local:MyButton>
+					<local:MyButton HorizontalAlignment="Left" Margin="0,0,10,0" Width="120" Height="30">手动选择Java</local:MyButton>
 				</DockPanel>
 				<CheckBox Margin="0,5,0,5" IsChecked="{Binding AutoFindJava}">启动时自动刷新Java列表</CheckBox>
 			</StackPanel>
 		</local:MyCard>
 
 		<local:MyCard Text="终端设置">
-			<StackPanel Margin="30,40,0,15">
+			<StackPanel Margin="25,40,23,15">
 				<DockPanel Margin="0,10,0,5">
 					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="输出编码格式"/>
 					<ComboBox Name="OutputEncodeType" Margin="0,0,10,0" Width="300" SelectedIndex="{Binding OutputEncode}">

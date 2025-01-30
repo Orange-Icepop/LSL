@@ -50,7 +50,6 @@ namespace LSL.Components
         {
             this.Resources["TransWhite"] = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255));
             this.Resources["HeadTextColor"] = new SolidColorBrush(Colors.Black);
-            /*
             foreach (var item in this.Children.ToList())
             {
                 if (item !=border)
@@ -59,7 +58,6 @@ namespace LSL.Components
                     stackpanel.Children.Add(item);
                 }
             }
-            */
         }
     }
 }

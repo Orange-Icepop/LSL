@@ -8,8 +8,9 @@
 	<DockPanel LastChildFill="True" Width="950" Height="590">
 		<DockPanel DockPanel.Dock="Bottom" Height="70">
 			<local:MyCard DockPanel.Dock="Right" Width="200">
-				<Grid Margin="20,0,20,0" VerticalAlignment="Center" HorizontalAlignment="Center" ColumnDefinitions="*,*,*">
-					<Button BorderThickness="2"
+				<Grid Margin="0,10,0,0" VerticalAlignment="Center" HorizontalAlignment="Center" ColumnDefinitions="*,*,*">
+					<local:MyButton BorderThickness="2"
+							Padding="0"
 							VerticalAlignment="Center"
 							Grid.Column="0" Margin="2"
 							Command="{Binding StopServerCmd}"
@@ -20,8 +21,9 @@
 								   VerticalAlignment="Center"
 								   Margin="8,5"
 								   FontSize="14"/>
-					</Button>
-					<Button BorderThickness="2"
+					</local:MyButton>
+					<local:MyButton BorderThickness="2"
+							Padding="0"
 							VerticalAlignment="Center"
 							Grid.Column="1" Margin="2"
 							Command="{Binding SaveServerCmd}"
@@ -31,8 +33,8 @@
 								   VerticalAlignment="Center"
 								   Margin="8,5"
 								   FontSize="14"/>
-					</Button>
-					<Button BorderThickness="2"
+					</local:MyButton>
+					<local:MyButton BorderThickness="2"
 							VerticalAlignment="Center"
 							Grid.Column="2" Margin="2"
 							Command="{Binding ShutServerCmd}"
@@ -42,7 +44,7 @@
 								   VerticalAlignment="Center"
 								   Margin="8,5"
 								   FontSize="14"/>
-					</Button>
+					</local:MyButton>
 				</Grid>
 			</local:MyCard>
 			<local:MyCard DockPanel.Dock="Right"/>

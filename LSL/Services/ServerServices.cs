@@ -1,14 +1,9 @@
-﻿using Microsoft.Extensions.Hosting;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using LSL.Services;
 
 namespace LSL.Services
 {
@@ -76,7 +71,7 @@ namespace LSL.Services
         #endregion
 
         #region 获取服务器进程实例GetServer(string serverId)
-        public Process GetServer(string serverId)
+        public Process? GetServer(string serverId)
         {
             _lock.EnterReadLock();
             try
@@ -156,7 +151,7 @@ namespace LSL.Services
         #region 发送命令SendCommand(string serverId, string command)
         public async void SendCommand(string serverId, string command)
         {
-            Process server = GetServer(serverId);
+            Process? server = GetServer(serverId);
             if (CheckProcess(server))
             {
                 if (command == "stop")
@@ -179,14 +174,14 @@ namespace LSL.Services
         #region 强制结束服务器进程EndServer(string serverId)
         public void EndServer(string serverId)
         {
-            Process serverProcess = GetServer(serverId);
+            Process? serverProcess = GetServer(serverId);
             if (CheckProcess(serverProcess))
             {
                 serverProcess.Kill();
                 serverProcess.Dispose();
                 UnloadServer(serverId);
             }
-            else if (serverProcess.HasExited)
+            else
             {
                 UnloadServer(serverId);
             }
@@ -211,7 +206,7 @@ namespace LSL.Services
         #region 确保进程退出命令EnsureExited(string serverId)
         public void EnsureExited(string serverId)
         {
-            Process server = GetServer(serverId);
+            Process? server = GetServer(serverId);
             if (server == null) { return; }
             else if (!server.HasExited)
             {
@@ -226,12 +221,13 @@ namespace LSL.Services
         #endregion
 
         #region 检查服务器进程是否存在CheckProcess(string serverId)
-        public bool CheckProcess(Process process)
+        public static bool CheckProcess(Process? process)
         {
             try
             {
-                if (process != null && !process.HasExited) return true;
-                else return false;
+                if (process == null) return false;
+                else if (process.HasExited) return false;
+                else return true;
             }
             catch (InvalidOperationException) { return false; }
         }
@@ -295,7 +291,7 @@ namespace LSL.Services
 
                 if (MsgWithoutTime.StartsWith("Done"))
                 {
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId= ServerId, Output = "[LSL 消息]: 服务器启动成功！" });
+                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = ServerId, Output = "[LSL 消息]: 服务器启动成功！" });
                     EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Status = true });
                 }
 

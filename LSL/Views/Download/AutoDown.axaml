@@ -7,7 +7,8 @@
              x:Class="LSL.Views.Download.AutoDown">
 	<StackPanel>
 		<local:MyCard Text="自动下载">
-			
+			<DockPanel Margin="25,40,23,15">
+			</DockPanel>
 		</local:MyCard>
 	</StackPanel>
 </UserControl>

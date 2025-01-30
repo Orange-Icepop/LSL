@@ -36,17 +36,17 @@
 	</Grid.Styles>
 	<Border Name="border"
 			Margin="10"
-			Padding="20,0,20,40"
+			Padding="0"
 			BorderThickness="0"
 			CornerRadius="10"
 			BoxShadow="0 0 10 -2 Gray">
-		<StackPanel Background="Transparent" Name="stackpanel">
+		<Grid Background="Transparent" Name="stackpanel">
 			<TextBlock Name="titleText"
 					   Text="{Binding $parent[2].Text}"
 					   FontSize="15"
 					   FontWeight="Bold"
-					   Margin="0,15,0,15"/>
-			<!-- 这里可以放置你的子元素，或者使用 ContentControl 来绑定 Content -->
-		</StackPanel>
+					   Margin="20,15,20,0"
+					   Grid.Row="0"/>
+		</Grid>
 	</Border>
 </Grid>

@@ -131,39 +131,45 @@
 	</Style>
 
 	<!--DataGrid控件样式定义-->
+	<!--DataGrid行-->
 	<Style Selector="DataGridRow">
-		<Setter Property="Background" Value="Transparent"/>
-		<Setter Property="Transitions">
-			<Transitions>
-				<BrushTransition Property="Background" Duration="0:0:0.1"/>
-			</Transitions>
-		</Setter>
-		<Style Selector="^:pointerover">
-			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+		<Style Selector="^ /template/ Rectangle#BackgroundRectangle">
+			<Setter Property="Fill" Value="Transparent"/>
+			<Setter Property="RadiusX" Value="5"/>
+			<Setter Property="RadiusY" Value="5"/>
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Fill" Duration="0:0:0.1"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<Style Selector="^:pointerover /template/ Rectangle#BackgroundRectangle">
+			<Setter Property="Fill" Value="{DynamicResource OBlueWhite}"/>
+		</Style>
+		<Style Selector="^:selected /template/ Rectangle#BackgroundRectangle">
+			<Setter Property="Fill" Value="{DynamicResource OBlue}"/>
 		</Style>
 	</Style>
-	<Style Selector="DataGridCellsPresenter">
-		<Style Selector="^:pointerover">
-			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
-		</Style>
-	</Style>
+	<!--DataGrid表头-->
 	<Style Selector="DataGridColumnHeader">
-		<Setter Property="Background" Value="Transparent"/>
-		<Setter Property="Transitions">
-			<Transitions>
-				<BrushTransition Property="Background" Duration="0:0:0.1"/>
-			</Transitions>
-		</Setter>
-		<Style Selector="^:pointerover">
+		<Style Selector="^ /template/ Grid#PART_ColumnHeaderRoot">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Background" Duration="0:0:0.1"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<Style Selector="^:pointerover /template/ Grid#PART_ColumnHeaderRoot">
 			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
 		</Style>
 	</Style>
-	<Style Selector="DataGridColumnHeadersPresenter">
-		<Style Selector="^:pointerover">
-			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+	<!--DataGrid单元格-->
+	<Style Selector="DataGridCell">
+		<Style Selector="^:focus /template/ Grid#FocusVisual">
+			<Setter Property="IsVisible" Value="False" />
 		</Style>
 	</Style>
-
 
 	<!--ComboBox控件样式定义-->
 	<Style Selector="ComboBox">
@@ -243,6 +249,6 @@
 			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
 		</Style>
 	</Style>
-	
-	
+
+
 </Styles>

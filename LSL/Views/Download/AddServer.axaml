@@ -8,7 +8,7 @@
 	<ScrollViewer>
 		<StackPanel>
 			<local:MyCard Text="导入服务器">
-				<StackPanel Margin="30,50">
+				<StackPanel Margin="25,40,23,15">
 					<local:MyListItem Content="从核心添加服务器" Height="30" Command="{Binding FullViewCmd}" CommandParameter="AddCore"/>
 				</StackPanel>
 			</local:MyCard>
