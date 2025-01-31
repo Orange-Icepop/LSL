@@ -50,6 +50,14 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel()
     {
+
+        // 事件订阅
+        EventBus.Instance.Subscribe<PopupMessageArgs>(ReceivePopupMessage);
+        EventBus.Instance.Subscribe<TerminalOutputArgs>(ReceiveStdOutPut);
+        EventBus.Instance.Subscribe<PlayerUpdateArgs>(ReceivePlayerUpdate);
+        EventBus.Instance.Subscribe<PlayerMessageArgs>(ReceiveMessage);
+        EventBus.Instance.Subscribe<ServerStatusArgs>(ReceiveServerStatus);
+        EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
         // 初始化
         ResetPopup();// 重置弹出窗口
         ConfigManager.Initialize();// 初始化配置
@@ -145,24 +153,16 @@ public partial class MainViewModel : ViewModelBase
 
         #region Popup相关命令实现
         // 正常情况下，这些命令被调用时PopupTcs不为null
-        PopupConfirm = ReactiveCommand.Create(() => PopupTcs.TrySetResult("Confirm"));
-        PopupCancel = ReactiveCommand.Create(() => PopupTcs.TrySetResult("Cancel"));
-        PopupYes = ReactiveCommand.Create(() => PopupTcs.TrySetResult("Yes"));
-        PopupNo = ReactiveCommand.Create(() => PopupTcs.TrySetResult("No"));
+        PopupConfirm = ReactiveCommand.Create(() => PopupTcs?.TrySetResult("Confirm"));
+        PopupCancel = ReactiveCommand.Create(() => PopupTcs?.TrySetResult("Cancel"));
+        PopupYes = ReactiveCommand.Create(() => PopupTcs?.TrySetResult("Yes"));
+        PopupNo = ReactiveCommand.Create(() => PopupTcs?.TrySetResult("No"));
         #endregion
 
         #region 其它命令实现
         OpenWebPageCmd = ReactiveCommand.Create<string>(OpenWebPage);// 打开网页命令-实现
         NotifyCommand = ReactiveCommand.Create(() => EventBus.Instance.Publish(new ViewBroadcastArgs { Target = "MainWindow.axaml.cs", Message = "Notify" }));// 通知命令-实现
         #endregion
-
-        // 事件订阅
-        EventBus.Instance.Subscribe<PopupMessageArgs>(ReceivePopupMessage);
-        EventBus.Instance.Subscribe<TerminalOutputArgs>(ReceiveStdOutPut);
-        EventBus.Instance.Subscribe<PlayerUpdateArgs>(ReceivePlayerUpdate);
-        EventBus.Instance.Subscribe<PlayerMessageArgs>(ReceiveMessage);
-        EventBus.Instance.Subscribe<ServerStatusArgs>(ReceiveServerStatus);
-        EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
     }
 
     public void QuitHandler(ClosingArgs args)// 退出事件处理
