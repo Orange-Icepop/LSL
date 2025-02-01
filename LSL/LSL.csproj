@@ -17,7 +17,6 @@
 
 
 	<ItemGroup>
-		<AvaloniaXaml Remove="Assets\Dictionaries\OverrideStyles.axaml" />
 		<AvaloniaXaml Remove="Assets\GStyle.axaml" />
 		<AvaloniaXaml Remove="Services\MyCard.axaml" />
 		<AvaloniaXaml Remove="Assets\Dictionaries\GlobalStyles.axaml" />
@@ -129,12 +128,6 @@
 
 	<ItemGroup>
 		<UpToDateCheckInput Remove="Views\Server\ServerGeneral.axaml" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <AvaloniaResource Update="Assets\Dictionaries\OverrideStyles.axaml">
-	    <SubType>Designer</SubType>
-	  </AvaloniaResource>
 	</ItemGroup>
 
 	<ItemGroup>

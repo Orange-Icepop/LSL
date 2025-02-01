@@ -51,7 +51,7 @@
 			</Border.Transitions>
 		</Border>
 		<!--右侧的内容-->
-		<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+		<ScrollViewer Name="RightScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 			<TransitioningContentControl Name="RightContent"
 										 Content="{Binding RightView}">
 				<TransitioningContentControl.PageTransition>

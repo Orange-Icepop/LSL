@@ -163,6 +163,12 @@ public partial class MainViewModel : ViewModelBase
         OpenWebPageCmd = ReactiveCommand.Create<string>(OpenWebPage);// 打开网页命令-实现
         NotifyCommand = ReactiveCommand.Create(() => EventBus.Instance.Publish(new ViewBroadcastArgs { Target = "MainWindow.axaml.cs", Message = "Notify" }));// 通知命令-实现
         #endregion
+
+        StartUpProgress();
+    }
+
+    private void StartUpProgress()// 非必要启动项
+    {
     }
 
     public void QuitHandler(ClosingArgs args)// 退出事件处理

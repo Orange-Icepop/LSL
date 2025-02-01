@@ -10,15 +10,14 @@
 		<Style Selector="local|MyListItem">
 			<Setter Property="Template">
 				<ControlTemplate>
-					<Border BorderBrush="Black"
-							BorderThickness="0"
+					<Border BorderThickness="0"
 							Background="{TemplateBinding Background}"
 							Padding="{TemplateBinding Padding}"
 							CornerRadius="5">
-						<ContentPresenter Content="{TemplateBinding Content}"
-										  ContentTemplate="{TemplateBinding ContentTemplate}"
-										  HorizontalAlignment="Left"
-										  VerticalAlignment="Center"/>
+						<DockPanel>
+							<TextBlock Text="{TemplateBinding Title}" DockPanel.Dock="Top" />
+							<TextBlock Foreground="Gray" FontSize="12" Text="{TemplateBinding Info}" DockPanel.Dock="Bottom" />
+						</DockPanel>
 					</Border>
 				</ControlTemplate>
 			</Setter>

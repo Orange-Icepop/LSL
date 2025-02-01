@@ -12,7 +12,7 @@ using System.Threading;
 
 namespace LSL.ViewModels
 {
-    public partial class MainViewModel : ViewModelBase
+    public partial class MainViewModel
     {
 
         #region µº∫Ωœ‡πÿ

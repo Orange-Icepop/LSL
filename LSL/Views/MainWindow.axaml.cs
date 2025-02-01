@@ -12,7 +12,7 @@ namespace LSL.Views;
 
 public partial class MainWindow : Window
 {
-    public WindowNotificationManager NotifyManager;
+    public WindowNotificationManager? NotifyManager;
 
     public MainWindow()
     {

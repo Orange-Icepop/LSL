@@ -164,7 +164,7 @@ namespace LSL.ViewModels
                     Dispatcher.UIThread.Post(() =>
                     {
                         ConfirmButton = true;
-                        PopupColor = new SolidColorBrush(Color.Parse("#33e¦Èe5"));
+                        PopupColor = new SolidColorBrush(Color.Parse("#33e0e5"));
                     });
                     break;
                 case PopupType.WarnYesNoCancel:
@@ -181,7 +181,7 @@ namespace LSL.ViewModels
                     {
                         YesButton = true;
                         NoButton = true;
-                        PopupColor = new SolidColorBrush(Color.Parse("#33e¦Èe5"));
+                        PopupColor = new SolidColorBrush(Color.Parse("#33e0e5"));
                     });
                     break;
                 case PopupType.WarnYesNo:

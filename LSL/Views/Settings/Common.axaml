@@ -48,7 +48,6 @@
 					<local:MyButton ColorType="Highlight" HorizontalAlignment="Left" Margin="0,0,10,0" Width="120" Height="30" Command="{Binding SearchJava}">查找可用Java</local:MyButton>
 					<local:MyButton HorizontalAlignment="Left" Margin="0,0,10,0" Width="120" Height="30">手动选择Java</local:MyButton>
 				</DockPanel>
-				<CheckBox Margin="0,5,0,5" IsChecked="{Binding AutoFindJava}">启动时自动刷新Java列表</CheckBox>
 			</StackPanel>
 		</local:MyCard>
 

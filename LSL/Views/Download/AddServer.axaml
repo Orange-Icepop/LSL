@@ -9,7 +9,7 @@
 		<StackPanel>
 			<local:MyCard Text="导入服务器">
 				<StackPanel Margin="25,40,23,15">
-					<local:MyListItem Content="从核心添加服务器" Height="30" Command="{Binding FullViewCmd}" CommandParameter="AddCore"/>
+					<local:MyListItem Title="从核心添加服务器" Info="目前仅支持该项QWQ" Command="{Binding FullViewCmd}" CommandParameter="AddCore"/>
 				</StackPanel>
 			</local:MyCard>
 		</StackPanel>
