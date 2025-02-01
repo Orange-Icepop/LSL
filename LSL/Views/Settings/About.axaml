@@ -30,10 +30,10 @@
 		</local:MyCard>
 		<local:MyCard Text="开源库使用声明">
 			<StackPanel Margin="25,40,23,15">
-				<local:MyListItem Title=".NET Runtime" Info="https://github.com/dotnet/runtime" Command="{Binding OpenWebPageCmd}" CommandParameter="https://github.com/dotnet/runtime"/>
-				<local:MyListItem Title="AvaloniaUI" Info="https://github.com/AvaloniaUI/Avalonia" Command="{Binding OpenWebPageCmd}" CommandParameter="https://github.com/AvaloniaUI/Avalonia"/>
-				<local:MyListItem Title="ReactiveUI" Info="https://github.com/reactiveui/reactiveui" Command="{Binding OpenWebPageCmd}" CommandParameter="https://github.com/reactiveui/reactiveui"/>
-				<local:MyListItem Title="Newtonsoft.Json" Info="https://github.com/JamesNK/Newtonsoft.Json" Command="{Binding OpenWebPageCmd}" CommandParameter="https://github.com/JamesNK/Newtonsoft.Json"/>
+				<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/dotnet.ico" Title=".NET Runtime" Info="https://github.com/dotnet/runtime" Command="{Binding OpenWebPageCmd}" CommandParameter="https://github.com/dotnet/runtime"/>
+				<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/AvaloniaUI.png" Title="AvaloniaUI" Info="https://github.com/AvaloniaUI/Avalonia" Command="{Binding OpenWebPageCmd}" CommandParameter="https://github.com/AvaloniaUI/Avalonia"/>
+				<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/ReactiveUI.png" Title="ReactiveUI" Info="https://github.com/reactiveui/reactiveui" Command="{Binding OpenWebPageCmd}" CommandParameter="https://github.com/reactiveui/reactiveui"/>
+				<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/Json.Net.png" Title="Newtonsoft.Json" Info="https://github.com/JamesNK/Newtonsoft.Json" Command="{Binding OpenWebPageCmd}" CommandParameter="https://github.com/JamesNK/Newtonsoft.Json"/>
 			</StackPanel>
 		</local:MyCard>
 	</StackPanel>

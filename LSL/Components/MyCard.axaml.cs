@@ -42,7 +42,7 @@ namespace LSL.Components
             this.Resources["HeadTextColor"] = new SolidColorBrush(Colors.Black);
         }
 
-        private void MyCardLoaded(object sender, RoutedEventArgs e)
+        private void MyCardLoaded(object? sender, RoutedEventArgs e)
         {
             this.Resources["TransWhite"] = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255));
             this.Resources["HeadTextColor"] = new SolidColorBrush(Colors.Black);

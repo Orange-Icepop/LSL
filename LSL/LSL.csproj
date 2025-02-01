@@ -34,10 +34,6 @@
 
 
 	<ItemGroup>
-		<None Remove="Assets\ButtonIcons\Cross.png" />
-		<None Remove="Assets\ButtonIcons\LArrow.png" />
-		<None Remove="Assets\ButtonIcons\PowerButton.png" />
-		<None Remove="Assets\ButtonIcons\Save.png" />
 		<None Remove="Assets\Fonts\SourceHanSansHWSC-Regular.otf" />
 		<None Remove="Assets\SmileySans-Oblique.ttf" />
 		<None Remove="Config.json" />
@@ -58,6 +54,7 @@
 		<PackageReference Include="Avalonia.Native" Version="11.2.2" />
 		<PackageReference Include="Avalonia.Remote.Protocol" Version="11.2.2" />
 		<PackageReference Include="Avalonia.Skia" Version="11.2.2" />
+		<PackageReference Include="Avalonia.Svg.Skia" Version="11.2.0.2" />
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.2" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.2" />
 		<PackageReference Include="Avalonia.ReactiveUI" Version="11.2.2" />
