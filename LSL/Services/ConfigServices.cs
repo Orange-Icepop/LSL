@@ -408,7 +408,7 @@ namespace LSL.Services
             try
             {
                 mainFile = File.ReadAllText(ConfigManager.ServerConfigPath);
-                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") throw new FileNotFoundException();
+                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return;
             }
             catch (FileNotFoundException)
             {
