@@ -1,8 +1,8 @@
-﻿using System;
+﻿using ICSharpCode.SharpZipLib.Zip;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -83,13 +83,23 @@ namespace LSL.Services.Validators
             try
             {
                 using FileStream stream = new FileStream(jarFilePath, FileMode.Open);
-                using ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read);
-                ZipArchiveEntry? manifestEntry = archive.Entries.FirstOrDefault(entry => entry.FullName == "META-INF/MANIFEST.MF");
-                if (manifestEntry != null)// 对于较新版本的MC，MANIFEST.MF中应当包含Main-Class字段
+                using (ZipFile zipFile = new ZipFile(stream))
                 {
-                    using StreamReader reader = new StreamReader(manifestEntry.Open());
-                    string manifestContent = reader.ReadToEnd();
-                    return FindMainClassLine(manifestContent);
+                    foreach (ZipEntry entry in zipFile)
+                    {
+                        if (entry.IsDirectory)
+                            continue;
+
+                        if (entry.Name == "META-INF/MANIFEST.MF")// 对于较新版本的MC，MANIFEST.MF中应当包含Main-Class字段
+                        {
+                            using (var fstream = zipFile.GetInputStream(entry))
+                            using (StreamReader reader = new StreamReader(fstream))
+                            {
+                                string manifestContent = reader.ReadToEnd();
+                                return FindMainClassLine(manifestContent);
+                            }
+                        }
+                    }
                 }
                 return null;
             }
@@ -112,7 +122,7 @@ namespace LSL.Services.Validators
 
         public static string? FindMainClassLine(string manifestContent)
         {
-            string[] lines = manifestContent.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            string[] lines = manifestContent.Split(["\r\n", "\r", "\n"], StringSplitOptions.None);
             foreach (string line in lines)
             {
                 if (line.StartsWith("Main-Class:"))
