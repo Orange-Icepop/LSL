@@ -100,11 +100,12 @@ public partial class MainViewModel : ViewModelBase
 
         DeleteServer = ReactiveCommand.Create(async () =>
         {
-            string confirmResult = await ShowPopup(2, "确定删除此服务器吗？", "该操作不可逆！");
+            string confirmResult = await ShowPopup(3, "确定删除此服务器吗？", "该操作不可逆！");
             if (confirmResult == "Yes")
             {
                 ServerConfigManager.DeleteServer(SelectedServerId);
                 ReadServerList();
+                Notify(1, null, "服务器已成功删除！");
             }
         });// 删除服务器命令-实现
 
@@ -122,8 +123,10 @@ public partial class MainViewModel : ViewModelBase
 
         SearchJava = ReactiveCommand.Create(() =>
         {
+            Notify(0, "正在搜索Java", "请耐心等待......");
             JavaManager.DetectJava();
             ReadJavaList();
+            Notify(1, "Java搜索完成！", $"搜索到了{JavaVersions.Count}个Java");
         });// 搜索Java命令-实现
         #endregion
 

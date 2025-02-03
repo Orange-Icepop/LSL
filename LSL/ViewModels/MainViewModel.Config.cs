@@ -159,6 +159,7 @@ namespace LSL.ViewModels
             {
                 ServerConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, uint.Parse(_minMemory), uint.Parse(_maxMemory), ExtJvm);
                 ReadServerList();
+                Notify(1, null, "服务器配置成功！");
                 FullViewBackCmd.Execute(null);
             }
         }
@@ -231,6 +232,7 @@ namespace LSL.ViewModels
         public void ReadJavaList()
         {
             JavaManager.InitJavaDict();
+            JavaVersions.Clear();
             foreach (var item in JavaManager.JavaDict)
             {
                 JavaVersions.Add(item.Value);

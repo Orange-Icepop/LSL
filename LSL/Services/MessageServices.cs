@@ -165,9 +165,9 @@ namespace LSL.Services
 
     public class NotifyArgs : EventArgs// 通知条事件
     {
-        public required int Type { get; set; }
-        public required string Title { get; set; }
-        public required string Message { get; set; }
+        public int? Type { get; set; }
+        public string? Title { get; set; }
+        public string? Message { get; set; }
     }
 
     public class UpdateTerminalArgs : EventArgs// 更新终端文本事件

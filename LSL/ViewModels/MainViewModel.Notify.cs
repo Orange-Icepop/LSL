@@ -11,7 +11,7 @@ namespace LSL.ViewModels
 	{
 		public ICommand NotifyCommand { get; }
 		//type:0-Info,1-Success,2-Warn,3-Error
-		public static void Notify(int type, string title, string message)
+		public static void Notify(int? type, string? title, string? message)
 		{
 			EventBus.Instance.Publish(new NotifyArgs { Type = type, Title = title, Message = message });
 		}

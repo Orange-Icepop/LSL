@@ -70,32 +70,41 @@ public partial class MainWindow : Window
 
     private void ShowNotification(NotifyArgs args)
     {
+        var title = args.Title;
+        var message = args.Message;
+        bool IsTitleEmpty = title == null;
+        title??= "通知";
+        message ??= "未知消息";
         NotificationType type;
         switch (args.Type)
         {
             case 0:
                 {
                     type = NotificationType.Information;
+                    if (IsTitleEmpty) title = "消息";
                     break;
                 }
             case 1:
                 {
                     type = NotificationType.Success;
+                    if (IsTitleEmpty) title = "成功";
                     break;
                 }
             case 2:
                 {
                     type = NotificationType.Warning;
+                    if (IsTitleEmpty) title = "警告";
                     break;
                 }
             case 3:
                 {
                     type = NotificationType.Error;
+                    if (IsTitleEmpty) title = "错误";
                     break;
                 }
             default:
                 return;
         }
-        NotifyManager.Show(new Notification(args.Title, args.Message, type));
+        NotifyManager.Show(new Notification(title, message, type));
     }
 }
