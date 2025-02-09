@@ -14,7 +14,7 @@ namespace LSL.Views.Settings
         }
         private void LeftChangeHandler(LeftChangedEventArgs args)
         {
-            ChangeLeftColor(args.LeftTarget);
+            if (args.LeftView == "SettingsLeft") ChangeLeftColor(args.LeftTarget);
         }
 
         //设置Left按钮样式方法

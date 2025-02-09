@@ -15,7 +15,7 @@ namespace LSL.Views.Download
         }
         private void LeftChangeHandler(LeftChangedEventArgs args)
         {
-            ChangeLeftColor(args.LeftTarget);
+            if (args.LeftView == "DownloadLeft") ChangeLeftColor(args.LeftTarget);
         }
 
         //设置Left按钮样式方法

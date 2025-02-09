@@ -384,6 +384,8 @@ namespace LSL.Services
 
     public class ServerConfigManager//服务器配置相关服务
     {
+        public static Dictionary<string, string> MainServerConfig = [];
+
         public static Dictionary<string, ServerConfig> ServerConfigs = [];
 
         public static readonly List<string> ServerConfigKeys =
@@ -397,7 +399,7 @@ namespace LSL.Services
             ];
         //TODO:自动检测目录下的未注册服务器
         //TODO:对于读取失败的服务器丢出异常以警告用户进行处理
-        #region 读取各个服务器的LSL配置文件ReadServerConfig
+        #region 读取各个服务器的LSL配置文件LoadServerConfigs
         public static void LoadServerConfigs()
         {
             ServerConfigs = [];
@@ -414,19 +416,18 @@ namespace LSL.Services
             {
                 QuickHandler.ThrowError($"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。");
             }
-            Dictionary<string, string> MainConfigs = [];
             try
             {
                 var configs = JsonConvert.DeserializeObject<Dictionary<string, string>>(mainFile);
                 if (configs == null) throw new JsonException();
-                else MainConfigs = configs;
+                else MainServerConfig = configs;
             }
             catch (JsonException)
             {
                 throw new FatalException($"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
             }
             // 读取各个服务器的LSL配置文件
-            foreach (var config in MainConfigs)
+            foreach (var config in MainServerConfig)
             {
                 // 读取步骤
                 string targetPath = Path.Combine(ConfigManager.ServersPath, config.Value, "lslconfig.json");
@@ -530,11 +531,11 @@ namespace LSL.Services
         #region 修改服务器方法EditServer
         public static void EditServer(string serverId, string serverName, string usingJava, uint minMem, uint maxMem, string extJVM)
         {
-            string serverPath = (string)JsonHelper.ReadJson(ConfigManager.ServerConfigPath, serverId);
+            string serverPath = MainServerConfig[serverId];
             if (serverPath != null && Directory.Exists(serverPath))
             {
-                string editedConfigPath = Path.Combine(serverPath, "config.json");
-                string coreName = (string)JsonHelper.ReadJson(editedConfigPath, "core_name");
+                string editedConfigPath = Path.Combine(serverPath, "lslconfig.json");
+                string coreName = ServerConfigs[serverId].core_name;
                 var newConfig = new
                 {
                     name = serverName,
@@ -547,6 +548,7 @@ namespace LSL.Services
                 string serializedConfig = JsonConvert.SerializeObject(newConfig, Formatting.Indented);
                 File.WriteAllText(editedConfigPath, serializedConfig);// 写入服务器文件夹内的配置文件
                 Debug.WriteLine("Server Edited:" + serverId);
+                LoadServerConfigs();
             }
             else
             {

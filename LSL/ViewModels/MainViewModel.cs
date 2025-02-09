@@ -109,17 +109,7 @@ public partial class MainViewModel : ViewModelBase
             }
         });// 删除服务器命令-实现
 
-        EditServer = ReactiveCommand.Create(async () =>
-        {
-            string JavaPath = JavaManager.JavaDict[JavaId.ToString()].Path;
-            string confirmResult = await ShowPopup(1, "编辑服务器", $"服务器信息：\r名称：{NewServerName}\rJava路径：{JavaPath}\r核心文件路径：{CorePath}\r内存范围：{MinMemory} ~ {MaxMemory}\r附加JVM参数：{ExtJvm}（默认为空）");
-            if (confirmResult == "Yes")
-            {
-                ServerConfigManager.EditServer(SelectedServerId, NewServerName, JavaPath, uint.Parse(_minMemory), uint.Parse(_maxMemory), ExtJvm);
-                ReadServerList();
-                FullViewBackCmd.Execute(null);
-            }
-        });// 编辑服务器命令-实现
+        EditServer = ReactiveCommand.Create(async () => await EditCurrentServer());// 编辑服务器命令-实现
 
         SearchJava = ReactiveCommand.Create(() =>
         {

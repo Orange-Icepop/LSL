@@ -14,7 +14,7 @@
 				</DockPanel>
 				<DockPanel Margin="30,10,0,5">
 					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">核心文件</TextBlock>
-					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" IsEnabled="False" Text="{Binding CorePath, Mode=OneWayToSource}"/>
+					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" IsEnabled="False" Text="{Binding CorePath}"/>
 				</DockPanel>
 				<DockPanel Margin="30,10,0,5">
 					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">内存大小</TextBlock>

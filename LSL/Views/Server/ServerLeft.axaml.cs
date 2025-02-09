@@ -14,11 +14,10 @@ namespace LSL.Views.Server
         {
             InitializeComponent();
             EventBus.Instance.Subscribe<LeftChangedEventArgs>(LeftChangeHandler);
-            ReadServerList();
         }
         private void LeftChangeHandler(LeftChangedEventArgs args)
         {
-            ChangeLeftColor(args.LeftTarget);
+            if (args.LeftView == "ServerLeft") ChangeLeftColor(args.LeftTarget);
         }
 
         //设置Left按钮样式方法
@@ -45,23 +44,5 @@ namespace LSL.Views.Server
             }
             Debug.WriteLine("Left Color Switched:" + NowPage);
         }
-        #region 服务器列表读取（从配置文件读取）
-        public void ReadServerList()
-        {
-            int count = 0;
-            ServerList.Items.Clear();
-            try
-            {
-                while (true)
-                {
-                    string KeyPath = $"$.{count}.name";
-                    ServerList.Items.Add(JsonHelper.ReadJson(ConfigManager.ServerConfigPath, KeyPath));
-                    count++;
-                }
-            }
-            catch { }
-            ServerList.SelectedIndex = 0;
-        }
-        #endregion
     }
 }

@@ -11,6 +11,7 @@ using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 
 namespace LSL.ViewModels
 {
@@ -93,7 +94,7 @@ namespace LSL.ViewModels
         #endregion
         //TODO:在修改配置时查找指定的Java，并自动填充JavaId
         #region 新增服务器处理方法
-        public async Task AddNewServer()
+        private async Task AddNewServer()
         {
             string JavaPath = JavaManager.JavaDict[JavaId.ToString()].Path;
             Dictionary<string, string> ServerInfo = new()
@@ -164,6 +165,45 @@ namespace LSL.ViewModels
             }
         }
         #endregion
+
+        #region 修改服务器方法
+        private async Task EditCurrentServer()
+        {
+            string JavaPath = JavaManager.JavaDict[JavaId.ToString()].Path;
+            Dictionary<string, string> ServerInfo = new()
+            {
+                { "ServerName", NewServerName },
+                { "JavaPath", JavaPath },
+                { "CorePath", CorePath },
+                { "MinMem", MinMemory },
+                { "MaxMem", MaxMemory },
+                { "ExtJvm", ExtJvm }
+            };
+            var checkResult = CheckService.VerifyServerConfig(ServerInfo);
+            string ErrorInfo = "";
+            foreach (var item in checkResult)
+            {
+                if (item.Passed == false)
+                {
+                    ErrorInfo += $"{item.Reason}\r";
+                }
+                else continue;
+            }
+            if (ErrorInfo != "")
+            {
+                await ShowPopup(5, "服务器配置错误", ErrorInfo);
+                return;
+            }
+            string confirmResult = await ShowPopup(1, "编辑服务器", $"服务器信息：\r名称：{NewServerName}\rJava路径：{JavaPath}\r内存范围：{MinMemory} ~ {MaxMemory}\r附加JVM参数：{ExtJvm}");
+            if (confirmResult == "Yes")
+            {
+                await Task.Run(() => ServerConfigManager.EditServer(SelectedServerId, NewServerName, JavaPath, uint.Parse(_minMemory), uint.Parse(_maxMemory), ExtJvm));
+                ReadServerList();
+                FullViewBackCmd.Execute(null);
+            }
+        }
+        #endregion
+
         private void LoadNewServerConfig()
         {
             NewServerName = "NewServer";
@@ -177,7 +217,7 @@ namespace LSL.ViewModels
         private void LoadCurrentServerConfig()
         {
             NewServerName = new string(CurrentServerConfig.name);
-            CorePath = new string(CurrentServerConfig.core_name);
+            CorePath = Path.Combine(ConfigManager.ServersPath, NewServerName, new string(CurrentServerConfig.core_name));
             MinMemory = CurrentServerConfig.min_memory.ToString();
             MaxMemory = CurrentServerConfig.max_memory.ToString();
             JavaId = 0;
@@ -191,30 +231,39 @@ namespace LSL.ViewModels
 
         public ServerConfig CurrentServerConfig // 当前服务器的LSL配置文件
         {
-            get => ServerConfigManager.ServerConfigs[SelectedServerId];
+            get
+            {
+                if (int.TryParse(SelectedServerId, out int result) && result >= 0) return ServerConfigManager.ServerConfigs[SelectedServerId];
+                else return new ServerConfig("", "", "", "", "", 0, 0, "");
+            }
         }
 
         #region 全局获取服务器列表ReadServerList => ServerNames
         //持久化服务器映射列表
         private ObservableCollection<string> _serverIDs = [];// 主配置文件中的服务器ID列表
-        private ObservableCollection<string> _servernames = [];// 服务器名称列表，以ServerID的顺序排列
+        private ObservableCollection<string> _serverNames = [];// 服务器名称列表，以ServerID的顺序排列
         public ObservableCollection<string> ServerIDs => _serverIDs;
-        public ObservableCollection<string> ServerNames => _servernames;
+        public ObservableCollection<string> ServerNames => _serverNames;
         // 服务器列表读取（从配置文件读取）
         public void ReadServerList()
         {
             ServerConfigManager.LoadServerConfigs();
-            ServerIDs.Clear();
-            ServerNames.Clear();
+            ObservableCollection<string> ids = [];
+            ObservableCollection<string> names = [];
             foreach (var item in ServerConfigManager.ServerConfigs)
             {
-                ServerIDs.Add(item.Value.server_id);
-                ServerNames.Add(item.Value.name);
+                ids.Add(item.Value.server_id);
+                names.Add(item.Value.name);
             }
-            if (SelectedServerIndex > ServerNames.Count)
+            _serverIDs = ids;
+            _serverNames = names;
+            if (_selectedServerIndex > ServerNames.Count)
             {
-                SelectedServerIndex = 0;
+                _selectedServerIndex = 0;
+                this.RaisePropertyChanged(nameof(SelectedServerIndex));
             }
+            this.RaisePropertyChanged(nameof(ServerIDs));
+            this.RaisePropertyChanged(nameof(ServerNames));
         }
 
         #endregion

@@ -81,7 +81,7 @@ namespace LSL.Services.Validators
                 {
                     case "ServerName": resCache = CheckComponents.ServerName(item.Value); break;
                     case "JavaPath": resCache = CheckComponents.JavaPath(item.Value); break;
-                    case "CorePath": resCache = CheckComponents.JavaPath(item.Value); break;
+                    case "CorePath": resCache = CheckComponents.CorePath(item.Value); break;
                     case "MinMem": resCache = CheckComponents.MinMem(item.Value); break;
                     case "MaxMem": resCache = CheckComponents.MinMem(item.Value); break;
                     case "ExtJvm": resCache = CheckComponents.ExtJvm(item.Value); break;
@@ -147,7 +147,6 @@ namespace LSL.Services.Validators
         {
             if (!IsValidPath(path)) return new VerifyResult("CorePath", false, "核心路径不可为空或为非法路径");
             else if (!File.Exists(path)) return new VerifyResult("CorePath", false, "选定的核心不存在");
-            //else if (!IsValidCorePath(path)) return new VerifyResult( "CorePath",false,"选定的文件不是有效的核心");//TODO:对不同种类的核心进行验证
             else return new VerifyResult("CorePath", true, null);
         }
 

@@ -148,6 +148,7 @@ namespace LSL.Services
 
     public class LeftChangedEventArgs : EventArgs// 左侧栏改变事件
     {
+        public required string LeftView { get; set; }
         public required string LeftTarget { get; set; }
     }
 

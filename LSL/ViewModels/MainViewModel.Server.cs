@@ -31,7 +31,14 @@ namespace LSL.ViewModels
                 ReadProperties();
             }
         }
-        public string SelectedServerId => ServerIDs[SelectedServerIndex];// 当前选中的服务器ID
+        public string SelectedServerId
+        {
+            get
+            {
+                if (ServerIDs.Count == 0 || SelectedServerIndex < 0 || SelectedServerIndex >= ServerIDs.Count) return "";
+                else return ServerIDs[SelectedServerIndex];
+            }
+        }// 当前选中的服务器ID
         public ICommand StartServerCmd { get; set; }// 启动服务器命令
         public ICommand StopServerCmd { get; set; }// 停止服务器命令
         public ICommand SaveServerCmd { get; set; }// 保存服务器命令
@@ -219,7 +226,7 @@ namespace LSL.ViewModels
         {
             try
             {
-                var text = File.ReadAllLines(Path.Combine((string)JsonHelper.ReadJson(ConfigManager.ConfigFilePath, SelectedServerId), "server.properties"));
+                var text = File.ReadAllLines(Path.Combine(CurrentServerPath, "server.properties"));
                 CurrentServerProperty.Clear();
                 foreach (var line in text)
                 {

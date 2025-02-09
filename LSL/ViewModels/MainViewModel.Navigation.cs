@@ -62,6 +62,7 @@ namespace LSL.ViewModels
             UserControl newView = ViewFactory.CreateView(viewName);
             if (newView != null && viewName != CurrentLeftView)
             {
+                CurrentLeftView = viewName;
                 if (viewName == "SettingsLeft") GetConfig();
                 LeftView = newView;
                 switch (viewName)
@@ -87,7 +88,6 @@ namespace LSL.ViewModels
                         LeftWidth = 150;
                         break;
                 }
-                CurrentLeftView = viewName;
                 EventBus.Instance.Publish(new BarChangedEventArgs { NavigateTarget = viewName });//通知主要视图更改
                 Debug.WriteLine("Left Page Switched:" + viewName);
             }
@@ -102,7 +102,7 @@ namespace LSL.ViewModels
                 RightView = newView;
                 if (CurrentLeftView == "SettingsLeft") ConfigManager.ConfirmConfig(ViewConfigs);
                 CurrentRightView = viewName;
-                EventBus.Instance.Publish(new LeftChangedEventArgs { LeftTarget = viewName });
+                EventBus.Instance.Publish(new LeftChangedEventArgs { LeftView = CurrentLeftView, LeftTarget = viewName });
                 Debug.WriteLine("Right Page Switched:" + viewName);
             }
         }

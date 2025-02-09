@@ -16,6 +16,10 @@ namespace LSL.ViewModels;
 #region ViewFactory穷举并创建所有视图
 public static class ViewFactory
 {
+    private static readonly HomeLeft HomeLeftView = new();
+    private static readonly ServerLeft ServerLeftView = new();
+    private static readonly DownloadLeft DownloadLeftView = new();
+    private static readonly SettingsLeft SettingsLeftView = new();
     public static UserControl CreateView(string viewName)
     {
         return viewName switch
@@ -25,10 +29,10 @@ public static class ViewFactory
             "FSBar" => new FSBar(),
 
             //Top
-            "HomeLeft" => new HomeLeft(),
-            "ServerLeft" => new ServerLeft(),
-            "DownloadLeft" => new DownloadLeft(),
-            "SettingsLeft" => new SettingsLeft(),
+            "HomeLeft" => HomeLeftView,
+            "ServerLeft" => ServerLeftView,
+            "DownloadLeft" => DownloadLeftView,
+            "SettingsLeft" => SettingsLeftView,
             //Home
             "HomeRight" => new HomeRight(),
             //Server
