@@ -14,9 +14,12 @@ public partial class MainWindow : Window
 {
     public WindowNotificationManager? NotifyManager;
 
+    public static MainWindow Instance { get; private set; }
+
     public MainWindow()
     {
         InitializeComponent();
+        Instance = this;
         this.Closing += MainWindow_Closing;// 重定向关闭窗口事件
         this.Loaded += InitializeViews;
         EventBus.Instance.Subscribe<ViewBroadcastArgs>(BroadcastHandler);

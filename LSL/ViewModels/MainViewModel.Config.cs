@@ -204,6 +204,7 @@ namespace LSL.ViewModels
         }
         #endregion
 
+        #region 添加与修改服务器时的配置载入
         private void LoadNewServerConfig()
         {
             NewServerName = "NewServer";
@@ -223,11 +224,14 @@ namespace LSL.ViewModels
             JavaId = 0;
             ExtJvm = new string(CurrentServerConfig.ext_jvm);
         }
+        #endregion
 
         public ICommand SearchJava { get; }// 搜索Java命令
         public ICommand ConfirmAddServer { get; }// 确认新增服务器命令
         public ICommand DeleteServer { get; }// 删除服务器命令
         public ICommand EditServer { get; }// 编辑服务器命令
+
+        #region 当前服务器LSL配置与基本配置（ID，路径，Java等）
 
         public ServerConfig CurrentServerConfig // 当前服务器的LSL配置文件
         {
@@ -237,6 +241,44 @@ namespace LSL.ViewModels
                 else return new ServerConfig("", "", "", "", "", 0, 0, "");
             }
         }
+        public string CurrentServerName { get => CurrentServerConfig.name; }
+        public string CurrentServerPath { get => CurrentServerConfig.server_path; }
+        public string CurrentServerJava { get => CurrentServerConfig.using_java; }
+        public string SelectedServerId
+        {
+            get
+            {
+                if (ServerIDs.Count == 0 || SelectedServerIndex < 0 || SelectedServerIndex >= ServerIDs.Count) return "";
+                else return ServerIDs[SelectedServerIndex];
+            }
+        }// 当前选中的服务器ID
+
+        public Dictionary<string, object> CurrentServerProperty = [];// 当前服务器server.properties字典
+        public bool ReadProperties()// 读取当前服务器server.properties
+        {
+            try
+            {
+                var text = File.ReadAllLines(Path.Combine(CurrentServerPath, "server.properties"));
+                CurrentServerProperty.Clear();
+                foreach (var line in text)
+                {
+                    if (!line.StartsWith('#'))
+                    {
+                        var keyValue = line.Split('=');
+                        if (keyValue.Length == 2)
+                        {
+                            CurrentServerProperty.Add(keyValue[0], keyValue[1]);
+                        }
+                    }
+                }
+                return true;
+            }
+            catch (FileNotFoundException)
+            {
+                return false;
+            }
+        }
+        #endregion
 
         #region 全局获取服务器列表ReadServerList => ServerNames
         //持久化服务器映射列表

@@ -36,7 +36,8 @@ namespace LSL.Services
 
             foreach (var pathPart in pathParts)
             {
-                string javaPath = Path.Combine(pathPart, "javaw.exe");
+                string javaPath = Path.Combine(pathPart, "java.exe");
+                string javawPath = Path.Combine(pathPart, "javaw.exe");
                 if (File.Exists(javaPath))
                 {
                     var javaInfo = GetJavaInfo(javaPath);
@@ -44,6 +45,16 @@ namespace LSL.Services
                     {
                         javaInfos.Add(javaInfo);
                     }
+                    continue;
+                }
+                else if (File.Exists(javawPath))
+                {
+                    var javaInfo = GetJavaInfo(javawPath);
+                    if (javaInfo != null)
+                    {
+                        javaInfos.Add(javaInfo);
+                    }
+                    continue;
                 }
             }
         }

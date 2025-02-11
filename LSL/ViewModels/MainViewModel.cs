@@ -48,6 +48,17 @@ public partial class MainViewModel : ViewModelBase
         LeftWidth = 350;
     }
 
+    private static MainViewModel _instance;
+
+    public static MainViewModel Instance
+    {
+        get
+        {
+            _instance ??= new MainViewModel();
+            return _instance;
+        }
+    }
+
     public MainViewModel()
     {
 
@@ -111,12 +122,15 @@ public partial class MainViewModel : ViewModelBase
 
         EditServer = ReactiveCommand.Create(async () => await EditCurrentServer());// 编辑服务器命令-实现
 
-        SearchJava = ReactiveCommand.Create(() =>
+        SearchJava = ReactiveCommand.Create(async () =>
         {
-            Notify(0, "正在搜索Java", "请耐心等待......");
-            JavaManager.DetectJava();
-            ReadJavaList();
-            Notify(1, "Java搜索完成！", $"搜索到了{JavaVersions.Count}个Java");
+            await Dispatcher.UIThread.InvokeAsync(() => Notify(0, "正在搜索Java", "请耐心等待......"));
+            await JavaManager.DetectJava();
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ReadJavaList();
+                Notify(1, "Java搜索完成！", $"搜索到了{JavaVersions.Count}个Java");
+            });
         });// 搜索Java命令-实现
         #endregion
 

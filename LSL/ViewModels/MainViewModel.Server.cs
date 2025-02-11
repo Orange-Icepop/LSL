@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -10,11 +11,6 @@ using System.Windows.Input;
 using System.IO;
 using ReactiveUI;
 using LSL.Services;
-using System.Collections.ObjectModel;
-using DynamicData.Binding;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using LSL.Services.Validators;
 
 namespace LSL.ViewModels
 {
@@ -31,14 +27,8 @@ namespace LSL.ViewModels
                 ReadProperties();
             }
         }
-        public string SelectedServerId
-        {
-            get
-            {
-                if (ServerIDs.Count == 0 || SelectedServerIndex < 0 || SelectedServerIndex >= ServerIDs.Count) return "";
-                else return ServerIDs[SelectedServerIndex];
-            }
-        }// 当前选中的服务器ID
+
+        #region 服务器控制
         public ICommand StartServerCmd { get; set; }// 启动服务器命令
         public ICommand StopServerCmd { get; set; }// 停止服务器命令
         public ICommand SaveServerCmd { get; set; }// 保存服务器命令
@@ -61,6 +51,7 @@ namespace LSL.ViewModels
         {
             await Task.Run(() => ServerHost.Instance.SendCommand(SelectedServerId, message));
         }
+        #endregion
 
         #region 启动前校验配置文件
         public static string? VerifyServerConfigBeforeStart(string serverId)
@@ -216,36 +207,5 @@ namespace LSL.ViewModels
 
         #endregion
 
-        #region 当前服务器配置文件
-        public string CurrentServerName { get => CurrentServerConfig.name; }
-        public string CurrentServerPath { get => CurrentServerConfig.server_path; }
-        public string CurrentServerJava { get => CurrentServerConfig.using_java; }
-
-        public Dictionary<string, object> CurrentServerProperty = [];// 当前服务器server.properties字典
-        public bool ReadProperties()// 读取当前服务器server.properties
-        {
-            try
-            {
-                var text = File.ReadAllLines(Path.Combine(CurrentServerPath, "server.properties"));
-                CurrentServerProperty.Clear();
-                foreach (var line in text)
-                {
-                    if (!line.StartsWith('#'))
-                    {
-                        var keyValue = line.Split('=');
-                        if (keyValue.Length == 2)
-                        {
-                            CurrentServerProperty.Add(keyValue[0], keyValue[1]);
-                        }
-                    }
-                }
-                return true;
-            }
-            catch (FileNotFoundException)
-            {
-                return false;
-            }
-        }
-        #endregion
     }
 }

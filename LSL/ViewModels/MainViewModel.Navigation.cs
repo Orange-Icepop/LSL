@@ -7,8 +7,6 @@ using ReactiveUI;
 using LSL.Services;
 using System.Collections.Generic;
 using LSL.Views;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace LSL.ViewModels
 {
@@ -54,8 +52,7 @@ namespace LSL.ViewModels
         public ReactiveCommand<Unit, Unit> CommonConfigCmd { get; }
         #endregion
 
-        #region «–ªª√¸¡Ó
-        //◊Û ”Õº
+        #region ◊Û ”Õº«–ªª√¸¡Ó
         public void INavigateLeft(string viewName) { NavigateLeftView(viewName); }
         public void NavigateLeftView(string viewName, bool dislink = false)
         {
@@ -68,22 +65,22 @@ namespace LSL.ViewModels
                 switch (viewName)
                 {
                     case "HomeLeft":
-                        if(!dislink)
+                        if (!dislink)
                             NavigateRightView("HomeRight");
                         LeftWidth = 350;
                         break;
                     case "ServerLeft":
-                        if(!dislink)
+                        if (!dislink)
                             NavigateRightView("ServerStat");
                         LeftWidth = 250;
                         break;
                     case "DownloadLeft":
-                        if(!dislink)
+                        if (!dislink)
                             NavigateRightView("AutoDown");
                         LeftWidth = 150;
                         break;
                     case "SettingsLeft":
-                        if(!dislink)
+                        if (!dislink)
                             NavigateRightView("Common");
                         LeftWidth = 150;
                         break;
@@ -92,7 +89,9 @@ namespace LSL.ViewModels
                 Debug.WriteLine("Left Page Switched:" + viewName);
             }
         }
-        //”“ ”Õº
+        #endregion
+
+        #region ”“ ”Õº«–ªª√¸¡Ó
         public void INavigateRight(string viewName) { NavigateRightView(viewName); }
         public void NavigateRightView(string viewName, bool force = false)
         {
@@ -106,7 +105,9 @@ namespace LSL.ViewModels
                 Debug.WriteLine("Right Page Switched:" + viewName);
             }
         }
-        // »´∆¡ ”Õº
+        #endregion
+
+        #region »´∆¡ ”Õº«–ªª√¸¡Ó
         public void NavigateFullScreenView(string viewName)
         {
             double originalLeftWidth = LeftWidth;
@@ -132,12 +133,14 @@ namespace LSL.ViewModels
             if (viewName == "EditSC") LoadCurrentServerConfig();
             NavigateRightView(viewName);
         }
-        // «ø÷∆À¢–¬
+        #endregion
+
+        #region ”“ ”Õº«ø÷∆À¢–¬√¸¡Ó
         public void RefreshRightView()
         {
             string original = CurrentRightView;
             NavigateRightView(original, true);
-            EventBus.Instance.Publish(new ViewBroadcastArgs{ Target = "ServerTerminal.axaml.cs", Message = "ScrollToEnd" });
+            EventBus.Instance.Publish(new ViewBroadcastArgs { Target = "ServerTerminal.axaml.cs", Message = "ScrollToEnd" });
         }
         #endregion
 

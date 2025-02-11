@@ -14,20 +14,19 @@ namespace LSL.ViewModels
 {
     public partial class MainViewModel
     {
+        #region Popup视图内部字段与访问器
         // Popup视图相关字段
         private string popupTitle;
         private string popupContent;
         private SolidColorBrush popupColor;
-        //private int popupType;
         private bool popupVisible;
         private double popupOpacity;
-
+        // 控制按钮的显示
         private bool confirmButton;
         private bool cancelButton;
         private bool yesButton;
         private bool noButton;
-
-        #region Popup视图访问器
+        // Popup视图相关访问器
         public string PopupTitle
         {
             get => popupTitle;
@@ -43,13 +42,6 @@ namespace LSL.ViewModels
             get => popupColor;
             set => this.RaiseAndSetIfChanged(ref popupColor, value);
         }
-        /*
-        public int PopupType
-        {
-            get => popupType;
-            set => this.RaiseAndSetIfChanged(ref popupType, value);
-        }
-        */
         public bool PopupVisible
         {
             get => popupVisible;
@@ -80,6 +72,11 @@ namespace LSL.ViewModels
             get => yesButton;
             set => this.RaiseAndSetIfChanged(ref yesButton, value);
         }
+        //Popup按钮命令
+        public ICommand PopupConfirm { get; set; }//Popup确认按钮
+        public ICommand PopupCancel { get; set; }//Popup取消按钮
+        public ICommand PopupYes { get; set; }//Popup是按钮
+        public ICommand PopupNo { get; set; }//Popup否按钮
         #endregion
 
         public async void ResetPopup()
@@ -106,6 +103,7 @@ namespace LSL.ViewModels
             await Dispatcher.UIThread.InvokeAsync(() => ShowPopup(args.Type, args.Title, args.Message));
         }
 
+        #region Popup处理机制
         private ConcurrentQueue<PopupRequest> PopupQueue = new();
 
         private bool PopupIsProcessing;// 防止覆盖
@@ -209,12 +207,9 @@ namespace LSL.ViewModels
             ResetPopup();
             return result;
         }
+        #endregion
 
-        public ICommand PopupConfirm { get; set; }//Popup确认按钮
-        public ICommand PopupCancel { get; set; }//Popup取消按钮
-        public ICommand PopupYes { get; set; }//Popup是按钮
-        public ICommand PopupNo { get; set; }//Popup否按钮
-
+        #region Popup内部使用的数据类型
         private enum PopupType
         {
             InfoConfirm,
@@ -230,6 +225,6 @@ namespace LSL.ViewModels
             public string Content { get; set; } = content;
             public TaskCompletionSource<string> Tcs { get; set; } = tcs;
         }
+        #endregion
     }
-
 }

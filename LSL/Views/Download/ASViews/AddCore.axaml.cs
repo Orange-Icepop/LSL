@@ -26,8 +26,12 @@ namespace LSL.Views.Download.ASViews
         public async void OpenFileCmd(object sender, RoutedEventArgs args)
         {
             var mainViewModel = (MainViewModel)this.DataContext;
+            if (mainViewModel == null)
+            {
+                QuickHandler.ThrowError("添加核心页面的DataContext为null，无法通过对话框选择文件。");
+            }
             // 从当前控件获取 TopLevel。此处使用 Window 引用。
-            var topLevel = TopLevel.GetTopLevel(this);
+            var topLevel = MainWindow.Instance;
             // 启动异步操作以打开对话框。
             var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
