@@ -565,10 +565,10 @@ namespace LSL.Services
             JavaDict.Clear();
             foreach (var item in jsonObj.Properties())//遍历配置文件中的所有Java
             {
-                JToken? versionObject = item.Value["version"];
-                JToken? pathObject = item.Value["path"];
-                JToken? vendorObject = item.Value["vendor"];
-                JToken? archObject = item.Value["architecture"];
+                JToken? versionObject = item.Value["Version"];
+                JToken? pathObject = item.Value["Path"];
+                JToken? vendorObject = item.Value["Vendor"];
+                JToken? archObject = item.Value["Architecture"];
                 if (versionObject != null &&
                     pathObject != null &&
                     vendorObject != null &&
