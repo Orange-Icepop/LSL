@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -49,7 +50,14 @@ namespace LSL.Services
         #region 移除服务器进程实例UnloadServer(string serverId)
         public void UnloadServer(string serverId)
         {
-            _runningServers.TryRemove(serverId, out _);
+            if (_runningServers.TryRemove(serverId, out _))
+            {
+                Debug.WriteLine($"服务器{serverId}已成功卸载");
+            }
+            else
+            {
+                Debug.WriteLine($"服务器{serverId}未找到，无法卸载");
+            }
         }
         #endregion
 
@@ -83,7 +91,10 @@ namespace LSL.Services
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                StandardInputEncoding = Encoding.UTF8,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
             };
             // 启动服务器
             Process? process = Process.Start(startInfo);

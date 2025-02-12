@@ -53,21 +53,6 @@
 
 		<local:MyCard Text="终端设置">
 			<StackPanel Margin="25,40,23,15">
-				<DockPanel Margin="0,10,0,5">
-					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="输出编码格式"/>
-					<ComboBox Name="OutputEncodeType" Margin="0,0,10,0" Width="300" SelectedIndex="{Binding OutputEncode}">
-						<ComboBoxItem Content="ANSI（推荐）"/>
-						<ComboBoxItem Content="UTF-8"/>
-					</ComboBox>
-				</DockPanel>
-				<DockPanel Margin="0,10,0,5">
-					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="输入编码格式"/>
-					<ComboBox Name="InputEncodeType" Margin="0,0,10,0" Width="300" SelectedIndex="{Binding InputEncode}">
-						<ComboBoxItem Content="跟随全局"/>
-						<ComboBoxItem Content="ANSI"/>
-						<ComboBoxItem Content="UTF-8"/>
-					</ComboBox>
-				</DockPanel>
 				<CheckBox Margin="0,5,0,5" IsChecked="{Binding ColoringTerminal}">终端分层设色</CheckBox>
 			</StackPanel>
 		</local:MyCard>

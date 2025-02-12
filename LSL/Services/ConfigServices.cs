@@ -189,8 +189,6 @@ namespace LSL.Services
             { "app_priority", 1 },
             { "end_server_when_close", false },
             { "daemon", true },
-            { "output_encode", 0 },
-            { "input_encode", 0 },
             { "coloring_terminal", true },
             //Download
             { "download_source", 0 },
@@ -244,8 +242,6 @@ namespace LSL.Services
             "app_priority",
             "end_server_when_close",
             "daemon",
-            "output_encode",
-            "input_encode",
             "coloring_terminal",
             //Download
             "download_source",
@@ -367,8 +363,7 @@ namespace LSL.Services
                 "max_memory",
                 "ext_jvm"
             ];
-        //TODO:自动检测目录下的未注册服务器
-        //TODO:对于读取失败的服务器丢出异常以警告用户进行处理
+
         #region 读取各个服务器的LSL配置文件LoadServerConfigs
         public static void LoadServerConfigs()
         {
