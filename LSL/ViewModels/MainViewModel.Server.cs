@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.IO;
 using ReactiveUI;
 using LSL.Services;
+using Avalonia.Threading;
 
 namespace LSL.ViewModels
 {
@@ -33,6 +34,27 @@ namespace LSL.ViewModels
         public ICommand StopServerCmd { get; set; }// 停止服务器命令
         public ICommand SaveServerCmd { get; set; }// 保存服务器命令
         public ICommand ShutServerCmd { get; set; }// 结束服务器进程命令
+        public ICommand SendServerCmd { get; set; }// 发送服务器命令
+        private string _serverInputText;// 服务器命令输入框文本
+        public string ServerInputText // 服务器命令输入框文本访问器
+        {
+            get => _serverInputText;
+            set
+            {
+                if (value.EndsWith('\n') || value.EndsWith('\r') || value.EndsWith("\r\n"))
+                {
+                    string sendedValue = value.TrimEnd('\n', '\r');
+                    sendedValue = sendedValue.TrimEnd('\r', '\n');
+                    Task.Run(() => SendServerCommand(sendedValue));
+                    Task.Run(ResetServerInputText);
+                }
+                this.RaiseAndSetIfChanged(ref _serverInputText, value);
+            }
+        }
+        private void ResetServerInputText() => Dispatcher.UIThread.Post(() => ServerInputText = "");
+        /*别问为什么要把重置方法独立出来
+        问就是这框架不知道抽了什么风
+        在set方法里设置值的操作不会返回到View上*/
         public void StartServer()//启动服务器方法
         {
             var result = VerifyServerConfigBeforeStart(SelectedServerId);
@@ -47,9 +69,9 @@ namespace LSL.ViewModels
             Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
         }
 
-        public async void SendServerCommand(string message)// 发送服务器命令
+        public async Task SendServerCommand(string? message)// 发送服务器命令
         {
-            await Task.Run(() => ServerHost.Instance.SendCommand(SelectedServerId, message));
+            if (!string.IsNullOrEmpty(message)) await Task.Run(() => ServerHost.Instance.SendCommand(SelectedServerId, message));
         }
         #endregion
 

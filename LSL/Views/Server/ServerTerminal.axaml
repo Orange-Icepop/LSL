@@ -12,14 +12,19 @@
 						  Margin="30,60,30,20"
 						  VerticalScrollBarVisibility="Auto"
 						  Name="TerminalScroll">
-				<TextBlock TextWrapping="Wrap"
+				<SelectableTextBlock TextWrapping="Wrap"
 						   IsEnabled="True"
 						 Name="TerminalOutput"
 						 Foreground="Black"
 						 Text="{Binding ServerTerminalText}"/>
 			</ScrollViewer>
 		</local:MyCard>
-		<local:MyCard Grid.Row="1" Grid.Column="0"/>
+		<local:MyCard Grid.Row="1" Grid.Column="0">
+			<Grid VerticalAlignment="Center" HorizontalAlignment="Stretch" ColumnDefinitions="*,Auto">
+				<TextBox Grid.Column="0" Height="30" Margin="10" Text="{Binding ServerInputText,Mode=TwoWay}" AcceptsReturn="True" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+				<local:MyButton Content="发送" Grid.Column="1" Margin="10" Width="50" Height="30" VerticalAlignment="Center" HorizontalAlignment="Right" Command="{Binding SendServerCmd}"/>
+			</Grid>
+		</local:MyCard>
 		<local:MyCard Grid.Row="1" Grid.Column="1">
 			<Grid VerticalAlignment="Center" HorizontalAlignment="Center" ColumnDefinitions="*,*,*">
 				<local:MyButton BorderThickness="2"

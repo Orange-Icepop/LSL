@@ -545,6 +545,18 @@ namespace LSL.Services
             this.max_memory = MaxMemory;
             this.ext_jvm = ExtJVM;
         }
+
+        public ServerConfig(ServerConfig config)// 深拷贝构造函数
+        {
+            this.server_id = config.server_id;
+            this.server_path = config.server_path;
+            this.name = config.name;
+            this.using_java = config.using_java;
+            this.core_name = config.core_name;
+            this.min_memory = config.min_memory;
+            this.max_memory = config.max_memory;
+            this.ext_jvm = config.ext_jvm;
+        }
     }
 
     public static class JavaManager//Java相关服务

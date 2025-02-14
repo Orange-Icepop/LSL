@@ -48,17 +48,6 @@ public partial class MainViewModel : ViewModelBase
         LeftWidth = 350;
     }
 
-    private static MainViewModel _instance;
-
-    public static MainViewModel Instance
-    {
-        get
-        {
-            _instance ??= new MainViewModel();
-            return _instance;
-        }
-    }
-
     public MainViewModel()
     {
 
@@ -70,12 +59,13 @@ public partial class MainViewModel : ViewModelBase
         EventBus.Instance.Subscribe<ServerStatusArgs>(ReceiveServerStatus);
         EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
         // 初始化
+        InitViewControl();// 初始化视图控制
         ResetPopup();// 重置弹出窗口
         ConfigManager.Initialize();// 初始化配置
         GetConfig();// 获取配置
         ReadServerList();// 读取服务器列表
         ReadJavaList();// 读取Java列表
-        OutputHandler outputHandler = new();// 初始化输出处理
+        var outputHandler = OutputHandler.Instance;// 初始化输出处理
 
         // 视图命令
         LeftViewCmd = ReactiveCommand.Create<string>(INavigateLeft);
@@ -141,12 +131,12 @@ public partial class MainViewModel : ViewModelBase
             string result = await ShowPopup(2, "确定关闭此服务器吗？", "你的存档将被保存。");
             if (result == "Yes")
             {
-                SendServerCommand("stop");
+                await SendServerCommand("stop");
             }
         });// 停止服务器命令-实现
         SaveServerCmd = ReactiveCommand.Create(async () =>
         {
-            SendServerCommand("save-all");
+            await SendServerCommand("save-all");
         });// 保存服务器命令-实现
         ShutServerCmd = ReactiveCommand.Create(async () =>
         {
@@ -156,6 +146,11 @@ public partial class MainViewModel : ViewModelBase
                 ServerHost.Instance.EndServer(SelectedServerId);
             }
         });// 结束服务器进程命令-实现
+        SendServerCmd = ReactiveCommand.Create(async () =>
+        {
+            await SendServerCommand(ServerInputText);
+            await Task.Run(ResetServerInputText);
+        });// 发送服务器命令的命令-实现
         #endregion
 
         #region Popup相关命令实现

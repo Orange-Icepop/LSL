@@ -13,7 +13,7 @@ namespace LSL.Services
     {
 
         Task RunServer(string serverId);
-        void SendCommand(string serverId, string command);
+        Task SendCommand(string serverId, string command);
         void EndServer(string serverId);
         void EndAllServers();
     }
@@ -152,7 +152,7 @@ namespace LSL.Services
         #endregion
 
         #region 发送命令SendCommand(string serverId, string command)
-        public async void SendCommand(string serverId, string command)
+        public async Task SendCommand(string serverId, string command)
         {
             Process? server = GetServer(serverId);
             if (CheckProcess(server))
@@ -161,11 +161,9 @@ namespace LSL.Services
                 {
                     EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 关闭服务器命令已发出，请等待......" });
                 }
-                using (StreamWriter writer = server.StandardInput)
-                {
-                    await writer.WriteLineAsync(command);
-                    await writer.FlushAsync();
-                }
+                var writer = server.StandardInput;
+                await writer.WriteLineAsync(command);
+                await writer.FlushAsync();
             }
             else
             {
@@ -231,23 +229,74 @@ namespace LSL.Services
             catch (InvalidOperationException) { return false; }
         }
         #endregion
+
+        private class ServerProcess
+        {
+            public ServerProcess(ServerConfig config)
+            {
+                string serverPath = config.server_path;
+                string configPath = Path.Combine(serverPath, "lslconfig.json");
+                string corePath = Path.Combine(serverPath, config.core_name);
+                string javaPath = config.using_java;
+                string MinMem = config.min_memory.ToString();
+                string MaxMem = config.max_memory.ToString();
+                string arguments = $"-server -Xms{MinMem}M -Xmx{MaxMem}M -jar {corePath} nogui";
+                StartInfo = new()// 提供服务器信息
+                {
+                    FileName = javaPath,
+                    Arguments = arguments,
+                    WorkingDirectory = serverPath,
+                    UseShellExecute = false,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    StandardInputEncoding = Encoding.UTF8,
+                    StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8
+                };
+            }
+            public Process? SProcess { get; private set; }
+            private ProcessStartInfo StartInfo { get; set; }
+            public StreamWriter? InStream { get; set; }
+            public StreamReader? OutStream { get; set; }
+            public bool IsRunning => SProcess != null && !SProcess.HasExited;
+            public void Run()
+            {
+                if (!IsRunning)
+                {
+                    SProcess = Process.Start(StartInfo);
+                    if (!IsRunning) throw new InvalidOperationException("Failed to start server process.");
+                    else
+                    {
+                        OutStream = SProcess.StandardOutput;
+                        InStream = SProcess.StandardInput;
+                    }
+                }
+            }
+        }
     }
 
     public class OutputHandler// 服务端输出预处理
     {
-        static OutputHandler()
+
+        private static readonly Lazy<OutputHandler> _instance = new(() => new OutputHandler());
+
+        public static OutputHandler Instance => _instance.Value;
+
+        private OutputHandler()
         {
             EventBus.Instance.Subscribe<TerminalOutputArgs>(HandleOutput);
         }
 
-        public static void HandleOutput(TerminalOutputArgs args)
+        public void HandleOutput(TerminalOutputArgs args)
         {
             Task.Run(() => OutputProcessor(args.ServerId, args.Output));
         }
 
-        private static Dictionary<string, string> PlayerPool = [];
+        private Dictionary<string, string> PlayerPool = [];
 
-        private static async void OutputProcessor(string ServerId, string Output)
+        private async void OutputProcessor(string ServerId, string Output)
         {
             if (Output.Substring(1, 3) == "LSL") return;
             bool isMsgWithTime;
