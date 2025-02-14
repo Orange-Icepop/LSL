@@ -230,50 +230,90 @@ namespace LSL.Services
         }
         #endregion
 
-        private class ServerProcess
+    }
+    public class ServerProcess : IDisposable
+    {
+        public ServerProcess(ServerConfig config)
         {
-            public ServerProcess(ServerConfig config)
+            string serverPath = config.server_path;
+            string configPath = Path.Combine(serverPath, "lslconfig.json");
+            string corePath = Path.Combine(serverPath, config.core_name);
+            string javaPath = config.using_java;
+            string MinMem = config.min_memory.ToString();
+            string MaxMem = config.max_memory.ToString();
+            string arguments = $"-server -Xms{MinMem}M -Xmx{MaxMem}M -jar {corePath} nogui";
+            StartInfo = new()// 提供服务器信息
             {
-                string serverPath = config.server_path;
-                string configPath = Path.Combine(serverPath, "lslconfig.json");
-                string corePath = Path.Combine(serverPath, config.core_name);
-                string javaPath = config.using_java;
-                string MinMem = config.min_memory.ToString();
-                string MaxMem = config.max_memory.ToString();
-                string arguments = $"-server -Xms{MinMem}M -Xmx{MaxMem}M -jar {corePath} nogui";
-                StartInfo = new()// 提供服务器信息
-                {
-                    FileName = javaPath,
-                    Arguments = arguments,
-                    WorkingDirectory = serverPath,
-                    UseShellExecute = false,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                    StandardInputEncoding = Encoding.UTF8,
-                    StandardOutputEncoding = Encoding.UTF8,
-                    StandardErrorEncoding = Encoding.UTF8
-                };
+                FileName = javaPath,
+                Arguments = arguments,
+                WorkingDirectory = serverPath,
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                StandardInputEncoding = Encoding.UTF8,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
+            };
+            SProcess = new Process { StartInfo = StartInfo };
+            InStream = SProcess.StandardInput;
+            SProcess.OutputDataReceived += (sender, args) => OutputReceived?.Invoke(sender, args);
+            SProcess.ErrorDataReceived += (sender, args) => ErrorReceived?.Invoke(sender, args);
+            SProcess.Exited += (sender, args) =>
+            {
+                ExitCode = SProcess.ExitCode;
+                Exited?.Invoke(sender, args);
+                SProcess.Dispose();
+            };
+        }
+        private Process SProcess { get; set; }
+        private ProcessStartInfo StartInfo { get; set; }
+        private StreamWriter InStream { get; set; }
+        public event DataReceivedEventHandler? OutputReceived;
+        public event DataReceivedEventHandler? ErrorReceived;
+        public event EventHandler? Exited;
+        public bool IsRunning => !SProcess.HasExited;
+        public int? ExitCode { get; private set; }
+        public void Run()
+        {
+            if (!IsRunning)
+            {
+                SProcess.Start();
+                if (!IsRunning) throw new InvalidOperationException("Failed to start server process.");
             }
-            public Process? SProcess { get; private set; }
-            private ProcessStartInfo StartInfo { get; set; }
-            public StreamWriter? InStream { get; set; }
-            public StreamReader? OutStream { get; set; }
-            public bool IsRunning => SProcess != null && !SProcess.HasExited;
-            public void Run()
+        }
+        public void BeginRead()
+        {
+            SProcess.BeginOutputReadLine();
+            SProcess.BeginErrorReadLine();
+        }
+        public void SendCommand(string command)
+        {
+            if (IsRunning)
             {
-                if (!IsRunning)
+                InStream.WriteLine(command);
+                InStream.FlushAsync();
+            }
+        }
+        public void ForceStop()
+        {
+            if (IsRunning)
+            {
+                try
                 {
-                    SProcess = Process.Start(StartInfo);
-                    if (!IsRunning) throw new InvalidOperationException("Failed to start server process.");
-                    else
-                    {
-                        OutStream = SProcess.StandardOutput;
-                        InStream = SProcess.StandardInput;
-                    }
+                    SProcess.Kill();
+                }
+                finally
+                {
+                    SProcess.Dispose();
                 }
             }
+        }
+        public void Dispose()
+        {
+            ForceStop();
+            GC.SuppressFinalize(this);
         }
     }
 
