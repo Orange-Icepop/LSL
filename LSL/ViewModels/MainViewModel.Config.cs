@@ -230,13 +230,12 @@ namespace LSL.ViewModels
         public ICommand EditServer { get; }// 编辑服务器命令
 
         #region 当前服务器LSL配置与基本配置（ID，路径，Java等）
-
         public ServerConfig CurrentServerConfig // 当前服务器的LSL配置文件
         {
             get
             {
                 if (int.TryParse(SelectedServerId, out int result) && result >= 0) return ServerConfigManager.ServerConfigs[SelectedServerId];
-                else return new ServerConfig("", "", "", "", "", 0, 0, "");
+                else return new ServerConfig("0", "", "未添加服务器", "null", "null", 0, 0, "");
             }
         }
         public string CurrentServerName { get => CurrentServerConfig.name; }
@@ -290,7 +289,12 @@ namespace LSL.ViewModels
             ServerConfigManager.LoadServerConfigs();
             ObservableCollection<string> ids = [];
             ObservableCollection<string> names = [];
-            foreach (var item in ServerConfigManager.ServerConfigs)
+            if (ServerConfigManager.ServerConfigs.Count == 0)
+            {
+                ids.Add("0");
+                names.Add("未添加服务器");
+            }
+            else foreach (var item in ServerConfigManager.ServerConfigs)
             {
                 ids.Add(item.Value.server_id);
                 names.Add(item.Value.name);

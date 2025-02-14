@@ -61,6 +61,7 @@ namespace LSL.ViewModels
             if (result != null)
             {
                 QuickHandler.ThrowError(result);
+                return;
             }
             TerminalTexts.TryAdd(SelectedServerId, new StringBuilder());
             NavigateLeftView("ServerLeft");
@@ -78,7 +79,15 @@ namespace LSL.ViewModels
         #region 启动前校验配置文件
         public static string? VerifyServerConfigBeforeStart(string serverId)
         {
-            var config = ServerConfigManager.ServerConfigs[serverId];
+            ServerConfig? config;
+            try
+            {
+                config = ServerConfigManager.ServerConfigs[serverId];
+            }
+            catch
+            {
+                return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
+            }
             if (config == null) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
             else if (!File.Exists(config.using_java)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
             else

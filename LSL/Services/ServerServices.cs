@@ -117,6 +117,7 @@ namespace LSL.Services
                     string status = $"已关闭，进程退出码为{exitCode}";
                     EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Status = false });
                     EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器" + status });
+                    SP.Dispose();
                 }
             };
         }
