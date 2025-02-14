@@ -35,7 +35,7 @@ namespace LSL.ViewModels
         public ICommand SaveServerCmd { get; set; }// 保存服务器命令
         public ICommand ShutServerCmd { get; set; }// 结束服务器进程命令
         public ICommand SendServerCmd { get; set; }// 发送服务器命令
-        private string _serverInputText;// 服务器命令输入框文本
+        private string _serverInputText = "";// 服务器命令输入框文本
         public string ServerInputText // 服务器命令输入框文本访问器
         {
             get => _serverInputText;

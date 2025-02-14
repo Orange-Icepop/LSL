@@ -38,10 +38,10 @@ namespace LSL.Services
 
         // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在MainViewModel中将列表项解析为ServerId
 
-        private ConcurrentDictionary<string, Process> _runningServers = [];// 存储正在运行的服务器实例
+        private ConcurrentDictionary<string, ServerProcess> _runningServers = [];// 存储正在运行的服务器实例
 
         #region 存储服务器进程实例LoadServer(string serverId, Process process)
-        public void LoadServer(string serverId, Process process)
+        public void LoadServer(string serverId, ServerProcess process)
         {
             _runningServers.AddOrUpdate(serverId, process, (key, value) => process);
         }
@@ -62,9 +62,9 @@ namespace LSL.Services
         #endregion
 
         #region 获取服务器进程实例GetServer(string serverId)
-        public Process? GetServer(string serverId)
+        public ServerProcess? GetServer(string serverId)
         {
-            return _runningServers.TryGetValue(serverId, out Process? process) ? process : null;
+            return _runningServers.TryGetValue(serverId, out ServerProcess? process) ? process : null;
         }
         #endregion
 
@@ -74,96 +74,65 @@ namespace LSL.Services
             EnsureExited(serverId);
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
             ServerConfig config = ServerConfigManager.ServerConfigs[serverId];
-            string serverPath = config.server_path;
-            string configPath = Path.Combine(serverPath, "lslconfig.json");
-            string corePath = Path.Combine(serverPath, config.core_name);
-            string javaPath = config.using_java;
-            string MinMem = config.min_memory.ToString();
-            string MaxMem = config.max_memory.ToString();
-            string arguments = $"-server -Xms{MinMem}M -Xmx{MaxMem}M -jar {corePath} nogui";
-
-            ProcessStartInfo startInfo = new()// 提供服务器信息
-            {
-                FileName = javaPath,
-                Arguments = arguments,
-                WorkingDirectory = serverPath,
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                StandardInputEncoding = Encoding.UTF8,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8
-            };
+            var SP = new ServerProcess(config);
             // 启动服务器
-            Process? process = Process.Start(startInfo);
-            if (process == null)
+            try
+            {
+                SP.Start();
+            }
+            catch (InvalidOperationException)
             {
                 EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器启动失败，请检查配置文件。" });
             }
-            else
+            LoadServer(serverId, SP);
+            EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器正在启动，请稍后......" });
+            SP.OutputReceived += (sender, e) =>
             {
-                using (process)
+                if (!string.IsNullOrEmpty(e.Data))
                 {
-                    LoadServer(serverId, process);
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器正在启动，请稍后......" });
-                    process.EnableRaisingEvents = true;
-
-                    process.OutputDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
-                        }
-                    };
-
-                    process.ErrorDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
-                        }
-                    };
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine();
-
-                    process.Exited += (sender, e) =>
-                    {
-                        // 移除进程的实例
-                        UnloadServer(serverId);
-                        string exitCode = "Unknown，因为服务端进程以异常的方式结束了";
-                        try
-                        {
-                            exitCode = process.ExitCode.ToString();
-                        }
-                        finally
-                        {
-                            string status = $"已关闭，进程退出码为{exitCode}";
-                            EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Status = false });
-                            EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器" + status });
-                        }
-                    };
-
-                    process.WaitForExit();
+                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
                 }
-            }
+            };
+
+            SP.ErrorReceived += (sender, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                {
+                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
+                }
+            };
+            SP.BeginRead();
+            SP.Exited += (sender, e) =>
+            {
+                // 移除进程的实例
+                UnloadServer(serverId);
+                string exitCode = "Unknown，因为服务端进程以异常的方式结束了";
+                try
+                {
+                    int SPExitCode = SP.ExitCode ?? -1;
+                    exitCode = SPExitCode == -1 ? "Unknown，因为服务端进程以异常的方式结束了" : SPExitCode.ToString();
+                }
+                finally
+                {
+                    string status = $"已关闭，进程退出码为{exitCode}";
+                    EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Status = false });
+                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器" + status });
+                }
+            };
         }
         #endregion
 
         #region 发送命令SendCommand(string serverId, string command)
         public async Task SendCommand(string serverId, string command)
         {
-            Process? server = GetServer(serverId);
-            if (CheckProcess(server))
+            ServerProcess? server = GetServer(serverId);
+            if (server != null && server.IsRunning)
             {
                 if (command == "stop")
                 {
                     EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 关闭服务器命令已发出，请等待......" });
                 }
-                var writer = server.StandardInput;
-                await writer.WriteLineAsync(command);
-                await writer.FlushAsync();
+                server.SendCommand(command);
             }
             else
             {
@@ -175,12 +144,8 @@ namespace LSL.Services
         #region 强制结束服务器进程EndServer(string serverId)
         public void EndServer(string serverId)
         {
-            Process? serverProcess = GetServer(serverId);
-            if (CheckProcess(serverProcess))
-            {
-                serverProcess.Kill();
-                serverProcess.Dispose();
-            }
+            ServerProcess? server = GetServer(serverId);
+            server?.Dispose();
             UnloadServer(serverId);
         }
         #endregion
@@ -190,11 +155,7 @@ namespace LSL.Services
         {
             foreach (var process in _runningServers.Values)
             {
-                if (process != null && !process.HasExited)
-                {
-                    process.Kill();
-                    process.Dispose();
-                }
+                process.Dispose();
             }
             _runningServers.Clear();
         }
@@ -203,11 +164,10 @@ namespace LSL.Services
         #region 确保进程退出命令EnsureExited(string serverId)
         public void EnsureExited(string serverId)
         {
-            Process? server = GetServer(serverId);
-            if (server == null) { return; }
-            else if (!server.HasExited)
+            ServerProcess? server = GetServer(serverId);
+            if (server == null) return;
+            else
             {
-                server.Kill();
                 server.Dispose();
             }
             if (server != null)
@@ -231,6 +191,8 @@ namespace LSL.Services
         #endregion
 
     }
+
+    #region 服务器进程类ServerProcess
     public class ServerProcess : IDisposable
     {
         public ServerProcess(ServerConfig config)
@@ -256,31 +218,31 @@ namespace LSL.Services
                 StandardOutputEncoding = Encoding.UTF8,
                 StandardErrorEncoding = Encoding.UTF8
             };
-            SProcess = new Process { StartInfo = StartInfo };
-            InStream = SProcess.StandardInput;
-            SProcess.OutputDataReceived += (sender, args) => OutputReceived?.Invoke(sender, args);
-            SProcess.ErrorDataReceived += (sender, args) => ErrorReceived?.Invoke(sender, args);
-            SProcess.Exited += (sender, args) =>
-            {
-                ExitCode = SProcess.ExitCode;
-                Exited?.Invoke(sender, args);
-                SProcess.Dispose();
-            };
         }
-        private Process SProcess { get; set; }
+        private Process? SProcess { get; set; }
         private ProcessStartInfo StartInfo { get; set; }
         private StreamWriter InStream { get; set; }
         public event DataReceivedEventHandler? OutputReceived;
         public event DataReceivedEventHandler? ErrorReceived;
         public event EventHandler? Exited;
-        public bool IsRunning => !SProcess.HasExited;
+        public bool IsRunning => SProcess != null && !SProcess.HasExited;
         public int? ExitCode { get; private set; }
-        public void Run()
+        public void Start()
         {
             if (!IsRunning)
             {
-                SProcess.Start();
+                SProcess = Process.Start(StartInfo);
                 if (!IsRunning) throw new InvalidOperationException("Failed to start server process.");
+                InStream = SProcess.StandardInput;
+                SProcess.EnableRaisingEvents = true;
+                SProcess.OutputDataReceived += (sender, args) => OutputReceived?.Invoke(sender, args);
+                SProcess.ErrorDataReceived += (sender, args) => ErrorReceived?.Invoke(sender, args);
+                SProcess.Exited += (sender, args) =>
+                {
+                    ExitCode = SProcess.ExitCode;
+                    Exited?.Invoke(sender, args);
+                    SProcess.Dispose();
+                };
             }
         }
         public void BeginRead()
@@ -298,16 +260,13 @@ namespace LSL.Services
         }
         public void ForceStop()
         {
-            if (IsRunning)
+            try
             {
-                try
-                {
-                    SProcess.Kill();
-                }
-                finally
-                {
-                    SProcess.Dispose();
-                }
+                SProcess.Kill();
+            }
+            finally
+            {
+                SProcess.Dispose();
             }
         }
         public void Dispose()
@@ -316,8 +275,10 @@ namespace LSL.Services
             GC.SuppressFinalize(this);
         }
     }
+    #endregion
 
-    public class OutputHandler// 服务端输出预处理
+    #region 服务端输出预处理
+    public class OutputHandler
     {
 
         private static readonly Lazy<OutputHandler> _instance = new(() => new OutputHandler());
@@ -381,6 +342,8 @@ namespace LSL.Services
                 {
                     EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = ServerId, Output = "[LSL 消息]: 服务器启动成功！" });
                     EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Status = true });
+                    ServerHost.Instance.SendCommand(ServerId, "hello");
+                    // 现在的情况是这个服务器输入处理方式不知道抽了什么风，第一个发送的命令会被修改，Buffer啥的也都排除掉了，所以这里加了一个hello命令，防止第一个命令被修改影响实际操作
                 }
 
                 if (MsgWithoutTime.StartsWith("Stopping the server"))
@@ -390,4 +353,5 @@ namespace LSL.Services
             }
         }
     }
+    #endregion
 }
