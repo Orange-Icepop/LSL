@@ -46,7 +46,7 @@ public partial class App : Application
 
     public App()
     {
-        this.DataContext = new MainViewModel();
+        this.DataContext = new ShellViewModel();
     }
 
 }
