@@ -295,10 +295,10 @@ namespace LSL.ViewModels
                 names.Add("未添加服务器");
             }
             else foreach (var item in ServerConfigManager.ServerConfigs)
-            {
-                ids.Add(item.Value.server_id);
-                names.Add(item.Value.name);
-            }
+                {
+                    ids.Add(item.Value.server_id);
+                    names.Add(item.Value.name);
+                }
             _serverIDs = ids;
             _serverNames = names;
             if (_selectedServerIndex > ServerNames.Count)
@@ -319,17 +319,23 @@ namespace LSL.ViewModels
         public ObservableCollection<JavaInfo> JavaVersions
         {
             get => _javaVersions;
-            set => this.RaiseAndSetIfChanged(ref _javaVersions, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _javaVersions, value);
+            }
         }
         // Java列表读取
         public void ReadJavaList()
         {
             JavaManager.InitJavaDict();
-            JavaVersions.Clear();
+            ObservableCollection<JavaInfo> javaVers = [];
             foreach (var item in JavaManager.JavaDict)
             {
-                JavaVersions.Add(item.Value);
+                javaVers.Add(item.Value);
             }
+            _javaVersions = javaVers;
+            this.RaisePropertyChanged(nameof(JavaVersions));
+            this.RaisePropertyChanged(nameof(AddingJavaList));
         }
         #endregion
 
