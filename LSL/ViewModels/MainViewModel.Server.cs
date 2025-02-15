@@ -219,6 +219,8 @@ namespace LSL.ViewModels
             this.RaisePropertyChanged(nameof(CurrentServerRunning));
             this.RaisePropertyChanged(nameof(CurrentServerOnline));
             this.RaisePropertyChanged(nameof(LaunchServerButtonContext));
+            this.RaisePropertyChanged(nameof(LaunchServerButtonCommand));
+            this.RaisePropertyChanged(nameof(LaunchServerButtonEnabled));
         }
         // 访问器
         public Tuple<bool, bool> ServerStatusValue(string serverId)

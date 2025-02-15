@@ -48,11 +48,18 @@
 			<!--禁用样式-->
 			<Style Selector="^:disabled">
 				<Setter Property="Background" Value="gray"/>
+				<Setter Property="Foreground" Value="black"/>
+				<Setter Property="BorderBrush" Value="black"/>
 			</Style>
 			<!--首选蓝色按钮样式定义-->
 			<Style Selector="^.highlight">
 				<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
 				<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
+				<Style Selector="^:disabled">
+					<Setter Property="Background" Value="gray"/>
+					<Setter Property="Foreground" Value="black"/>
+					<Setter Property="BorderBrush" Value="black"/>
+				</Style>
 			</Style>
 			<!--红色按钮样式定义-->
 			<Style Selector="^.red">

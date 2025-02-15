@@ -12,13 +12,14 @@
 		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10" ItemsSource="{Binding ServerNames}" SelectedIndex="{Binding SelectedServerIndex}">
 		</ComboBox>
 		<local:MyButton Name="LaunchServerButton"
-						Command="{Binding StartServerCmd}"
+						Command="{Binding LaunchServerButtonCommand}"
 						DockPanel.Dock="Top"
 						ColorType="Highlight"
 						VerticalAlignment="Center"
 						HorizontalAlignment="Center"
 						Width="150"
 						Height="40"
+						IsEnabled="{Binding LaunchServerButtonEnabled}"
 						Content="{Binding LaunchServerButtonContext}"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="StatusButton" Content="状态" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ServerStat"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="TerminalButton" Content="终端" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ServerTerminal"/>
