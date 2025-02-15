@@ -14,7 +14,7 @@ namespace LSL.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     // 不要忘了每次发布Release时更新版本号！！！
-    public static string CurrentVersion { get; } = "v0.08.1";
+    public static string CurrentVersion { get; } = "v0.08.2";
 
     #region About页面的相关内容
     public ICommand OpenWebPageCmd { get; }
