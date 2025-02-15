@@ -212,28 +212,27 @@ namespace LSL.ViewModels
         #endregion
 
         #region 服务器状态
-        public ConcurrentDictionary<string, bool> ServerStatus = new();// 服务器状态
+        public ConcurrentDictionary<string, Tuple<bool, bool>> ServerStatus = new();// 服务器状态
         public void ReceiveServerStatus(ServerStatusArgs args)// 接收服务器状态
         {
-            if (args.Status)
-            {
-                ServerStatus.AddOrUpdate(args.ServerId, true, (key, existing) => true);
-            }
-            else
-            {
-                ServerStatus.AddOrUpdate(args.ServerId, false, (key, existing) => false);
-            }
-            this.RaisePropertyChanged(nameof(EnableOperation));
+            ServerStatus.AddOrUpdate(args.ServerId, Tuple.Create(args.Running, args.Online), (key, existing) => Tuple.Create(args.Running, args.Online));
+            this.RaisePropertyChanged(nameof(CurrentServerRunning));
+            this.RaisePropertyChanged(nameof(CurrentServerOnline));
+            this.RaisePropertyChanged(nameof(LaunchServerButtonContext));
         }
         // 访问器
-        public bool ServerStatusValue(string serverId)
+        public Tuple<bool, bool> ServerStatusValue(string serverId)
         {
-            return ServerStatus.GetOrAdd(serverId, false);
+            return ServerStatus.GetOrAdd(serverId, Tuple.Create(false,false));
         }
 
-        public bool EnableOperation
+        public bool CurrentServerRunning
         {
-            get => ServerStatusValue(SelectedServerId);
+            get => ServerStatusValue(SelectedServerId).Item1;
+        }
+        public bool CurrentServerOnline
+        {
+            get => ServerStatusValue(SelectedServerId).Item2;
         }
 
         #endregion

@@ -193,7 +193,8 @@ namespace LSL.Services
     public class ServerStatusArgs : EventArgs// 服务器状态更新事件
     {
         public required string ServerId { get; set; }
-        public required bool Status { get; set; }
+        public required bool Running { get; set; }
+        public required bool Online { get; set; }
     }
 
     public class ClosingArgs : EventArgs { }// 窗体关闭事件

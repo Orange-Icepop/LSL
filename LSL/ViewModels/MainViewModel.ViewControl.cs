@@ -10,12 +10,7 @@ namespace LSL.ViewModels
     // 主要成员是get-set访问器，用于控制控件可用性与特殊内容
     public partial class MainViewModel
     {
-        private void InitViewControl()
-        {
-            LaunchServerButtonContext = "启动服务器";
-            LaunchServerButtonEnabled = false;
-        }
-        public string LaunchServerButtonContext { get; set; }
+        public string LaunchServerButtonContext { get => "启动服务器"; }// TODO:配置ICommand的修改
         public bool LaunchServerButtonEnabled { get; set; }
     }
 }

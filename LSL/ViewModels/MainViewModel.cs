@@ -59,7 +59,6 @@ public partial class MainViewModel : ViewModelBase
         EventBus.Instance.Subscribe<ServerStatusArgs>(ReceiveServerStatus);
         EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
         // 初始化
-        InitViewControl();// 初始化视图控制
         ResetPopup();// 重置弹出窗口
         ConfigManager.Initialize();// 初始化配置
         GetConfig();// 获取配置

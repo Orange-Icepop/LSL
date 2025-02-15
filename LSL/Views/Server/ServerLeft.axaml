@@ -18,7 +18,8 @@
 						VerticalAlignment="Center"
 						HorizontalAlignment="Center"
 						Width="150"
-						Height="40">启动服务器</local:MyButton>
+						Height="40"
+						Content="{Binding LaunchServerButtonContext}"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="StatusButton" Content="状态" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ServerStat"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="TerminalButton" Content="终端" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ServerTerminal"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="ConfButton" Content="设置" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="ServerConf"/>
