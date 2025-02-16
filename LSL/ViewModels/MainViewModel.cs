@@ -39,17 +39,11 @@ public partial class MainViewModel : ViewModelBase
     }
     #endregion
 
-    //初始化主窗口
-    public void InitializeMainWindow()
-    {
-        BarView = new Bar();
-        NavigateLeftView("HomeLeft");
-        NavigateRightView("HomeRight");
-        LeftWidth = 350;
-    }
+    private AppStateLayer AppState { get; }
 
-    public MainViewModel()
+    public MainViewModel(AppStateLayer appState)
     {
+        AppState = appState;
 
         // 事件订阅
         EventBus.Instance.Subscribe<PopupMessageArgs>(ReceivePopupMessage);
@@ -57,7 +51,6 @@ public partial class MainViewModel : ViewModelBase
         EventBus.Instance.Subscribe<PlayerUpdateArgs>(ReceivePlayerUpdate);
         EventBus.Instance.Subscribe<PlayerMessageArgs>(ReceiveMessage);
         EventBus.Instance.Subscribe<ServerStatusArgs>(ReceiveServerStatus);
-        EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
         // 初始化
         ResetPopup();// 重置弹出窗口
         ConfigManager.Initialize();// 初始化配置
@@ -65,35 +58,6 @@ public partial class MainViewModel : ViewModelBase
         ReadServerList();// 读取服务器列表
         ReadJavaList();// 读取Java列表
         var outputHandler = OutputHandler.Instance;// 初始化输出处理
-
-        // 视图命令
-        LeftViewCmd = ReactiveCommand.Create<string>(INavigateLeft);
-        RightViewCmd = ReactiveCommand.Create<string>(INavigateRight);
-        FullViewCmd = ReactiveCommand.Create<string>(NavigateFullScreenView);
-        FullViewBackCmd = ReactiveCommand.Create(async () =>
-        {
-            await ShowPopup(4, "不应出现的命令错误", "当您看见该弹窗时，说明表单填充时用于返回的命令在未进入全屏表单时被触发了。如果您没有对LSL进行修改，这通常意味着LSL出现了一个Bug，请在LSL的源码仓库中提交一份关于该Bug的issue。");
-        });
-        ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
-        QuitCmd = ReactiveCommand.Create(Quit);
-
-        #region 多参数导航
-        PanelConfigCmd = ReactiveCommand.Create(() =>
-        {
-            NavigateLeftView("SettingsLeft", true);
-            NavigateRightView("PanelSettings");
-        });
-        DownloadConfigCmd = ReactiveCommand.Create(() =>
-        {
-            NavigateLeftView("SettingsLeft", true);
-            NavigateRightView("DownloadSettings");
-        });
-        CommonConfigCmd = ReactiveCommand.Create(() =>
-        {
-            NavigateLeftView("SettingsLeft", true);
-            NavigateRightView("Common");
-        });
-        #endregion
 
         #region 配置相关命令实现
         ConfirmAddServer = ReactiveCommand.Create(async () => await AddNewServer());// 添加服务器命令-实现
@@ -171,19 +135,5 @@ public partial class MainViewModel : ViewModelBase
     private void StartUpProgress()// 非必要启动项
     {
     }
-
-    public void QuitHandler(ClosingArgs args)// 退出事件处理
-    {
-        ConfigManager.ConfirmConfig(ViewConfigs);
-    }
-
-    public ICommand ShowMainWindowCmd { get; }// 显示主窗口命令
-    public ICommand QuitCmd { get; }// 退出命令
-
-    public static void ShowMainWindow()
-    {
-        EventBus.Instance.Publish(new ViewBroadcastArgs { Target = "MainWindow.axaml.cs", Message = "Show" });
-    }
-    public static void Quit() { Environment.Exit(0); }
 
 }

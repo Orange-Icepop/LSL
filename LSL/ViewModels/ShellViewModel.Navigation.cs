@@ -10,7 +10,7 @@ using LSL.Views;
 
 namespace LSL.ViewModels
 {
-    public partial class MainViewModel
+    public partial class ShellViewModel
     {
 
         #region 导航相关
@@ -47,9 +47,9 @@ namespace LSL.ViewModels
         public ICommand FullViewBackCmd { get; set; }
         //这一部分是多参数导航按钮的部分，由于设置别的VM会导致堆栈溢出且暂时没找到替代方案，所以先摆了
         //还有就是本来希望可以创建一个方法来传递两个参数的，但是太麻烦了，还是先搁置了
-        public ReactiveCommand<Unit, Unit> PanelConfigCmd { get; }
-        public ReactiveCommand<Unit, Unit> DownloadConfigCmd { get; }
-        public ReactiveCommand<Unit, Unit> CommonConfigCmd { get; }
+        public ICommand PanelConfigCmd { get; }
+        public ICommand DownloadConfigCmd { get; }
+        public ICommand CommonConfigCmd { get; }
         #endregion
 
         #region 左视图切换命令
@@ -60,7 +60,7 @@ namespace LSL.ViewModels
             if (newView != null && viewName != CurrentLeftView)
             {
                 CurrentLeftView = viewName;
-                if (viewName == "SettingsLeft") GetConfig();
+                if (viewName == "SettingsLeft") MainVM.GetConfig();
                 LeftView = newView;
                 switch (viewName)
                 {
@@ -99,7 +99,7 @@ namespace LSL.ViewModels
             if (newView != null && (viewName != CurrentRightView || force))
             {
                 RightView = newView;
-                if (CurrentLeftView == "SettingsLeft") ConfigManager.ConfirmConfig(ViewConfigs);
+                if (CurrentLeftView == "SettingsLeft") ConfigManager.ConfirmConfig(MainVM.ViewConfigs);
                 CurrentRightView = viewName;
                 EventBus.Instance.Publish(new LeftChangedEventArgs { LeftView = CurrentLeftView, LeftTarget = viewName });
                 Debug.WriteLine("Right Page Switched:" + viewName);
@@ -118,7 +118,7 @@ namespace LSL.ViewModels
                 { "AddCore", "从核心添加服务器" },
                 { "EditSC", "修改服务器配置" },
             };
-            FSTitle = TitleMatcher.TryGetValue(viewName, out string? value) ? value : viewName;
+            AppState.FullScreenTitle = TitleMatcher.TryGetValue(viewName, out string? value) ? value : viewName;
             FullViewBackCmd = ReactiveCommand.Create(() =>
             {
                 BarView = ViewFactory.CreateView("Bar");

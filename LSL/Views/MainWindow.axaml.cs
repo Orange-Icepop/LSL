@@ -37,8 +37,8 @@ public partial class MainWindow : Window
     }
     private void InitializeViews(object sender, EventArgs e)
     {
-        var mainViewModel = (MainViewModel)this.DataContext;
-        mainViewModel.InitializeMainWindow();
+        var shellViewModel = (ShellViewModel)this.DataContext;
+        shellViewModel.MainVM.InitializeMainWindow();
     }
     private void MainWindow_Closing(object sender, CancelEventArgs e)
     {

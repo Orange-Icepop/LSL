@@ -9,15 +9,6 @@ namespace LSL.ViewModels
 {
     public partial class MainViewModel
     {
-        #region 全屏顶栏板块
-        private string _FSTitle;
-        public string FSTitle
-        {
-            get => _FSTitle;
-            set => this.RaiseAndSetIfChanged(ref _FSTitle, value);
-        }
-        #endregion
-
         #region 服务器添加板块
         // Java选择列表绑定
         public List<string> AddingJavaList

@@ -10,7 +10,7 @@
 	<Design.DataContext>
 		<!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-		<vm:MainViewModel />
+		<vm:ShellViewModel />
 	</Design.DataContext>
 
 	<!--主页面的模板-->
@@ -18,7 +18,7 @@
 		<!--<views:Bar Height="50" DockPanel.Dock="Top"/>-->
 		<Border Height="50" DockPanel.Dock="Top" Background="{StaticResource OBlueBar}">
 			<TransitioningContentControl Name="BarContent"
-							Content="{Binding BarView}">
+							Content="{Binding BarVM.CurrentView}">
 				<TransitioningContentControl.PageTransition>
 					<CompositePageTransition>
 						<CrossFade Duration="0:00:00.3"/>
@@ -36,7 +36,7 @@
 		<!--为了防止背景被纳入过渡，加入一个Border包住内容-->
 		<Border Background="White" Width="{Binding LeftWidth}" BoxShadow="5 0 10 -5 Gray">
 			<TransitioningContentControl Name="LeftContent"
-							Content="{Binding LeftView}"
+							Content="{Binding LeftVM.CurrentView}"
 							HorizontalAlignment="Left">
 				<TransitioningContentControl.PageTransition>
 					<CompositePageTransition>
@@ -53,7 +53,7 @@
 		<!--右侧的内容-->
 		<ScrollViewer Name="RightScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 			<TransitioningContentControl Name="RightContent"
-										 Content="{Binding RightView}">
+										 Content="{Binding RightVM.CurrentView}">
 				<TransitioningContentControl.PageTransition>
 					<CompositePageTransition>
 						<CrossFade Duration="0:00:00.4"/>

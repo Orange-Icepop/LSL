@@ -18,7 +18,7 @@ namespace LSL.ViewModels
         }
         public LeftRegionVM(AppStateLayer appState) : base(appState) 
         {
-
+            CurrentView = ViewFactory.CreateView("HomeLeft");
         }
     }
 }

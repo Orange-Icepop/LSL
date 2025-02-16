@@ -18,6 +18,15 @@ namespace LSL.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _currentView, value);
         }
 
+        #region 全屏顶栏板块
+        private string _FSTitle;
+        public string FSTitle
+        {
+            get => _FSTitle;
+            set => this.RaiseAndSetIfChanged(ref _FSTitle, value);
+        }
+        #endregion
+
         public bool HomeButtonClass { get; set; }
         public bool ServerButtonClass { get; set; }
         public bool DownloadButtonClass { get; set; }
@@ -30,6 +39,7 @@ namespace LSL.ViewModels
             ServerButtonClass = false;
             DownloadButtonClass = false;
             SettingsButtonClass = false;
+            FSTitle = string.Empty;
         }
     }
 }
