@@ -159,7 +159,7 @@ namespace LSL.ViewModels
                 ServerConfigManager.RegisterServer(NewServerName, JavaPath, CorePath, uint.Parse(_minMemory), uint.Parse(_maxMemory), ExtJvm);
                 ReadServerList();
                 Notify(1, null, "服务器配置成功！");
-                FullViewBackCmd.Execute(null);
+                MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Undefined, RightTarget = RightPageState.Undefined });
             }
         }
         #endregion
@@ -197,13 +197,13 @@ namespace LSL.ViewModels
             {
                 await Task.Run(() => ServerConfigManager.EditServer(SelectedServerId, NewServerName, JavaPath, uint.Parse(_minMemory), uint.Parse(_maxMemory), ExtJvm));
                 ReadServerList();
-                FullViewBackCmd.Execute(null);
+                MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Undefined, RightTarget = RightPageState.Undefined });
             }
         }
         #endregion
 
         #region 添加与修改服务器时的配置载入
-        private void LoadNewServerConfig()
+        public void LoadNewServerConfig()
         {
             NewServerName = "NewServer";
             CorePath = "";
@@ -213,7 +213,7 @@ namespace LSL.ViewModels
             ExtJvm = "-Dlog4j2.formatMsgNoLookups=true";
         }
 
-        private void LoadCurrentServerConfig()
+        public void LoadCurrentServerConfig()
         {
             NewServerName = new string(CurrentServerConfig.name);
             CorePath = Path.Combine(ConfigManager.ServersPath, NewServerName, new string(CurrentServerConfig.core_name));

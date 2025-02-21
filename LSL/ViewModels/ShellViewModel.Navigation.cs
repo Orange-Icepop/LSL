@@ -14,31 +14,9 @@ namespace LSL.ViewModels
     {
 
         #region 导航相关
-        //View原件
-        private UserControl _leftView;
-        private UserControl _rightView;
-        private UserControl _barView;
-
         //当前View
         public string CurrentLeftView { get; set; }
         public string CurrentRightView { get; set; }
-
-        //View访问器
-        public UserControl LeftView
-        {
-            get => _leftView;
-            set => this.RaiseAndSetIfChanged(ref _leftView, value);
-        }
-        public UserControl RightView
-        {
-            get => _rightView;
-            set => this.RaiseAndSetIfChanged(ref _rightView, value);
-        }
-        public UserControl BarView
-        {
-            get => _barView;
-            set => this.RaiseAndSetIfChanged(ref _barView, value);
-        }
 
         //创建切换触发方法
         public ICommand LeftViewCmd { get; }
@@ -56,35 +34,39 @@ namespace LSL.ViewModels
         public void INavigateLeft(string viewName) { NavigateLeftView(viewName); }
         public void NavigateLeftView(string viewName, bool dislink = false)
         {
-            UserControl newView = ViewFactory.CreateView(viewName);
-            if (newView != null && viewName != CurrentLeftView)
+            if (viewName != CurrentLeftView)
             {
                 CurrentLeftView = viewName;
                 if (viewName == "SettingsLeft") MainVM.GetConfig();
-                LeftView = newView;
+                GeneralPageState gps = new();
                 switch (viewName)
                 {
                     case "HomeLeft":
+                        gps = GeneralPageState.Home;
                         if (!dislink)
                             NavigateRightView("HomeRight");
                         LeftWidth = 350;
                         break;
                     case "ServerLeft":
+                        gps = GeneralPageState.Server;
                         if (!dislink)
                             NavigateRightView("ServerStat");
                         LeftWidth = 250;
                         break;
                     case "DownloadLeft":
+                        gps = GeneralPageState.Downloads;
                         if (!dislink)
                             NavigateRightView("AutoDown");
                         LeftWidth = 150;
                         break;
                     case "SettingsLeft":
+                        gps = GeneralPageState.Settings;
                         if (!dislink)
                             NavigateRightView("Common");
                         LeftWidth = 150;
                         break;
                 }
+                MessageBus.Current.SendMessage(new NavigateArgs { LeftTarget = gps, RightTarget = RightPageState.Undefined});
                 EventBus.Instance.Publish(new BarChangedEventArgs { NavigateTarget = viewName });//通知主要视图更改
                 Debug.WriteLine("Left Page Switched:" + viewName);
             }
@@ -98,7 +80,7 @@ namespace LSL.ViewModels
             UserControl newView = ViewFactory.CreateView(viewName);
             if (newView != null && (viewName != CurrentRightView || force))
             {
-                RightView = newView;
+                MessageBus.Current.SendMessage(new NavigateArgs { RightTarget = RightPageState.Undefined });//TODO:增加变成Enum的方法
                 if (CurrentLeftView == "SettingsLeft") ConfigManager.ConfirmConfig(MainVM.ViewConfigs);
                 CurrentRightView = viewName;
                 EventBus.Instance.Publish(new LeftChangedEventArgs { LeftView = CurrentLeftView, LeftTarget = viewName });
@@ -121,16 +103,16 @@ namespace LSL.ViewModels
             AppState.FullScreenTitle = TitleMatcher.TryGetValue(viewName, out string? value) ? value : viewName;
             FullViewBackCmd = ReactiveCommand.Create(() =>
             {
-                BarView = ViewFactory.CreateView("Bar");
+                MessageBus.Current.SendMessage(new NavigateArgs {BarTarget = BarState.Common, LeftTarget = GeneralPageState.Undefined, RightTarget = RightPageState.Undefined });
                 LeftWidth = originalLeftWidth;
                 NavigateLeftView(originalLeftView);
                 NavigateRightView(originalRightView);
                 EventBus.Instance.Publish(new BarChangedEventArgs { NavigateTarget = originalLeftView });
             });
             LeftWidth = 0;
-            BarView = new FSBar();
-            if (viewName == "AddCore") LoadNewServerConfig();
-            if (viewName == "EditSC") LoadCurrentServerConfig();
+            MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RightPageState.Empty });
+            if (viewName == "AddCore") MainVM.LoadNewServerConfig();
+            if (viewName == "EditSC") MainVM.LoadCurrentServerConfig();
             NavigateRightView(viewName);
         }
         #endregion

@@ -1,8 +1,10 @@
 ﻿using Avalonia.Controls;
+using LSL.Services;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,15 +12,22 @@ namespace LSL.ViewModels
 {
     public class LeftRegionVM : RegionalVMBase
     {
-        private UserControl _currentView;
-        public UserControl CurrentView
+        private ObservableAsPropertyHelper<UserControl> _currentView;
+        public UserControl CurrentView => _currentView.Value;
+
+        public LeftRegionVM(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
         {
-            get => _currentView;
-            private set => this.RaiseAndSetIfChanged(ref _currentView, value);
+            AppState.WhenAnyValue(AS => AS.CurrentGeneralPage)
+                .Where(CV => CV != GeneralPageState.Undefined)
+                .Select(CV => NavigateLeft(CV))
+                .ToProperty(this, t => t.CurrentView, out _currentView);
         }
-        public LeftRegionVM(AppStateLayer appState) : base(appState) 
+
+        private UserControl NavigateLeft(GeneralPageState page)
         {
-            CurrentView = ViewFactory.CreateView("HomeLeft");
+            if (page == GeneralPageState.Undefined) return CurrentView;
+            else if (page == GeneralPageState.Empty) return new UserControl();
+            else return ViewFactory.CreateView(page.ToString() + "Left");
         }
     }
 }

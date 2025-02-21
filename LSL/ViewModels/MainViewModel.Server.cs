@@ -24,7 +24,7 @@ namespace LSL.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _selectedServerIndex, value);
-                RefreshRightView();
+                MessageBus.Current.SendMessage(new NavigateCommand { Type = NavigateCommandType.Refresh });
                 ReadProperties();
             }
         }
@@ -64,8 +64,7 @@ namespace LSL.ViewModels
                 return;
             }
             TerminalTexts.TryAdd(SelectedServerId, new StringBuilder());
-            NavigateLeftView("ServerLeft");
-            NavigateRightView("ServerTerminal");
+            MessageBus.Current.SendMessage(new NavigateArgs { LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
             Task RunServer = Task.Run(() => ServerHost.Instance.RunServer(SelectedServerId));
             Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
         }

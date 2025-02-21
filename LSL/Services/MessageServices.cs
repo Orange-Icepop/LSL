@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LSL.ViewModels;
 
 namespace LSL.Services
 {
@@ -217,4 +218,19 @@ namespace LSL.Services
             EventBus.Instance.Publish(new NotifyArgs { Type = type, Title = title, Message = message });
         }
     }
+
+    #region ReactiveUI事件类
+    public interface IMessageArgs;
+    public class NavigateArgs : IMessageArgs
+    {
+        public BarState BarTarget { get; set; } = BarState.Undefined;
+        public GeneralPageState LeftTarget { get; set; } = GeneralPageState.Undefined;
+        public RightPageState RightTarget { get; set; } = RightPageState.Undefined;
+    }
+
+    public class NavigateCommand : IMessageArgs
+    {
+        public NavigateCommandType Type { get; set; } = NavigateCommandType.None;
+    }
+    #endregion
 }

@@ -13,6 +13,7 @@ namespace LSL.ViewModels
     public partial class ShellViewModel : ViewModelBase
     {
         public AppStateLayer AppState { get; }
+        public ServiceConnector ServeCon { get; }
         public MainViewModel MainVM { get; }
         public BarRegionVM BarVM { get; }
         public LeftRegionVM LeftVM { get; }
@@ -20,20 +21,18 @@ namespace LSL.ViewModels
         public ShellViewModel()
         {
             AppState = new AppStateLayer();
+            ServeCon = new ServiceConnector(AppState);
             MainVM = new MainViewModel(AppState);
-            BarVM = new BarRegionVM(AppState);
-            LeftVM = new LeftRegionVM(AppState);
-            RightVM = new RightRegionVM(AppState);
+            BarVM = new BarRegionVM(AppState, ServeCon);
+            LeftVM = new LeftRegionVM(AppState, ServeCon);
+            RightVM = new RightRegionVM(AppState, ServeCon);
             EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
 
             // 视图命令
             LeftViewCmd = ReactiveCommand.Create<string>(INavigateLeft);
             RightViewCmd = ReactiveCommand.Create<string>(INavigateRight);
             FullViewCmd = ReactiveCommand.Create<string>(NavigateFullScreenView);
-            FullViewBackCmd = ReactiveCommand.Create(async () =>
-            {
-                await ShowPopup(4, "不应出现的命令错误", "当您看见该弹窗时，说明表单填充时用于返回的命令在未进入全屏表单时被触发了。如果您没有对LSL进行修改，这通常意味着LSL出现了一个Bug，请在LSL的源码仓库中提交一份关于该Bug的issue。");
-            });
+            FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common }));
             ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
             QuitCmd = ReactiveCommand.Create(Quit);
 
@@ -59,7 +58,7 @@ namespace LSL.ViewModels
         //初始化主窗口
         public void InitializeMainWindow()
         {
-            BarView = new Bar();
+            MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Home, RightTarget = RightPageState.HomeRight });
             NavigateLeftView("HomeLeft");
             NavigateRightView("HomeRight");
             LeftWidth = 350;
