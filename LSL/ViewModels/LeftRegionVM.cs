@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using LSL.Services;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,8 @@ namespace LSL.ViewModels
         private ObservableAsPropertyHelper<UserControl> _currentView;
         public UserControl CurrentView => _currentView.Value;
 
+        [Reactive] public double LeftWidth { get; set; }
+
         public LeftRegionVM(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
         {
             AppState.WhenAnyValue(AS => AS.CurrentGeneralPage)
@@ -27,7 +30,20 @@ namespace LSL.ViewModels
         {
             if (page == GeneralPageState.Undefined) return CurrentView;
             else if (page == GeneralPageState.Empty) return new UserControl();
-            else return ViewFactory.CreateView(page.ToString() + "Left");
+            else 
+            {
+                double lw = page switch
+                {
+                    GeneralPageState.Home => 350,
+                    GeneralPageState.Server => 250,
+                    GeneralPageState.Downloads => 150,
+                    GeneralPageState.Settings => 150,
+                    GeneralPageState.FullScreen => 0,
+                    _ => 150
+                };
+                LeftWidth = lw;
+                return ViewFactory.CreateView(page.ToString() + "Left");
+            }
         }
     }
 }

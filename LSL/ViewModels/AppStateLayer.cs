@@ -1,5 +1,6 @@
 ﻿using LSL.Services;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace LSL.ViewModels
 {
+    #region 页面状态枚举
     public enum BarState
     {
         Common,
@@ -50,7 +52,7 @@ namespace LSL.ViewModels
         //Others
         Empty,
         Undefined,
-        Refresh
+        Hold
     }
 
     public enum NavigateCommandType
@@ -59,33 +61,13 @@ namespace LSL.ViewModels
         Refresh,
         FS2Common
     }
+    #endregion
 
     public class AppStateLayer : ReactiveObject
     {
-        private BarState _currentBarState;
-        public BarState CurrentBarState
-        {
-            get => _currentBarState;
-            set => this.RaiseAndSetIfChanged(ref _currentBarState, value);
-        }
-        private GeneralPageState _currentGeneralPage;
-        public GeneralPageState CurrentGeneralPage
-        {
-            get => _currentGeneralPage;
-            set => this.RaiseAndSetIfChanged(ref _currentGeneralPage, value);
-        }
-        private RightPageState _currentRightPage;
-        public RightPageState CurrentRightPage
-        {
-            get => _currentRightPage;
-            set => this.RaiseAndSetIfChanged(ref _currentRightPage, value);
-        }
-        private string _fullScreenTitle;
-        public string FullScreenTitle
-        {
-            get => _fullScreenTitle;
-            set => this.RaiseAndSetIfChanged(ref _fullScreenTitle, value);
-        }
+        [Reactive] public BarState CurrentBarState { get; set; }
+        [Reactive] public GeneralPageState CurrentGeneralPage { get; set; }
+        [Reactive] public RightPageState CurrentRightPage { get; set; }
 
         private Tuple<GeneralPageState, RightPageState> _lastPage;
 
@@ -96,8 +78,16 @@ namespace LSL.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(args => Navigate(args));
         }
-        private void Navigate(NavigateArgs args)
+        private void Navigate(NavigateArgs args)// ASL不负责查重操作
         {
+            if (args.LeftTarget != GeneralPageState.Undefined)
+            {
+                CurrentGeneralPage = args.LeftTarget;
+            }
+            if (args.RightTarget != RightPageState.Undefined)
+            {
+                CurrentRightPage = args.RightTarget;
+            }
             if (args.BarTarget != BarState.Undefined)
             {
                 if (args.BarTarget == BarState.FullScreen && CurrentBarState == BarState.Common)
@@ -119,14 +109,6 @@ namespace LSL.ViewModels
                     }
                 }
                 else CurrentBarState = args.BarTarget;
-            }
-            if (args.LeftTarget != GeneralPageState.Undefined)
-            {
-                CurrentGeneralPage = args.LeftTarget;
-            }
-            if (args.RightTarget != RightPageState.Undefined)
-            {
-                CurrentRightPage = args.RightTarget;
             }
         }
     }

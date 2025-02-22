@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using LSL.Views;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,37 +21,11 @@ namespace LSL.ViewModels
         }
 
         #region 全屏顶栏板块
-        private string _FSTitle;
-        public string FSTitle
-        {
-            get => _FSTitle;
-            set => this.RaiseAndSetIfChanged(ref _FSTitle, value);
-        }
-
-        private bool _homeButtonClass;
-        public bool HomeButtonClass
-        {
-            get => _homeButtonClass;
-            private set => this.RaiseAndSetIfChanged(ref _homeButtonClass, value);
-        }
-        private bool _serverButtonClass;
-        public bool ServerButtonClass
-        {
-            get => _serverButtonClass;
-            private set => this.RaiseAndSetIfChanged(ref _serverButtonClass, value);
-        }
-        private bool _downloadButtonClass;
-        public bool DownloadButtonClass
-        {
-            get => _downloadButtonClass;
-            private set => this.RaiseAndSetIfChanged(ref _downloadButtonClass, value);
-        }
-        private bool _settingsButtonClass;
-        public bool SettingsButtonClass
-        {
-            get => _settingsButtonClass;
-            private set => this.RaiseAndSetIfChanged(ref _settingsButtonClass, value);
-        }
+        [Reactive] public string FSTitle { get; set; }
+        [Reactive] public bool HomeButtonClass { get; set; }
+        [Reactive] public bool ServerButtonClass { get; set; }
+        [Reactive] public bool DownloadButtonClass { get; set; }
+        [Reactive] public bool SettingsButtonClass { get; set; }
         #endregion
 
         public BarRegionVM(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
@@ -90,7 +65,12 @@ namespace LSL.ViewModels
                     SettingsButtonClass = true;
                     break;
                 case GeneralPageState.FullScreen:
-                    FSTitle = AppState.FullScreenTitle;
+                    FSTitle = AppState.CurrentRightPage switch
+                    {
+                        RightPageState.EditSC => "修改服务器配置",
+                        RightPageState.AddCore => "从核心添加服务器",
+                        _ => ""
+                    };
                     break;
                 default:
                     break;

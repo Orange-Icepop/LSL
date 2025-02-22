@@ -25,7 +25,8 @@ namespace LSL.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(e =>
                 {
-                    if (e.Type == NavigateCommandType.Refresh) NavigateRight(AppState.CurrentRightPage);
+                    if (e.Type == NavigateCommandType.Refresh)
+                        MessageBus.Current.SendMessage(new NavigateArgs { RightTarget = AppState.CurrentRightPage });
                 });
         }
         public UserControl NavigateRight(RightPageState page)

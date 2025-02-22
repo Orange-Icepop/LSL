@@ -61,7 +61,6 @@ namespace LSL.ViewModels
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Home, RightTarget = RightPageState.HomeRight });
             NavigateLeftView("HomeLeft");
             NavigateRightView("HomeRight");
-            LeftWidth = 350;
         }
 
 

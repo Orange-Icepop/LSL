@@ -45,29 +45,24 @@ namespace LSL.ViewModels
                         gps = GeneralPageState.Home;
                         if (!dislink)
                             NavigateRightView("HomeRight");
-                        LeftWidth = 350;
                         break;
                     case "ServerLeft":
                         gps = GeneralPageState.Server;
                         if (!dislink)
                             NavigateRightView("ServerStat");
-                        LeftWidth = 250;
                         break;
                     case "DownloadLeft":
                         gps = GeneralPageState.Downloads;
                         if (!dislink)
                             NavigateRightView("AutoDown");
-                        LeftWidth = 150;
                         break;
                     case "SettingsLeft":
                         gps = GeneralPageState.Settings;
                         if (!dislink)
                             NavigateRightView("Common");
-                        LeftWidth = 150;
                         break;
                 }
-                MessageBus.Current.SendMessage(new NavigateArgs { LeftTarget = gps, RightTarget = RightPageState.Undefined});
-                EventBus.Instance.Publish(new BarChangedEventArgs { NavigateTarget = viewName });//通知主要视图更改
+                MessageBus.Current.SendMessage(new NavigateArgs { LeftTarget = gps, RightTarget = RightPageState.Undefined });
                 Debug.WriteLine("Left Page Switched:" + viewName);
             }
         }
@@ -77,13 +72,10 @@ namespace LSL.ViewModels
         public void INavigateRight(string viewName) { NavigateRightView(viewName); }
         public void NavigateRightView(string viewName, bool force = false)
         {
-            UserControl newView = ViewFactory.CreateView(viewName);
-            if (newView != null && (viewName != CurrentRightView || force))
+            if (Enum.TryParse<RightPageState>(viewName, out var RV) && (viewName != CurrentRightView || force))
             {
-                MessageBus.Current.SendMessage(new NavigateArgs { RightTarget = RightPageState.Undefined });//TODO:增加变成Enum的方法
-                if (CurrentLeftView == "SettingsLeft") ConfigManager.ConfirmConfig(MainVM.ViewConfigs);
-                CurrentRightView = viewName;
-                EventBus.Instance.Publish(new LeftChangedEventArgs { LeftView = CurrentLeftView, LeftTarget = viewName });
+                MessageBus.Current.SendMessage(new NavigateArgs { RightTarget = RV });
+                if (CurrentLeftView == "SettingsLeft") ConfigManager.ConfirmConfig(MainVM.ViewConfigs);//TODO
                 Debug.WriteLine("Right Page Switched:" + viewName);
             }
         }
@@ -92,48 +84,26 @@ namespace LSL.ViewModels
         #region 全屏视图切换命令
         public void NavigateFullScreenView(string viewName)
         {
-            double originalLeftWidth = LeftWidth;
-            string originalLeftView = new string(CurrentLeftView);
-            string originalRightView = new string(CurrentRightView);
-            Dictionary<string, string> TitleMatcher = new()
+            FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Undefined, RightTarget = RightPageState.Undefined }));
+            if (!Enum.TryParse<RightPageState>(viewName, out var RV)) return;
+            else if (RV == RightPageState.AddCore || RV == RightPageState.EditSC)
             {
-                { "AddCore", "从核心添加服务器" },
-                { "EditSC", "修改服务器配置" },
-            };
-            AppState.FullScreenTitle = TitleMatcher.TryGetValue(viewName, out string? value) ? value : viewName;
-            FullViewBackCmd = ReactiveCommand.Create(() =>
-            {
-                MessageBus.Current.SendMessage(new NavigateArgs {BarTarget = BarState.Common, LeftTarget = GeneralPageState.Undefined, RightTarget = RightPageState.Undefined });
-                LeftWidth = originalLeftWidth;
-                NavigateLeftView(originalLeftView);
-                NavigateRightView(originalRightView);
-                EventBus.Instance.Publish(new BarChangedEventArgs { NavigateTarget = originalLeftView });
-            });
-            LeftWidth = 0;
-            MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RightPageState.Empty });
-            if (viewName == "AddCore") MainVM.LoadNewServerConfig();
-            if (viewName == "EditSC") MainVM.LoadCurrentServerConfig();
-            NavigateRightView(viewName);
+                MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RV });
+                if (RV == RightPageState.AddCore) MainVM.LoadNewServerConfig();//TODO
+                if (RV == RightPageState.EditSC) MainVM.LoadCurrentServerConfig();
+                Debug.WriteLine("Successfully navigated to " + viewName);
+            }
+            else Debug.WriteLine("This view is not a fullscreen view: " + viewName);
         }
         #endregion
 
         #region 右视图强制刷新命令
         public void RefreshRightView()
         {
-            string original = CurrentRightView;
-            NavigateRightView(original, true);
+            var original = AppState.CurrentRightPage;
+            MessageBus.Current.SendMessage(new NavigateArgs { RightTarget = original });
             EventBus.Instance.Publish(new ViewBroadcastArgs { Target = "ServerTerminal.axaml.cs", Message = "ScrollToEnd" });
         }
         #endregion
-
-        #region 左栏宽度定义
-        private double _leftWidth;
-        public double LeftWidth
-        {
-            get => _leftWidth;
-            set => this.RaiseAndSetIfChanged(ref _leftWidth, value);
-        }
-        #endregion
-
     }
 }
