@@ -7,6 +7,8 @@ using LSL.Services;
 
 namespace LSL.ViewModels
 {
+    // 用于连接视图模型与服务层
+    // 主要成员为void，用于调用服务层方法
     public class ServiceConnector
     {
         public AppStateLayer AppState { get; set; }
@@ -15,10 +17,23 @@ namespace LSL.ViewModels
             AppState = appState;
         }
 
-        public void GetConfig()
+        public void GetConfig(bool readFile = true)
         {
-            ConfigManager.LoadConfig();
+            if (readFile) ConfigManager.LoadConfig();
             AppState.CurrentConfigs = ConfigManager.CurrentConfigs;
         }
+
+        public void ReadJavaConfig(bool readFile = true)
+        {
+            if (readFile) JavaManager.ReadJavaConfig();
+            AppState.CurrentJavaDict = JavaManager.JavaDict;
+        }
+
+        public void ReadServerConfig(bool readFile = true)
+        {
+            if (readFile) ServerConfigManager.LoadServerConfigs();
+            AppState.CurrentServerConfigs = ServerConfigManager.ServerConfigs;
+        }
+
     }
 }

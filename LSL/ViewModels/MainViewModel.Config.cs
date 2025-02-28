@@ -327,7 +327,7 @@ namespace LSL.ViewModels
         // Java¡–±Ì∂¡»°
         public void ReadJavaList()
         {
-            JavaManager.InitJavaDict();
+            JavaManager.ReadJavaConfig();
             ObservableCollection<JavaInfo> javaVers = [];
             foreach (var item in JavaManager.JavaDict)
             {

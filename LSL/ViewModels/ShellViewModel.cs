@@ -18,6 +18,7 @@ namespace LSL.ViewModels
         public BarRegionVM BarVM { get; }
         public LeftRegionVM LeftVM { get; }
         public RightRegionVM RightVM { get; }
+        public ConfigViewModel ConfigVM { get; set; }
         public ShellViewModel()
         {
             AppState = new AppStateLayer();
@@ -26,6 +27,7 @@ namespace LSL.ViewModels
             BarVM = new BarRegionVM(AppState, ServeCon);
             LeftVM = new LeftRegionVM(AppState, ServeCon);
             RightVM = new RightRegionVM(AppState, ServeCon);
+            ConfigVM = new ConfigViewModel(AppState, ServeCon);
             EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
 
             // 视图命令

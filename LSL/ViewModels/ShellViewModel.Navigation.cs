@@ -34,9 +34,16 @@ namespace LSL.ViewModels
         public void INavigateLeft(string viewName) { NavigateLeftView(viewName); }
         public void NavigateLeftView(string viewName, bool dislink = false)
         {
-            if (viewName + "Left" != AppState.CurrentGeneralPage.ToString())
+            if (viewName != AppState.CurrentGeneralPage.ToString() + "Left")
             {
-                if (viewName == "SettingsLeft") ServeCon.GetConfig();
+                if (viewName == "SettingsLeft")
+                {
+                    ConfigVM.GetConfig();
+                }
+                else if (AppState.CurrentGeneralPage == GeneralPageState.Settings)
+                {
+                    ConfigVM.ConfirmConfig();
+                }
                 GeneralPageState gps = new();
                 switch (viewName)
                 {

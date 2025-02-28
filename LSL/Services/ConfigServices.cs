@@ -565,29 +565,39 @@ namespace LSL.Services
         public static Dictionary<string, JavaInfo> JavaDict = [];// 目前读取的Java列表
 
         #region 读取Java列表
-        public static void InitJavaDict()
+        public static bool ReadJavaConfig(/*out Exception? ex*/)
         {
-            var file = File.ReadAllText(ConfigManager.JavaListPath);
-            JObject jsonObj = JObject.Parse(file);
-            JavaDict.Clear();
-            foreach (var item in jsonObj.Properties())//遍历配置文件中的所有Java
+            //ex = null;
+            try
             {
-                JToken? versionObject = item.Value["Version"];
-                JToken? pathObject = item.Value["Path"];
-                JToken? vendorObject = item.Value["Vendor"];
-                JToken? archObject = item.Value["Architecture"];
-                if (versionObject != null &&
-                    pathObject != null &&
-                    vendorObject != null &&
-                    archObject != null &&
-                    versionObject.Type == JTokenType.String &&
-                    pathObject.Type == JTokenType.String &&
-                    vendorObject.Type == JTokenType.String &&
-                    archObject.Type == JTokenType.String)
+                var file = File.ReadAllText(ConfigManager.JavaListPath);
+                JObject jsonObj = JObject.Parse(file);
+                JavaDict.Clear();
+                foreach (var item in jsonObj.Properties())//遍历配置文件中的所有Java
                 {
-                    JavaDict.Add(item.Name, new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(), archObject.ToString()));
+                    JToken? versionObject = item.Value["Version"];
+                    JToken? pathObject = item.Value["Path"];
+                    JToken? vendorObject = item.Value["Vendor"];
+                    JToken? archObject = item.Value["Architecture"];
+                    if (versionObject != null &&
+                        pathObject != null &&
+                        vendorObject != null &&
+                        archObject != null &&
+                        versionObject.Type == JTokenType.String &&
+                        pathObject.Type == JTokenType.String &&
+                        vendorObject.Type == JTokenType.String &&
+                        archObject.Type == JTokenType.String)
+                    {
+                        JavaDict.Add(item.Name, new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(), archObject.ToString()));
+                    }
                 }
             }
+            catch(Exception exi)
+            {
+                //ex = exi;
+                return false;
+            }
+            return true;
         }
         #endregion
 

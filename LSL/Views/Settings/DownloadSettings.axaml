@@ -10,7 +10,7 @@
 			<StackPanel Margin="25,40,23,15">
 				<DockPanel Margin="0,10,0,5">
 					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="下载源"/>
-					<ComboBox Name="DownloadSource" Width="300" SelectedIndex="{Binding DownloadSource}">
+					<ComboBox Name="DownloadSource" Width="300" SelectedIndex="{Binding ConfigVM.DownloadSource}">
 						<ComboBoxItem Content="LSL本地爬取"/>
 						<ComboBoxItem Content="FastMirror"/>
 						<ComboBoxItem Content="MCSLAPI"/>
@@ -23,7 +23,7 @@
 					<Slider Name="DownloadThreads"
 							Maximum="128"
 							Minimum="1"
-							Value="{Binding DownloadThreads}"
+							Value="{Binding ConfigVM.DownloadThreads}"
 							TickFrequency="1"
 							IsSnapToTickEnabled="True"
 							Width="400"
@@ -34,7 +34,7 @@
 				</DockPanel>
 				<DockPanel Margin="0,10,0,5">
 					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="下载限速"/>
-					<TextBox Width="150" Text="{Binding DownloadLimit}"></TextBox>
+					<TextBox Width="150" Text="{Binding ConfigVM.DownloadLimit}"></TextBox>
 					<TextBlock Text="KB/s，0表示不限速" Margin="10,0,10,0" VerticalAlignment="Center"/>
 				</DockPanel>
 			</StackPanel>

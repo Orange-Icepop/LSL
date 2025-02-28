@@ -65,13 +65,6 @@ namespace LSL.ViewModels
 
     public class AppStateLayer : ReactiveObject
     {
-        [Reactive] public BarState CurrentBarState { get; set; }
-        [Reactive] public GeneralPageState CurrentGeneralPage { get; set; }
-        [Reactive] public RightPageState CurrentRightPage { get; set; }
-        [Reactive] public Dictionary<string, object> CurrentConfigs { get; set; }
-
-        private (GeneralPageState, RightPageState) _lastPage = (GeneralPageState.Undefined, RightPageState.Undefined);
-
         public AppStateLayer()
         {
             CurrentGeneralPage = GeneralPageState.Home;
@@ -79,6 +72,14 @@ namespace LSL.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(args => Navigate(args));
         }
+
+        #region 导航相关
+        [Reactive] public BarState CurrentBarState { get; set; }
+        [Reactive] public GeneralPageState CurrentGeneralPage { get; set; }
+        [Reactive] public RightPageState CurrentRightPage { get; set; }
+
+        private (GeneralPageState, RightPageState) _lastPage = (GeneralPageState.Undefined, RightPageState.Undefined);
+
         private void Navigate(NavigateArgs args)// ASL不负责查重操作
         {
             if (args.LeftTarget != GeneralPageState.Undefined)
@@ -113,5 +114,10 @@ namespace LSL.ViewModels
                 else CurrentBarState = args.BarTarget;
             }
         }
+        #endregion
+
+        [Reactive] public Dictionary<string, object> CurrentConfigs { get; set; } = [];
+        [Reactive] public Dictionary<string, JavaInfo> CurrentJavaDict { get; set; } = [];
+        [Reactive] public Dictionary<string, ServerConfig> CurrentServerConfigs { get; set; } = [];
     }
 }
