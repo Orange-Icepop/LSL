@@ -68,8 +68,9 @@ namespace LSL.ViewModels
         [Reactive] public BarState CurrentBarState { get; set; }
         [Reactive] public GeneralPageState CurrentGeneralPage { get; set; }
         [Reactive] public RightPageState CurrentRightPage { get; set; }
+        [Reactive] public Dictionary<string, object> CurrentConfigs { get; set; }
 
-        private Tuple<GeneralPageState, RightPageState> _lastPage;
+        private (GeneralPageState, RightPageState) _lastPage = (GeneralPageState.Undefined, RightPageState.Undefined);
 
         public AppStateLayer()
         {
@@ -92,12 +93,12 @@ namespace LSL.ViewModels
             {
                 if (args.BarTarget == BarState.FullScreen && CurrentBarState == BarState.Common)
                 {
-                    _lastPage = new Tuple<GeneralPageState, RightPageState>(CurrentGeneralPage, CurrentRightPage);
+                    _lastPage = (CurrentGeneralPage, CurrentRightPage);
                     CurrentBarState = args.BarTarget;
                 }
                 else if (args.BarTarget == BarState.Common && CurrentBarState == BarState.FullScreen)
                 {
-                    if (_lastPage != null)
+                    if (_lastPage != (GeneralPageState.Undefined, RightPageState.Undefined))
                     {
                         CurrentGeneralPage = _lastPage.Item1;
                         CurrentRightPage = _lastPage.Item2;
@@ -107,6 +108,7 @@ namespace LSL.ViewModels
                         CurrentGeneralPage = GeneralPageState.Home;
                         CurrentRightPage = RightPageState.HomeRight;
                     }
+                    _lastPage = (GeneralPageState.Undefined, RightPageState.Undefined);
                 }
                 else CurrentBarState = args.BarTarget;
             }

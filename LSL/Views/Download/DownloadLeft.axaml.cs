@@ -6,16 +6,16 @@ using System.Diagnostics;
 
 namespace LSL.Views.Download
 {
-    public partial class DownloadLeft : UserControl
+    public partial class DownloadsLeft : UserControl
     {
-        public DownloadLeft()
+        public DownloadsLeft()
         {
             InitializeComponent();
             EventBus.Instance.Subscribe<LeftChangedEventArgs>(LeftChangeHandler);
         }
         private void LeftChangeHandler(LeftChangedEventArgs args)
         {
-            if (args.LeftView == "DownloadLeft") ChangeLeftColor(args.LeftTarget);
+            if (args.LeftView == "DownloadsLeft") ChangeLeftColor(args.LeftTarget);
         }
 
         //设置Left按钮样式方法

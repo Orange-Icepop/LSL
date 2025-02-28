@@ -34,7 +34,7 @@
 
 		<!--左侧的内容-->
 		<!--为了防止背景被纳入过渡，加入一个Border包住内容-->
-		<Border Background="White" Width="{Binding LeftWidth}" BoxShadow="5 0 10 -5 Gray">
+		<Border Background="White" Width="{Binding LeftVM.LeftWidth}" BoxShadow="5 0 10 -5 Gray">
 			<TransitioningContentControl Name="LeftContent"
 							Content="{Binding LeftVM.CurrentView}"
 							HorizontalAlignment="Left">

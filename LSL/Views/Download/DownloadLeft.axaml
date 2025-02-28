@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="600"
-             x:Class="LSL.Views.Download.DownloadLeft">
+             x:Class="LSL.Views.Download.DownloadsLeft">
 	<DockPanel Width="150">
 		<TextBlock DockPanel.Dock="Top" Text="服务器核心" Margin="10,10,0,0" Foreground="Gray"/>
 		<Button Width="150" DockPanel.Dock="Top" Name="AutoDownButton" Content="自动下载" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="AutoDown"/>

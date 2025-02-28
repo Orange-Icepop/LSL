@@ -18,7 +18,7 @@ public static class ViewFactory
 {
     private static readonly HomeLeft HomeLeftView = new();
     private static readonly ServerLeft ServerLeftView = new();
-    private static readonly DownloadLeft DownloadLeftView = new();
+    private static readonly DownloadsLeft DownloadsLeftView = new();
     private static readonly SettingsLeft SettingsLeftView = new();
     public static UserControl CreateView(string viewName)
     {
@@ -31,7 +31,7 @@ public static class ViewFactory
             //Top
             "HomeLeft" => HomeLeftView,
             "ServerLeft" => ServerLeftView,
-            "DownloadLeft" => DownloadLeftView,
+            "DownloadsLeft" => DownloadsLeftView,
             "SettingsLeft" => SettingsLeftView,
             //Home
             "HomeRight" => new HomeRight(),

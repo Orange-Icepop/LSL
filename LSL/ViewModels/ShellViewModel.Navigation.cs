@@ -34,10 +34,9 @@ namespace LSL.ViewModels
         public void INavigateLeft(string viewName) { NavigateLeftView(viewName); }
         public void NavigateLeftView(string viewName, bool dislink = false)
         {
-            if (viewName != CurrentLeftView)
+            if (viewName + "Left" != AppState.CurrentGeneralPage.ToString())
             {
-                CurrentLeftView = viewName;
-                if (viewName == "SettingsLeft") MainVM.GetConfig();
+                if (viewName == "SettingsLeft") ServeCon.GetConfig();
                 GeneralPageState gps = new();
                 switch (viewName)
                 {
@@ -51,7 +50,7 @@ namespace LSL.ViewModels
                         if (!dislink)
                             NavigateRightView("ServerStat");
                         break;
-                    case "DownloadLeft":
+                    case "DownloadsLeft":
                         gps = GeneralPageState.Downloads;
                         if (!dislink)
                             NavigateRightView("AutoDown");
@@ -72,10 +71,10 @@ namespace LSL.ViewModels
         public void INavigateRight(string viewName) { NavigateRightView(viewName); }
         public void NavigateRightView(string viewName, bool force = false)
         {
-            if (Enum.TryParse<RightPageState>(viewName, out var RV) && (viewName != CurrentRightView || force))
+            if (Enum.TryParse<RightPageState>(viewName, out var RV) && (viewName != AppState.CurrentRightPage.ToString() || force))
             {
                 MessageBus.Current.SendMessage(new NavigateArgs { RightTarget = RV });
-                if (CurrentLeftView == "SettingsLeft") ConfigManager.ConfirmConfig(MainVM.ViewConfigs);//TODO
+                if (AppState.CurrentGeneralPage.ToString() == "Settings") ConfigManager.ConfirmConfig(MainVM.ViewConfigs);//TODO
                 Debug.WriteLine("Right Page Switched:" + viewName);
             }
         }

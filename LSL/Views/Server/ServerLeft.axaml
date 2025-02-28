@@ -27,7 +27,7 @@
 		<local:MyButton Classes="right"
 				Name="AddServerButton"
 				Command="{Binding LeftViewCmd}"
-				CommandParameter="DownloadLeft"
+				CommandParameter="DownloadsLeft"
 				DockPanel.Dock="Bottom"
 				VerticalAlignment="Bottom"
 				HorizontalAlignment="Center"
