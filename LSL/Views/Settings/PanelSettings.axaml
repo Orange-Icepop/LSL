@@ -14,7 +14,7 @@
 					<MaskedTextBox Watermark="0~65535"
 							 HorizontalAlignment="Left"
 							 Width="100"
-							 Text="{Binding PanelPort}"/>
+							 Text="{Binding ConfigVM.PanelPort}"/>
 				</DockPanel>
 				<CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.PanelMonitor}">显示性能占用</CheckBox>
 				<CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.PanelTerminal}">显示终端输出</CheckBox>

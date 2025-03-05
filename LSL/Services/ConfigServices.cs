@@ -524,7 +524,8 @@ namespace LSL.Services
 
     }
 
-    public class ServerConfig// 服务器配置记录
+    #region 服务器配置记录
+    public class ServerConfig
     {
         public string server_id;
         public string server_path;
@@ -558,6 +559,7 @@ namespace LSL.Services
             this.ext_jvm = config.ext_jvm;
         }
     }
+    #endregion
 
     public static class JavaManager//Java相关服务
     {

@@ -9,7 +9,7 @@
 		<TextBlock DockPanel.Dock="Top" Text="服务器管理" Margin="10,10,0,0" Foreground="Gray"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="GeneralButton" Content="概览" Classes="left" Margin="0,10,0,0" Command="{Binding RightViewCmd}" CommandParameter="ServerGeneral"/>
 		<TextBlock DockPanel.Dock="Top" Text="选择服务器" Margin="10,10,0,0" Foreground="Gray"/>
-		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10" ItemsSource="{Binding ServerNames}" SelectedIndex="{Binding SelectedServerIndex}">
+		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10" ItemsSource="{Binding ConfigVM.ServerNames}" SelectedIndex="{Binding AppState.SelectedServerIndex}">
 		</ComboBox>
 		<local:MyButton Name="LaunchServerButton"
 						Command="{Binding LaunchServerButtonCommand}"

@@ -16,7 +16,7 @@ namespace LSL.ViewModels
         {
             AppState = appState;
         }
-
+        #region 配置部分
         public void GetConfig(bool readFile = true)
         {
             if (readFile) ConfigManager.LoadConfig();
@@ -35,5 +35,11 @@ namespace LSL.ViewModels
             AppState.CurrentServerConfigs = ServerConfigManager.ServerConfigs;
         }
 
+        public void SaveConfig()
+        {
+            ConfigManager.ConfirmConfig(AppState.CurrentConfigs);
+        }
+
+        #endregion
     }
 }

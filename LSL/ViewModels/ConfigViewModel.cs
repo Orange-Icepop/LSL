@@ -1,8 +1,11 @@
 ﻿using LSL.Services;
 using LSL.Services.Validators;
+using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,7 +15,13 @@ namespace LSL.ViewModels
     {
         public ConfigViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
-            GetConfig();
+            AppState.WhenAnyValue(AS => AS.CurrentServerConfigs)
+                .Select(s => new ObservableCollection<string>(s.Keys))
+                .ToProperty(this, x => x.ServerIDs, out _serverIDs);
+            AppState.WhenAnyValue(AS => AS.CurrentServerConfigs)
+                .Select(s => new ObservableCollection<string>(s.Values.Select(v => v.name)))
+                .ToProperty(this, x => x.ServerNames, out _serverNames);
+            GetConfig(true);
         }
 
         private Dictionary<string, object> cachedConfig = [];
@@ -36,10 +45,10 @@ namespace LSL.ViewModels
         public bool BetaUpdate { get => (bool)cachedConfig["beta_update"]; set { CacheConfig("auto_eula", value); } }
         #endregion
 
-
-        public void GetConfig()
+        #region 主配置操作
+        public void GetConfig(bool rf = false)
         {
-            Connector.GetConfig();
+            Connector.GetConfig(rf);
             cachedConfig = AppState.CurrentConfigs;
         }
 
@@ -55,6 +64,15 @@ namespace LSL.ViewModels
         public void ConfirmConfig()
         {
             AppState.CurrentConfigs = cachedConfig;
+            Connector.SaveConfig();
         }
+        #endregion
+
+        #region 服务器配置
+        private ObservableAsPropertyHelper<ObservableCollection<string>> _serverIDs;
+        private ObservableAsPropertyHelper<ObservableCollection<string>> _serverNames;
+        public ObservableCollection<string> ServerIDs => _serverIDs.Value;
+        public ObservableCollection<string> ServerNames => _serverNames.Value;
+        #endregion
     }
 }
