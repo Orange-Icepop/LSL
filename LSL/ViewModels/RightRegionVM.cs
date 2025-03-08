@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using LSL.Services;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,15 +13,14 @@ namespace LSL.ViewModels
 {
     public class RightRegionVM : RegionalVMBase
     {
-        private ObservableAsPropertyHelper<UserControl> _currentView;
-        public UserControl CurrentView => _currentView.Value;
+        public UserControl CurrentView { [ObservableAsProperty] get; }
 
         public RightRegionVM(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
         {
             AppState.WhenAnyValue(AS => AS.CurrentRightPage)
                 .Where(CV => CV != RightPageState.Undefined)
                 .Select(CV => NavigateRight(CV))
-                .ToProperty(this, t => t.CurrentView, out _currentView);
+                .ToPropertyEx(this, t => t.CurrentView);
             MessageBus.Current.Listen<NavigateCommand>()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(e =>

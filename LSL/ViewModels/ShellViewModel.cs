@@ -33,8 +33,8 @@ namespace LSL.ViewModels
             EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
 
             // 视图命令
-            LeftViewCmd = ReactiveCommand.Create<string>(INavigateLeft);
-            RightViewCmd = ReactiveCommand.Create<string>(INavigateRight);
+            LeftViewCmd = ReactiveCommand.Create<string>(param => NavigateLeftView(param, false));
+            RightViewCmd = ReactiveCommand.Create<string>(param => NavigateRightView(param, false));
             FullViewCmd = ReactiveCommand.Create<string>(NavigateFullScreenView);
             FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common }));
             ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);

@@ -14,10 +14,6 @@ namespace LSL.ViewModels
     {
 
         #region µº∫Ωœ‡πÿ
-        //µ±«∞View
-        public string CurrentLeftView { get; set; }
-        public string CurrentRightView { get; set; }
-
         //¥¥Ω®«–ªª¥•∑¢∑Ω∑®
         public ICommand LeftViewCmd { get; }
         public ICommand RightViewCmd { get; }
@@ -31,58 +27,59 @@ namespace LSL.ViewModels
         #endregion
 
         #region ◊Û ”Õº«–ªª√¸¡Ó
-        public void INavigateLeft(string viewName) { NavigateLeftView(viewName); }
         public void NavigateLeftView(string viewName, bool dislink = false)
         {
-            if (viewName != AppState.CurrentGeneralPage.ToString() + "Left")
+            GeneralPageState gps = GeneralPageState.Undefined;
+            RightPageState rps = RightPageState.Undefined;
+            switch (viewName)
             {
-                if (viewName == "SettingsLeft")
-                {
-                    ConfigVM.GetConfig();
-                }
-                else if (AppState.CurrentGeneralPage == GeneralPageState.Settings)
-                {
-                    ConfigVM.ConfirmConfig();
-                }
-                GeneralPageState gps = new();
-                switch (viewName)
-                {
-                    case "HomeLeft":
-                        gps = GeneralPageState.Home;
-                        if (!dislink)
-                            NavigateRightView("HomeRight");
-                        break;
-                    case "ServerLeft":
-                        gps = GeneralPageState.Server;
-                        if (!dislink)
-                            NavigateRightView("ServerStat");
-                        break;
-                    case "DownloadsLeft":
-                        gps = GeneralPageState.Downloads;
-                        if (!dislink)
-                            NavigateRightView("AutoDown");
-                        break;
-                    case "SettingsLeft":
-                        gps = GeneralPageState.Settings;
-                        if (!dislink)
-                            NavigateRightView("Common");
-                        break;
-                }
-                MessageBus.Current.SendMessage(new NavigateArgs { LeftTarget = gps, RightTarget = RightPageState.Undefined });
-                Debug.WriteLine("Left Page Switched:" + viewName);
+                case "HomeLeft":
+                    gps = GeneralPageState.Home;
+                    if (!dislink)
+                        rps = RightPageState.HomeRight;
+                    break;
+                case "ServerLeft":
+                    gps = GeneralPageState.Server;
+                    if (!dislink)
+                        rps = RightPageState.ServerGeneral;
+                    break;
+                case "DownloadsLeft":
+                    gps = GeneralPageState.Downloads;
+                    if (!dislink)
+                        rps = RightPageState.AutoDown;
+                    break;
+                case "SettingsLeft":
+                    gps = GeneralPageState.Settings;
+                    if (!dislink)
+                        rps = RightPageState.Common;
+                    break;
             }
+            NavigateToPage(gps, rps);
         }
         #endregion
 
         #region ”“ ”Õº«–ªª√¸¡Ó
-        public void INavigateRight(string viewName) { NavigateRightView(viewName); }
         public void NavigateRightView(string viewName, bool force = false)
         {
-            if (Enum.TryParse<RightPageState>(viewName, out var RV) && (viewName != AppState.CurrentRightPage.ToString() || force))
+            if (Enum.TryParse<RightPageState>(viewName, out var RV))
             {
-                MessageBus.Current.SendMessage(new NavigateArgs { RightTarget = RV });
-                if (AppState.CurrentGeneralPage.ToString() == "Settings") ConfigManager.ConfirmConfig(MainVM.ViewConfigs);//TODO
-                Debug.WriteLine("Right Page Switched:" + viewName);
+                NavigateToPage(GeneralPageState.Undefined, RV, force);
+            }
+            else Debug.WriteLine("Unknown right page name");
+        }
+        #endregion
+
+        #region  ”Õº«–ªª√¸¡Ó
+        public void NavigateToPage(GeneralPageState gps, RightPageState rps, bool force = false)
+        {
+            if (gps == AppState.CurrentGeneralPage && !force) return;
+            else if (rps == AppState.CurrentRightPage && !force) return;
+            else
+            {
+                if (AppState.CurrentGeneralPage == GeneralPageState.Settings) ConfigVM.ConfirmConfig();
+                if (gps == GeneralPageState.Settings) ConfigVM.GetConfig();
+                MessageBus.Current.SendMessage(new NavigateArgs { LeftTarget = gps, RightTarget = rps });
+                Debug.WriteLine("Page Switched:" + gps.ToString() + rps.ToString());
             }
         }
         #endregion
