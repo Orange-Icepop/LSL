@@ -25,7 +25,7 @@
 		<local:MyCard Text="Java设置">
 			<StackPanel Margin="25,40,23,15">
 				<DataGrid Margin="0,5,0,5"
-						  ItemsSource="{Binding AppState.JavaVersions}"
+						  ItemsSource="{Binding ConfigVM.JavaVersions}"
 						  CanUserReorderColumns="False"
 						  CanUserResizeColumns="False"
 						  CanUserSortColumns="False"

@@ -1,6 +1,7 @@
 ﻿using LSL.Services;
 using LSL.Services.Validators;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,11 +18,16 @@ namespace LSL.ViewModels
         {
             AppState.WhenAnyValue(AS => AS.CurrentServerConfigs)
                 .Select(s => new ObservableCollection<string>(s.Keys))
-                .ToProperty(this, x => x.ServerIDs, out _serverIDs);
+                .ToPropertyEx(this, x => x.ServerIDs);
             AppState.WhenAnyValue(AS => AS.CurrentServerConfigs)
                 .Select(s => new ObservableCollection<string>(s.Values.Select(v => v.name)))
-                .ToProperty(this, x => x.ServerNames, out _serverNames);
-            GetConfig(true);
+                .ToPropertyEx(this, x => x.ServerNames);
+            AppState.WhenAnyValue(AS => AS.CurrentJavaDict)
+                .Select(s => new ObservableCollection<JavaInfo>(s.Values))
+                .ToPropertyEx(this, x => x.JavaVersions);
+            GetConfig(true);// cached config需要手动同步，不能依赖自动更新
+            ReadServerConfig(true);// 服务器配置由于较为复杂，统一为手动控制
+            Connector.ReadJavaConfig(true);
         }
 
         private Dictionary<string, object> cachedConfig = [];
@@ -69,10 +75,19 @@ namespace LSL.ViewModels
         #endregion
 
         #region 服务器配置
-        private ObservableAsPropertyHelper<ObservableCollection<string>> _serverIDs;
-        private ObservableAsPropertyHelper<ObservableCollection<string>> _serverNames;
-        public ObservableCollection<string> ServerIDs => _serverIDs.Value;
-        public ObservableCollection<string> ServerNames => _serverNames.Value;
+        public ObservableCollection<string> ServerIDs { [ObservableAsProperty] get; }
+        public ObservableCollection<string> ServerNames { [ObservableAsProperty] get; }
+        #endregion
+
+        #region 服务器配置操作
+        public void ReadServerConfig(bool rf = false)
+        {
+            Connector.ReadServerConfig(rf);
+        }
+        #endregion
+
+        #region Java配置
+        public ObservableCollection<JavaInfo> JavaVersions { [ObservableAsProperty] get; }
         #endregion
     }
 }

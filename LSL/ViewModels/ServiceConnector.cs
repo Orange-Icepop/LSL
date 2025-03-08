@@ -16,20 +16,21 @@ namespace LSL.ViewModels
         {
             AppState = appState;
         }
+
         #region 配置部分
-        public void GetConfig(bool readFile = true)
+        public void GetConfig(bool readFile = false)
         {
             if (readFile) ConfigManager.LoadConfig();
             AppState.CurrentConfigs = ConfigManager.CurrentConfigs;
         }
 
-        public void ReadJavaConfig(bool readFile = true)
+        public void ReadJavaConfig(bool readFile = false)
         {
             if (readFile) JavaManager.ReadJavaConfig();
             AppState.CurrentJavaDict = JavaManager.JavaDict;
         }
 
-        public void ReadServerConfig(bool readFile = true)
+        public void ReadServerConfig(bool readFile = false)
         {
             if (readFile) ServerConfigManager.LoadServerConfigs();
             AppState.CurrentServerConfigs = ServerConfigManager.ServerConfigs;

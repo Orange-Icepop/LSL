@@ -21,6 +21,6 @@
 						Height="60" Width="250" 
 						IsEnabled="{Binding LaunchServerButtonEnabled}"
 						Command="{Binding LaunchServerButtonCommand}"/>
-		<ComboBox Name="ServerList" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="30" Width="250" Margin="0,0,0,20" ItemsSource="{Binding ServerNames}" SelectedIndex="{Binding SelectedServerIndex}"></ComboBox>
+		<ComboBox Name="ServerList" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="30" Width="250" Margin="0,0,0,20" ItemsSource="{Binding ConfigVM.ServerNames}" SelectedIndex="{Binding AppState.SelectedServerIndex}"></ComboBox>
 	</DockPanel>
 </UserControl>

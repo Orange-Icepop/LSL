@@ -116,10 +116,14 @@ namespace LSL.ViewModels
         }
         #endregion
 
+        #region 配置相关
         [Reactive] public Dictionary<string, object> CurrentConfigs { get; set; } = [];
-        [Reactive] public Dictionary<string, JavaInfo> CurrentJavaDict { get; set; } = [];
         [Reactive] public Dictionary<string, ServerConfig> CurrentServerConfigs { get; set; } = [];
+        [Reactive] public Dictionary<string, JavaInfo> CurrentJavaDict { get; set; } = [];
+        #endregion
 
+        #region 选项相关
         [Reactive] public int SelectedServerIndex { get; set; }
+        #endregion
     }
 }
