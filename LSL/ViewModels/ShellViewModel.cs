@@ -70,7 +70,7 @@ namespace LSL.ViewModels
 
         public void QuitHandler(ClosingArgs args)// 退出事件处理
         {
-            ConfigManager.ConfirmConfig(MainVM.ViewConfigs);
+            ServeCon.SaveConfig();  
         }
 
         public ICommand ShowMainWindowCmd { get; }// 显示主窗口命令

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using LSL.Services;
 
 namespace LSL.ViewModels
@@ -39,6 +40,12 @@ namespace LSL.ViewModels
         public void SaveConfig()
         {
             ConfigManager.ConfirmConfig(AppState.CurrentConfigs);
+        }
+
+        public async Task FindJava()
+        {
+            await JavaManager.DetectJava();
+            await Dispatcher.UIThread.InvokeAsync(() => ReadJavaConfig());
         }
 
         #endregion

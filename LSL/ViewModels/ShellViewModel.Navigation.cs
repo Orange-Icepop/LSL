@@ -79,7 +79,7 @@ namespace LSL.ViewModels
                 if (AppState.CurrentGeneralPage == GeneralPageState.Settings) ConfigVM.ConfirmConfig();
                 if (gps == GeneralPageState.Settings) ConfigVM.GetConfig();
                 MessageBus.Current.SendMessage(new NavigateArgs { LeftTarget = gps, RightTarget = rps });
-                Debug.WriteLine("Page Switched:" + gps.ToString() + rps.ToString());
+                Debug.WriteLine("Page Switched:" + gps.ToString() + ", " + rps.ToString());
             }
         }
         #endregion

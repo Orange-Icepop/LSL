@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia.Threading;
 using LSL.Services;
 using ReactiveUI;
 
@@ -17,7 +18,17 @@ namespace LSL.ViewModels
         public PublicCommand(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
             OpenWebPageCmd = ReactiveCommand.Create<string>(OpenWebPage);// 打开网页命令-实现
+            SearchJava = ReactiveCommand.Create(async () =>
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => QuickHandler.SendNotify(0, "正在搜索Java", "请耐心等待......"));
+                await Connector.FindJava();
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    QuickHandler.SendNotify(1, "Java搜索完成！", $"搜索到了{AppState.CurrentJavaDict.Count}个Java");
+                });
+            });// 搜索Java命令-实现
         }
+
         #region About页面的相关内容
         public ICommand OpenWebPageCmd { get; }
         public async void OpenWebPage(string url)
@@ -41,5 +52,6 @@ namespace LSL.ViewModels
         }
         #endregion
 
+        public ICommand SearchJava { get; }
     }
 }
