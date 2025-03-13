@@ -109,4 +109,57 @@ namespace LSL.ViewModels
         }
         #endregion
     }
+
+    #region Ò³Ãæ×´Ì¬Ã¶¾Ù
+    public enum BarState
+    {
+        Common,
+        FullScreen,
+        Undefined
+    }
+    public enum GeneralPageState
+    {
+        Home,
+        Server,
+        Downloads,
+        Settings,
+        FullScreen,
+        Empty,
+        Undefined
+    }
+    public enum RightPageState
+    {
+        HomeRight,
+        //Server
+        ServerGeneral,
+        ServerStat,
+        ServerTerminal,
+        ServerConf,
+        //Downloads
+        AutoDown,
+        ManualDown,
+        AddServer,
+        ModDown,
+        //Settings
+        Common,
+        DownloadSettings,
+        PanelSettings,
+        StyleSettings,
+        About,
+        //FullScreen
+        EditSC,
+        AddCore,
+        //Others
+        Empty,
+        Undefined,
+        Hold
+    }
+
+    public enum NavigateCommandType
+    {
+        None,
+        Refresh,
+        FS2Common
+    }
+    #endregion
 }

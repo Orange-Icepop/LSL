@@ -372,4 +372,8 @@ namespace LSL.Services
         }
     }
     #endregion
+
+    #region 服务端输出存储
+
+    #endregion
 }

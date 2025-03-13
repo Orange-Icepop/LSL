@@ -82,7 +82,7 @@ namespace LSL.ViewModels
         public async void ResetPopup()
         {
             Dispatcher.UIThread.Post(() => PopupOpacity = 0);
-            await Task.Delay(200);
+            await Task.Delay(200);// µÈ´ý¶¯»­½áÊø
             Dispatcher.UIThread.Post(() =>
             {
                 PopupVisible = false;

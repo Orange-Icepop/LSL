@@ -232,5 +232,12 @@ namespace LSL.Services
     {
         public NavigateCommandType Type { get; set; } = NavigateCommandType.None;
     }
+
+    public class PopupRequest : IMessageArgs
+    {
+        public int Type { get; set; } = 0;
+        public string Title { get; set; } = "空弹窗";
+        public string Message { get; set; } = "我是一个空的弹窗！";
+    }
     #endregion
 }

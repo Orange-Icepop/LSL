@@ -18,7 +18,9 @@ namespace LSL.ViewModels
         public BarRegionVM BarVM { get; }
         public LeftRegionVM LeftVM { get; }
         public RightRegionVM RightVM { get; }
+        public PopupViewModel PopupVM { get; }
         public ConfigViewModel ConfigVM { get; }
+        public ServerViewModel ServerVM { get; }
         public PublicCommand PublicCmd { get; }
         public ShellViewModel()
         {
@@ -28,7 +30,9 @@ namespace LSL.ViewModels
             BarVM = new BarRegionVM(AppState, ServeCon);
             LeftVM = new LeftRegionVM(AppState, ServeCon);
             RightVM = new RightRegionVM(AppState, ServeCon);
+            PopupVM = new PopupViewModel();
             ConfigVM = new ConfigViewModel(AppState, ServeCon);
+            ServerVM = new ServerViewModel(AppState, ServeCon);
             PublicCmd = new PublicCommand(AppState, ServeCon);
             EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
 

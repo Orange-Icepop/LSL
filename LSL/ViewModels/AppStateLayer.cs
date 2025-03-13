@@ -10,59 +10,6 @@ using System.Threading.Tasks;
 
 namespace LSL.ViewModels
 {
-    #region 页面状态枚举
-    public enum BarState
-    {
-        Common,
-        FullScreen,
-        Undefined
-    }
-    public enum GeneralPageState
-    {
-        Home,
-        Server,
-        Downloads,
-        Settings,
-        FullScreen,
-        Empty,
-        Undefined
-    }
-    public enum RightPageState
-    {
-        HomeRight,
-        //Server
-        ServerGeneral,
-        ServerStat,
-        ServerTerminal,
-        ServerConf,
-        //Downloads
-        AutoDown,
-        ManualDown,
-        AddServer,
-        ModDown,
-        //Settings
-        Common,
-        DownloadSettings,
-        PanelSettings,
-        StyleSettings,
-        About,
-        //FullScreen
-        EditSC,
-        AddCore,
-        //Others
-        Empty,
-        Undefined,
-        Hold
-    }
-
-    public enum NavigateCommandType
-    {
-        None,
-        Refresh,
-        FS2Common
-    }
-    #endregion
-
     public class AppStateLayer : ReactiveObject
     {
         public AppStateLayer()
