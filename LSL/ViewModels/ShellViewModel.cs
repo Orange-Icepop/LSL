@@ -14,7 +14,6 @@ namespace LSL.ViewModels
     {
         public AppStateLayer AppState { get; }
         public ServiceConnector ServeCon { get; }
-        public MainViewModel MainVM { get; }
         public BarRegionVM BarVM { get; }
         public LeftRegionVM LeftVM { get; }
         public RightRegionVM RightVM { get; }
@@ -26,7 +25,6 @@ namespace LSL.ViewModels
         {
             AppState = new AppStateLayer();
             ServeCon = new ServiceConnector(AppState);
-            MainVM = new MainViewModel(AppState);
             BarVM = new BarRegionVM(AppState, ServeCon);
             LeftVM = new LeftRegionVM(AppState, ServeCon);
             RightVM = new RightRegionVM(AppState, ServeCon);
@@ -40,7 +38,7 @@ namespace LSL.ViewModels
             LeftViewCmd = ReactiveCommand.Create<string>(param => NavigateLeftView(param, false));
             RightViewCmd = ReactiveCommand.Create<string>(param => NavigateRightView(param, false));
             FullViewCmd = ReactiveCommand.Create<string>(NavigateFullScreenView);
-            FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common }));
+            FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Undefined, RightTarget = RightPageState.Undefined }));
             ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
             QuitCmd = ReactiveCommand.Create(Quit);
 
@@ -74,7 +72,7 @@ namespace LSL.ViewModels
 
         public void QuitHandler(ClosingArgs args)// 退出事件处理
         {
-            ServeCon.SaveConfig();  
+            ServeCon.SaveConfig();
         }
 
         public ICommand ShowMainWindowCmd { get; }// 显示主窗口命令

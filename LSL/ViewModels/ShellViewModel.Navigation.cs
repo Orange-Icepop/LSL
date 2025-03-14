@@ -78,7 +78,7 @@ namespace LSL.ViewModels
             {
                 if (AppState.CurrentGeneralPage == GeneralPageState.Settings) ConfigVM.ConfirmConfig();
                 if (gps == GeneralPageState.Settings) ConfigVM.GetConfig();
-                MessageBus.Current.SendMessage(new NavigateArgs { LeftTarget = gps, RightTarget = rps });
+                MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Undefined, LeftTarget = gps, RightTarget = rps });
                 Debug.WriteLine("Page Switched:" + gps.ToString() + ", " + rps.ToString());
             }
         }
@@ -87,13 +87,13 @@ namespace LSL.ViewModels
         #region È«ÆÁÊÓÍ¼ÇÐ»»ÃüÁî
         public void NavigateFullScreenView(string viewName)
         {
-            FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Undefined, RightTarget = RightPageState.Undefined }));
+            FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateCommand { Type = NavigateCommandType.FS2Common }));
             if (!Enum.TryParse<RightPageState>(viewName, out var RV)) return;
             else if (RV == RightPageState.AddCore || RV == RightPageState.EditSC)
             {
                 MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RV });
-                if (RV == RightPageState.AddCore) MainVM.LoadNewServerConfig();//TODO
-                if (RV == RightPageState.EditSC) MainVM.LoadCurrentServerConfig();
+                //if (RV == RightPageState.AddCore) MainVM.LoadNewServerConfig();//TODO
+                //if (RV == RightPageState.EditSC) MainVM.LoadCurrentServerConfig();
                 Debug.WriteLine("Successfully navigated to " + viewName);
             }
             else Debug.WriteLine("This view is not a fullscreen view: " + viewName);
@@ -104,7 +104,7 @@ namespace LSL.ViewModels
         public void RefreshRightView()
         {
             var original = AppState.CurrentRightPage;
-            MessageBus.Current.SendMessage(new NavigateArgs { RightTarget = original });
+            MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Undefined, LeftTarget = GeneralPageState.Undefined, RightTarget = original });
             EventBus.Instance.Publish(new ViewBroadcastArgs { Target = "ServerTerminal.axaml.cs", Message = "ScrollToEnd" });
         }
         #endregion

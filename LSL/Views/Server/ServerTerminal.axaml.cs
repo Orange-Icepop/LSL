@@ -17,6 +17,7 @@ namespace LSL.Views.Server
         public ServerTerminal()
         {
             InitializeComponent();
+            /*
             this.WhenActivated(disposables =>
             {
                 this.ViewModel.MainVM.ScrollTerminal
@@ -24,6 +25,7 @@ namespace LSL.Views.Server
                     .Subscribe(_ => TurnToEnd())
                     .DisposeWith(disposables);
             });
+            */
             EventBus.Instance.Subscribe<ViewBroadcastArgs>(ForceScroll);
         }
         public void TurnToEnd()

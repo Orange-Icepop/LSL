@@ -223,9 +223,9 @@ namespace LSL.Services
     public interface IMessageArgs;
     public class NavigateArgs : IMessageArgs
     {
-        public BarState BarTarget { get; set; } = BarState.Undefined;
-        public GeneralPageState LeftTarget { get; set; } = GeneralPageState.Undefined;
-        public RightPageState RightTarget { get; set; } = RightPageState.Undefined;
+        public required BarState BarTarget { get; set; } = BarState.Undefined;
+        public required GeneralPageState LeftTarget { get; set; } = GeneralPageState.Undefined;
+        public required RightPageState RightTarget { get; set; } = RightPageState.Undefined;
     }
 
     public class NavigateCommand : IMessageArgs

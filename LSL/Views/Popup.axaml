@@ -18,6 +18,9 @@
 				<TextBlock Name="Head" DockPanel.Dock="Top" Margin="10" FontWeight="Bold" FontSize="17" Text="{Binding PopupVM.Title}" />
 				<TextBlock Name="Message" DockPanel.Dock="Top" Margin="10" Text="{Binding PopupVM.Content}" TextWrapping="Wrap" />
 				<ItemsRepeater Name="Buttons" ItemsSource="{Binding PopupVM.Buttons}" DockPanel.Dock="Bottom">
+					<ItemsRepeater.Layout>
+						<StackLayout Orientation="Horizontal" Spacing="20"/>
+					</ItemsRepeater.Layout>
 					<ItemsRepeater.ItemTemplate>
 						<DataTemplate>
 							<Button Content="{Binding Text}" Command="{Binding Command}" CommandParameter="{Binding Parameter}" Margin="10"/>

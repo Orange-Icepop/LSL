@@ -14,10 +14,16 @@ namespace LSL.ViewModels
     {
         public AppStateLayer()
         {
+            CurrentBarState = BarState.Common;
             CurrentGeneralPage = GeneralPageState.Home;
+            CurrentRightPage = RightPageState.HomeRight;
             MessageBus.Current.Listen<NavigateArgs>()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(args => Navigate(args));
+            MessageBus.Current.Listen<NavigateCommand>()
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Where(args => args.Type == NavigateCommandType.FS2Common)
+                .Subscribe(args => Navigate(new NavigateArgs { BarTarget = LastPage.Item1, LeftTarget = LastPage.Item2, RightTarget = LastPage.Item3 }));
         }
 
         #region 导航相关
@@ -25,10 +31,11 @@ namespace LSL.ViewModels
         [Reactive] public GeneralPageState CurrentGeneralPage { get; set; }
         [Reactive] public RightPageState CurrentRightPage { get; set; }
 
-        private (GeneralPageState, RightPageState) _lastPage = (GeneralPageState.Undefined, RightPageState.Undefined);
+        private (BarState, GeneralPageState, RightPageState) LastPage = (BarState.Common, GeneralPageState.Undefined, RightPageState.Undefined);
 
         private void Navigate(NavigateArgs args)// ASL不负责查重操作
         {
+            (BarState, GeneralPageState, RightPageState) _lastPage = (BarState.Common, CurrentGeneralPage, CurrentRightPage);
             if (args.LeftTarget != GeneralPageState.Undefined)
             {
                 CurrentGeneralPage = args.LeftTarget;
@@ -41,25 +48,27 @@ namespace LSL.ViewModels
             {
                 if (args.BarTarget == BarState.FullScreen && CurrentBarState == BarState.Common)
                 {
-                    _lastPage = (CurrentGeneralPage, CurrentRightPage);
-                    CurrentBarState = args.BarTarget;
+                    CurrentBarState = BarState.FullScreen;
                 }
                 else if (args.BarTarget == BarState.Common && CurrentBarState == BarState.FullScreen)
                 {
-                    if (_lastPage != (GeneralPageState.Undefined, RightPageState.Undefined))
+                    CurrentBarState = BarState.Common;
+                    if (LastPage != (BarState.Common, GeneralPageState.Undefined, RightPageState.Undefined))
                     {
-                        CurrentGeneralPage = _lastPage.Item1;
-                        CurrentRightPage = _lastPage.Item2;
+                        CurrentBarState = LastPage.Item1;
+                        CurrentGeneralPage = LastPage.Item2;
+                        CurrentRightPage = LastPage.Item3;
                     }
                     else
                     {
                         CurrentGeneralPage = GeneralPageState.Home;
                         CurrentRightPage = RightPageState.HomeRight;
                     }
-                    _lastPage = (GeneralPageState.Undefined, RightPageState.Undefined);
+                    _lastPage = (BarState.Common, GeneralPageState.Undefined, RightPageState.Undefined);
                 }
                 else CurrentBarState = args.BarTarget;
             }
+            LastPage = _lastPage;
         }
         #endregion
 

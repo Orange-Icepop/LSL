@@ -64,7 +64,7 @@ namespace LSL.ViewModels
                 return;
             }
             TerminalTexts.TryAdd(SelectedServerId, new StringBuilder());
-            MessageBus.Current.SendMessage(new NavigateArgs { LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
+            MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
             Task RunServer = Task.Run(() => ServerHost.Instance.RunServer(SelectedServerId));
             Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
         }
@@ -224,7 +224,7 @@ namespace LSL.ViewModels
         // 访问器
         public Tuple<bool, bool> ServerStatusValue(string serverId)
         {
-            return ServerStatus.GetOrAdd(serverId, Tuple.Create(false,false));
+            return ServerStatus.GetOrAdd(serverId, Tuple.Create(false, false));
         }
 
         public bool CurrentServerRunning

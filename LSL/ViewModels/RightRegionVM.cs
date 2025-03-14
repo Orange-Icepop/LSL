@@ -26,7 +26,7 @@ namespace LSL.ViewModels
                 .Subscribe(e =>
                 {
                     if (e.Type == NavigateCommandType.Refresh)
-                        MessageBus.Current.SendMessage(new NavigateArgs { RightTarget = AppState.CurrentRightPage });
+                        MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Undefined, LeftTarget = GeneralPageState.Undefined, RightTarget = AppState.CurrentRightPage });
                 });
         }
         public UserControl NavigateRight(RightPageState page)

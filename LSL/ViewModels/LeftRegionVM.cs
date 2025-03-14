@@ -29,7 +29,11 @@ namespace LSL.ViewModels
         private UserControl NavigateLeft(GeneralPageState page)
         {
             if (page == GeneralPageState.Undefined) return CurrentView;
-            else if (page == GeneralPageState.Empty) return new UserControl();
+            else if (page == GeneralPageState.Empty) 
+            {
+                LeftWidth = 0;
+                return new UserControl(); 
+            }
             else 
             {
                 double lw = page switch
