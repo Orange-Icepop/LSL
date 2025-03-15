@@ -133,10 +133,7 @@ namespace LSL.Services
     2. 发布事件
     EventBus.Instance.Publish(new 【事件类名】 { 【事件参数名称】 = 【值】 });
     3. 事件处理器类（可选）
-    事件处理器可以统一设置，也可以在需要的地方单独设置
-    如果是统一设置的非静态事件处理器，需要引入该类的实例
     public void 【事件处理器方法名】(【事件类名】 args)
-    注：AI给的示例中还包含object sender参数，但如果加上会报错，就很神奇
     4. 订阅事件
     EventBus.Instance.Subscribe<【事件类名】>(【事件处理器方法】);
     */

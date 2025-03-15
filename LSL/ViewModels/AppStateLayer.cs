@@ -23,7 +23,7 @@ namespace LSL.ViewModels
             MessageBus.Current.Listen<NavigateCommand>()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Where(args => args.Type == NavigateCommandType.FS2Common)
-                .Subscribe(args => Navigate(new NavigateArgs { BarTarget = LastPage.Item1, LeftTarget = LastPage.Item2, RightTarget = LastPage.Item3 }));
+                .Subscribe(_ => Navigate(new NavigateArgs { BarTarget = LastPage.Item1, LeftTarget = LastPage.Item2, RightTarget = LastPage.Item3 }));
         }
 
         #region 导航相关
