@@ -29,11 +29,14 @@ namespace LSL.ViewModels
                         MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Undefined, LeftTarget = GeneralPageState.Undefined, RightTarget = AppState.CurrentRightPage });
                 });
         }
+
+        #region 右侧视图导航逻辑
         public UserControl NavigateRight(RightPageState page)
         {
             if (page == RightPageState.Undefined) return CurrentView;
             else if (page == RightPageState.Empty) return new UserControl();
             else return ViewFactory.CreateView(page.ToString());
         }
+        #endregion
     }
 }
