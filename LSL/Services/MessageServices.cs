@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,7 +9,7 @@ using LSL.ViewModels;
 namespace LSL.Services
 {
     #region 事件总线
-    public class EventBus
+    public sealed class EventBus
     {
         // 锁对象，用于同步对事件字典的访问  
         private readonly ReaderWriterLockSlim _lock = new();
@@ -19,20 +20,10 @@ namespace LSL.Services
         // 私有构造函数，使用了单例模式
         private EventBus() { }
 
-        // 单例属性  
-        private static EventBus _instance;
+        // 使用 Lazy<T> 实现线程安全的单例
+        private static readonly Lazy<EventBus> _instance = new(() => new EventBus());
 
-        public static EventBus Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new EventBus();
-                }
-                return _instance;
-            }
-        }
+        public static EventBus Instance => _instance.Value;
 
         // 订阅事件（在构造函数中使用）
         public void Subscribe<TEvent>(Action<TEvent> handler) where TEvent : EventArgs
@@ -139,17 +130,6 @@ namespace LSL.Services
     */
 
     #region 事件类
-    public class BarChangedEventArgs : EventArgs// 导航栏改变事件
-    {
-        public required string NavigateTarget { get; set; }
-    }
-
-    public class LeftChangedEventArgs : EventArgs// 左侧栏改变事件
-    {
-        public required string LeftView { get; set; }
-        public required string LeftTarget { get; set; }
-    }
-
     public class TerminalOutputArgs : EventArgs// 终端输出事件
     {
         public required string ServerId { get; set; }
@@ -217,24 +197,87 @@ namespace LSL.Services
     }
 
     #region ReactiveUI事件类
-    public interface IMessageArgs;
-    public class NavigateArgs : IMessageArgs
+    public class NavigateArgs : EventArgs
     {
         public required BarState BarTarget { get; set; } = BarState.Undefined;
         public required GeneralPageState LeftTarget { get; set; } = GeneralPageState.Undefined;
         public required RightPageState RightTarget { get; set; } = RightPageState.Undefined;
     }
 
-    public class NavigateCommand : IMessageArgs
+    public class NavigateCommand : EventArgs
     {
         public NavigateCommandType Type { get; set; } = NavigateCommandType.None;
     }
 
-    public class PopupRequest : IMessageArgs
+    public class PopupRequest : EventArgs
     {
         public int Type { get; set; } = 0;
         public string Title { get; set; } = "空弹窗";
         public string Message { get; set; } = "我是一个空的弹窗！";
+    }
+    #endregion
+
+    #region 带返回值的远程调用
+    public sealed class InvokeBus
+    {
+        private InvokeBus() { }
+        private static readonly Lazy<InvokeBus> _instance = new(() => new InvokeBus());
+        public static InvokeBus Instance => _instance.Value;
+        private readonly ConcurrentDictionary<Type, (Type RTType, Delegate Handler)> _handlers = new();
+        // 注册事件处理器
+        public bool TryRegister<TEvent, TResult>(Func<TEvent, TResult> handler, bool force = false) where TEvent : EventArgs
+        {
+            if (handler is null) return false;
+            var key = typeof(TEvent);
+            var value = (typeof(TResult), (Delegate)handler);
+            return force ? _handlers.TryUpdate(key, value, _handlers[key]) : _handlers.TryAdd(key, value);
+        }
+        // 注册异步事件处理器
+        public bool TryRegisterAsync<TEvent, TResult>(Func<TEvent, Task<TResult>> handler, bool force = false) where TEvent : EventArgs
+        {
+            if (handler is null) return false;
+            var key = typeof(TEvent);
+            var value = (typeof(Task<TResult>), (Delegate)handler);
+            return force ? _handlers.TryUpdate(key, value, _handlers[key]) : _handlers.TryAdd(key, value);
+        }
+        // 移除事件处理器
+        public bool TryRemove<TEvent>() where TEvent : EventArgs
+            => _handlers.TryRemove(typeof(TEvent), out _);
+        // 调用事件处理器
+        public TResult? Invoke<TEvent, TResult>(TEvent args) where TEvent : EventArgs
+        {
+            ArgumentNullException.ThrowIfNull(args);
+            if (_handlers.TryGetValue(typeof(TEvent), out var pair))
+            {
+                if (typeof(TResult) == pair.RTType)
+                {
+                    var handler = (Func<TEvent, TResult>)pair.Handler;
+                    return handler(args);
+                }
+                else throw new InvalidCastException("Return type mismatch");
+            }
+            else return default;
+        }
+        // 异步调用事件处理器
+        public async Task<TResult?> InvokeAsync<TEvent, TResult>(TEvent args) where TEvent : EventArgs
+        {
+            ArgumentNullException.ThrowIfNull(args);
+            if (_handlers.TryGetValue(typeof(TEvent), out var pair))
+            {
+                if (typeof(TResult) == pair.RTType)
+                {
+                    return pair.Handler switch
+                    {
+                        Func<TEvent, Task<TResult>> asyncHandler => await asyncHandler(args).ConfigureAwait(false),
+                        Func<TEvent, TResult> syncHandler => await Task.Run(() => syncHandler(args)).ConfigureAwait(false),// 兼容同步处理器
+                        _ => throw new InvalidOperationException($"Unsupported handler type: {pair.Handler.GetType()}"),
+                    };
+                }
+                else throw new InvalidCastException("Return type mismatch");
+            }
+            else return default;
+        }
+
     }
     #endregion
 }
