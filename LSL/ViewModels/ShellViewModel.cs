@@ -21,14 +21,17 @@ namespace LSL.ViewModels
         public ConfigViewModel ConfigVM { get; }
         public ServerViewModel ServerVM { get; }
         public PublicCommand PublicCmd { get; }
+        // 弹窗交互，这玩意儿和上面的东西没关系
+        public PopupInteraction PopupITA { get; } = new PopupInteraction();
+
         public ShellViewModel()
         {
-            AppState = new AppStateLayer();
+            AppState = new AppStateLayer(PopupITA);
             ServeCon = new ServiceConnector(AppState);
             BarVM = new BarRegionVM(AppState, ServeCon);
             LeftVM = new LeftRegionVM(AppState, ServeCon);
             RightVM = new RightRegionVM(AppState, ServeCon);
-            PopupVM = new PopupViewModel();
+            PopupVM = new PopupViewModel(PopupITA);
             ConfigVM = new ConfigViewModel(AppState, ServeCon);
             ServerVM = new ServerViewModel(AppState, ServeCon);
             PublicCmd = new PublicCommand(AppState, ServeCon);
@@ -45,18 +48,15 @@ namespace LSL.ViewModels
             #region 多参数导航
             PanelConfigCmd = ReactiveCommand.Create(() =>
             {
-                NavigateLeftView("SettingsLeft", true);
-                NavigateRightView("PanelSettings");
+                NavigateToPage(GeneralPageState.Settings, RightPageState.PanelSettings);
             });
             DownloadConfigCmd = ReactiveCommand.Create(() =>
             {
-                NavigateLeftView("SettingsLeft", true);
-                NavigateRightView("DownloadSettings");
+                NavigateToPage(GeneralPageState.Settings, RightPageState.DownloadSettings);
             });
             CommonConfigCmd = ReactiveCommand.Create(() =>
             {
-                NavigateLeftView("SettingsLeft", true);
-                NavigateRightView("Common");
+                NavigateToPage(GeneralPageState.Settings, RightPageState.Common);
             });
             #endregion
         }

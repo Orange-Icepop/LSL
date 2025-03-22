@@ -37,8 +37,8 @@ public partial class MainWindow : Window
     }
     private void InitializeViews(object sender, EventArgs e)
     {
-        var shellViewModel = (ShellViewModel)this.DataContext;
-        shellViewModel.InitializeMainWindow();
+        var shellViewModel = (ShellViewModel?)this.DataContext;
+        shellViewModel?.InitializeMainWindow();
     }
     private void MainWindow_Closing(object sender, CancelEventArgs e)
     {
@@ -108,6 +108,6 @@ public partial class MainWindow : Window
             default:
                 return;
         }
-        NotifyManager.Show(new Notification(title, message, type));
+        NotifyManager?.Show(new Notification(title, message, type));
     }
 }

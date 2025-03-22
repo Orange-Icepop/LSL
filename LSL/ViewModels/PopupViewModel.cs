@@ -1,6 +1,7 @@
 ﻿using Avalonia.Animation;
 using Avalonia.Media;
 using Avalonia.Threading;
+using LSL.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
@@ -20,8 +21,14 @@ namespace LSL.ViewModels
 {
     public class PopupViewModel
     {
-        public PopupViewModel()
+        public PopupViewModel(PopupInteraction interaction)
         {
+            //InvokeBus.Instance.TryRegisterAsync<PopupArgs, PopupResult>(ShowPopup, true);
+            interaction.RegisterHandler(async args =>
+            {
+                var result = await ShowPopup(args.Input);
+                args.SetOutput(result);
+            });
             Title = "";
             Content = "";
             MainColor = Brushes.Black;
@@ -48,18 +55,23 @@ namespace LSL.ViewModels
         [Reactive] public bool IsVisible { get; set; }
         [Reactive] public double Opacity { get; set; }
         public ObservableCollection<PopupButton> Buttons { get; set; } = [];
-        private ConcurrentQueue<PopupRequest> RequestQueue = new();
+        private readonly ConcurrentQueue<PopupRequest> RequestQueue = new();
         public ICommand SetResCmd { get; set; }
         #endregion
 
         #region 公共方法
-        public Task<PopupResult> ShowPopop(PopupType type, string? title, string? content)
+        public Task<PopupResult> ShowPopup(PopupArgs args)
+        {
+            return ShowPopup((PopupType)args.Type, args.Title, args.Message);
+        }
+        public Task<PopupResult> ShowPopup(PopupType type, string? title, string? content)
         {
             if (!PopupConfigs.TryGetValue(type, out var conf)) throw new NotImplementedException("Unknown popup type");
             title ??= conf.Title;
             content ??= conf.Content;
             TaskCompletionSource<PopupResult> tcs = new();
             RequestQueue.Enqueue(new(type, title, content, tcs));
+            ProcessQueue();
             return tcs.Task;
         }
         #endregion
@@ -67,7 +79,8 @@ namespace LSL.ViewModels
         #region 弹窗处理机制
         private async Task ProcessQueue()
         {
-            await _queLock.WaitAsync();
+            await _queLock.WaitAsync().ConfigureAwait(false);
+            if (IsProcessing) return;
             await Dispatcher.UIThread.InvokeAsync(() => IsProcessing = true);
             try
             {
@@ -75,9 +88,12 @@ namespace LSL.ViewModels
                 {
                     if (RequestQueue.TryDequeue(out var request))
                     {
-                        await ProcessPopup(request);
-                        await request.RTcs.Task;
-                        await ResetPopup();
+                        await Task.Run(async () =>
+                        {
+                            await ProcessPopup(request).ConfigureAwait(false);
+                            await request.RTcs.Task.ConfigureAwait(false); // 避免死锁
+                            await ResetPopup().ConfigureAwait(false);
+                        });
                     }
                 }
             }
@@ -90,27 +106,35 @@ namespace LSL.ViewModels
         }
         private async Task ProcessPopup(PopupRequest request)
         {
-            if (!PopupConfigs.TryGetValue(request.RType, out var config)) return;
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            try
             {
-                Title = request.RTitle;
-                Content = request.RContent;
-                MainColor = config.MainColor;
-                Buttons.Clear();
-                foreach (var item in config.Buttons) Buttons.Add(item);
-                CurrentPopupTcs = request.RTcs;
-                IsVisible = true;
-                Opacity = 1;
-            });
+                if (!PopupConfigs.TryGetValue(request.RType, out var config))
+                {
+                    request.RTcs.SetException(new KeyNotFoundException("Invalid popup type"));
+                    return;
+                }
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Title = request.RTitle;
+                    Content = request.RContent;
+                    MainColor = config.MainColor;
+                    Buttons.Clear();
+                    foreach (var item in config.Buttons) Buttons.Add(item);
+                    CurrentPopupTcs = request.RTcs;
+                    IsVisible = true;
+                    Opacity = 1;
+                });
+            }
+            catch (Exception ex)
+            {
+                request.RTcs.SetException(ex);
+            }
         }
         private async Task ResetPopup()
         {
-            Dispatcher.UIThread.Post(() =>
-            {
-                Opacity = 0;
-            });
-            await Task.Delay(200);
-            Dispatcher.UIThread.Post(() =>
+            await Dispatcher.UIThread.InvokeAsync(() => Opacity = 0);
+            await Task.Delay(200).ConfigureAwait(false);
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 IsVisible = false;
                 Title = "";
@@ -123,7 +147,7 @@ namespace LSL.ViewModels
 
         private TaskCompletionSource<PopupResult> CurrentPopupTcs { get; set; } = new();
         private bool IsProcessing;
-        private readonly SemaphoreSlim _queLock = new(1,1);
+        private readonly SemaphoreSlim _queLock = new(1, 1);
 
         #region Popup所用类，枚举与配置
         public record PopupButton(string Text, ICommand Command, PopupResult Parameter);// 按钮的文本与命令
@@ -148,5 +172,5 @@ namespace LSL.ViewModels
         No,
         Cancel,
     }
-
+    public class PopupInteraction : Interaction<PopupArgs, PopupResult> { }
 }
