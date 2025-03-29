@@ -5,14 +5,14 @@
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
              x:Class="LSL.Views.Popup">
 	<Grid>
-		<Grid Name="Cover" Background="{Binding	PopupVM.Color}" Opacity="0.3"/>
+		<Grid Name="Cover" Background="{Binding	PopupVM.MainColor}" Opacity="0.3"/>
 		<Border Width="600"
 				Name="PopupBorder"
 				Padding="10"
 				VerticalAlignment="Center"
 				Background="White"
 				BorderThickness="4"
-				BorderBrush="{Binding PopupVM.Color}"
+				BorderBrush="{Binding PopupVM.MainColor}"
 				CornerRadius="10">
 			<DockPanel>
 				<TextBlock Name="Head" DockPanel.Dock="Top" Margin="10" FontWeight="Bold" FontSize="17" Text="{Binding PopupVM.Title}" />

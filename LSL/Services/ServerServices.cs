@@ -1,10 +1,14 @@
-﻿using System;
+﻿using Avalonia.Media;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace LSL.Services
@@ -300,22 +304,44 @@ namespace LSL.Services
     {
 
         private static readonly Lazy<OutputHandler> _instance = new(() => new OutputHandler());
+        private readonly Channel<TerminalOutputArgs> OutputChannel;
+        private readonly CancellationTokenSource OutputCTS=new();
+        private Dictionary<string, string> PlayerPool = [];
 
         public static OutputHandler Instance => _instance.Value;
 
         private OutputHandler()
         {
+            OutputChannel = Channel.CreateUnbounded<TerminalOutputArgs>();
             EventBus.Instance.Subscribe<TerminalOutputArgs>(HandleOutput);
+            Task.Run(() => ProcessOutput(OutputCTS.Token));
         }
 
         public void HandleOutput(TerminalOutputArgs args)
         {
-            Task.Run(() => OutputProcessor(args.ServerId, args.Output));
+            //Task.Run(() => OutputProcessor(args.ServerId, args.Output));
+            OutputChannel.Writer.TryWrite(args);
         }
 
-        private Dictionary<string, string> PlayerPool = [];
+        private async Task ProcessOutput(CancellationToken ct)
+        {
+            try
+            {
+                await foreach (var args in OutputChannel.Reader.ReadAllAsync(ct))
+                {
+                    try { await OutputProcessor(args.ServerId, args.Output); }
+                    catch { }
+                }
+            }
+            catch (OperationCanceledException) { }
+        }
+        public void Shutdown()
+        {
+            OutputCTS.Cancel();
+            OutputChannel.Writer.TryComplete();
+        }
 
-        private async void OutputProcessor(string ServerId, string Output)
+        private async Task OutputProcessor(string ServerId, string Output)
         {
             if (Output.Substring(1, 3) == "LSL") return;
             bool isMsgWithTime;
@@ -374,6 +400,10 @@ namespace LSL.Services
     #endregion
 
     #region 服务端输出存储
-
+    public record ServerOutputLine(string Line, ISolidColorBrush Color);
+    public class ServerOutputStorage
+    {
+        private ConcurrentDictionary<int, ObservableCollection<ServerOutputLine>> OutputDict;
+    }
     #endregion
 }

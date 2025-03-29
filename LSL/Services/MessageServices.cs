@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Media;
 using LSL.ViewModels;
 
 namespace LSL.Services
@@ -134,6 +135,12 @@ namespace LSL.Services
     {
         public required string ServerId { get; set; }
         public required string Output { get; set; }
+    }
+    public class ColorOutputArgs : EventArgs// 彩色终端输出事件
+    {
+        public required string ServerId { get; set; }
+        public required string Output { get; set; }
+        public required ISolidColorBrush Color { get; set; }
     }
     public class PopupMessageArgs : EventArgs// 弹窗事件
     {
