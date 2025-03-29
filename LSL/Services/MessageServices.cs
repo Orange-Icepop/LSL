@@ -92,7 +92,7 @@ namespace LSL.Services
             }
         }
         // 异步发布事件（其实比较常用）
-        public void PublishAsync<TEvent>(TEvent e) where TEvent : EventArgs
+        public async Task PublishAsync<TEvent>(TEvent e) where TEvent : EventArgs
         {
             _lock.EnterReadLock();
             try
@@ -103,7 +103,7 @@ namespace LSL.Services
                     foreach (var handler in handlers.Cast<Action<TEvent>>())
                     {
                         // 同步执行请用Publish方法
-                        Task.Run(() => handler(e)); // 异步执行  
+                        await Task.Run(() => handler(e)); // 异步执行  
                     }
                 }
             }
@@ -139,8 +139,8 @@ namespace LSL.Services
     public class ColorOutputArgs : EventArgs// 彩色终端输出事件
     {
         public required string ServerId { get; set; }
-        public required string Output { get; set; }
         public required ISolidColorBrush Color { get; set; }
+        public required string Output { get; set; }
     }
     public class PopupMessageArgs : EventArgs// 弹窗事件
     {

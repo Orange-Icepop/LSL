@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq.Expressions;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -299,14 +300,13 @@ namespace LSL.Services
     }
     #endregion
 
-    #region 服务端输出预处理
-    public class OutputHandler
+    // 服务端输出预处理
+    public partial class OutputHandler
     {
 
         private static readonly Lazy<OutputHandler> _instance = new(() => new OutputHandler());
         private readonly Channel<TerminalOutputArgs> OutputChannel;
-        private readonly CancellationTokenSource OutputCTS=new();
-        private Dictionary<string, string> PlayerPool = [];
+        private readonly CancellationTokenSource OutputCTS = new();
 
         public static OutputHandler Instance => _instance.Value;
 
@@ -317,6 +317,7 @@ namespace LSL.Services
             Task.Run(() => ProcessOutput(OutputCTS.Token));
         }
 
+        #region 待处理队列
         public void HandleOutput(TerminalOutputArgs args)
         {
             //Task.Run(() => OutputProcessor(args.ServerId, args.Output));
@@ -335,72 +336,94 @@ namespace LSL.Services
             }
             catch (OperationCanceledException) { }
         }
+        #endregion
+
         public void Shutdown()
         {
             OutputCTS.Cancel();
             OutputChannel.Writer.TryComplete();
         }
 
+        private static readonly Regex GetTimeStamp = new(@"^\[(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})\s(?<type>[A-Z]{4})\]\s*:\s*(?<context>.*)", RegexOptions.Compiled);
+        private static readonly Regex GetPlayerMessage = new(@"^\<(?<player>.*)\>\s*(?<message>.*)", RegexOptions.Compiled);
+        private static readonly Regex GetUUID = new(@"^UUID\sof\splayer\s(?<player>.*)\sis\s(?<uuid>[\da-f-]*)", RegexOptions.Compiled);
+        private static readonly Regex PlayerLeft = new(@"(?<player>.*)\sleft\sthe\sgame$", RegexOptions.Compiled);
+
+        #region 处理操作
         private async Task OutputProcessor(string ServerId, string Output)
         {
-            if (Output.Substring(1, 3) == "LSL") return;
-            bool isMsgWithTime;
-            string MsgWithoutTime;
+            ISolidColorBrush colorBrush = new SolidColorBrush(Colors.Black);
+            string final = Output;
             // 检测消息是否带有时间戳
-            if (Output.StartsWith('['))
+            if (Output.Substring(1, 3) == "LSL") { }
+            else if (GetTimeStamp.IsMatch(Output))
             {
-                isMsgWithTime = true;
-                MsgWithoutTime = Output.Substring(Output.IndexOf(']') + 2).Trim();
+                var match = GetTimeStamp.Match(Output);
+                if (GetPlayerMessage.IsMatch(match.Groups["context"].Value))
+                {
+                    final = match.Groups["context"].Value;
+                }
+                else
+                {
+                    string type = match.Groups["type"].Value;
+                    if (type == "INFO")
+                    {
+                        colorBrush = new SolidColorBrush(Colors.Blue);
+                    }
+                    else if (type == "WARN")
+                    {
+                        colorBrush = new SolidColorBrush(Colors.Orange);
+                    }
+                    else if (type == "ERRO")
+                    {
+                        colorBrush = new SolidColorBrush(Colors.Red);
+                    }
+                    else if (type == "FATA")
+                    {
+                        colorBrush = new SolidColorBrush(Colors.Red);
+                    }
+                    ProcessSystem(ServerId, match.Groups["context"].Value);
+                }
             }
             else
             {
-                isMsgWithTime = false;
-                MsgWithoutTime = Output;
+                colorBrush = new SolidColorBrush(Colors.Red);
             }
-            // 检测消息是否为用户消息
-            if (isMsgWithTime && MsgWithoutTime.StartsWith('<'))
+            EventBus.Instance.PublishAsync(new ColorOutputArgs { ServerId = ServerId, Output = final, Color = colorBrush });
+        }
+        // 额外处理服务端自身输出所需要更新的操作
+        private void ProcessSystem(string ServerId, string Output)
+        {
+            string[] pieces = Output.Split(' ');
+            if (GetUUID.IsMatch(Output))
             {
-                EventBus.Instance.PublishAsync(new PlayerMessageArgs { ServerId = ServerId, Message = MsgWithoutTime });
+                var match = GetUUID.Match(Output);
+                EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = match.Groups["uuid"].Value, PlayerName = match.Groups["player"].Value, Entering = true });
             }
-            else
+
+            if (PlayerLeft.IsMatch(Output))
             {
-                if (MsgWithoutTime.StartsWith('['))
-                {
-                    MsgWithoutTime = MsgWithoutTime.Substring(MsgWithoutTime.IndexOf(':') + 1).Trim();
-                }
-                var MessagePieces = MsgWithoutTime.Split(' ');
-                if (MsgWithoutTime.Contains("UUID of player"))
-                {
-                    string PlayerName = MessagePieces[4];
-                    string uuid = MessagePieces[6];
-                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = uuid, PlayerName = PlayerName, Entering = true });
-                }
+                EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = "lefting", PlayerName = GetUUID.Match(Output).Groups["player"].Value, Entering = false });
+            }
 
-                if (MsgWithoutTime.Contains("left the game"))
-                {
-                    string PlayerName = MessagePieces[0];
-                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = "lefting", PlayerName = PlayerName, Entering = false });
-                }
+            if (Output.StartsWith("Done"))
+            {
+                EventBus.Instance.PublishAsync(new ColorOutputArgs { ServerId = ServerId, Color = new SolidColorBrush(Colors.Green), Output = "[LSL 消息]: 服务器启动成功！" });
+                EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Running = true, Online = true });
+                ServerHost.Instance.SendCommand(ServerId, "hello");
+                // 现在的情况是这个服务器输入处理方式不知道抽了什么风，第一个发送的命令会被修改，Buffer啥的也都排除掉了，所以这里加了一个hello命令，防止第一个命令被修改影响实际操作
+            }
 
-                if (MsgWithoutTime.StartsWith("Done"))
-                {
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = ServerId, Output = "[LSL 消息]: 服务器启动成功！" });
-                    EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Running = true, Online = true });
-                    ServerHost.Instance.SendCommand(ServerId, "hello");
-                    // 现在的情况是这个服务器输入处理方式不知道抽了什么风，第一个发送的命令会被修改，Buffer啥的也都排除掉了，所以这里加了一个hello命令，防止第一个命令被修改影响实际操作
-                }
-
-                if (MsgWithoutTime.StartsWith("Stopping the server"))
-                {
-                    EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Running = true, Online = false });
-                }
+            if (Output.StartsWith("Stopping the server"))
+            {
+                EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Running = true, Online = false });
             }
         }
+        #endregion
     }
-    #endregion
 
     #region 服务端输出存储
-    public record ServerOutputLine(string Line, ISolidColorBrush Color);
+    public record ServerOutputLine(DateTime Time, string Line, ISolidColorBrush Color);
     public class ServerOutputStorage
     {
         private ConcurrentDictionary<int, ObservableCollection<ServerOutputLine>> OutputDict;
