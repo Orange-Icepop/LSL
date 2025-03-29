@@ -25,7 +25,7 @@ namespace LSL.Views.Download.ASViews
         };
         public async void OpenFileCmd(object sender, RoutedEventArgs args)
         {
-            var mainViewModel = (MainViewModel)this.DataContext;
+            var mainViewModel = (ShellViewModel)this.DataContext;
             if (mainViewModel == null)
             {
                 QuickHandler.ThrowError("添加核心页面的DataContext为null，无法通过对话框选择文件。");
@@ -44,7 +44,7 @@ namespace LSL.Views.Download.ASViews
             {
                 var URI = files[0].Path;
                 string localPath = URI.LocalPath;
-                mainViewModel.SaveFilePath(localPath, "CorePath");
+                //mainViewModel.SaveFilePath(localPath, "CorePath");//TODO
             }
         }
         #endregion

@@ -16,7 +16,7 @@
 						   IsEnabled="True"
 						 Name="TerminalOutput"
 						 Foreground="Black"
-						 Text="{Binding ServerTerminalText}"/>
+						 Text="{Binding ServerVM.TerminalText}"/>
 			</ScrollViewer>
 		</local:MyCard>
 		<local:MyCard Grid.Row="1" Grid.Column="0">

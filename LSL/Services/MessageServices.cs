@@ -133,12 +133,12 @@ namespace LSL.Services
     #region 事件类
     public class TerminalOutputArgs : EventArgs// 终端输出事件
     {
-        public required string ServerId { get; set; }
+        public required int ServerId { get; set; }
         public required string Output { get; set; }
     }
     public class ColorOutputArgs : EventArgs// 彩色终端输出事件
     {
-        public required string ServerId { get; set; }
+        public required int ServerId { get; set; }
         public required ISolidColorBrush Color { get; set; }
         public required string Output { get; set; }
     }
@@ -163,13 +163,13 @@ namespace LSL.Services
 
     public class PlayerMessageArgs : EventArgs// 服务器消息事件
     {
-        public required string ServerId { get; set; }
+        public required int ServerId { get; set; }
         public required string Message { get; set; }
     }
 
     public class PlayerUpdateArgs : EventArgs// 玩家列表更新事件
     {
-        public required string ServerId { get; set; }
+        public required int ServerId { get; set; }
         public required string UUID { get; set; }
         public required string PlayerName { get; set; }
         public required bool Entering { get; set; }
@@ -177,7 +177,7 @@ namespace LSL.Services
 
     public class ServerStatusArgs : EventArgs// 服务器状态更新事件
     {
-        public required string ServerId { get; set; }
+        public required int ServerId { get; set; }
         public required bool Running { get; set; }
         public required bool Online { get; set; }
     }

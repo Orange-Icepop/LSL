@@ -16,12 +16,6 @@ namespace LSL.ViewModels
     {
         public ConfigViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
-            AppState.WhenAnyValue(AS => AS.CurrentServerConfigs)
-                .Select(s => new ObservableCollection<string>(s.Keys))
-                .ToPropertyEx(this, x => x.ServerIDs);
-            AppState.WhenAnyValue(AS => AS.CurrentServerConfigs)
-                .Select(s => new ObservableCollection<string>(s.Values.Select(v => v.name)))
-                .ToPropertyEx(this, x => x.ServerNames);
             AppState.WhenAnyValue(AS => AS.CurrentJavaDict)
                 .Select(s => new ObservableCollection<JavaInfo>(s.Values))
                 .ToPropertyEx(this, x => x.JavaVersions);
@@ -72,11 +66,6 @@ namespace LSL.ViewModels
             AppState.CurrentConfigs = cachedConfig;
             Connector.SaveConfig();
         }
-        #endregion
-
-        #region 服务器配置
-        public ObservableCollection<string> ServerIDs { [ObservableAsProperty] get; }
-        public ObservableCollection<string> ServerNames { [ObservableAsProperty] get; }
         #endregion
 
         #region 服务器配置操作

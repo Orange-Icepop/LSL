@@ -1,13 +1,18 @@
-﻿using LSL.Services;
+﻿using Avalonia.Media;
+using Avalonia.Threading;
+using LSL.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -15,26 +20,33 @@ namespace LSL.ViewModels
 {
     public class ServerViewModel : RegionalVMBase
     {
-        public ServerViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
+        private Channel<ColorOutputArgs> ServerOutputChannel = Channel.CreateUnbounded<ColorOutputArgs>();
+        private CancellationTokenSource OutputCts = new();
+        private void OnServerOutputLine(ColorOutputArgs args)
         {
-            AppState.WhenAnyValue(AS => AS.CurrentServerConfigs)
-                .Select(s => new ObservableCollection<string>(s.Keys))
-                .ToPropertyEx(this, x => x.ServerIDs);
-            AppState.WhenAnyValue(AS => AS.CurrentServerConfigs)
-                .Select(s => new ObservableCollection<string>(s.Values.Select(v => v.name)))
-                .ToPropertyEx(this, x => x.ServerNames);
+            ServerOutputChannel.Writer.TryWrite(args);
         }
-        #region 控制
-        private int _selectedServerIndex;// 当前选中的服务器在列表中的位置，用于绑定到View
-        public int SelectedServerIndex
+        private async Task HandleOutput(CancellationToken token)
         {
-            get => _selectedServerIndex;
-            set
+            await foreach (var args in ServerOutputChannel.Reader.ReadAllAsync(token))
             {
-                this.RaiseAndSetIfChanged(ref _selectedServerIndex, value);
-                MessageBus.Current.SendMessage(new NavigateCommand { Type = NavigateCommandType.Refresh });
+                await Dispatcher.UIThread.InvokeAsync(() => TerminalTexts[AppState.SelectedServerId].Add(new ColoredLines(args.Output, args.Color)));
             }
         }
+        public ServerViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
+        {
+            AppState.WhenAnyValue(AS => AS.SelectedServerId)
+                .Select(id => TerminalTexts.GetOrAdd(id, []))
+                .ToPropertyEx(this, x => x.TerminalText);
+            this.WhenAnyValue(t => t.TerminalTexts)
+                .Select(t => t.TryGetValue(AppState.SelectedServerId, out var value) ? value : new())
+                .Where(t => t != TerminalText)
+                .ToPropertyEx(this, x => x.TerminalText);
+            EventBus.Instance.Subscribe<ColorOutputArgs>(OnServerOutputLine);
+            Task.Run(() => HandleOutput(OutputCts.Token));
+        }
+
+        #region 控制
         public ICommand StartServerCmd { get; set; }// 启动服务器命令
         public ICommand StopServerCmd { get; set; }// 停止服务器命令
         public ICommand SaveServerCmd { get; set; }// 保存服务器命令
@@ -52,22 +64,22 @@ namespace LSL.ViewModels
         }
         public void StartServer()//启动服务器方法
         {
-            var result = VerifyServerConfigBeforeStart(AppState.SelectedServerId.ToString());
+            var result = VerifyServerConfigBeforeStart(AppState.SelectedServerId);
             if (result != null)
             {
                 QuickHandler.ThrowError(result);
                 return;
             }
-            TerminalTexts.TryAdd(SelectedServerId, new StringBuilder());
+            TerminalTexts.TryAdd(AppState.SelectedServerId, new());
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
-            Task RunServer = Task.Run(() => ServerHost.Instance.RunServer(SelectedServerId));
-            Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
+            Task RunServer = Task.Run(() => ServerHost.Instance.RunServer(AppState.SelectedServerId));
+            //Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
         }
 
         #endregion
 
         #region 启动前校验配置文件
-        public static string? VerifyServerConfigBeforeStart(string serverId)
+        public static string? VerifyServerConfigBeforeStart(int serverId)
         {
             if (ServerConfigManager.ServerConfigs.TryGetValue(serverId, out var config)) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
             else if (config == null) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
@@ -81,11 +93,9 @@ namespace LSL.ViewModels
         }
         #endregion
 
-        #region 服务器配置
-        public ObservableCollection<string> ServerIDs { [ObservableAsProperty] get; }
-        public ObservableCollection<string> ServerNames { [ObservableAsProperty] get; }
-        #endregion
 
+        private ConcurrentDictionary<int, ObservableCollection<ColoredLines>> TerminalTexts = new();
+        public ObservableCollection<ColoredLines> TerminalText { [ObservableAsProperty] get; }
     }
-
+    public record ColoredLines(string Line, ISolidColorBrush Color);
 }

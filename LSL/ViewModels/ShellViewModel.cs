@@ -12,6 +12,8 @@ namespace LSL.ViewModels
 {
     public partial class ShellViewModel : ViewModelBase
     {
+        private const string _version = "0.08.2";
+        public string Version => _version;
         public AppStateLayer AppState { get; }
         public ServiceConnector ServeCon { get; }
         public BarRegionVM BarVM { get; }

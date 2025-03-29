@@ -17,9 +17,9 @@ namespace LSL.Services
     public interface IServerHost
     {
 
-        Task RunServer(string serverId);
-        Task SendCommand(string serverId, string command);
-        void EndServer(string serverId);
+        Task RunServer(int serverId);
+        Task SendCommand(int serverId, string command);
+        void EndServer(int serverId);
         void EndAllServers();
     }
 
@@ -32,17 +32,17 @@ namespace LSL.Services
 
         // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在MainViewModel中将列表项解析为ServerId
 
-        private ConcurrentDictionary<string, ServerProcess> _runningServers = [];// 存储正在运行的服务器实例
+        private ConcurrentDictionary<int, ServerProcess> _runningServers = [];// 存储正在运行的服务器实例
 
         #region 存储服务器进程实例LoadServer(string serverId, Process process)
-        public void LoadServer(string serverId, ServerProcess process)
+        public void LoadServer(int serverId, ServerProcess process)
         {
             _runningServers.AddOrUpdate(serverId, process, (key, value) => process);
         }
         #endregion
 
         #region 移除服务器进程实例UnloadServer(string serverId)
-        public void UnloadServer(string serverId)
+        public void UnloadServer(int serverId)
         {
             if (_runningServers.TryRemove(serverId, out _))
             {
@@ -56,14 +56,14 @@ namespace LSL.Services
         #endregion
 
         #region 获取服务器进程实例GetServer(string serverId)
-        public ServerProcess? GetServer(string serverId)
+        public ServerProcess? GetServer(int serverId)
         {
             return _runningServers.TryGetValue(serverId, out ServerProcess? process) ? process : null;
         }
         #endregion
 
         #region 启动服务器RunServer(string serverId)
-        public async Task RunServer(string serverId)
+        public async Task RunServer(int serverId)
         {
             EnsureExited(serverId);
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
@@ -121,7 +121,7 @@ namespace LSL.Services
         #endregion
 
         #region 发送命令SendCommand(string serverId, string command)
-        public async Task SendCommand(string serverId, string command)
+        public async Task SendCommand(int serverId, string command)
         {
             ServerProcess? server = GetServer(serverId);
             if (server != null && server.IsRunning)
@@ -140,7 +140,7 @@ namespace LSL.Services
         #endregion
 
         #region 强制结束服务器进程EndServer(string serverId)
-        public void EndServer(string serverId)
+        public void EndServer(int serverId)
         {
             ServerProcess? server = GetServer(serverId);
             server?.Kill();
@@ -159,7 +159,7 @@ namespace LSL.Services
         #endregion
 
         #region 确保进程退出命令EnsureExited(string serverId)
-        public void EnsureExited(string serverId)
+        public void EnsureExited(int serverId)
         {
             ServerProcess? server = GetServer(serverId);
             if (server == null) return;
@@ -350,7 +350,7 @@ namespace LSL.Services
         private static readonly Regex PlayerLeft = new(@"(?<player>.*)\sleft\sthe\sgame$", RegexOptions.Compiled);
 
         #region 处理操作
-        private async Task OutputProcessor(string ServerId, string Output)
+        private async Task OutputProcessor(int ServerId, string Output)
         {
             ISolidColorBrush colorBrush = new SolidColorBrush(Colors.Black);
             string final = Output;
@@ -392,7 +392,7 @@ namespace LSL.Services
             EventBus.Instance.PublishAsync(new ColorOutputArgs { ServerId = ServerId, Output = final, Color = colorBrush });
         }
         // 额外处理服务端自身输出所需要更新的操作
-        private void ProcessSystem(string ServerId, string Output)
+        private void ProcessSystem(int ServerId, string Output)
         {
             string[] pieces = Output.Split(' ');
             if (GetUUID.IsMatch(Output))
@@ -426,7 +426,7 @@ namespace LSL.Services
     public record ServerOutputLine(DateTime Time, string Line, ISolidColorBrush Color);
     public class ServerOutputStorage
     {
-        private ConcurrentDictionary<int, ObservableCollection<ServerOutputLine>> OutputDict;
+        private ConcurrentDictionary<uint, ObservableCollection<ServerOutputLine>> OutputDict;
     }
     #endregion
 }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +28,13 @@ namespace LSL.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Where(args => args.Type == NavigateCommandType.FS2Common)
                 .Subscribe(_ => Navigate(new NavigateArgs { BarTarget = LastPage.Item1, LeftTarget = LastPage.Item2, RightTarget = LastPage.Item3 }));
+            this.WhenAnyValue(AS => AS.CurrentServerConfigs)
+                .Select(s => new ObservableCollection<int>(s.Keys))
+                .ToPropertyEx(this, x => x.ServerIDs);
+            this.WhenAnyValue(AS => AS.CurrentServerConfigs)
+                .Select(s => new ObservableCollection<string>(s.Values.Select(v => v.name)))
+                .ToPropertyEx(this, x => x.ServerNames);
+
         }
 
         #region 导航相关
@@ -77,14 +85,23 @@ namespace LSL.ViewModels
 
         #region 配置相关
         [Reactive] public Dictionary<string, object> CurrentConfigs { get; set; } = [];
-        [Reactive] public Dictionary<string, ServerConfig> CurrentServerConfigs { get; set; } = [];
-        [Reactive] public Dictionary<string, JavaInfo> CurrentJavaDict { get; set; } = [];
+        [Reactive] public Dictionary<int, ServerConfig> CurrentServerConfigs { get; set; } = [];
+        [Reactive] public Dictionary<int, JavaInfo> CurrentJavaDict { get; set; } = [];
         #endregion
 
         #region 选项相关
-        [Reactive] public int SelectedServerIndex { get; set; }
+        private int _selectedServerIndex;// 当前选中的服务器在列表中的位置，用于绑定到View
+        public int SelectedServerIndex
+        {
+            get => _selectedServerIndex;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedServerIndex, value);
+                MessageBus.Current.SendMessage(new NavigateCommand { Type = NavigateCommandType.Refresh });
+            }
+        }
         public int SelectedServerId { [ObservableAsProperty] get; }
-        public ObservableCollection<string> ServerIDs { [ObservableAsProperty] get; }
+        public ObservableCollection<int> ServerIDs { [ObservableAsProperty] get; }
         public ObservableCollection<string> ServerNames { [ObservableAsProperty] get; }
         #endregion
     }

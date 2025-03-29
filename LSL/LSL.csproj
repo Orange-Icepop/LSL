@@ -29,6 +29,13 @@
 		<Compile Remove="Assets\MyCard.cs" />
 		<Compile Remove="Services\MyCard.axaml.cs" />
 		<Compile Remove="ViewModels\ErrorPopupViewModel.cs" />
+		<Compile Remove="ViewModels\MainViewModel.Config.cs" />
+		<Compile Remove="ViewModels\MainViewModel.cs" />
+		<Compile Remove="ViewModels\MainViewModel.FullScreen.cs" />
+		<Compile Remove="ViewModels\MainViewModel.Notify.cs" />
+		<Compile Remove="ViewModels\MainViewModel.Popup.cs" />
+		<Compile Remove="ViewModels\MainViewModel.Server.cs" />
+		<Compile Remove="ViewModels\MainViewModel.ViewControl.cs" />
 		<Compile Remove="ViewModels\SharedData.cs" />
 	</ItemGroup>
 
