@@ -12,11 +12,20 @@
 						  Margin="30,60,30,20"
 						  VerticalScrollBarVisibility="Auto"
 						  Name="TerminalScroll">
-				<SelectableTextBlock TextWrapping="Wrap"
-						   IsEnabled="True"
-						 Name="TerminalOutput"
-						 Foreground="Black"
-						 Text="{Binding ServerVM.TerminalText}"/>
+				<VirtualizingStackPanel>
+					<ItemsControl Name="TerminalOutput" ItemsSource="{Binding ServerVM.TerminalText}">
+						<ItemsControl.ItemsPanel>
+							<ItemsPanelTemplate>
+								<VirtualizingStackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+							</ItemsPanelTemplate>
+						</ItemsControl.ItemsPanel>
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<SelectableTextBlock IsEnabled="False" Text="{Binding Line}" Foreground="{Binding LineColor}"/>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</VirtualizingStackPanel>
 			</ScrollViewer>
 		</local:MyCard>
 		<local:MyCard Grid.Row="1" Grid.Column="0">

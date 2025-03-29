@@ -97,5 +97,14 @@ namespace LSL.ViewModels
         private ConcurrentDictionary<int, ObservableCollection<ColoredLines>> TerminalTexts = new();
         public ObservableCollection<ColoredLines> TerminalText { [ObservableAsProperty] get; }
     }
-    public record ColoredLines(string Line, ISolidColorBrush Color);
+    public class ColoredLines
+    {
+        public string Line { get; set; }
+        public ISolidColorBrush LineColor { get; set; }
+        public ColoredLines(string line, ISolidColorBrush lineColor)
+        {
+            Line = line;
+            LineColor = lineColor;
+        }
+    }
 }
