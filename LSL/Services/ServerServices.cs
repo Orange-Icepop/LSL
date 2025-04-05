@@ -14,19 +14,13 @@ using System.Threading.Tasks;
 
 namespace LSL.Services
 {
-    public interface IServerHost
+    public class ServerHost
     {
-
-        Task RunServer(int serverId);
-        Task SendCommand(int serverId, string command);
-        void EndServer(int serverId);
-        void EndAllServers();
-    }
-
-
-    public class ServerHost : IServerHost
-    {
-        private ServerHost() { }
+        private ServerHost()
+        {
+            // 启动输出处理器
+            OutputHandler outputHandler = new();
+        }
         private static readonly Lazy<ServerHost> _lazyInstance = new(() => new ServerHost());
         public static ServerHost Instance => _lazyInstance.Value;
 
@@ -63,7 +57,7 @@ namespace LSL.Services
         #endregion
 
         #region 启动服务器RunServer(string serverId)
-        public async Task RunServer(int serverId)
+        public void RunServer(int serverId)
         {
             EnsureExited(serverId);
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
@@ -121,7 +115,7 @@ namespace LSL.Services
         #endregion
 
         #region 发送命令SendCommand(string serverId, string command)
-        public async Task SendCommand(int serverId, string command)
+        public bool SendCommand(int serverId, string command)
         {
             ServerProcess? server = GetServer(serverId);
             if (server != null && server.IsRunning)
@@ -131,10 +125,12 @@ namespace LSL.Services
                     EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 关闭服务器命令已发出，请等待......" });
                 }
                 server.SendCommand(command);
+                return true;
             }
             else
             {
                 EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 错误]: 服务器未启动，消息无法发送" });
+                return false;
             }
         }
         #endregion
@@ -152,7 +148,7 @@ namespace LSL.Services
         {
             foreach (var process in _runningServers.Values)
             {
-                process.Dispose();
+                process?.Dispose();
             }
             _runningServers.Clear();
         }
@@ -162,15 +158,8 @@ namespace LSL.Services
         public void EnsureExited(int serverId)
         {
             ServerProcess? server = GetServer(serverId);
-            if (server == null) return;
-            else
-            {
-                server.Dispose();
-            }
-            if (server != null)
-            {
-                UnloadServer(serverId);
-            }
+            server?.Dispose();
+            UnloadServer(serverId);
         }
         #endregion
 
@@ -301,16 +290,13 @@ namespace LSL.Services
     #endregion
 
     // 服务端输出预处理
-    public partial class OutputHandler
+    public class OutputHandler
     {
 
-        private static readonly Lazy<OutputHandler> _instance = new(() => new OutputHandler());
         private readonly Channel<TerminalOutputArgs> OutputChannel;
         private readonly CancellationTokenSource OutputCTS = new();
 
-        public static OutputHandler Instance => _instance.Value;
-
-        private OutputHandler()
+        public OutputHandler()
         {
             OutputChannel = Channel.CreateUnbounded<TerminalOutputArgs>();
             EventBus.Instance.Subscribe<TerminalOutputArgs>(HandleOutput);
@@ -426,7 +412,7 @@ namespace LSL.Services
     public record ServerOutputLine(DateTime Time, string Line, ISolidColorBrush Color);
     public class ServerOutputStorage
     {
-        private ConcurrentDictionary<uint, ObservableCollection<ServerOutputLine>> OutputDict;
+        public ConcurrentDictionary<uint, ObservableCollection<ServerOutputLine>> OutputDict = new();
     }
     #endregion
 }

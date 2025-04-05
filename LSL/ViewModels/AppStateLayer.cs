@@ -2,6 +2,7 @@
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -103,6 +104,12 @@ namespace LSL.ViewModels
         public int SelectedServerId { [ObservableAsProperty] get; }
         public ObservableCollection<int> ServerIDs { [ObservableAsProperty] get; }
         public ObservableCollection<string> ServerNames { [ObservableAsProperty] get; }
+        #endregion
+
+        #region 服务器相关
+
+        [Reactive] public ConcurrentDictionary<int, ObservableCollection<ColoredLines>> TerminalTexts { get; set; } = new();
+
         #endregion
     }
 }

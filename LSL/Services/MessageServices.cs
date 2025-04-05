@@ -46,7 +46,7 @@ namespace LSL.Services
         }
 
         // 取消订阅事件（谨慎使用）
-        public void Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : EventArgs
+        public bool Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : EventArgs
         {
             _lock.EnterWriteLock();
             try
@@ -60,7 +60,9 @@ namespace LSL.Services
                     {
                         _handlers.Remove(typeof(TEvent));
                     }
+                    return true; // 成功取消订阅
                 }
+                else return false;
             }
             finally
             {
@@ -69,7 +71,7 @@ namespace LSL.Services
         }
 
         // 发布事件
-        public void Publish<TEvent>(TEvent e) where TEvent : EventArgs
+        public bool Publish<TEvent>(TEvent e) where TEvent : EventArgs
         {
             _lock.EnterReadLock();
             try
@@ -86,13 +88,21 @@ namespace LSL.Services
                     }
                 }
             }
+            catch(Exception ex)
+            {
+                // 处理异常
+                Console.WriteLine($"Error publishing event: {ex.Message}");
+                _lock.ExitReadLock();
+                return false;
+            }
             finally
             {
                 _lock.ExitReadLock();
             }
+            return true;
         }
         // 异步发布事件（其实比较常用）
-        public async Task PublishAsync<TEvent>(TEvent e) where TEvent : EventArgs
+        public async Task<bool> PublishAsync<TEvent>(TEvent e) where TEvent : EventArgs
         {
             _lock.EnterReadLock();
             try
@@ -107,10 +117,18 @@ namespace LSL.Services
                     }
                 }
             }
+            catch(Exception ex)
+            {
+                // 处理异常
+                Console.WriteLine($"Error publishing event: {ex.Message}");
+                _lock.ExitReadLock();
+                return false;
+            }
             finally
             {
                 _lock.ExitReadLock();
             }
+            return true;
         }
     }
     #endregion

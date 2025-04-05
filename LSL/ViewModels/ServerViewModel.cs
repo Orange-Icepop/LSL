@@ -20,30 +20,20 @@ namespace LSL.ViewModels
 {
     public class ServerViewModel : RegionalVMBase
     {
-        private Channel<ColorOutputArgs> ServerOutputChannel = Channel.CreateUnbounded<ColorOutputArgs>();
-        private CancellationTokenSource OutputCts = new();
-        private void OnServerOutputLine(ColorOutputArgs args)
-        {
-            ServerOutputChannel.Writer.TryWrite(args);
-        }
-        private async Task HandleOutput(CancellationToken token)
-        {
-            await foreach (var args in ServerOutputChannel.Reader.ReadAllAsync(token))
-            {
-                await Dispatcher.UIThread.InvokeAsync(() => TerminalTexts[AppState.SelectedServerId].Add(new ColoredLines(args.Output, args.Color)));
-            }
-        }
         public ServerViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
             AppState.WhenAnyValue(AS => AS.SelectedServerId)
-                .Select(id => TerminalTexts.GetOrAdd(id, []))
+                .Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
                 .ToPropertyEx(this, x => x.TerminalText);
-            this.WhenAnyValue(t => t.TerminalTexts)
-                .Select(t => t.TryGetValue(AppState.SelectedServerId, out var value) ? value : new())
+            AppState.WhenAnyValue(AS => AS.TerminalTexts)
+                .Select(CD => CD.TryGetValue(AppState.SelectedServerId, out var value) ? value : new())
                 .Where(t => t != TerminalText)
                 .ToPropertyEx(this, x => x.TerminalText);
-            EventBus.Instance.Subscribe<ColorOutputArgs>(OnServerOutputLine);
-            Task.Run(() => HandleOutput(OutputCts.Token));
+            StartServerCmd = ReactiveCommand.Create(StartSelectedServer);
+            StopServerCmd = ReactiveCommand.Create(Connector.StopSelectedServer);
+            SaveServerCmd = ReactiveCommand.Create(Connector.SaveSelectedServer);
+            EndServerCmd = ReactiveCommand.Create(Connector.EndSelectedServer);
+            SendCommand = ReactiveCommand.Create(SendCommandToServer);
         }
 
         #region 控制
@@ -59,42 +49,33 @@ namespace LSL.ViewModels
             set
             {
                 string endless = value.TrimEnd('\r', '\n');
-                this.RaiseAndSetIfChanged(ref _inputText, endless.Length < value.Length ? "" : value);
+                if(endless.Length < value.Length)
+                {
+                    SendCommandToServer();
+                    this.RaiseAndSetIfChanged(ref _inputText, "");
+                }
+                else this.RaiseAndSetIfChanged(ref _inputText, endless);
             }
         }
-        public void StartServer()//启动服务器方法
+        public void StartSelectedServer()//启动服务器方法
         {
-            var result = VerifyServerConfigBeforeStart(AppState.SelectedServerId);
-            if (result != null)
-            {
-                QuickHandler.ThrowError(result);
-                return;
-            }
-            TerminalTexts.TryAdd(AppState.SelectedServerId, new());
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
-            Task RunServer = Task.Run(() => ServerHost.Instance.RunServer(AppState.SelectedServerId));
+            Connector.StartSelectedServer();
             //Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
         }
-
-        #endregion
-
-        #region 启动前校验配置文件
-        public static string? VerifyServerConfigBeforeStart(int serverId)
+        public void SendCommandToServer()//发送命令方法
         {
-            if (ServerConfigManager.ServerConfigs.TryGetValue(serverId, out var config)) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
-            else if (config == null) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
-            else if (!File.Exists(config.using_java)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
-            else
+            if (string.IsNullOrEmpty(InputText))
             {
-                string configPath = Path.Combine(config.server_path, config.core_name);
-                if (!File.Exists(configPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的核心文件不存在。";
+                //Notify(0, "输入为空", "请输入要发送的命令");
+                return;
             }
-            return null;
+            Connector.SendCommandToServer(InputText);
+            InputText = "";
         }
+
         #endregion
 
-
-        private ConcurrentDictionary<int, ObservableCollection<ColoredLines>> TerminalTexts = new();
         public ObservableCollection<ColoredLines> TerminalText { [ObservableAsProperty] get; }
     }
     public class ColoredLines

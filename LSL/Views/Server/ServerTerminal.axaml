@@ -30,8 +30,8 @@
 		</local:MyCard>
 		<local:MyCard Grid.Row="1" Grid.Column="0">
 			<Grid VerticalAlignment="Center" HorizontalAlignment="Stretch" ColumnDefinitions="*,Auto">
-				<TextBox Grid.Column="0" Height="30" Margin="10" Text="{Binding ServerInputText,Mode=TwoWay}" AcceptsReturn="True" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
-				<local:MyButton Content="发送" Grid.Column="1" Margin="10" Width="50" Height="30" VerticalAlignment="Center" HorizontalAlignment="Right" Command="{Binding SendServerCmd}" IsEnabled="{Binding CurrentServerOnline}"/>
+				<TextBox Grid.Column="0" Height="30" Margin="10" Text="{Binding ServerVM.InputText,Mode=TwoWay}" AcceptsReturn="True" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+				<local:MyButton Content="发送" Grid.Column="1" Margin="10" Width="50" Height="30" VerticalAlignment="Center" HorizontalAlignment="Right" Command="{Binding ServerVM.SendCommand}" IsEnabled="{Binding ServerVM.CurrentServerOnline}"/>
 			</Grid>
 		</local:MyCard>
 		<local:MyCard Grid.Row="1" Grid.Column="1">
@@ -40,9 +40,8 @@
 						Padding="0"
 						VerticalAlignment="Center"
 						Grid.Column="0" Margin="2"
-						Command="{Binding StopServerCmd}"
-						IsEnabled="{Binding CurrentServerOnline}"
-						Content="关闭">
+						Command="{Binding ServerVM.StopServerCmd}"
+						IsEnabled="{Binding ServerVM.CurrentServerOnline}">
 					<TextBlock Text="关闭"
 							   HorizontalAlignment="Center"
 							   VerticalAlignment="Center"
@@ -53,8 +52,8 @@
 						Padding="0"
 						VerticalAlignment="Center"
 						Grid.Column="1" Margin="2"
-						Command="{Binding SaveServerCmd}"
-						IsEnabled="{Binding CurrentServerOnline}">
+						Command="{Binding ServerVM.SaveServerCmd}"
+						IsEnabled="{Binding ServerVM.CurrentServerOnline}">
 					<TextBlock Text="保存"
 							   HorizontalAlignment="Center"
 							   VerticalAlignment="Center"
@@ -64,8 +63,8 @@
 				<local:MyButton BorderThickness="2"
 						VerticalAlignment="Center"
 						Grid.Column="2" Margin="2"
-						Command="{Binding ShutServerCmd}"
-						IsEnabled="{Binding CurrentServerRunning}">
+						Command="{Binding ServerVM.EndServerCmd}"
+						IsEnabled="{Binding ServerVM.CurrentServerRunning}">
 					<TextBlock Text="终止"
 							   HorizontalAlignment="Center"
 							   VerticalAlignment="Center"
