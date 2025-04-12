@@ -16,17 +16,21 @@ namespace LSL.Services
 {
     public class ServerHost
     {
+        private readonly ServerOutputStorage outputStorage;
+        // 启动输出处理器
+        private readonly OutputHandler outputHandler;
         private ServerHost()
         {
-            // 启动输出处理器
-            OutputHandler outputHandler = new();
+            outputStorage = new();
+            outputHandler = new(outputStorage);
+            Debug.WriteLine("ServerHost Launched");
         }
         private static readonly Lazy<ServerHost> _lazyInstance = new(() => new ServerHost());
         public static ServerHost Instance => _lazyInstance.Value;
 
-        // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在MainViewModel中将列表项解析为ServerId
+        // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在ViewModel中将列表项解析为ServerId
 
-        private ConcurrentDictionary<int, ServerProcess> _runningServers = [];// 存储正在运行的服务器实例
+        private readonly ConcurrentDictionary<int, ServerProcess> _runningServers = [];// 存储正在运行的服务器实例
 
         #region 存储服务器进程实例LoadServer(string serverId, Process process)
         public void LoadServer(int serverId, ServerProcess process)
@@ -63,6 +67,7 @@ namespace LSL.Services
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
             ServerConfig config = ServerConfigManager.ServerConfigs[serverId];
             var SP = new ServerProcess(config);
+            SP.StatusEventHandler += async (sender, args) => await EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Running = args.Item1, Online = args.Item2 });
             // 启动服务器
             try
             {
@@ -70,18 +75,17 @@ namespace LSL.Services
             }
             catch (InvalidOperationException)
             {
-                EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器启动失败，请检查配置文件。" });
+                outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动失败，请检查配置文件。"));
                 SP.Dispose();
                 return;
             }
             LoadServer(serverId, SP);
-            EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Running = true, Online = false });
-            EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器正在启动，请稍后......" });
+            outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器正在启动，请稍后......"));
             SP.OutputReceived += (sender, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
+                    outputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data));
                 }
             };
 
@@ -89,7 +93,7 @@ namespace LSL.Services
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
+                    outputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data));
                 }
             };
             SP.BeginRead();
@@ -106,11 +110,26 @@ namespace LSL.Services
                 finally
                 {
                     string status = $"已关闭，进程退出码为{exitCode}";
-                    EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Running = false, Online = false });
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器" + status });
+                    outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 当前服务器" + status));
                     SP.Dispose();
                 }
             };
+        }
+        #endregion
+
+        #region 关闭服务器StopServer(int serverId)
+        public void StopServer(int serverId)
+        {
+            ServerProcess? server = GetServer(serverId);
+            if (server != null && server.IsRunning)
+            {
+                server.Stop();
+                outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
+            }
+            else
+            {
+                outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送"));
+            }
         }
         #endregion
 
@@ -122,14 +141,14 @@ namespace LSL.Services
             {
                 if (command == "stop")
                 {
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 关闭服务器命令已发出，请等待......" });
+                    outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
                 }
                 server.SendCommand(command);
                 return true;
             }
             else
             {
-                EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 错误]: 服务器未启动，消息无法发送" });
+                outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送"));
                 return false;
             }
         }
@@ -163,22 +182,9 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 检查服务器进程是否存在CheckProcess(string serverId)
-        public static bool CheckProcess(Process? process)
-        {
-            try
-            {
-                if (process == null) return false;
-                else if (process.HasExited) return false;
-                else return true;
-            }
-            catch (InvalidOperationException) { return false; }
-        }
-        #endregion
-
     }
 
-    #region 服务器进程类ServerProcess
+    // 服务器进程类ServerProcess
     public class ServerProcess : IDisposable
     {
         public ServerProcess(ServerConfig config)
@@ -213,8 +219,9 @@ namespace LSL.Services
         private DataReceivedEventHandler OutputReceivedHandler;
         private DataReceivedEventHandler ErrorReceivedHandler;
         private EventHandler ExitedHandler;
-        //状态获取
-        public EventHandler<(bool, bool)>? StatusEventHandler;// IsRunning,IsOnline
+
+        # region 状态获取
+        public EventHandler<(bool, bool)>? StatusEventHandler;// IsRunning, IsOnline
         private bool isOnline;
         public bool IsOnline
         {
@@ -257,13 +264,17 @@ namespace LSL.Services
             }
         }
         */
+        #endregion
+
         public int? ExitCode { get; private set; }
+
+        #region 命令
         public void Start()
         {
             if (!IsRunning)
             {
                 SProcess = Process.Start(StartInfo);
-                if (SProcess is not null && !SProcess.HasExited) throw new InvalidOperationException("Failed to start server process.");
+                if (SProcess is null || SProcess.HasExited) throw new InvalidOperationException("Failed to start server process.");
                 else
                 {
                     InStream = SProcess.StandardInput;
@@ -284,14 +295,25 @@ namespace LSL.Services
                     SProcess.OutputDataReceived += OutputReceivedHandler;
                     SProcess.ErrorDataReceived += ErrorReceivedHandler;
                     SProcess.Exited += ExitedHandler;
-                    IsRunning=true;
+                    IsRunning = true;
                 }
             }
         }
         public void BeginRead()
         {
-            SProcess.BeginOutputReadLine();
-            SProcess.BeginErrorReadLine();
+            if (SProcess is not null && !SProcess.HasExited)
+            {
+                SProcess.BeginOutputReadLine();
+                SProcess.BeginErrorReadLine();
+            }
+        }
+        public void Stop()
+        {
+            if (SProcess is not null && !SProcess.HasExited)
+            {
+                SProcess.StandardInput.WriteLine("stop");
+                SProcess.StandardInput.Flush();
+            }
         }
         public void SendCommand(string command)
         {
@@ -309,6 +331,7 @@ namespace LSL.Services
                 SProcess.ErrorDataReceived -= ErrorReceivedHandler;
                 SProcess.Exited -= ExitedHandler;
             }
+            StatusEventHandler = null;
         }
         public void Kill()
         {
@@ -335,7 +358,9 @@ namespace LSL.Services
             Kill();
             GC.SuppressFinalize(this);
         }
+        #endregion
 
+        #region 输出处理
         private static readonly Regex GetDone = new(@"^\[.*\]\s*Done", RegexOptions.Compiled);
         private static readonly Regex GetPlayerMessage = new(@"^\<(?<player>.*)\>\s*(?<message>.*)", RegexOptions.Compiled);
         private void HandleOutput(string? Output)
@@ -345,30 +370,40 @@ namespace LSL.Services
                 IsOnline = true;
             }
         }
+        #endregion
+
     }
-    #endregion
+    public record TerminalOutputArgs(int ServerId, string Output);// 终端输出事件
+    public record ServerOutputLine(DateTime Time, string Line, ISolidColorBrush Color);// 着色输出行
+    public record ServerOutputLineArgs(int ServerId, ServerOutputLine Line);// 着色输出事件
 
     // 服务端输出预处理
     public class OutputHandler
     {
-
-        private readonly Channel<TerminalOutputArgs> OutputChannel;
-        private readonly CancellationTokenSource OutputCTS = new();
-
-        public OutputHandler()
+        public OutputHandler(ServerOutputStorage outputStorage)
         {
-            OutputChannel = Channel.CreateUnbounded<TerminalOutputArgs>();
-            EventBus.Instance.Subscribe<TerminalOutputArgs>(HandleOutput);
+            OutputStorage = outputStorage;
+            OutputChannel = Channel.CreateUnbounded<TerminalOutputArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
             Task.Run(() => ProcessOutput(OutputCTS.Token));
+            Debug.WriteLine("OutputHandler Launched");
         }
+        private readonly ServerOutputStorage OutputStorage;
 
         #region 待处理队列
-        public void HandleOutput(TerminalOutputArgs args)
+        public bool TrySendLine(TerminalOutputArgs args)
         {
-            //Task.Run(() => OutputProcessor(args.ServerId, args.Output));
-            OutputChannel.Writer.TryWrite(args);
+            if (OutputChannel.Writer.TryWrite(args))
+            {
+                return true;
+            }
+            else
+            {
+                Debug.WriteLine("OutputChannel Writer is full");
+                return false;
+            }
         }
-
+        private readonly Channel<TerminalOutputArgs> OutputChannel;
+        private readonly CancellationTokenSource OutputCTS = new();
         private async Task ProcessOutput(CancellationToken ct)
         {
             try
@@ -411,22 +446,14 @@ namespace LSL.Services
                 else
                 {
                     string type = match.Groups["type"].Value;
-                    if (type == "INFO")
+                    colorBrush = type switch
                     {
-                        colorBrush = new SolidColorBrush(Colors.Blue);
-                    }
-                    else if (type == "WARN")
-                    {
-                        colorBrush = new SolidColorBrush(Colors.Orange);
-                    }
-                    else if (type == "ERRO")
-                    {
-                        colorBrush = new SolidColorBrush(Colors.Red);
-                    }
-                    else if (type == "FATA")
-                    {
-                        colorBrush = new SolidColorBrush(Colors.Red);
-                    }
+                        "INFO" => new SolidColorBrush(Colors.Blue),
+                        "WARN" => new SolidColorBrush(Colors.Orange),
+                        "ERRO" => new SolidColorBrush(Colors.Red),
+                        "FATA" => new SolidColorBrush(Colors.Red),
+                        _ => new SolidColorBrush(Colors.Black)
+                    };
                     ProcessSystem(ServerId, match.Groups["context"].Value);
                 }
             }
@@ -467,10 +494,34 @@ namespace LSL.Services
     }
 
     #region 服务端输出存储
-    public record ServerOutputLine(DateTime Time, string Line, ISolidColorBrush Color);
     public class ServerOutputStorage
     {
-        public ConcurrentDictionary<int, ObservableCollection<ServerOutputLine>> OutputDict = new();
+        public readonly ConcurrentDictionary<int, ObservableCollection<ServerOutputLine>> OutputDict = new();
+        private readonly Channel<ServerOutputLineArgs> StorageQueue;
+        private readonly CancellationTokenSource StorageCTS = new();
+        // 添加输出行请求
+        public bool TrySendLine(ServerOutputLineArgs args)
+        {
+            if (StorageQueue.Writer.TryWrite(args))
+            {
+                return true;
+            }
+            else
+            {
+                Debug.WriteLine("StorageQueue Writer is full");
+                return false;
+            }
+        }
+        public ServerOutputStorage()
+        {
+            StorageQueue = Channel.CreateUnbounded<ServerOutputLineArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
+            Debug.WriteLine("ServerOutputStorage Launched");
+        }
+        public void Shutdown()
+        {
+            StorageCTS.Cancel();
+            StorageQueue.Writer.TryComplete();
+        }
     }
     #endregion
 }

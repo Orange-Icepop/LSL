@@ -149,11 +149,6 @@ namespace LSL.Services
     */
 
     #region 事件类
-    public class TerminalOutputArgs : EventArgs// 终端输出事件
-    {
-        public required int ServerId { get; set; }
-        public required string Output { get; set; }
-    }
     public class ColorOutputArgs : EventArgs// 彩色终端输出事件
     {
         public required int ServerId { get; set; }

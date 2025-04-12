@@ -9,7 +9,7 @@ using System.Net;
 namespace LSL;
 public partial class App : Application
 {
-    private Window mainWindow;
+    //private Window mainWindow;
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);

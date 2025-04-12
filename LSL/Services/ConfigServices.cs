@@ -567,9 +567,8 @@ namespace LSL.Services
         public static Dictionary<int, JavaInfo> JavaDict = [];// 目前读取的Java列表
 
         #region 读取Java列表
-        public static bool ReadJavaConfig(/*out Exception? ex*/)
+        public static bool ReadJavaConfig()
         {
-            //ex = null;
             try
             {
                 var file = File.ReadAllText(ConfigManager.JavaListPath);
@@ -594,9 +593,8 @@ namespace LSL.Services
                     }
                 }
             }
-            catch(Exception exi)
+            catch(Exception)
             {
-                //ex = exi;
                 return false;
             }
             return true;

@@ -42,10 +42,9 @@ namespace LSL.Components
             set => SetValue(LogoProperty, value);
         }
 
-        private Bitmap? _logoImage;
         public Bitmap? LogoImage
         {
-            get => _logoImage;
+            get => GetValue(LogoImageProperty);
             set => SetValue(LogoImageProperty, value);
         }
 
