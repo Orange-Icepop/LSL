@@ -3,7 +3,7 @@
              x:Class="LSL.App"
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
 			 xmlns:LSL="clr-namespace:LSL"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Light">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 	<!--全局颜色资源定义-->
 	<Application.Resources>

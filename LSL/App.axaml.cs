@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using LSL.ViewModels;
 using LSL.Views;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 
 namespace LSL;
@@ -21,23 +22,31 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow
             {
-                DataContext = (ShellViewModel)this.DataContext
+                DataContext = shellVM
             };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
             singleViewPlatform.MainView = new MainView
             {
-                DataContext = (ShellViewModel)this.DataContext
+                DataContext = shellVM
             };
         }
         ServicePointManager.DefaultConnectionLimit = 512;
         base.OnFrameworkInitializationCompleted();
     }
 
+    private ServiceCollection serviceDescriptors;
+    private ShellViewModel shellVM;
+
     public App()
     {
-        this.DataContext = new ShellViewModel();
+        serviceDescriptors = new ServiceCollection();
+        serviceDescriptors.AddServerHost();
+        serviceDescriptors.AddViewModels();
+        var services = serviceDescriptors.BuildServiceProvider();
+        shellVM = services.GetRequiredService<ShellViewModel>();
+        this.DataContext = shellVM;
     }
 
 }

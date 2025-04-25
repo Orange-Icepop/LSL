@@ -14,11 +14,19 @@ using System.Threading.Tasks;
 
 namespace LSL.Services
 {
-    public class ServerHost
+    public interface IServerHost
     {
-        private readonly ServerOutputStorage outputStorage;
+        bool RunServer(int serverId);
+        void StopServer(int serverId);
+        bool SendCommand(int serverId, string command);
+        void EndServer(int serverId);
+        void EndAllServers();
+    }
+    public class ServerHost : IServerHost
+    {
         // 启动输出处理器
         private readonly OutputHandler outputHandler;
+        private readonly ServerOutputStorage outputStorage;
         private ServerHost()
         {
             outputStorage = new();
@@ -32,15 +40,15 @@ namespace LSL.Services
 
         private readonly ConcurrentDictionary<int, ServerProcess> _runningServers = [];// 存储正在运行的服务器实例
 
-        #region 存储服务器进程实例LoadServer(string serverId, Process process)
-        public void LoadServer(int serverId, ServerProcess process)
+        #region 存储服务器进程实例LoadServer(int serverId, Process process)
+        private void LoadServer(int serverId, ServerProcess process)
         {
             _runningServers.AddOrUpdate(serverId, process, (key, value) => process);
         }
         #endregion
 
-        #region 移除服务器进程实例UnloadServer(string serverId)
-        public void UnloadServer(int serverId)
+        #region 移除服务器进程实例UnloadServer(int serverId)
+        private void UnloadServer(int serverId)
         {
             if (_runningServers.TryRemove(serverId, out _))
             {
@@ -53,15 +61,15 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 获取服务器进程实例GetServer(string serverId)
-        public ServerProcess? GetServer(int serverId)
+        #region 获取服务器进程实例GetServer(int serverId)
+        private ServerProcess? GetServer(int serverId)
         {
             return _runningServers.TryGetValue(serverId, out ServerProcess? process) ? process : null;
         }
         #endregion
 
-        #region 启动服务器RunServer(string serverId)
-        public void RunServer(int serverId)
+        #region 启动服务器RunServer(int serverId)
+        public bool RunServer(int serverId)
         {
             EnsureExited(serverId);
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
@@ -77,7 +85,7 @@ namespace LSL.Services
             {
                 outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动失败，请检查配置文件。"));
                 SP.Dispose();
-                return;
+                return false;
             }
             LoadServer(serverId, SP);
             outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器正在启动，请稍后......"));
@@ -114,6 +122,7 @@ namespace LSL.Services
                     SP.Dispose();
                 }
             };
+            return true;
         }
         #endregion
 
@@ -133,7 +142,7 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 发送命令SendCommand(string serverId, string command)
+        #region 发送命令SendCommand(int serverId, string command)
         public bool SendCommand(int serverId, string command)
         {
             ServerProcess? server = GetServer(serverId);
@@ -154,7 +163,7 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 强制结束服务器进程EndServer(string serverId)
+        #region 强制结束服务器进程EndServer(int serverId)
         public void EndServer(int serverId)
         {
             ServerProcess? server = GetServer(serverId);
@@ -173,8 +182,8 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 确保进程退出命令EnsureExited(string serverId)
-        public void EnsureExited(int serverId)
+        #region 确保进程退出命令EnsureExited(int serverId)
+        private void EnsureExited(int serverId)
         {
             ServerProcess? server = GetServer(serverId);
             server?.Dispose();

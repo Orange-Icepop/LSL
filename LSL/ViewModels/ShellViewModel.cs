@@ -24,19 +24,31 @@ namespace LSL.ViewModels
         public ServerViewModel ServerVM { get; }
         public PublicCommand PublicCmd { get; }
         // 弹窗交互，这玩意儿和上面的东西没关系
-        public PopupInteraction PopupITA { get; } = new PopupInteraction();
+        public PopupInteraction PopupITA { get; }
 
-        public ShellViewModel()
+        public ShellViewModel(
+            AppStateLayer appState,
+            ServiceConnector connector,
+            BarRegionVM barVM,
+            LeftRegionVM leftVM,
+            RightRegionVM rightVM,
+            PopupViewModel popupVM,
+            ConfigViewModel configVM,
+            ServerViewModel serverVM,
+            PublicCommand publicCommand,
+            PopupInteraction popupITA
+            )
         {
-            AppState = new AppStateLayer(PopupITA);
-            ServeCon = new ServiceConnector(AppState);
-            BarVM = new BarRegionVM(AppState, ServeCon);
-            LeftVM = new LeftRegionVM(AppState, ServeCon);
-            RightVM = new RightRegionVM(AppState, ServeCon);
-            PopupVM = new PopupViewModel(PopupITA);
-            ConfigVM = new ConfigViewModel(AppState, ServeCon);
-            ServerVM = new ServerViewModel(AppState, ServeCon);
-            PublicCmd = new PublicCommand(AppState, ServeCon);
+            AppState = appState;
+            ServeCon = connector;
+            BarVM = barVM;
+            LeftVM = leftVM;
+            RightVM = rightVM;
+            PopupVM = popupVM;
+            ConfigVM = configVM;
+            ServerVM = serverVM;
+            PublicCmd = publicCommand;
+            PopupITA = popupITA;
             EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
 
             // 视图命令
