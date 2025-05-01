@@ -110,7 +110,7 @@ namespace LSL.ViewModels
         {
             await foreach (var args in ServerOutputChannel.Reader.ReadAllAsync(token))
             {
-                await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts[AppState.SelectedServerId].Add(new ColoredLines(args.Output, args.Color)));
+                await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts[AppState.SelectedServerId].Add(new ColoredLines(args.Output, args.ColorBrush)));
             }
         }
         #endregion

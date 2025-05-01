@@ -14,7 +14,7 @@ namespace LSL
     {
         public static void AddServerHost(this IServiceCollection collection)
         {
-            collection.AddSingleton<IServerHost, ServerHost>();
+            //collection.AddSingleton<IServerHost, ServerHost>();
             collection.AddLogging(builder => builder.AddDebug());
         }
         public static void AddViewModels(this IServiceCollection collection)

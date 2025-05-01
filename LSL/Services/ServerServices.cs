@@ -22,7 +22,7 @@ namespace LSL.Services
         void EndServer(int serverId);
         void EndAllServers();
     }
-    public class ServerHost : IServerHost
+    public class ServerHost : IServerHost, IDisposable
     {
         // 启动输出处理器
         private readonly OutputHandler outputHandler;
@@ -75,7 +75,7 @@ namespace LSL.Services
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
             ServerConfig config = ServerConfigManager.ServerConfigs[serverId];
             var SP = new ServerProcess(config);
-            SP.StatusEventHandler += async (sender, args) => await EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Running = args.Item1, Online = args.Item2 });
+            SP.StatusEventHandler += async (sender, args) => await EventBus.Instance.PublishAsync(new ServerStatusArgs(serverId, args.Item1, args.Item2));
             // 启动服务器
             try
             {
@@ -122,6 +122,15 @@ namespace LSL.Services
                     SP.Dispose();
                 }
             };
+            SP.StatusEventHandler += (sender, e) =>
+            {
+                if (e.Item2)
+                {
+                    outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动成功!"));
+                    SendCommand(serverId, "hello");// 防止某些奇怪的情况导致第一个命令被修改
+                }
+                // storage.TrySendStatus
+            };
             return true;
         }
         #endregion
@@ -130,7 +139,7 @@ namespace LSL.Services
         public void StopServer(int serverId)
         {
             ServerProcess? server = GetServer(serverId);
-            if (server != null && server.IsRunning)
+            if (server is not null && server.IsRunning)
             {
                 server.Stop();
                 outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
@@ -146,7 +155,7 @@ namespace LSL.Services
         public bool SendCommand(int serverId, string command)
         {
             ServerProcess? server = GetServer(serverId);
-            if (server != null && server.IsRunning)
+            if (server is not null && server.IsRunning)
             {
                 if (command == "stop")
                 {
@@ -191,6 +200,14 @@ namespace LSL.Services
         }
         #endregion
 
+        // 释放资源
+        public void Dispose()
+        {
+            EndAllServers();
+            outputHandler.Dispose();
+            outputStorage.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 
     // 服务器进程类ServerProcess
@@ -295,15 +312,12 @@ namespace LSL.Services
                     {
                         IsOnline = false;
                         IsRunning = false;
-                        SProcess.CancelOutputRead();
-                        SProcess.CancelErrorRead();
+                        CleanupProcessHandlers();
                         ExitCode = SProcess.ExitCode;
                         Exited?.Invoke(sender, args);
                         SProcess?.Dispose();
                     };
-                    SProcess.OutputDataReceived += OutputReceivedHandler;
-                    SProcess.ErrorDataReceived += ErrorReceivedHandler;
-                    SProcess.Exited += ExitedHandler;
+                    AttachProcessHandlers();
                     IsRunning = true;
                 }
             }
@@ -332,32 +346,44 @@ namespace LSL.Services
                 InStream.FlushAsync();
             }
         }
+        private void AttachProcessHandlers()
+        {
+            if (SProcess is not null)
+            {
+                SProcess.OutputDataReceived += OutputReceivedHandler;
+                SProcess.ErrorDataReceived += ErrorReceivedHandler;
+                SProcess.Exited += ExitedHandler;
+            }
+        }
         private void CleanupProcessHandlers()
         {
-            if (SProcess != null)
+            if (SProcess is not null)
             {
+                // 停止异步读取
                 SProcess.OutputDataReceived -= OutputReceivedHandler;
                 SProcess.ErrorDataReceived -= ErrorReceivedHandler;
                 SProcess.Exited -= ExitedHandler;
+                SProcess.CancelOutputRead();
+                SProcess.CancelErrorRead();
             }
             StatusEventHandler = null;
         }
         public void Kill()
         {
-            if (SProcess != null)
+            if (SProcess is not null)
             {
                 try
                 {
-                    // 停止异步读取
-                    SProcess.CancelOutputRead();
-                    SProcess.CancelErrorRead();
-                    SProcess.Kill();
-                    SProcess.WaitForExit(5000);
+                    if(!SProcess.HasExited)
+                    {
+                        SProcess.Kill();
+                        SProcess.WaitForExit(5000);
+                    }
                 }
                 finally
                 {
                     CleanupProcessHandlers();
-                    SProcess.Dispose();
+                    SProcess?.Dispose();
                     SProcess = null;
                 }
             }
@@ -371,24 +397,34 @@ namespace LSL.Services
 
         #region 输出处理
         private static readonly Regex GetDone = new(@"^\[.*\]\s*Done", RegexOptions.Compiled);
+        private static readonly Regex GetExit = new(@"^\[.*\]\s*Stopping\sthe\sserver", RegexOptions.Compiled);
         private static readonly Regex GetPlayerMessage = new(@"^\<(?<player>.*)\>\s*(?<message>.*)", RegexOptions.Compiled);
         private void HandleOutput(string? Output)
         {
-            if (!string.IsNullOrEmpty(Output) && !GetPlayerMessage.IsMatch(Output) && GetDone.IsMatch(Output))
+            if (!string.IsNullOrEmpty(Output) && !GetPlayerMessage.IsMatch(Output))
             {
-                IsOnline = true;
+                if (GetDone.IsMatch(Output)) IsOnline = true;
+                else if (GetExit.IsMatch(Output)) IsOnline = false;
             }
         }
         #endregion
 
     }
+
+    #region 存储类
+    public interface IStorageArgs;
     public record TerminalOutputArgs(int ServerId, string Output);// 终端输出事件
-    public record ServerOutputLine(DateTime Time, string Line, ISolidColorBrush Color);// 着色输出行
-    public record ServerOutputLineArgs(int ServerId, ServerOutputLine Line);// 着色输出事件
+    public record ColorOutputLine(string Line, ISolidColorBrush Color);// 着色输出行
+    public record ColorOutputArgs(int ServerId, string Output, ISolidColorBrush ColorBrush) : IStorageArgs;// 彩色终端输出事件
+    public record ServerStatusArgs(int ServerId, bool IsRunning, bool IsOnline) : IStorageArgs;// 服务器状态更新事件
+    public record PlayerUpdateArgs(int ServerId, string UUID, string PlayerName, bool Entering) : IStorageArgs;// 玩家列表更新事件
+    public record PlayerMessageArgs(int ServerId, string Message) : IStorageArgs;// 服务器消息事件
+    #endregion
 
     // 服务端输出预处理
-    public class OutputHandler
+    public class OutputHandler : IDisposable
     {
+        private readonly ServerOutputStorage OutputStorage;
         public OutputHandler(ServerOutputStorage outputStorage)
         {
             OutputStorage = outputStorage;
@@ -396,7 +432,6 @@ namespace LSL.Services
             Task.Run(() => ProcessOutput(OutputCTS.Token));
             Debug.WriteLine("OutputHandler Launched");
         }
-        private readonly ServerOutputStorage OutputStorage;
 
         #region 待处理队列
         public bool TrySendLine(TerminalOutputArgs args)
@@ -427,11 +462,27 @@ namespace LSL.Services
         }
         #endregion
 
-        public void Shutdown()
+        #region 清理
+        private bool _disposed = false;
+        public void Dispose()
         {
-            OutputCTS.Cancel();
-            OutputChannel.Writer.TryComplete();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    OutputCTS.Cancel();
+                    OutputChannel.Writer.TryComplete();
+                    OutputCTS.Dispose();
+                }
+                _disposed = true;
+            }
+        }
+        #endregion
 
         private static readonly Regex GetTimeStamp = new(@"^\[(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})\s(?<type>[A-Z]{4})\]\s*:\s*(?<context>.*)", RegexOptions.Compiled);
         private static readonly Regex GetPlayerMessage = new(@"^\<(?<player>.*)\>\s*(?<message>.*)", RegexOptions.Compiled);
@@ -444,13 +495,13 @@ namespace LSL.Services
             ISolidColorBrush colorBrush = new SolidColorBrush(Colors.Black);
             string final = Output;
             // 检测消息是否带有时间戳
-            if (Output.Substring(1, 3) == "LSL") { }
+            if (Output.StartsWith("[LSL")) { }
             else if (GetTimeStamp.IsMatch(Output))
             {
                 var match = GetTimeStamp.Match(Output);
                 if (GetPlayerMessage.IsMatch(match.Groups["context"].Value))
                 {
-                    final = match.Groups["context"].Value;
+                    EventBus.Instance.PublishAsync(new PlayerMessageArgs(ServerId, match.Groups["context"].Value));
                 }
                 else
                 {
@@ -470,7 +521,7 @@ namespace LSL.Services
             {
                 colorBrush = new SolidColorBrush(Colors.Red);
             }
-            EventBus.Instance.PublishAsync(new ColorOutputArgs { ServerId = ServerId, Output = final, Color = colorBrush });
+            EventBus.Instance.PublishAsync(new ColorOutputArgs(ServerId, final, colorBrush));
         }
         // 额外处理服务端自身输出所需要更新的操作
         private void ProcessSystem(int ServerId, string Output)
@@ -478,38 +529,33 @@ namespace LSL.Services
             if (GetUUID.IsMatch(Output))
             {
                 var match = GetUUID.Match(Output);
-                EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = match.Groups["uuid"].Value, PlayerName = match.Groups["player"].Value, Entering = true });
+                EventBus.Instance.PublishAsync(new PlayerUpdateArgs(ServerId, match.Groups["uuid"].Value, match.Groups["player"].Value, true));
             }
 
             if (PlayerLeft.IsMatch(Output))
             {
-                EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = "lefting", PlayerName = GetUUID.Match(Output).Groups["player"].Value, Entering = false });
-            }
-
-            if (Output.StartsWith("Done"))
-            {
-                EventBus.Instance.PublishAsync(new ColorOutputArgs { ServerId = ServerId, Color = new SolidColorBrush(Colors.Green), Output = "[LSL 消息]: 服务器启动成功！" });
-                EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Running = true, Online = true });
-                ServerHost.Instance.SendCommand(ServerId, "hello");
-                // 现在的情况是这个服务器输入处理方式不知道抽了什么风，第一个发送的命令会被修改，Buffer啥的也都排除掉了，所以这里加了一个hello命令，防止第一个命令被修改影响实际操作
-            }
-
-            if (Output.StartsWith("Stopping the server"))
-            {
-                EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Running = true, Online = false });
+                EventBus.Instance.PublishAsync(new PlayerUpdateArgs(ServerId, "Unknown", GetUUID.Match(Output).Groups["player"].Value, false));
             }
         }
         #endregion
     }
 
-    #region 服务端输出存储
-    public class ServerOutputStorage
+    // 服务端输出存储
+    public class ServerOutputStorage : IDisposable
     {
-        public readonly ConcurrentDictionary<int, ObservableCollection<ServerOutputLine>> OutputDict = new();
-        private readonly Channel<ServerOutputLineArgs> StorageQueue;
+        public readonly ConcurrentDictionary<int, ObservableCollection<ColorOutputLine>> OutputDict = new();
+        public readonly ConcurrentDictionary<int, (bool IsRunning, bool IsOnline)> StatusDict = new();
+        public readonly ConcurrentDictionary<(int ServerId, string PlayerName), string> PlayerDict = new();
+        private readonly Channel<IStorageArgs> StorageQueue;
         private readonly CancellationTokenSource StorageCTS = new();
-        // 添加输出行请求
-        public bool TrySendLine(ServerOutputLineArgs args)
+        public ServerOutputStorage()
+        {
+            StorageQueue = Channel.CreateUnbounded<IStorageArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
+            Debug.WriteLine("ServerOutputStorage Launched");
+        }
+
+        #region 排队处理
+        public bool TrySendLine(IStorageArgs args)//TODO:增加泛型处理机制
         {
             if (StorageQueue.Writer.TryWrite(args))
             {
@@ -521,16 +567,63 @@ namespace LSL.Services
                 return false;
             }
         }
-        public ServerOutputStorage()
+        public async Task ProcessStorage(CancellationToken ct)
         {
-            StorageQueue = Channel.CreateUnbounded<ServerOutputLineArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
-            Debug.WriteLine("ServerOutputStorage Launched");
+            try
+            {
+                await foreach (var args in StorageQueue.Reader.ReadAllAsync(ct))
+                {
+                    try { await StorageProcessor(args); }
+                    catch { }
+                }
+            }
+            catch (OperationCanceledException) { }
         }
-        public void Shutdown()
+        public async Task StorageProcessor(IStorageArgs args)
+        {
+            switch (args)
+            {
+                case ColorOutputArgs COA:
+                    OutputDict.AddOrUpdate(COA.ServerId, new ObservableCollection<ColorOutputLine> { new ColorOutputLine(COA.Output, COA.ColorBrush) }, (key, value) =>
+                    {
+                        value.Add(new ColorOutputLine(COA.Output, COA.ColorBrush));
+                        return value;
+                    });
+                    break;
+                case ServerStatusArgs SSA:
+                    StatusDict.AddOrUpdate(SSA.ServerId, (SSA.IsRunning, SSA.IsOnline), (key, value) =>
+                    {
+                        value.IsRunning = SSA.IsRunning;
+                        value.IsOnline = SSA.IsOnline;
+                        return value;
+                    });
+                    break;
+                case PlayerUpdateArgs PUA:
+                    PlayerDict.AddOrUpdate((PUA.ServerId, PUA.PlayerName), PUA.UUID, (key, value) =>
+                    {
+                        if (PUA.Entering)
+                        {
+                            return PUA.UUID;
+                        }
+                        else
+                        {
+                            PlayerDict.TryRemove(key, out _);
+                            return string.Empty;
+                        }
+                    });
+                    break;
+                default:
+                    break;
+            }
+        }
+        public void Dispose()
         {
             StorageCTS.Cancel();
             StorageQueue.Writer.TryComplete();
+            StorageCTS.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
     #endregion
+
 }

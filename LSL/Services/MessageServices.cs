@@ -27,7 +27,7 @@ namespace LSL.Services
         public static EventBus Instance => _instance.Value;
 
         // 订阅事件（在构造函数中使用）
-        public void Subscribe<TEvent>(Action<TEvent> handler) where TEvent : EventArgs
+        public void Subscribe<TEvent>(Action<TEvent> handler)
         {
             _lock.EnterWriteLock();
             try
@@ -46,7 +46,7 @@ namespace LSL.Services
         }
 
         // 取消订阅事件（谨慎使用）
-        public bool Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : EventArgs
+        public bool Unsubscribe<TEvent>(Action<TEvent> handler)
         {
             _lock.EnterWriteLock();
             try
@@ -71,7 +71,7 @@ namespace LSL.Services
         }
 
         // 发布事件
-        public bool Publish<TEvent>(TEvent e) where TEvent : EventArgs
+        public bool Publish<TEvent>(TEvent e)
         {
             _lock.EnterReadLock();
             try
@@ -102,7 +102,7 @@ namespace LSL.Services
             return true;
         }
         // 异步发布事件（其实比较常用）
-        public async Task<bool> PublishAsync<TEvent>(TEvent e) where TEvent : EventArgs
+        public async Task<bool> PublishAsync<TEvent>(TEvent e)
         {
             _lock.EnterReadLock();
             try
@@ -136,7 +136,7 @@ namespace LSL.Services
     /*
     使用说明：
     1. 创建一个事件类，继承自EventArgs
-    public class 【类名】 : EventArgs
+    public class 【类名】
     {
         public 【参数类型】 【参数名称】 { get; set; }
     }
@@ -149,55 +149,29 @@ namespace LSL.Services
     */
 
     #region 事件类
-    public class ColorOutputArgs : EventArgs// 彩色终端输出事件
-    {
-        public required int ServerId { get; set; }
-        public required ISolidColorBrush Color { get; set; }
-        public required string Output { get; set; }
-    }
-    public class PopupMessageArgs : EventArgs// 弹窗事件
+    public class PopupMessageArgs// 弹窗事件
     {
         public required int Type { get; set; }
         public required string Title { get; set; }
         public required string Message { get; set; }
     }
 
-    public class NotifyArgs : EventArgs// 通知条事件
+    public class NotifyArgs// 通知条事件
     {
         public int? Type { get; set; }
         public string? Title { get; set; }
         public string? Message { get; set; }
     }
 
-    public class UpdateTerminalArgs : EventArgs// 更新终端文本事件
+    public class UpdateTerminalArgs// 更新终端文本事件
     {
         public required string Type { get; set; }
     }
 
-    public class PlayerMessageArgs : EventArgs// 服务器消息事件
-    {
-        public required int ServerId { get; set; }
-        public required string Message { get; set; }
-    }
 
-    public class PlayerUpdateArgs : EventArgs// 玩家列表更新事件
-    {
-        public required int ServerId { get; set; }
-        public required string UUID { get; set; }
-        public required string PlayerName { get; set; }
-        public required bool Entering { get; set; }
-    }
+    public class ClosingArgs { }// 窗体关闭事件
 
-    public class ServerStatusArgs : EventArgs// 服务器状态更新事件
-    {
-        public required int ServerId { get; set; }
-        public required bool Running { get; set; }
-        public required bool Online { get; set; }
-    }
-
-    public class ClosingArgs : EventArgs { }// 窗体关闭事件
-
-    public class ViewBroadcastArgs : EventArgs// 广播事件
+    public class ViewBroadcastArgs// 广播事件
     {
         public required string Target { get; set; }
         public required string Message { get; set; }
@@ -217,19 +191,19 @@ namespace LSL.Services
     }
 
     #region ReactiveUI事件类
-    public class NavigateArgs : EventArgs
+    public class NavigateArgs
     {
         public required BarState BarTarget { get; set; } = BarState.Undefined;
         public required GeneralPageState LeftTarget { get; set; } = GeneralPageState.Undefined;
         public required RightPageState RightTarget { get; set; } = RightPageState.Undefined;
     }
 
-    public class NavigateCommand : EventArgs
+    public class NavigateCommand
     {
         public NavigateCommandType Type { get; set; } = NavigateCommandType.None;
     }
 
-    public class PopupArgs : EventArgs
+    public class PopupArgs
     {
         public int Type { get; set; } = 0;
         public string Title { get; set; } = "空弹窗";
@@ -245,7 +219,7 @@ namespace LSL.Services
         public static InvokeBus Instance => _instance.Value;
         private readonly ConcurrentDictionary<Type, (Type RTType, Delegate Handler)> _handlers = new();
         // 注册事件处理器
-        public bool TryRegister<TEvent, TResult>(Func<TEvent, TResult> handler, bool force = false) where TEvent : EventArgs
+        public bool TryRegister<TEvent, TResult>(Func<TEvent, TResult> handler, bool force = false)
         {
             if(handler is null) return false;
             var key = typeof(TEvent);
@@ -258,7 +232,7 @@ namespace LSL.Services
             return _handlers.TryAdd(key, value);
         }
         // 注册异步事件处理器
-        public bool TryRegisterAsync<TEvent, TResult>(Func<TEvent, Task<TResult>> handler, bool force = false) where TEvent : EventArgs
+        public bool TryRegisterAsync<TEvent, TResult>(Func<TEvent, Task<TResult>> handler, bool force = false)
         {
             if (handler is null) return false;
             var key = typeof(TEvent);
@@ -271,10 +245,10 @@ namespace LSL.Services
             return _handlers.TryAdd(key, value);
         }
         // 移除事件处理器
-        public bool TryRemove<TEvent>() where TEvent : EventArgs
+        public bool TryRemove<TEvent>()
             => _handlers.TryRemove(typeof(TEvent), out _);
         // 调用事件处理器
-        public TResult? Invoke<TEvent, TResult>(TEvent args) where TEvent : EventArgs
+        public TResult? Invoke<TEvent, TResult>(TEvent args)
         {
             ArgumentNullException.ThrowIfNull(args);
             if (_handlers.TryGetValue(typeof(TEvent), out var pair))
@@ -289,7 +263,7 @@ namespace LSL.Services
             else return default;
         }
         // 异步调用事件处理器
-        public async Task<TResult?> InvokeAsync<TEvent, TResult>(TEvent args) where TEvent : EventArgs
+        public async Task<TResult?> InvokeAsync<TEvent, TResult>(TEvent args)
         {
             ArgumentNullException.ThrowIfNull(args);
             if (_handlers.TryGetValue(typeof(TEvent), out var pair))
