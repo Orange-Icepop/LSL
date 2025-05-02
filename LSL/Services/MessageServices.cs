@@ -88,7 +88,7 @@ namespace LSL.Services
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 // 处理异常
                 Console.WriteLine($"Error publishing event: {ex.Message}");
@@ -117,7 +117,7 @@ namespace LSL.Services
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 // 处理异常
                 Console.WriteLine($"Error publishing event: {ex.Message}");
@@ -203,11 +203,11 @@ namespace LSL.Services
         public NavigateCommandType Type { get; set; } = NavigateCommandType.None;
     }
 
-    public class PopupArgs
+    public class PopupArgs(int type, string title, string message)
     {
-        public int Type { get; set; } = 0;
-        public string Title { get; set; } = "空弹窗";
-        public string Message { get; set; } = "我是一个空的弹窗！";
+        public int Type { get; set; } = type;
+        public string Title { get; set; } = title;
+        public string Message { get; set; } = message;
     }
     #endregion
 
@@ -221,7 +221,7 @@ namespace LSL.Services
         // 注册事件处理器
         public bool TryRegister<TEvent, TResult>(Func<TEvent, TResult> handler, bool force = false)
         {
-            if(handler is null) return false;
+            if (handler is null) return false;
             var key = typeof(TEvent);
             var value = (RTType: typeof(TResult), (Delegate)handler);
             if (force)

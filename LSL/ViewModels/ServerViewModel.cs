@@ -78,14 +78,5 @@ namespace LSL.ViewModels
 
         public ObservableCollection<ColoredLines> TerminalText { [ObservableAsProperty] get; }
     }
-    public class ColoredLines
-    {
-        public string Line { get; set; }
-        public ISolidColorBrush LineColor { get; set; }
-        public ColoredLines(string line, ISolidColorBrush lineColor)
-        {
-            Line = line;
-            LineColor = lineColor;
-        }
-    }
+    public record ColoredLines(string Line, ISolidColorBrush LineColor);
 }
