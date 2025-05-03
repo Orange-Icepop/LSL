@@ -10,6 +10,7 @@ namespace LSL.ViewModels
     {
         public Interaction<InvokePopupArgs, PopupResult> PopupITA { get; } = new();
         public Interaction<NotifyArgs, Unit> NotifyITA { get; } = new();
+        public Interaction<Unit, string> FilePickerITA { get; } = new();
         public IObservable<PopupResult> ThrowError(string message)
         {
             return PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "非致命错误", message));

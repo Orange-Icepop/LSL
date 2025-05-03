@@ -4,6 +4,7 @@ using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Platform.Storage;
 using Avalonia.ReactiveUI;
 using LSL.Services;
 using LSL.ViewModels;
@@ -30,6 +31,8 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
             action(this.ViewModel!.ITAUnits.NotifyITA.RegisterHandler(ShowNotification));
         });
     }
+
+    #region 生命周期
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
@@ -59,6 +62,7 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
             e.Cancel = false;
         }
     }
+    #endregion
 
     private void BroadcastHandler(ViewBroadcastArgs args)
     {
@@ -123,4 +127,30 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
         var result = await dialog.ShowDialog<PopupResult>(this);
         interaction.SetOutput(result);
     }
+
+    #region 文件选择
+    private static FilePickerFileType CoreFileType { get; } = new("Minecraft服务器核心文件")
+    {
+        Patterns = new[] { "*.jar" },
+        MimeTypes = new[] { "application/java-archive" }
+    };
+    public async Task OpenFileCmd(IInteractionContext<Unit, string> ITA)
+    {
+        // 启动异步操作以打开对话框。
+        var files = await this.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "打开Minecraft核心文件",
+            AllowMultiple = false,
+            FileTypeFilter = new[] { CoreFileType },
+        });
+
+        if (files.Count >= 1)
+        {
+            var URI = files[0].Path;
+            ITA.SetOutput(URI.LocalPath);
+        }
+        else ITA.SetOutput(string.Empty);
+    }
+    #endregion
+
 }
