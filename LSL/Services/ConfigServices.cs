@@ -1,13 +1,12 @@
-﻿using LSL.Components;
-using LSL.Services.Validators;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using LSL.Services.Validators;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LSL.Services
 {
@@ -63,17 +62,13 @@ namespace LSL.Services
             }
             else
             {
-                switch (token.Type)
+                return token.Type switch
                 {
-                    case JTokenType.String:
-                        return token.Value<string>();
-                    case JTokenType.Integer:
-                        return token.Value<int>();
-                    case JTokenType.Boolean:
-                        return token.Value<bool>();
-                    default:
-                        throw new ArgumentException($"Key '{keyPath}' is not a string, number, or bool.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
-                }
+                    JTokenType.String => token.Value<string>()!,
+                    JTokenType.Integer => token.Value<int>(),
+                    JTokenType.Boolean => token.Value<bool>(),
+                    _ => throw new ArgumentException($"Key '{keyPath}' is not a string, number, or bool.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。"),
+                };
             }
         }
         #endregion
@@ -295,7 +290,7 @@ namespace LSL.Services
             CurrentConfigs.Clear();// 清空当前配置字典
             foreach (var key in ConfigKeys)
             {
-                JToken config = configs[key];
+                JToken config = configs[key]!;
                 object? keyValue = config.Type switch// 根据值类型读取
                 {
                     JTokenType.Boolean => config.Value<bool>(),
@@ -594,7 +589,7 @@ namespace LSL.Services
                     }
                 }
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return false;
             }

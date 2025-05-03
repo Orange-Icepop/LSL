@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reactive;
 using LSL.Services;
-using LSL.Views;
 using ReactiveUI;
 
 namespace LSL.ViewModels
@@ -18,7 +17,7 @@ namespace LSL.ViewModels
         public void ShowServiceError(ServiceError error)
         {
             if (error.ErrorCode == 0) return;
-            else 
+            else
             {
                 string fin;
                 if (error.Message is not null) fin = error.Message;

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LSL.Services;
-using LSL.ViewModels;
+﻿using LSL.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -14,7 +8,6 @@ namespace LSL
     {
         public static void AddServerHost(this IServiceCollection collection)
         {
-            //collection.AddSingleton<IServerHost, ServerHost>();
             collection.AddLogging(builder => builder.AddDebug());
         }
         public static void AddViewModels(this IServiceCollection collection)

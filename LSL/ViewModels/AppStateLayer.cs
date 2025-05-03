@@ -1,16 +1,12 @@
-﻿using LSL.Services;
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Net.NetworkInformation;
-using System.Reactive;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using LSL.Services;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels
 {

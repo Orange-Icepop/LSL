@@ -1,12 +1,7 @@
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Data;
-using LSL.Components;
-using LSL.ViewModels;
-using Avalonia.Media;
-using System.Diagnostics;
 using System;
 using System.Windows.Input;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace LSL.Components
 {

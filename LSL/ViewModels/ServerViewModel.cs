@@ -1,20 +1,11 @@
-﻿using Avalonia.Media;
-using Avalonia.Threading;
+﻿using System.Collections.ObjectModel;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Windows.Input;
+using Avalonia.Media;
 using LSL.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace LSL.ViewModels
 {
@@ -49,7 +40,7 @@ namespace LSL.ViewModels
             set
             {
                 string endless = value.TrimEnd('\r', '\n');
-                if(endless.Length < value.Length)
+                if (endless.Length < value.Length)
                 {
                     SendCommandToServer();
                     this.RaiseAndSetIfChanged(ref _inputText, "");
