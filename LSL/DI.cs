@@ -19,16 +19,16 @@ namespace LSL
         }
         public static void AddViewModels(this IServiceCollection collection)
         {
-            collection.AddSingleton<PopupInteraction>();
-            collection.AddSingleton<AppStateLayer>(provider => new AppStateLayer(provider.GetRequiredService<PopupInteraction>()));
+            collection.AddSingleton<InteractionUnits>();
+            collection.AddSingleton<AppStateLayer>(provider => new AppStateLayer(provider.GetRequiredService<InteractionUnits>()));
             collection.AddSingleton<ServiceConnector>(provider => new ServiceConnector(provider.GetRequiredService<AppStateLayer>()));
-            collection.AddTransient<PublicCommand>();
-            collection.AddTransient<BarRegionVM>();
-            collection.AddTransient<LeftRegionVM>();
-            collection.AddTransient<RightRegionVM>();
-            collection.AddTransient<ConfigViewModel>();
-            collection.AddTransient<ServerViewModel>();
-            collection.AddTransient<ShellViewModel>();
+            collection.AddSingleton<PublicCommand>();
+            collection.AddSingleton<BarRegionVM>();
+            collection.AddSingleton<LeftRegionVM>();
+            collection.AddSingleton<RightRegionVM>();
+            collection.AddSingleton<ConfigViewModel>();
+            collection.AddSingleton<ServerViewModel>();
+            collection.AddSingleton<ShellViewModel>();
         }
     }
 }

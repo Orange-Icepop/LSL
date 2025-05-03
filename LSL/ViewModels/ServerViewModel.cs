@@ -61,13 +61,13 @@ namespace LSL.ViewModels
         {
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
             Connector.StartSelectedServer();
-            //Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
+            AppState.ITAUnits.NotifyITA.Handle(new(0, "服务器正在启动", "请稍候等待服务器启动完毕"));
         }
         public void SendCommandToServer()//发送命令方法
         {
             if (string.IsNullOrEmpty(InputText))
             {
-                //Notify(0, "输入为空", "请输入要发送的命令");
+                AppState.ITAUnits.NotifyITA.Handle(new(0, "输入为空", "请输入要发送的命令"));
                 return;
             }
             Connector.SendCommandToServer(InputText);

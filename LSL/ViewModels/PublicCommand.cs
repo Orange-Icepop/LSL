@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -20,11 +21,11 @@ namespace LSL.ViewModels
             OpenWebPageCmd = ReactiveCommand.Create<string>(OpenWebPage);// 打开网页命令-实现
             SearchJava = ReactiveCommand.Create(async () =>
             {
-                await Dispatcher.UIThread.InvokeAsync(() => QuickHandler.SendNotify(0, "正在搜索Java", "请耐心等待......"));
+                await Dispatcher.UIThread.InvokeAsync(() => AppState.ITAUnits.NotifyITA.Handle(new(0, "正在搜索Java", "请耐心等待......")));
                 await Connector.FindJava();
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    QuickHandler.SendNotify(1, "Java搜索完成！", $"搜索到了{AppState.CurrentJavaDict.Count}个Java");
+                    AppState.ITAUnits.NotifyITA.Handle(new(1, "Java搜索完成！", $"搜索到了{AppState.CurrentJavaDict.Count}个Java"));
                 });
             });// 搜索Java命令-实现
         }
@@ -36,18 +37,18 @@ namespace LSL.ViewModels
             try
             {
                 ArgumentNullException.ThrowIfNull(url);
-                //if (url.IndexOf("http://") != 1 && url.IndexOf("https://") != 1) throw new ArgumentException("URL格式错误");
+                if (url.IndexOf("http://") != 1 && url.IndexOf("https://") != 1) throw new ArgumentException("URL格式错误");
                 Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-                QuickHandler.SendNotify(1, "成功打开了网页！", url);//TODO
+                AppState.ITAUnits.NotifyITA.Handle(new NotifyArgs(1, "成功打开了网页！", url));//TODO
             }
             catch (System.ComponentModel.Win32Exception noBrowser)
-            {/*
+            {
                 if (noBrowser.ErrorCode == -2147467259)
-                    await ShowPopup(4, "打开网页失败", $"LSL未能成功打开网页{url}，请检查您的系统是否设置了默认浏览器。\r错误内容：{noBrowser.Message}");*/
+                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "打开网页失败", $"LSL未能成功打开网页{url}，请检查您的系统是否设置了默认浏览器。\r错误内容：{noBrowser.Message}")).ToTask();
             }
             catch (Exception ex)
-            {/*
-                await ShowPopup(4, "打开网页失败", $"LSL未能成功打开网页{url}，这是由于非浏览器配置错误造成的。\r如果这是在自定义主页中发生的，请检查您的自定义主页是否正确配置了网址；否则，这可能是一个Bug，请您提交一个issue反馈。\r错误内容：{ex.Message}");*/
+            {
+                await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "打开网页失败", $"LSL未能成功打开网页{url}，这是由于非浏览器配置错误造成的。\r如果这是在自定义主页中发生的，请检查您的自定义主页是否正确配置了网址；否则，这可能是一个Bug，请您提交一个issue反馈。\r错误内容：{ex.Message}")).ToTask();
             }
         }
         #endregion

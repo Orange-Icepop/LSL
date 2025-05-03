@@ -13,6 +13,7 @@ namespace LSL.Views
             InitializeComponent();
             this.Title = title;
             this.Message.Text = content;
+            SetButton(type);
         }
         private void SetButton(PopupType type)
         {
@@ -44,5 +45,4 @@ namespace LSL.Views
             }
         }
     }
-    public record InvokePopupArgs (PopupType type, string title, string content); 
 }

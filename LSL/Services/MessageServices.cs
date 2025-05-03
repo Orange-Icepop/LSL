@@ -156,12 +156,7 @@ namespace LSL.Services
         public required string Message { get; set; }
     }
 
-    public class NotifyArgs// 通知条事件
-    {
-        public int? Type { get; set; }
-        public string? Title { get; set; }
-        public string? Message { get; set; }
-    }
+    public record NotifyArgs(int Type, string? Title, string? Message);// 通知条事件
 
     public class UpdateTerminalArgs// 更新终端文本事件
     {
@@ -177,18 +172,6 @@ namespace LSL.Services
         public required string Message { get; set; }
     }
     #endregion
-
-    public static class QuickHandler// 快捷的消息处理方式（手动狗头）
-    {
-        public static void ThrowError(string message)
-        {
-            EventBus.Instance.Publish(new PopupMessageArgs { Type = 4, Title = "非致命错误", Message = message });
-        }
-        public static void SendNotify(int type, string title, string message)
-        {
-            EventBus.Instance.Publish(new NotifyArgs { Type = type, Title = title, Message = message });
-        }
-    }
 
     #region ReactiveUI事件类
     public class NavigateArgs

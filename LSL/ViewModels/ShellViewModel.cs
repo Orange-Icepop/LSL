@@ -23,7 +23,7 @@ namespace LSL.ViewModels
         public ServerViewModel ServerVM { get; }
         public PublicCommand PublicCmd { get; }
         // 弹窗交互，这玩意儿和上面的东西没关系
-        public PopupInteraction PopupITA { get; }
+        public InteractionUnits ITAUnits { get; }
 
         public ShellViewModel(
             AppStateLayer appState,
@@ -34,7 +34,7 @@ namespace LSL.ViewModels
             ConfigViewModel configVM,
             ServerViewModel serverVM,
             PublicCommand publicCommand,
-            PopupInteraction popupITA
+            InteractionUnits ITA
             )
         {
             AppState = appState;
@@ -45,7 +45,7 @@ namespace LSL.ViewModels
             ConfigVM = configVM;
             ServerVM = serverVM;
             PublicCmd = publicCommand;
-            PopupITA = popupITA;
+            ITAUnits = ITA;
             EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
 
             // 视图命令

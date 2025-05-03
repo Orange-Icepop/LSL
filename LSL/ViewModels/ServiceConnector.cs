@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Channels;
+﻿using System.IO;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using LSL.Services;
@@ -40,7 +34,11 @@ namespace LSL.ViewModels
 
         public void ReadServerConfig(bool readFile = false)
         {
-            if (readFile) ServerConfigManager.LoadServerConfigs();
+            if (readFile) 
+            {
+                var result = ServerConfigManager.LoadServerConfigs(); 
+                AppState.ITAUnits.ShowServiceError(result);
+            }
             AppState.CurrentServerConfigs = ServerConfigManager.ServerConfigs;
         }
 
@@ -64,7 +62,7 @@ namespace LSL.ViewModels
             var result = VerifyServerConfigBeforeStart(serverId);
             if (result != null)
             {
-                QuickHandler.ThrowError(result);
+                AppState.ITAUnits.ThrowError(result);
                 return;
             }
             AppState.TerminalTexts.TryAdd(AppState.SelectedServerId, new());
@@ -72,7 +70,7 @@ namespace LSL.ViewModels
         }
         public void StopSelectedServer()
         {
-            ServerHost.Instance.SendCommand(AppState.SelectedServerId, "stop");
+            ServerHost.Instance.StopServer(AppState.SelectedServerId);
         }
         public void SaveSelectedServer()
         {

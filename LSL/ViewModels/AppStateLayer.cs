@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,10 +16,10 @@ namespace LSL.ViewModels
 {
     public class AppStateLayer : ReactiveObject
     {
-        public PopupInteraction PopupHandler { get; }// 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
-        public AppStateLayer(PopupInteraction pinteraction)
+        public InteractionUnits ITAUnits { get; }// 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
+        public AppStateLayer(InteractionUnits interUnit)
         {
-            PopupHandler = pinteraction;
+            ITAUnits = interUnit;
             CurrentBarState = BarState.Common;
             CurrentGeneralPage = GeneralPageState.Home;
             CurrentRightPage = RightPageState.HomeRight;

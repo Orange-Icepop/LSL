@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.ReactiveUI;
-using LSL.Components;
 using LSL.Services;
 
 namespace LSL.Desktop;

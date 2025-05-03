@@ -365,7 +365,7 @@ namespace LSL.Services
             ];
 
         #region 读取各个服务器的LSL配置文件LoadServerConfigs
-        public static void LoadServerConfigs()
+        public static ServiceError LoadServerConfigs()
         {
             ServerConfigs = [];
             List<string> NotfoundServers = [];
@@ -375,21 +375,21 @@ namespace LSL.Services
             try
             {
                 mainFile = File.ReadAllText(ConfigManager.ServerConfigPath);
-                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return;
+                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return new();
             }
             catch (FileNotFoundException)
             {
-                QuickHandler.ThrowError($"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。");
+                return new(2, $"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。");
             }
             try
             {
                 var configs = JsonConvert.DeserializeObject<Dictionary<int, string>>(mainFile);
-                if (configs == null) throw new JsonException();
+                if (configs is null) return new(2, $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
                 else MainServerConfig = configs;
             }
             catch (JsonException)
             {
-                throw new FatalException($"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
+                return new(2, $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
             }
             // 读取各个服务器的LSL配置文件
             foreach (var config in MainServerConfig)
@@ -434,8 +434,9 @@ namespace LSL.Services
                 else if (ConfigErrorServers.Count > 0) ErrorContext += "格式错误的服务器配置文件。";
                 if (NotfoundServers.Count > 0) ErrorContext += "\r不存在的服务器：" + string.Join(", \r", NotfoundServers) + "\r请确保" + ConfigManager.ServerConfigPath + "文件中的服务器名称与实际服务器文件夹名称一致。";
                 if (ConfigErrorServers.Count > 0) ErrorContext += "\r格式错误的服务器配置文件：" + string.Join(", \r", ConfigErrorServers) + "\r请确保这些配置文件的格式正确。";
-                QuickHandler.ThrowError(ErrorContext);
+                return new(1, ErrorContext);
             }
+            return new();
         }
         #endregion
 

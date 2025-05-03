@@ -7,6 +7,7 @@ using System.Diagnostics;
 using LSL.ViewModels;
 using LSL.Services;
 using LSL.Views.Server;
+using Avalonia.ReactiveUI;
 
 namespace LSL.Views.Download.ASViews
 {
@@ -17,6 +18,7 @@ namespace LSL.Views.Download.ASViews
             InitializeComponent();
         }
 
+        // TODO：将以下内容放至MainWindow中，并改用Interaction调用
         #region 文件选择
         private static FilePickerFileType CoreFileType { get; } = new("Minecraft服务器核心文件")
         {
@@ -25,11 +27,6 @@ namespace LSL.Views.Download.ASViews
         };
         public async void OpenFileCmd(object sender, RoutedEventArgs args)
         {
-            var mainViewModel = (ShellViewModel)this.DataContext;
-            if (mainViewModel == null)
-            {
-                QuickHandler.ThrowError("添加核心页面的DataContext为null，无法通过对话框选择文件。");
-            }
             // 从当前控件获取 TopLevel。此处使用 Window 引用。
             var topLevel = MainWindow.Instance;
             // 启动异步操作以打开对话框。
