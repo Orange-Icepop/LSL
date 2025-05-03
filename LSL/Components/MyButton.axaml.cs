@@ -6,6 +6,7 @@ using LSL.ViewModels;
 using Avalonia.Media;
 using System.Diagnostics;
 using System;
+using System.Windows.Input;
 
 namespace LSL.Components
 {
@@ -33,16 +34,21 @@ namespace LSL.Components
         public MyButton()
         {
             InitializeComponent();
-            this.Initialized += StartUpdatingStyles;
+            this.Initialized += (s, e) => UpdateStyles();
         }
-        private void StartUpdatingStyles(object sender, EventArgs e)
+        public MyButton(string color, string content, ICommand command)
         {
-            UpdateStyles();
+            InitializeComponent();
+            this.ColorType = Enum.TryParse(color, out ColorType colorType) ? colorType : ColorType.Default;
+            this.Content = content;
+            this.Command = command;
+            this.Initialized += (s, e) => UpdateStyles();
         }
+
         //根据ColorType更改按钮样式
         private void UpdateStyles()
         {
-            switch(ColorType)
+            switch (ColorType)
             {
                 case ColorType.Highlight:
                     this.Classes.Add("highlight");

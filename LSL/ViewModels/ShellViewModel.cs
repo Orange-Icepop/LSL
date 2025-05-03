@@ -19,7 +19,6 @@ namespace LSL.ViewModels
         public BarRegionVM BarVM { get; }
         public LeftRegionVM LeftVM { get; }
         public RightRegionVM RightVM { get; }
-        public PopupViewModel PopupVM { get; }
         public ConfigViewModel ConfigVM { get; }
         public ServerViewModel ServerVM { get; }
         public PublicCommand PublicCmd { get; }
@@ -32,7 +31,6 @@ namespace LSL.ViewModels
             BarRegionVM barVM,
             LeftRegionVM leftVM,
             RightRegionVM rightVM,
-            PopupViewModel popupVM,
             ConfigViewModel configVM,
             ServerViewModel serverVM,
             PublicCommand publicCommand,
@@ -44,7 +42,6 @@ namespace LSL.ViewModels
             BarVM = barVM;
             LeftVM = leftVM;
             RightVM = rightVM;
-            PopupVM = popupVM;
             ConfigVM = configVM;
             ServerVM = serverVM;
             PublicCmd = publicCommand;

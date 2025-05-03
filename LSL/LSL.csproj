@@ -85,8 +85,8 @@
 		  <SubType>Code</SubType>
 		  <DependentUpon>FSBar.axaml</DependentUpon>
 		</Compile>
-		<Compile Update="Views\Popup.axaml.cs">
-			<DependentUpon>Popup.axaml</DependentUpon>
+		<Compile Update="Views\PopupWindow.axaml.cs">
+			<DependentUpon>PopupWindow.axaml</DependentUpon>
 		</Compile>
 		<Compile Update="Views\Home\HomeLeft.axaml.cs">
 			<DependentUpon>HomeLeft.axaml</DependentUpon>

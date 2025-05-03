@@ -1,19 +1,18 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using System;
 using System.ComponentModel;
-using LSL.ViewModels;
-using LSL.Services;
-using System;
-using System.Diagnostics;
+using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
-//using System.Reactive;
+using Avalonia.ReactiveUI;
+using LSL.Services;
+using LSL.ViewModels;
+using ReactiveUI;
+
 namespace LSL.Views;
 
-public partial class MainWindow : Window
+public partial class MainWindow : ReactiveWindow<ShellViewModel>
 {
     public WindowNotificationManager? NotifyManager;
-
     public static MainWindow Instance { get; private set; }
 
     public MainWindow()
@@ -24,6 +23,7 @@ public partial class MainWindow : Window
         this.Loaded += InitializeViews;
         EventBus.Instance.Subscribe<ViewBroadcastArgs>(BroadcastHandler);
         EventBus.Instance.Subscribe<NotifyArgs>(ShowNotification);
+        this.WhenActivated(action => action(this.ViewModel!.PopupITA.RegisterHandler(HandlePopup)));
     }
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
@@ -35,12 +35,12 @@ public partial class MainWindow : Window
             FontSize = 12,
         };
     }
-    private void InitializeViews(object sender, EventArgs e)
+    private void InitializeViews(object? sender, EventArgs e)
     {
-        var shellViewModel = (ShellViewModel?)this.DataContext;
-        shellViewModel?.InitializeMainWindow();
+        var shellViewModel = this.ViewModel!;
+        shellViewModel.InitializeMainWindow();
     }
-    private void MainWindow_Closing(object sender, CancelEventArgs e)
+    private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
         EventBus.Instance.Publish(new ClosingArgs());
         bool EnableDaemon = (bool)ConfigManager.CurrentConfigs["daemon"];
@@ -76,7 +76,7 @@ public partial class MainWindow : Window
         var title = args.Title;
         var message = args.Message;
         bool IsTitleEmpty = title == null;
-        title??= "通知";
+        title ??= "通知";
         message ??= "未知消息";
         NotificationType type;
         switch (args.Type)
@@ -109,5 +109,12 @@ public partial class MainWindow : Window
                 return;
         }
         NotifyManager?.Show(new Notification(title, message, type));
+    }
+    private async Task HandlePopup(IInteractionContext<InvokePopupArgs, PopupResult> interaction)
+    {
+        var args = interaction.Input;
+        var dialog = new PopupWindow(args.type, args.title, args.content);
+        var result = await dialog.ShowDialog<PopupResult>(this);
+        interaction.SetOutput(result);
     }
 }

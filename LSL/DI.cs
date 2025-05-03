@@ -26,7 +26,6 @@ namespace LSL
             collection.AddTransient<BarRegionVM>();
             collection.AddTransient<LeftRegionVM>();
             collection.AddTransient<RightRegionVM>();
-            collection.AddTransient<PopupViewModel>();
             collection.AddTransient<ConfigViewModel>();
             collection.AddTransient<ServerViewModel>();
             collection.AddTransient<ShellViewModel>();
