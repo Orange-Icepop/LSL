@@ -13,9 +13,11 @@ namespace LSL.ViewModels
     {
         public ServerViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
-            AppState.WhenAnyValue(AS => AS.SelectedServerId)
-                .Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
+            var IdChanged = AppState.WhenAnyValue(AS => AS.SelectedServerId);
+            IdChanged.Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
                 .ToPropertyEx(this, x => x.TerminalText);
+            IdChanged.Select(id => AppState.ServerStatuses.GetOrAdd(id, (false, false)))
+                .Subscribe(x => ChangeState(x));
             AppState.WhenAnyValue(AS => AS.TerminalTexts)
                 .Select(CD => CD.TryGetValue(AppState.SelectedServerId, out var value) ? value : new())
                 .Where(t => t != TerminalText)
@@ -28,11 +30,11 @@ namespace LSL.ViewModels
         }
 
         #region 控制
-        public ICommand StartServerCmd { get; set; }// 启动服务器命令
-        public ICommand StopServerCmd { get; set; }// 停止服务器命令
-        public ICommand SaveServerCmd { get; set; }// 保存服务器命令
-        public ICommand EndServerCmd { get; set; }// 结束服务器进程命令
-        public ICommand SendCommand { get; set; }// 发送服务器命令
+        public ICommand StartServerCmd { get; }// 启动服务器命令
+        public ICommand StopServerCmd { get; }// 停止服务器命令
+        public ICommand SaveServerCmd { get; }// 保存服务器命令
+        public ICommand EndServerCmd { get; }// 结束服务器进程命令
+        public ICommand SendCommand { get; }// 发送服务器命令
         private string _inputText = "";
         public string InputText
         {
@@ -66,7 +68,19 @@ namespace LSL.ViewModels
         }
 
         #endregion
+        #region 服务器状态及其决定的操作
+        public ICommand LaunchButtonCmd { [ObservableAsProperty] get; }// 绑定到快捷操作钮的命令
+        private ICommand LBCDicider((bool isRunning, bool isOnline) param)
+        {
+            return param.isRunning ? StopServerCmd : StartServerCmd;
+        }
+        private void ChangeState((bool isRunning, bool isOnline) param)
+        {
 
+        }
+        public bool CurrentIsRunning { [ObservableAsProperty] get; }
+        public bool CurrentIsOnline { [ObservableAsProperty] get; }
+        #endregion
         public ObservableCollection<ColoredLines> TerminalText { [ObservableAsProperty] get; }
     }
     public record ColoredLines(string Line, ISolidColorBrush LineColor);

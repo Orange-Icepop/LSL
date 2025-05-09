@@ -626,4 +626,5 @@ namespace LSL.Services
     }
     #endregion
 
+    public record StatusPair(bool IsRunning, bool IsOnline);
 }
