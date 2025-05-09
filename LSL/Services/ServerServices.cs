@@ -623,8 +623,7 @@ namespace LSL.Services
             StorageCTS.Dispose();
             GC.SuppressFinalize(this);
         }
-    }
     #endregion
 
-    public record StatusPair(bool IsRunning, bool IsOnline);
+    }
 }

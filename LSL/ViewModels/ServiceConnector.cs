@@ -1,9 +1,12 @@
-﻿using System.IO;
+﻿using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using LSL.Services;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels
 {
@@ -34,9 +37,9 @@ namespace LSL.ViewModels
 
         public void ReadServerConfig(bool readFile = false)
         {
-            if (readFile) 
+            if (readFile)
             {
-                var result = ServerConfigManager.LoadServerConfigs(); 
+                var result = ServerConfigManager.LoadServerConfigs();
                 AppState.ITAUnits.ShowServiceError(result);
             }
             AppState.CurrentServerConfigs = ServerConfigManager.ServerConfigs;
@@ -55,7 +58,7 @@ namespace LSL.ViewModels
 
         #endregion
 
-        #region 服务器部分
+        #region 服务器命令
         public void StartSelectedServer()
         {
             int serverId = AppState.SelectedServerId;
@@ -85,6 +88,7 @@ namespace LSL.ViewModels
             if (string.IsNullOrEmpty(command)) return;
             ServerHost.Instance.SendCommand(AppState.SelectedServerId, command);
         }
+        #endregion
 
         #region 启动前校验配置文件
         public string? VerifyServerConfigBeforeStart(int serverId)
@@ -102,13 +106,43 @@ namespace LSL.ViewModels
         #endregion
 
         #region 读取服务器输出
-        private Channel<ColorOutputArgs> ServerOutputChannel = Channel.CreateUnbounded<ColorOutputArgs>();
-        private CancellationTokenSource OutputCts = new();
+        private readonly Channel<ColorOutputArgs> ServerOutputChannel = Channel.CreateUnbounded<ColorOutputArgs>();
+        private readonly CancellationTokenSource OutputCts = new();
         private async Task HandleOutput(CancellationToken token)
         {
             await foreach (var args in ServerOutputChannel.Reader.ReadAllAsync(token))
             {
                 await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts[AppState.SelectedServerId].Add(new ColoredLines(args.Output, args.ColorBrush)));
+            }
+        }
+        private void UpdateUser(PlayerUpdateArgs args)
+        {
+            if (args.Entering)
+            {
+                AppState.UserDict.AddOrUpdate(args.ServerId, key =>
+                {
+                    var adder = new ObservableCollection<UUID_User>();
+                    adder.Add(new UUID_User(args.UUID, args.PlayerName));
+                    return adder;
+                }, (key, oldValue) =>
+                {
+                    oldValue.Add(new UUID_User(args.UUID, args.PlayerName));
+                    return oldValue;
+                });
+            }
+            else
+            {
+                if (AppState.UserDict.TryGetValue(args.ServerId, out var uc))
+                {
+                    for (int i = uc.Count - 1; i >= 0; i--)
+                    {
+                        if (uc[i].UUID == args.UUID)
+                        {
+                            uc.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
             }
         }
         #endregion
@@ -118,6 +152,41 @@ namespace LSL.ViewModels
 
         }
 
-        #endregion
     }
+
+    #region 服务器状态类
+    public class ServerStatus : ReactiveObject
+    {
+        public ServerStatus()
+        {
+            IsRunning = false;
+            IsOnline = false;
+        }
+        public ServerStatus((bool, bool) param)
+        {
+            IsRunning = param.Item1;
+            IsOnline = param.Item2;
+        }
+        public ServerStatus(bool isRunning, bool isOnline)
+        {
+            IsRunning = isRunning;
+            IsOnline = isOnline;
+        }
+        [Reactive] public bool IsRunning { get; set; }
+        [Reactive] public bool IsOnline { get; set; }
+    }
+    #endregion
+
+    #region 用户记录类
+    public class UUID_User
+    {
+        public UUID_User(string uuid, string user)
+        {
+            this.UUID = uuid;
+            this.User = user;
+        }
+        public string UUID { get; set; }
+        public string User { get; set; }
+    }
+    #endregion
 }

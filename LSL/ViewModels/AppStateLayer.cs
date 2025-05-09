@@ -104,10 +104,9 @@ namespace LSL.ViewModels
         #endregion
 
         #region 服务器相关
-
         [Reactive] public ConcurrentDictionary<int, ObservableCollection<ColoredLines>> TerminalTexts { get; set; } = new();
-        [Reactive] public ConcurrentDictionary<int, (bool IsRunning, bool IsOnline)> ServerStatuses { get; set; } = new();
-
+        [Reactive] public ConcurrentDictionary<int, ServerStatus> ServerStatuses { get; set; } = new();
+        [Reactive] public ConcurrentDictionary<int, ObservableCollection<UUID_User>> UserDict { get; set; } = new();
         #endregion
     }
 }

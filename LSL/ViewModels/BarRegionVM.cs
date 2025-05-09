@@ -13,12 +13,7 @@ namespace LSL.ViewModels
 {
     public class BarRegionVM : RegionalVMBase
     {
-        private UserControl _currentView;
-        public UserControl CurrentView
-        {
-            get => _currentView;
-            private set => this.RaiseAndSetIfChanged(ref _currentView, value);
-        }
+        [Reactive] public UserControl CurrentView { get; private set; }
 
         #region 全屏顶栏板块
         [Reactive] public string FSTitle { get; set; }

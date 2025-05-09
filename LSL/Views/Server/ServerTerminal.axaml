@@ -31,7 +31,7 @@
 		<local:MyCard Grid.Row="1" Grid.Column="0">
 			<Grid VerticalAlignment="Center" HorizontalAlignment="Stretch" ColumnDefinitions="*,Auto">
 				<TextBox Grid.Column="0" Height="30" Margin="10" Text="{Binding ServerVM.InputText,Mode=TwoWay}" AcceptsReturn="True" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
-				<local:MyButton Content="发送" Grid.Column="1" Margin="10" Width="50" Height="30" VerticalAlignment="Center" HorizontalAlignment="Right" Command="{Binding ServerVM.SendCommand}" IsEnabled="{Binding ServerVM.CurrentServerOnline}"/>
+				<local:MyButton Content="发送" Grid.Column="1" Margin="10" Width="50" Height="30" VerticalAlignment="Center" HorizontalAlignment="Right" Command="{Binding ServerVM.SendCommand}" IsEnabled="{Binding ServerVM.CurrentStatus.IsOnline}"/>
 			</Grid>
 		</local:MyCard>
 		<local:MyCard Grid.Row="1" Grid.Column="1">
@@ -41,7 +41,7 @@
 						VerticalAlignment="Center"
 						Grid.Column="0" Margin="2"
 						Command="{Binding ServerVM.StopServerCmd}"
-						IsEnabled="{Binding ServerVM.CurrentServerOnline}">
+						IsEnabled="{Binding ServerVM.CurrentStatus.IsOnline}">
 					<TextBlock Text="关闭"
 							   HorizontalAlignment="Center"
 							   VerticalAlignment="Center"
@@ -53,7 +53,7 @@
 						VerticalAlignment="Center"
 						Grid.Column="1" Margin="2"
 						Command="{Binding ServerVM.SaveServerCmd}"
-						IsEnabled="{Binding ServerVM.CurrentServerOnline}">
+						IsEnabled="{Binding ServerVM.CurrentStatus.IsOnline}">
 					<TextBlock Text="保存"
 							   HorizontalAlignment="Center"
 							   VerticalAlignment="Center"
@@ -64,7 +64,7 @@
 						VerticalAlignment="Center"
 						Grid.Column="2" Margin="2"
 						Command="{Binding ServerVM.EndServerCmd}"
-						IsEnabled="{Binding ServerVM.CurrentServerRunning}">
+						IsEnabled="{Binding ServerVM.CurrentStatus.IsRunning}">
 					<TextBlock Text="终止"
 							   HorizontalAlignment="Center"
 							   VerticalAlignment="Center"

@@ -12,15 +12,15 @@
 		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10" ItemsSource="{Binding AppState.ServerNames}" SelectedIndex="{Binding AppState.SelectedServerIndex}">
 		</ComboBox>
 		<local:MyButton Name="LaunchServerButton"
-						Command="{Binding LaunchServerButtonCommand}"
+						Command="{Binding ServerVM.LaunchButtonCommand}"
 						DockPanel.Dock="Top"
 						ColorType="Highlight"
 						VerticalAlignment="Center"
 						HorizontalAlignment="Center"
 						Width="150"
 						Height="40"
-						IsEnabled="{Binding LaunchServerButtonEnabled}"
-						Content="{Binding LaunchServerButtonContext}"/>
+						IsEnabled="{Binding ServerVM.LBCEnabled}"
+						Content="{Binding ServerVM.LaunchButtonContent}"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="StatusButton" Content="状态" Classes="left" Classes.selLeft="{Binding LeftVM.HLServerStat}" Command="{Binding RightViewCmd}" CommandParameter="ServerStat"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="TerminalButton" Content="终端" Classes="left" Classes.selLeft="{Binding LeftVM.HLServerTerminal}" Command="{Binding RightViewCmd}" CommandParameter="ServerTerminal"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="ConfButton" Content="设置" Classes="left" Classes.selLeft="{Binding LeftVM.HLServerConf}" Command="{Binding RightViewCmd}" CommandParameter="ServerConf"/>
