@@ -228,9 +228,9 @@ namespace LSL.Services
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
-                StandardInputEncoding = Encoding.UTF8,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8
+                StandardInputEncoding = null,
+                StandardOutputEncoding = null,
+                StandardErrorEncoding = null//神奇的是，把这三个设置为null就能解决乱码问题
             };
         }
         private Process? SProcess { get; set; }
@@ -498,7 +498,7 @@ namespace LSL.Services
                     string type = match.Groups["type"].Value;
                     colorBrush = type switch
                     {
-                        "INFO" => "#0000ff",
+                        "INFO" => "#019eff",// 还是这个颜色顺眼 (>v<)
                         "WARN" => "#ffc125",
                         "ERRO" => "#ff0000",
                         "FATA" => "#ff0000",
