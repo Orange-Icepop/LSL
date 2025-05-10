@@ -1,4 +1,6 @@
-﻿using LSL.Services;
+﻿using Avalonia.Controls;
+using Avalonia.Controls.Models.TreeDataGrid;
+using LSL.Services;
 using LSL.Services.Validators;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -17,7 +19,16 @@ namespace LSL.ViewModels
         public ConfigViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
             AppState.WhenAnyValue(AS => AS.CurrentJavaDict)
-                .Select(s => new ObservableCollection<JavaInfo>(s.Values))
+                .Select(s => new FlatTreeDataGridSource<JavaInfo>(s.Values)
+                {
+                    Columns =
+                        {
+                            new TextColumn<JavaInfo, string> ("版本", x => x.Version),
+                            new TextColumn<JavaInfo, string> ("路径", x => x.Path),
+                            new TextColumn<JavaInfo, string> ("提供商", x => x.Vendor),
+                            new TextColumn<JavaInfo, string> ("架构", x=>x.Architecture),
+                        },
+                })
                 .ToPropertyEx(this, x => x.JavaVersions);
             GetConfig(true);// cached config需要手动同步，不能依赖自动更新
             ReadServerConfig(true);// 服务器配置由于较为复杂，统一为手动控制
@@ -76,7 +87,7 @@ namespace LSL.ViewModels
         #endregion
 
         #region Java配置
-        public ObservableCollection<JavaInfo> JavaVersions { [ObservableAsProperty] get; }
+        public FlatTreeDataGridSource<JavaInfo> JavaVersions { [ObservableAsProperty] get; }
         #endregion
     }
 }

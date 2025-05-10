@@ -14,7 +14,7 @@ SubProject
 [x] 完整适配string参数的导航命令与enum参数的导航命令
 [x] 完善反向导航命令于AppState
 [ ] 创建视图缓存策略
-[ ] 使用编译时绑定
+[ ] 使用编译时绑定（在完成所有绑定修复后进行，因为需要编译）
 [ ] 修复所有绑定（包括命令和字段）
  - [ ] 服务器的在线玩家数量、已经添加的服务器数量、正在运行的服务器数量
 [x] 修复弹窗，并同步修复打开网页的错误处理
@@ -22,12 +22,12 @@ SubProject
 
 2、解决配置迁移
 [x] 使用WhenAnyValue监听ServerConfig和JavaList的变化，并更新对应的ObservableCollection
-[ ] 将JavaInfo改用TreeDataGrid以优化卡顿
 [ ] 修复添加服务器逻辑
 
 3、跨组件协作
 [ ] 将EventBus迁移到MessageBus
 [x] 新建跨组件有返回值无耦合的通信方式
 
-4、解决UI构建问题
-[ ] 修复右栏的溢出问题
+4、解决UI问题
+[x] 修复右栏的溢出问题
+[ ] 将JavaInfo改用TreeDataGrid以优化卡顿，并添加样式

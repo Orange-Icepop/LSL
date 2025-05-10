@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using Avalonia.Controls;
+using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Media;
 using LSL.Services;
 using ReactiveUI;
@@ -24,7 +26,14 @@ namespace LSL.ViewModels
             var idChanged = AppState.WhenAnyValue(AS => AS.SelectedServerId);
             idChanged.Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
                 .ToPropertyEx(this, x => x.TerminalText);
-            idChanged.Select(id => AppState.UserDict.GetOrAdd(id, []))
+            idChanged.Select(id => new FlatTreeDataGridSource<UUID_User>(AppState.UserDict.GetOrAdd(id, [])) 
+            {
+                Columns =
+                {
+                    new TextColumn<UUID_User, string>("用户名", x => x.User),
+                    new TextColumn<UUID_User, string>("UUID", x => x.UUID),
+                }
+            })
                 .ToProperty(this, x => x.CurrentUsers);
             idChanged.Select(id => AppState.MessageDict.GetOrAdd(id, []))
                 .ToPropertyEx(this, x => x.CurrentUserMessage);
@@ -96,7 +105,7 @@ namespace LSL.ViewModels
         #endregion
 
         public ObservableCollection<ColoredLines> TerminalText { [ObservableAsProperty] get; }
-        public ObservableCollection<UUID_User> CurrentUsers { [ObservableAsProperty] get; }
+        public FlatTreeDataGridSource<UUID_User> CurrentUsers { [ObservableAsProperty] get; }
         public ObservableCollection<UserMessageLine> CurrentUserMessage { [ObservableAsProperty] get; }
     }
     public class UserMessageLine(string msg)

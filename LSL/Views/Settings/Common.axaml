@@ -25,26 +25,18 @@
 
 			<local:MyCard Text="Java设置">
 				<StackPanel Margin="25,40,23,15">
-					<DataGrid Margin="0,5,0,5"
-							  ItemsSource="{Binding ConfigVM.JavaVersions}"
-							  CanUserReorderColumns="False"
+					<TreeDataGrid Margin="0,5,0,5"
+							  Source="{Binding ConfigVM.JavaVersions}"
 							  CanUserResizeColumns="False"
 							  CanUserSortColumns="False"
-							  IsReadOnly="True"
 							  Width="800"
 							  HorizontalAlignment="Left">
-						<DataGrid.Styles>
+						<TreeDataGrid.Styles>
 							<Style Selector="TextBlock">
 								<Setter Property="TextWrapping" Value="Wrap"/>
 							</Style>
-						</DataGrid.Styles>
-						<DataGrid.Columns>
-							<DataGridTextColumn Header="版本" Binding="{Binding Version}" Width="100"/>
-							<DataGridTextColumn Header="路径" Binding="{Binding Path}" Width="500"/>
-							<DataGridTextColumn Header="提供商" Binding="{Binding Vendor}" Width="100"/>
-							<DataGridTextColumn Header="架构" Binding="{Binding Architecture}" Width="100"/>
-						</DataGrid.Columns>
-					</DataGrid>
+						</TreeDataGrid.Styles>
+					</TreeDataGrid>
 					<DockPanel Margin="0,5,0,5">
 						<local:MyButton ColorType="Highlight" HorizontalAlignment="Left" Margin="0,0,10,0" Width="120" Height="30" Command="{Binding PublicCmd.SearchJava}">查找可用Java</local:MyButton>
 						<!--

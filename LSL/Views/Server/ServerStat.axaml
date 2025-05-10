@@ -21,20 +21,16 @@
 		</local:MyCard>
 		<local:MyCard Text="玩家列表" DockPanel.Dock="Left" Width="250">
 			<ScrollViewer VerticalScrollBarVisibility="Auto" Height="{Binding $parent[0].Height}">
-				<DataGrid Width="200"
+				<TreeDataGrid Width="200"
 						  Margin="0,50,0,0"
-						  ItemsSource="{Binding ServerVM.CurrentUsers}">
-					<DataGrid.Styles>
+						  Source="{Binding ServerVM.CurrentUsers}">
+					<TreeDataGrid.Styles>
 						<Style Selector="TextBlock">
 							<Setter Property="FontSize" Value="10"/>
 							<Setter Property="TextWrapping" Value="Wrap"/>
 						</Style>
-					</DataGrid.Styles>
-					<DataGrid.Columns>
-						<DataGridTextColumn Header="玩家名" Width="80" Binding="{Binding User}"/>
-						<DataGridTextColumn Header="UUID" Width="120" Binding="{Binding UUID}"/>
-					</DataGrid.Columns>
-				</DataGrid>
+					</TreeDataGrid.Styles>
+				</TreeDataGrid>
 			</ScrollViewer>
 		</local:MyCard>
 		<local:MyCard Text="玩家消息" DockPanel.Dock="Left">

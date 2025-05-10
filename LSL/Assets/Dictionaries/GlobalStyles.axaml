@@ -171,6 +171,50 @@
 		</Style>
 	</Style>
 
+	<!--TreeDataGrid控件样式定义-->
+	<!--TreeDataGrid行-->
+	<Style Selector="TreeDataGridRow">
+		<Style Selector="^ /template/ Border#RowBorder">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="CornerRadius" Value="5"/>
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Background" Duration="0:0:0.1"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<Style Selector="^ /template/ TreeDataGridCellsPresenter#PART_CellsPresenter">
+			<Setter Property="Height" Value="40"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="CornerRadius" Value="5"/>
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Background" Duration="0:0:0.1"/>
+				</Transitions>
+			</Setter>
+		</Style>
+
+		<Style Selector="^:pointerover /template/ Border#RowBorder">
+			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+		</Style>
+		<Style Selector="^:selected /template/ TreeDataGridCellsPresenter#PART_CellsPresenter">
+			<Setter Property="Background" Value="{DynamicResource OBlue}"/>
+		</Style>
+	</Style>
+
+	<Style Selector="TreeDataGridColumnHeader">
+		<Style Selector="^ /template/ Border#DataGridBorder">
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Background" Duration="0:0:0.1"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<Style Selector="^:pointerover /template/ Border#DataGridBorder">
+			<Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+		</Style>
+	</Style>
+
 	<!--ComboBox控件样式定义-->
 	<Style Selector="ComboBox">
 		<Setter Property="Background" Value="Transparent"/>
