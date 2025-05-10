@@ -107,7 +107,7 @@ namespace LSL.ViewModels
         [Reactive] public ConcurrentDictionary<int, ObservableCollection<ColoredLines>> TerminalTexts { get; set; } = new();
         [Reactive] public ConcurrentDictionary<int, ServerStatus> ServerStatuses { get; set; } = new();
         [Reactive] public ConcurrentDictionary<int, ObservableCollection<UUID_User>> UserDict { get; set; } = new();
-        [Reactive] public ConcurrentDictionary<int, ObservableCollection<string>> MessageDict { get; set; } = new();
+        [Reactive] public ConcurrentDictionary<int, ObservableCollection<UserMessageLine>> MessageDict { get; set; } = new();
         #endregion
     }
 }

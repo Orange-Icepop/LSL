@@ -8,24 +8,17 @@
 	<Grid Height="590" RowDefinitions="*,70" ColumnDefinitions="*,200">
 		<local:MyCard Text="终端" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
 			<ScrollViewer VerticalAlignment="Stretch"
-						  HorizontalAlignment="Left"
+						  HorizontalAlignment="Stretch"
 						  Margin="30,60,30,20"
 						  VerticalScrollBarVisibility="Auto"
 						  Name="TerminalScroll">
-				<VirtualizingStackPanel>
-					<ItemsControl Name="TerminalOutput" ItemsSource="{Binding ServerVM.TerminalText}">
-						<ItemsControl.ItemsPanel>
-							<ItemsPanelTemplate>
-								<VirtualizingStackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-							</ItemsPanelTemplate>
-						</ItemsControl.ItemsPanel>
-						<ItemsControl.ItemTemplate>
-							<DataTemplate>
-								<SelectableTextBlock IsEnabled="False" Text="{Binding Line}" Foreground="{Binding LineColor}"/>
-							</DataTemplate>
-						</ItemsControl.ItemTemplate>
-					</ItemsControl>
-				</VirtualizingStackPanel>
+				<ItemsRepeater Name="TerminalOutput" ItemsSource="{Binding ServerVM.TerminalText}">
+					<ItemsRepeater.ItemTemplate>
+						<DataTemplate>
+							<SelectableTextBlock IsEnabled="False" Text="{Binding Line}" Foreground="{Binding LineColor}" Height="20" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+						</DataTemplate>
+					</ItemsRepeater.ItemTemplate>
+				</ItemsRepeater>
 			</ScrollViewer>
 		</local:MyCard>
 		<local:MyCard Grid.Row="1" Grid.Column="0">

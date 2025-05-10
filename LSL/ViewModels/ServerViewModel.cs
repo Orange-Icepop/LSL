@@ -25,7 +25,7 @@ namespace LSL.ViewModels
             idChanged.Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
                 .ToPropertyEx(this, x => x.TerminalText);
             idChanged.Select(id => AppState.UserDict.GetOrAdd(id, []))
-                .ToProperty(this, x => x.Users);
+                .ToProperty(this, x => x.CurrentUsers);
             idChanged.Select(id => AppState.MessageDict.GetOrAdd(id, []))
                 .ToPropertyEx(this, x => x.CurrentUserMessage);
             // status更新
@@ -101,8 +101,12 @@ namespace LSL.ViewModels
         #endregion
 
         public ObservableCollection<ColoredLines> TerminalText { [ObservableAsProperty] get; }
-        public ObservableCollection<UUID_User> Users { [ObservableAsProperty] get; }
-        public ObservableCollection<string> CurrentUserMessage { [ObservableAsProperty] get; }
+        public ObservableCollection<UUID_User> CurrentUsers { [ObservableAsProperty] get; }
+        public ObservableCollection<UserMessageLine> CurrentUserMessage { [ObservableAsProperty] get; }
+    }
+    public class UserMessageLine(string msg)
+    {
+        public string Message { get; set; } = msg;
     }
     public class ColoredLines : ReactiveObject
     {

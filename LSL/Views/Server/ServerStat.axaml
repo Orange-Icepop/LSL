@@ -23,7 +23,7 @@
 			<ScrollViewer VerticalScrollBarVisibility="Auto" Height="{Binding $parent[0].Height}">
 				<DataGrid Width="200"
 						  Margin="0,50,0,0"
-						  ItemsSource="{Binding CurrentPlayerList}">
+						  ItemsSource="{Binding ServerVM.CurrentUsers}">
 					<DataGrid.Styles>
 						<Style Selector="TextBlock">
 							<Setter Property="FontSize" Value="10"/>
@@ -31,14 +31,22 @@
 						</Style>
 					</DataGrid.Styles>
 					<DataGrid.Columns>
-						<DataGridTextColumn Header="玩家名" Width="80" Binding="{Binding Player}"/>
+						<DataGridTextColumn Header="玩家名" Width="80" Binding="{Binding User}"/>
 						<DataGridTextColumn Header="UUID" Width="120" Binding="{Binding UUID}"/>
 					</DataGrid.Columns>
 				</DataGrid>
 			</ScrollViewer>
 		</local:MyCard>
 		<local:MyCard Text="玩家消息" DockPanel.Dock="Left">
-			<TextBlock Text="{Binding CurrentPlayerMessage}"/>
+			<ScrollViewer VerticalScrollBarVisibility="Auto">
+				<ItemsRepeater Name="UserMessage" ItemsSource="{Binding ServerVM.CurrentUserMessage}">
+					<ItemsRepeater.ItemTemplate>
+						<DataTemplate>
+							<SelectableTextBlock IsEnabled="False" Text="{Binding Message}"/>
+						</DataTemplate>
+					</ItemsRepeater.ItemTemplate>
+				</ItemsRepeater>
+			</ScrollViewer>
 		</local:MyCard>
 	</DockPanel>
 </UserControl>

@@ -122,7 +122,7 @@ namespace LSL.ViewModels
             switch (args)
             {
                 case ColorOutputArgs COA:
-                    await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts.AddOrUpdate(COA.ServerId, [new ColoredLines(COA.Output, COA.ColorHex)] , (key, value) =>
+                    await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts.AddOrUpdate(COA.ServerId, [new ColoredLines(COA.Output, COA.ColorHex)], (key, value) =>
                     {
                         value.Add(new ColoredLines(COA.Output, COA.ColorHex));
                         return value;
@@ -135,9 +135,9 @@ namespace LSL.ViewModels
                     await Dispatcher.UIThread.InvokeAsync(() => UpdateUser(PUA));
                     break;
                 case PlayerMessageArgs PMA:
-                    await Dispatcher.UIThread.InvokeAsync(() => AppState.MessageDict.AddOrUpdate(PMA.ServerId, [PMA.Message], (key, value) =>
+                    await Dispatcher.UIThread.InvokeAsync(() => AppState.MessageDict.AddOrUpdate(PMA.ServerId, [new(PMA.Message)], (key, value) =>
                     {
-                        value.Add(PMA.Message);
+                        value.Add(new(PMA.Message));
                         return value;
                     }));
                     break;
@@ -149,7 +149,7 @@ namespace LSL.ViewModels
         {
             if (args.Entering)
             {
-                AppState.UserDict.AddOrUpdate(args.ServerId,[new UUID_User(args.UUID, args.PlayerName)], (key, oldValue) =>
+                AppState.UserDict.AddOrUpdate(args.ServerId, [new UUID_User(args.UUID, args.PlayerName)], (key, oldValue) =>
                 {
                     oldValue.Add(new UUID_User(args.UUID, args.PlayerName));
                     return oldValue;
