@@ -5,22 +5,24 @@
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              x:Class="LSL.Views.Server.ServerConf">
-	<StackPanel>
-		<local:MyCard Text="概述">
-			<Grid HorizontalAlignment="Left" Margin="20,50,10,20" ColumnDefinitions="*,*,*">
-				<DockPanel Grid.Column="0">
-					<Image DockPanel.Dock="Left" Source="/Assets/mc.png" Width="32" Height="32" Margin="10"/>
-					<TextBlock DockPanel.Dock="Top" Text="{Binding CurrentServerName}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Left" Margin="0,5,0,0"/>
-					<TextBlock DockPanel.Dock="Top" Text="{Binding CurrentServerPath}" FontSize="15" Foreground="Gray" HorizontalAlignment="Left" TextWrapping="Wrap"/>
+	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+		<StackPanel>
+			<local:MyCard Text="概述">
+				<Grid HorizontalAlignment="Left" Margin="20,50,10,20" ColumnDefinitions="*,*,*">
+					<DockPanel Grid.Column="0">
+						<Image DockPanel.Dock="Left" Source="/Assets/mc.png" Width="32" Height="32" Margin="10"/>
+						<TextBlock DockPanel.Dock="Top" Text="{Binding CurrentServerName}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+						<TextBlock DockPanel.Dock="Top" Text="{Binding CurrentServerPath}" FontSize="15" Foreground="Gray" HorizontalAlignment="Left" TextWrapping="Wrap"/>
+					</DockPanel>
+				</Grid>
+			</local:MyCard>
+			<local:MyCard Text="配置">
+				<DockPanel Margin="25,50,25,25">
+					<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight" Height="30" Width="100" Margin="10" Command="{Binding FullViewCmd}" CommandParameter="EditSC">修改配置</local:MyButton>
+					<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight" Height="30" Width="100" Margin="10">打开文件夹</local:MyButton>
+					<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Red" Height="30" Width="100" Margin="10" Command="{Binding DeleteServer}">删除服务器</local:MyButton>
 				</DockPanel>
-			</Grid>
-		</local:MyCard>
-		<local:MyCard Text="配置">
-			<DockPanel Margin="25,50,25,25">
-				<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight" Height="30" Width="100" Margin="10" Command="{Binding FullViewCmd}" CommandParameter="EditSC">修改配置</local:MyButton>
-				<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight" Height="30" Width="100" Margin="10">打开文件夹</local:MyButton>
-				<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Red" Height="30" Width="100" Margin="10" Command="{Binding DeleteServer}">删除服务器</local:MyButton>
-			</DockPanel>
-		</local:MyCard>
-	</StackPanel>
+			</local:MyCard>
+		</StackPanel>
+	</ScrollViewer>
 </UserControl>

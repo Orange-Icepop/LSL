@@ -5,7 +5,7 @@
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Download.AddServer">
-	<ScrollViewer>
+	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 		<StackPanel>
 			<local:MyCard Text="导入服务器">
 				<StackPanel Margin="25,40,23,15">

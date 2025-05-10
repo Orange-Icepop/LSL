@@ -52,17 +52,15 @@
 			</Border.Transitions>
 		</Border>
 		<!--右侧的内容-->
-		<ScrollViewer Name="RightScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-			<TransitioningContentControl Name="RightContent"
-										 Content="{Binding RightVM.CurrentView}">
-				<TransitioningContentControl.PageTransition>
-					<CompositePageTransition>
-						<CrossFade Duration="0:00:00.4"/>
-						<PageSlide Duration="0:00:00.4" Orientation="Vertical" SlideInEasing="ExponentialEaseOut" SlideOutEasing="SineEaseInOut"/>
-					</CompositePageTransition>
-				</TransitioningContentControl.PageTransition>
-			</TransitioningContentControl>
-		</ScrollViewer>
+		<TransitioningContentControl Name="RightContent"
+									 Content="{Binding RightVM.CurrentView}">
+			<TransitioningContentControl.PageTransition>
+				<CompositePageTransition>
+					<CrossFade Duration="0:00:00.4"/>
+					<PageSlide Duration="0:00:00.4" Orientation="Vertical" SlideInEasing="ExponentialEaseOut" SlideOutEasing="SineEaseInOut"/>
+				</CompositePageTransition>
+			</TransitioningContentControl.PageTransition>
+		</TransitioningContentControl>
 	</DockPanel>
 </UserControl>
 

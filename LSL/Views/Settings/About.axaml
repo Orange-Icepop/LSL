@@ -5,39 +5,41 @@
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.About">
-	<StackPanel>
-		<local:MyCard Text="关于">
-			<StackPanel Margin="25,40,23,15">
-				<DockPanel>
-					<Image Source="avares://LSL/Assets/icon.ico" Width="70" HorizontalAlignment="Left" Margin="0,20,20,10" DockPanel.Dock="Left"/>
-					<Image Source="avares://LSL/Assets/LSL-WORD.png" Width="300" HorizontalAlignment="Left" Margin="0,25,0,0" DockPanel.Dock="Top"/>
-					<TextBlock Text="©Orange-Icepop 橙子冰棒" FontSize="12" FontWeight="Bold" DockPanel.Dock="Top"/>
-				</DockPanel>
-			</StackPanel>
-		</local:MyCard>
-		<local:MyCard Text="更新">
-			<StackPanel Margin="25,40,23,15">
-				<TextBlock Margin="0,10,0,0">
-					<Run Text="当前版本:"/>
-					<Run Text="{Binding Version}"/>
-				</TextBlock>
-				<local:MyButton ColorType="Highlight" HorizontalAlignment="Left" Width="90" Height="30" Margin="0,10,0,10">检查更新</local:MyButton>
-				<CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.AutoUpdate}">启动时自动检查更新</CheckBox>
-				<CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.BetaUpdate}">更新测试版</CheckBox>
-			</StackPanel>
-		</local:MyCard>
-		<local:MyCard Text="相关链接">
-			<StackPanel Margin="25,40,23,15">
-				<local:MyButton Width="80" Height="30" Margin="0,10,0,10" HorizontalAlignment="Left" Command="{Binding PublicCmd.OpenWebPageCmd}" CommandParameter="https://github.com/Orange-Icepop/LSL/">GitHub</local:MyButton>
-			</StackPanel>
-		</local:MyCard>
-		<local:MyCard Text="开源库使用声明">
-			<StackPanel Margin="25,40,23,15">
-				<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/dotnet.ico" Title=".NET Runtime" Info="https://github.com/dotnet/runtime" Command="{Binding PublicCmd.OpenWebPageCmd}" CommandParameter="https://github.com/dotnet/runtime"/>
-				<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/AvaloniaUI.png" Title="AvaloniaUI" Info="https://github.com/AvaloniaUI/Avalonia" Command="{Binding PublicCmd.OpenWebPageCmd}" CommandParameter="https://github.com/AvaloniaUI/Avalonia"/>
-				<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/ReactiveUI.png" Title="ReactiveUI" Info="https://github.com/reactiveui/reactiveui" Command="{Binding PublicCmd.OpenWebPageCmd}" CommandParameter="https://github.com/reactiveui/reactiveui"/>
-				<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/Json.Net.png" Title="Newtonsoft.Json" Info="https://github.com/JamesNK/Newtonsoft.Json" Command="{Binding PublicCmd.OpenWebPageCmd}" CommandParameter="https://github.com/JamesNK/Newtonsoft.Json"/>
-			</StackPanel>
-		</local:MyCard>
-	</StackPanel>
+	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+		<StackPanel>
+			<local:MyCard Text="关于">
+				<StackPanel Margin="25,40,23,15">
+					<DockPanel>
+						<Image Source="avares://LSL/Assets/icon.ico" Width="70" HorizontalAlignment="Left" Margin="0,20,20,10" DockPanel.Dock="Left"/>
+						<Image Source="avares://LSL/Assets/LSL-WORD.png" Width="300" HorizontalAlignment="Left" Margin="0,25,0,0" DockPanel.Dock="Top"/>
+						<TextBlock Text="©Orange-Icepop 橙子冰棒" FontSize="12" FontWeight="Bold" DockPanel.Dock="Top"/>
+					</DockPanel>
+				</StackPanel>
+			</local:MyCard>
+			<local:MyCard Text="更新">
+				<StackPanel Margin="25,40,23,15">
+					<TextBlock Margin="0,10,0,0">
+						<Run Text="当前版本:"/>
+						<Run Text="{Binding Version}"/>
+					</TextBlock>
+					<local:MyButton ColorType="Highlight" HorizontalAlignment="Left" Width="90" Height="30" Margin="0,10,0,10">检查更新</local:MyButton>
+					<CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.AutoUpdate}">启动时自动检查更新</CheckBox>
+					<CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.BetaUpdate}">更新测试版</CheckBox>
+				</StackPanel>
+			</local:MyCard>
+			<local:MyCard Text="相关链接">
+				<StackPanel Margin="25,40,23,15">
+					<local:MyButton Width="80" Height="30" Margin="0,10,0,10" HorizontalAlignment="Left" Command="{Binding PublicCmd.OpenWebPageCmd}" CommandParameter="https://github.com/Orange-Icepop/LSL/">GitHub</local:MyButton>
+				</StackPanel>
+			</local:MyCard>
+			<local:MyCard Text="开源库使用声明">
+				<StackPanel Margin="25,40,23,15">
+					<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/dotnet.ico" Title=".NET Runtime" Info="https://github.com/dotnet/runtime" Command="{Binding PublicCmd.OpenWebPageCmd}" CommandParameter="https://github.com/dotnet/runtime"/>
+					<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/AvaloniaUI.png" Title="AvaloniaUI" Info="https://github.com/AvaloniaUI/Avalonia" Command="{Binding PublicCmd.OpenWebPageCmd}" CommandParameter="https://github.com/AvaloniaUI/Avalonia"/>
+					<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/ReactiveUI.png" Title="ReactiveUI" Info="https://github.com/reactiveui/reactiveui" Command="{Binding PublicCmd.OpenWebPageCmd}" CommandParameter="https://github.com/reactiveui/reactiveui"/>
+					<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/Json.Net.png" Title="Newtonsoft.Json" Info="https://github.com/JamesNK/Newtonsoft.Json" Command="{Binding PublicCmd.OpenWebPageCmd}" CommandParameter="https://github.com/JamesNK/Newtonsoft.Json"/>
+				</StackPanel>
+			</local:MyCard>
+		</StackPanel>
+	</ScrollViewer>
 </UserControl>
