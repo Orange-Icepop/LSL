@@ -575,7 +575,7 @@ namespace LSL.Services
             switch (args)
             {
                 case ColorOutputArgs COA:
-                    OutputDict.AddOrUpdate(COA.ServerId, new ObservableCollection<ColorOutputLine> { new ColorOutputLine(COA.Output, COA.ColorHex) }, (key, value) =>
+                    OutputDict.AddOrUpdate(COA.ServerId, [new ColorOutputLine(COA.Output, COA.ColorHex)], (key, value) =>
                     {
                         value.Add(new ColorOutputLine(COA.Output, COA.ColorHex));
                         return value;

@@ -122,9 +122,9 @@ namespace LSL.ViewModels
             switch (args)
             {
                 case ColorOutputArgs COA:
-                    await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts.AddOrUpdate(COA.ServerId, [new ColoredLines(COA.Output, new SolidColorBrush(Color.Parse(COA.ColorHex)))] , (key, value) =>
+                    await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts.AddOrUpdate(COA.ServerId, [new ColoredLines(COA.Output, COA.ColorHex)] , (key, value) =>
                     {
-                        value.Add(new ColoredLines(COA.Output, new SolidColorBrush(Color.Parse(COA.ColorHex))));
+                        value.Add(new ColoredLines(COA.Output, COA.ColorHex));
                         return value;
                     }));
                     break;

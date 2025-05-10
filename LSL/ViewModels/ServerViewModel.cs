@@ -104,5 +104,19 @@ namespace LSL.ViewModels
         public ObservableCollection<UUID_User> Users { [ObservableAsProperty] get; }
         public ObservableCollection<string> CurrentUserMessage { [ObservableAsProperty] get; }
     }
-    public record ColoredLines(string Line, ISolidColorBrush LineColor);
+    public class ColoredLines : ReactiveObject
+    {
+        [Reactive] string Line { get; init; }
+        [Reactive] ISolidColorBrush LineColor { get; init; }
+        public ColoredLines(string line, ISolidColorBrush lineColor)
+        {
+            Line = line;
+            LineColor = lineColor;
+        }
+        public ColoredLines(string line, string ColorHex)
+        {
+            Line = line;
+            LineColor = new SolidColorBrush(Color.Parse(ColorHex));
+        }
+    }
 }

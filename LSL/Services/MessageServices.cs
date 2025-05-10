@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,14 +12,14 @@ namespace LSL.Services
     #region 事件总线
     public sealed class EventBus
     {
-        // 锁对象，用于同步对事件字典的访问  
-        private readonly ReaderWriterLockSlim _lock = new();
-
         // 字典，用于存储事件类型和对应的委托列表  
-        private readonly Dictionary<Type, List<Delegate>> _handlers = [];
+        private readonly ConcurrentDictionary<Type, (object _lock, List<Delegate> _delegates)> _handlers = [];
 
         // 私有构造函数，使用了单例模式
-        private EventBus() { }
+        private EventBus()
+        {
+            Debug.WriteLine("EventBus initialized");
+        }
 
         // 使用 Lazy<T> 实现线程安全的单例
         private static readonly Lazy<EventBus> _instance = new(() => new EventBus());
@@ -26,59 +27,58 @@ namespace LSL.Services
         public static EventBus Instance => _instance.Value;
 
         // 订阅事件（在构造函数中使用）
-        public void Subscribe<TEvent>(Action<TEvent> handler)
+        public bool Subscribe<TEvent>(Action<TEvent> handler)
         {
-            _lock.EnterWriteLock();
             try
             {
-                if (!_handlers.ContainsKey(typeof(TEvent)))
+                var (_lock, _delegates) = _handlers.GetOrAdd(typeof(TEvent), t => (new object(), new List<Delegate>()));
+                lock (_lock)
                 {
-                    _handlers[typeof(TEvent)] = [];
+                    _delegates.Add(handler);
                 }
-
-                _handlers[typeof(TEvent)].Add(handler);
             }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
+            catch { return false; }
+            return true;
         }
 
         // 取消订阅事件（谨慎使用）
         public bool Unsubscribe<TEvent>(Action<TEvent> handler)
         {
-            _lock.EnterWriteLock();
             try
             {
-                if (_handlers.TryGetValue(typeof(TEvent), out var handlers))
+                if (_handlers.TryGetValue(typeof(TEvent), out var entry))
                 {
-                    handlers.Remove(handler);
-
-                    // 如果订阅者列表为空，则移除该事件类型  
-                    if (handlers.Count == 0)
+                    lock (entry._lock)
                     {
-                        _handlers.Remove(typeof(TEvent));
+                        entry._delegates.Remove(handler);
+                    }
+                    // 如果订阅者列表为空，则移除该事件类型  
+                    if (entry._delegates.Count == 0)
+                    {
+                        _handlers.TryRemove(typeof(TEvent), out _);
                     }
                     return true; // 成功取消订阅
                 }
                 else return false;
             }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
+            catch { return false; }
         }
 
         // 发布事件
         public bool Publish<TEvent>(TEvent e)
         {
-            _lock.EnterReadLock();
             try
             {
-                if (_handlers.TryGetValue(typeof(TEvent), out var handlers))
+                if (_handlers.TryGetValue(typeof(TEvent), out var entry))
                 {
+                    // 创建副本，避免同步操作耗费过长时间
+                    List<Delegate> snapshot;
+                    lock (entry._lock)
+                    {
+                        snapshot = new(entry._delegates);
+                    }
                     // 使用委托的DynamicInvoke方法来避免显式类型转换  
-                    foreach (var handler in handlers.Cast<Action<TEvent>>())
+                    foreach (var handler in snapshot.Cast<Action<TEvent>>())
                     {
                         // 使用PublishAsync可以异步处理事件，避免阻塞主线程
                         // 比较适用于把东西一丢就不管的情况
@@ -91,28 +91,30 @@ namespace LSL.Services
             {
                 // 处理异常
                 Console.WriteLine($"Error publishing event: {ex.Message}");
-                _lock.ExitReadLock();
                 return false;
-            }
-            finally
-            {
-                _lock.ExitReadLock();
             }
             return true;
         }
         // 异步发布事件（其实比较常用）
         public async Task<bool> PublishAsync<TEvent>(TEvent e)
         {
-            _lock.EnterReadLock();
             try
             {
-                if (_handlers.TryGetValue(typeof(TEvent), out var handlers))
+                if (_handlers.TryGetValue(typeof(TEvent), out var entry))
                 {
-                    // 使用委托的DynamicInvoke方法来避免显式类型转换  
-                    foreach (var handler in handlers.Cast<Action<TEvent>>())
+                    // 创建副本，避免同步操作耗费过长时间
+                    List<Delegate> snapshot;
+                    lock (entry._lock)
                     {
-                        // 同步执行请用Publish方法
-                        await Task.Run(() => handler(e)); // 异步执行  
+                        snapshot = new(entry._delegates);
+                    }
+                    // 使用委托的DynamicInvoke方法来避免显式类型转换  
+                    foreach (var handler in snapshot.Cast<Action<TEvent>>())
+                    {
+                        // 使用PublishAsync可以异步处理事件，避免阻塞主线程
+                        // 比较适用于把东西一丢就不管的情况
+                        // 但请注意，这并不会改变事件处理的顺序，只是并行执行  
+                        await Task.Run(() => handler(e)); // 同步执行  
                     }
                 }
             }
@@ -120,12 +122,7 @@ namespace LSL.Services
             {
                 // 处理异常
                 Console.WriteLine($"Error publishing event: {ex.Message}");
-                _lock.ExitReadLock();
                 return false;
-            }
-            finally
-            {
-                _lock.ExitReadLock();
             }
             return true;
         }
