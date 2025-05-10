@@ -15,7 +15,7 @@
 				<ItemsRepeater Name="TerminalOutput" ItemsSource="{Binding ServerVM.TerminalText}">
 					<ItemsRepeater.ItemTemplate>
 						<DataTemplate>
-							<SelectableTextBlock IsEnabled="False" Text="{Binding Line}" Foreground="{Binding LineColor}" Height="20" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+							<SelectableTextBlock IsEnabled="True" Text="{Binding Line}" Foreground="{Binding LineColor}" Height="20" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 						</DataTemplate>
 					</ItemsRepeater.ItemTemplate>
 				</ItemsRepeater>

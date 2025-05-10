@@ -37,11 +37,6 @@ namespace LSL.ViewModels
             statusFlow.Select(x => x.IsRunning ? "停止服务器" : "启动服务器")
                 .ToPropertyEx(this, x => x.LaunchButtonContent);
             statusFlow.ToPropertyEx(this, x => x.CurrentStatus);
-
-            AppState.WhenAnyValue(AS => AS.TerminalTexts)
-                .Select(CD => CD.TryGetValue(AppState.SelectedServerId, out var value) ? value : new())
-                .Where(t => t != TerminalText)
-                .ToPropertyEx(this, x => x.TerminalText);
         }
 
         #region 控制
