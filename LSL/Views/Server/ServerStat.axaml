@@ -42,7 +42,7 @@
 				<ItemsRepeater Name="UserMessage" ItemsSource="{Binding ServerVM.CurrentUserMessage}">
 					<ItemsRepeater.ItemTemplate>
 						<DataTemplate>
-							<SelectableTextBlock IsEnabled="False" Text="{Binding Message}"/>
+							<SelectableTextBlock IsEnabled="True" Text="{Binding Message}"/>
 						</DataTemplate>
 					</ItemsRepeater.ItemTemplate>
 				</ItemsRepeater>

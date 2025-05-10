@@ -217,7 +217,7 @@ namespace LSL.Services
             string javaPath = config.using_java;
             string MinMem = config.min_memory.ToString();
             string MaxMem = config.max_memory.ToString();
-            string arguments = $"-server -Xms{MinMem}M -Xmx{MaxMem}M -Dfile.encoding=utf-8 -jar {corePath} nogui";
+            string arguments = $"-server -Xms{MinMem}M -Xmx{MaxMem}M -jar {corePath} nogui";
             StartInfo = new()// 提供服务器信息
             {
                 FileName = javaPath,

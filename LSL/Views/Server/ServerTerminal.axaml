@@ -5,17 +5,18 @@
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerTerminal">
-	<Grid Height="590" RowDefinitions="*,70" ColumnDefinitions="*,200">
+	<Grid RowDefinitions="*,70" ColumnDefinitions="*,200">
 		<local:MyCard Text="终端" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
 			<ScrollViewer VerticalAlignment="Stretch"
 						  HorizontalAlignment="Stretch"
 						  Margin="30,60,30,20"
 						  VerticalScrollBarVisibility="Auto"
+						  HorizontalScrollBarVisibility="Disabled"
 						  Name="TerminalScroll">
 				<ItemsRepeater Name="TerminalOutput" ItemsSource="{Binding ServerVM.TerminalText}">
 					<ItemsRepeater.ItemTemplate>
 						<DataTemplate>
-							<SelectableTextBlock IsEnabled="True" Text="{Binding Line}" Foreground="{Binding LineColor}" Height="20" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+							<SelectableTextBlock IsEnabled="True" Text="{Binding Line}" Foreground="{Binding LineColor}" HorizontalAlignment="Left" VerticalAlignment="Center" TextWrapping="Wrap"/>
 						</DataTemplate>
 					</ItemsRepeater.ItemTemplate>
 				</ItemsRepeater>

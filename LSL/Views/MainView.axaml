@@ -7,15 +7,16 @@
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="600"
              x:Class="LSL.Views.MainView"
              x:DataType="vm:ShellViewModel">
-	<Design.DataContext>
-		<!-- This only sets the DataContext for the previewer in an IDE,
+	<!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-		<vm:ShellViewModel />
-	</Design.DataContext>
+	<!--
+	<Design.DataContext>-->
+	<!--<vm:ShellViewModel />
+	</Design.DataContext>-->
+
 
 	<!--主页面的模板-->
 	<DockPanel Background="#c7ffee">
-		<!--<views:Bar Height="50" DockPanel.Dock="Top"/>-->
 		<Border Height="50" DockPanel.Dock="Top" Background="{StaticResource OBlueBar}">
 			<TransitioningContentControl Name="BarContent"
 							Content="{Binding BarVM.CurrentView}">
