@@ -12,7 +12,7 @@
 		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10" ItemsSource="{Binding AppState.ServerNames}" SelectedIndex="{Binding AppState.SelectedServerIndex}">
 		</ComboBox>
 		<local:MyButton Name="LaunchServerButton"
-						Command="{Binding ServerVM.LaunchButtonCommand}"
+						Command="{Binding ServerVM.LaunchButtonCmd}"
 						DockPanel.Dock="Top"
 						ColorType="Highlight"
 						VerticalAlignment="Center"

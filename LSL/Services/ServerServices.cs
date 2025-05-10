@@ -1,11 +1,8 @@
-﻿using Avalonia.Media;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq.Expressions;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -374,7 +371,7 @@ namespace LSL.Services
             {
                 try
                 {
-                    if(!SProcess.HasExited)
+                    if (!SProcess.HasExited)
                     {
                         SProcess.Kill();
                         SProcess.WaitForExit(5000);
@@ -411,15 +408,8 @@ namespace LSL.Services
 
     }
 
-    #region 存储类
-    public interface IStorageArgs;
     public record TerminalOutputArgs(int ServerId, string Output);// 终端输出事件
-    public record ColorOutputLine(string Line, ISolidColorBrush Color);// 着色输出行
-    public record ColorOutputArgs(int ServerId, string Output, ISolidColorBrush ColorBrush) : IStorageArgs;// 彩色终端输出事件
-    public record ServerStatusArgs(int ServerId, bool IsRunning, bool IsOnline) : IStorageArgs;// 服务器状态更新事件
-    public record PlayerUpdateArgs(int ServerId, string UUID, string PlayerName, bool Entering) : IStorageArgs;// 玩家列表更新事件
-    public record PlayerMessageArgs(int ServerId, string Message) : IStorageArgs;// 服务器消息事件
-    #endregion
+    public record ColorOutputLine(string Line, string ColorHex);// 着色输出行
 
     // 服务端输出预处理
     public class OutputHandler : IDisposable
@@ -492,7 +482,7 @@ namespace LSL.Services
         #region 处理操作
         private async Task OutputProcessor(int ServerId, string Output)
         {
-            ISolidColorBrush colorBrush = new SolidColorBrush(Colors.Black);
+            string colorBrush = "#000000";
             string final = Output;
             // 检测消息是否带有时间戳
             if (Output.StartsWith("[LSL")) { }
@@ -508,18 +498,18 @@ namespace LSL.Services
                     string type = match.Groups["type"].Value;
                     colorBrush = type switch
                     {
-                        "INFO" => new SolidColorBrush(Colors.Blue),
-                        "WARN" => new SolidColorBrush(Colors.Orange),
-                        "ERRO" => new SolidColorBrush(Colors.Red),
-                        "FATA" => new SolidColorBrush(Colors.Red),
-                        _ => new SolidColorBrush(Colors.Black)
+                        "INFO" => "#0000ff",
+                        "WARN" => "#ffc125",
+                        "ERRO" => "#ff0000",
+                        "FATA" => "#ff0000",
+                        _ => "#000000"
                     };
                     ProcessSystem(ServerId, match.Groups["context"].Value);
                 }
             }
             else
             {
-                colorBrush = new SolidColorBrush(Colors.Red);
+                colorBrush = "#ff0000";
             }
             EventBus.Instance.PublishAsync(new ColorOutputArgs(ServerId, final, colorBrush));
         }
@@ -551,11 +541,12 @@ namespace LSL.Services
         public ServerOutputStorage()
         {
             StorageQueue = Channel.CreateUnbounded<IStorageArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
+            Task.Run(() => ProcessStorage(StorageCTS.Token));
             Debug.WriteLine("ServerOutputStorage Launched");
         }
 
         #region 排队处理
-        public bool TrySendLine(IStorageArgs args)//TODO:增加泛型处理机制
+        public bool TrySendLine(IStorageArgs args)
         {
             if (StorageQueue.Writer.TryWrite(args))
             {
@@ -567,7 +558,7 @@ namespace LSL.Services
                 return false;
             }
         }
-        public async Task ProcessStorage(CancellationToken ct)
+        private async Task ProcessStorage(CancellationToken ct)
         {
             try
             {
@@ -579,14 +570,14 @@ namespace LSL.Services
             }
             catch (OperationCanceledException) { }
         }
-        public async Task StorageProcessor(IStorageArgs args)
+        private async Task StorageProcessor(IStorageArgs args)
         {
             switch (args)
             {
                 case ColorOutputArgs COA:
-                    OutputDict.AddOrUpdate(COA.ServerId, new ObservableCollection<ColorOutputLine> { new ColorOutputLine(COA.Output, COA.ColorBrush) }, (key, value) =>
+                    OutputDict.AddOrUpdate(COA.ServerId, new ObservableCollection<ColorOutputLine> { new ColorOutputLine(COA.Output, COA.ColorHex) }, (key, value) =>
                     {
-                        value.Add(new ColorOutputLine(COA.Output, COA.ColorBrush));
+                        value.Add(new ColorOutputLine(COA.Output, COA.ColorHex));
                         return value;
                     });
                     break;
@@ -623,7 +614,7 @@ namespace LSL.Services
             StorageCTS.Dispose();
             GC.SuppressFinalize(this);
         }
-    #endregion
+        #endregion
 
     }
 }

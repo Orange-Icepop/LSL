@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Avalonia.Media;
 using Avalonia.Threading;
 using LSL.Services;
 using ReactiveUI;
@@ -112,19 +113,43 @@ namespace LSL.ViewModels
         {
             await foreach (var args in ServerOutputChannel.Reader.ReadAllAsync(token))
             {
-                await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts[AppState.SelectedServerId].Add(new ColoredLines(args.Output, args.ColorBrush)));
+                try { await ArgsProcessor(args); }
+                catch { }
+            }
+        }
+        private async Task ArgsProcessor(IStorageArgs args)
+        {
+            switch (args)
+            {
+                case ColorOutputArgs COA:
+                    await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts.AddOrUpdate(COA.ServerId, [new ColoredLines(COA.Output, new SolidColorBrush(Color.Parse(COA.ColorHex)))] , (key, value) =>
+                    {
+                        value.Add(new ColoredLines(COA.Output, new SolidColorBrush(Color.Parse(COA.ColorHex))));
+                        return value;
+                    }));
+                    break;
+                case ServerStatusArgs SSA:
+                    await Dispatcher.UIThread.InvokeAsync(() => AppState.ServerStatuses.AddOrUpdate(SSA.ServerId, new ServerStatus(SSA.IsRunning, SSA.IsOnline), (key, value) => value.Update(SSA.IsRunning, SSA.IsOnline)));
+                    break;
+                case PlayerUpdateArgs PUA:
+                    await Dispatcher.UIThread.InvokeAsync(() => UpdateUser(PUA));
+                    break;
+                case PlayerMessageArgs PMA:
+                    await Dispatcher.UIThread.InvokeAsync(() => AppState.MessageDict.AddOrUpdate(PMA.ServerId, [PMA.Message], (key, value) =>
+                    {
+                        value.Add(PMA.Message);
+                        return value;
+                    }));
+                    break;
+                default:
+                    break;
             }
         }
         private void UpdateUser(PlayerUpdateArgs args)
         {
             if (args.Entering)
             {
-                AppState.UserDict.AddOrUpdate(args.ServerId, key =>
-                {
-                    var adder = new ObservableCollection<UUID_User>();
-                    adder.Add(new UUID_User(args.UUID, args.PlayerName));
-                    return adder;
-                }, (key, oldValue) =>
+                AppState.UserDict.AddOrUpdate(args.ServerId,[new UUID_User(args.UUID, args.PlayerName)], (key, oldValue) =>
                 {
                     oldValue.Add(new UUID_User(args.UUID, args.PlayerName));
                     return oldValue;
@@ -172,8 +197,20 @@ namespace LSL.ViewModels
             IsRunning = isRunning;
             IsOnline = isOnline;
         }
-        [Reactive] public bool IsRunning { get; set; }
-        [Reactive] public bool IsOnline { get; set; }
+        public ServerStatus Update(bool isRunning, bool isOnline)
+        {
+            IsRunning = isRunning;
+            IsOnline = isOnline;
+            return this;
+        }
+        public ServerStatus Update((bool, bool) param)
+        {
+            IsRunning = param.Item1;
+            IsOnline = param.Item2;
+            return this;
+        }
+        [Reactive] public bool IsRunning { get; private set; }
+        [Reactive] public bool IsOnline { get; private set; }
     }
     #endregion
 

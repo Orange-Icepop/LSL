@@ -24,6 +24,11 @@ namespace LSL.ViewModels
             var idChanged = AppState.WhenAnyValue(AS => AS.SelectedServerId);
             idChanged.Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
                 .ToPropertyEx(this, x => x.TerminalText);
+            idChanged.Select(id => AppState.UserDict.GetOrAdd(id, []))
+                .ToProperty(this, x => x.Users);
+            idChanged.Select(id => AppState.MessageDict.GetOrAdd(id, []))
+                .ToPropertyEx(this, x => x.CurrentUserMessage);
+            // status更新
             var statusFlow = idChanged.Select(id => AppState.ServerStatuses.GetOrAdd(id, new ServerStatus()));
             statusFlow.Select(x => LBCEnabler(x))
                 .ToPropertyEx(this, x => x.LBCEnabled);
@@ -96,6 +101,8 @@ namespace LSL.ViewModels
         #endregion
 
         public ObservableCollection<ColoredLines> TerminalText { [ObservableAsProperty] get; }
+        public ObservableCollection<UUID_User> Users { [ObservableAsProperty] get; }
+        public ObservableCollection<string> CurrentUserMessage { [ObservableAsProperty] get; }
     }
     public record ColoredLines(string Line, ISolidColorBrush LineColor);
 }
