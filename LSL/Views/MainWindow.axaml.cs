@@ -27,6 +27,7 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
         {
             action(this.ViewModel!.ITAUnits.PopupITA.RegisterHandler(HandlePopup));
             action(this.ViewModel!.ITAUnits.NotifyITA.RegisterHandler(ShowNotification));
+            action(this.ViewModel!.ITAUnits.FilePickerITA.RegisterHandler(OpenFileOperation));
         });
     }
 
@@ -132,7 +133,7 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
         Patterns = new[] { "*.jar" },
         MimeTypes = new[] { "application/java-archive" }
     };
-    public async Task OpenFileCmd(IInteractionContext<Unit, string> ITA)
+    public async Task OpenFileOperation(IInteractionContext<Unit, string> ITA)
     {
         // 启动异步操作以打开对话框。
         var files = await this.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions

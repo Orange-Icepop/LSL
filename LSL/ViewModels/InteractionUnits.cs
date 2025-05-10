@@ -24,8 +24,8 @@ namespace LSL.ViewModels
                 else if (error.Error is not null) fin = error.Error.Message;
                 else return;
 
-                if (error.ErrorCode == 1) NotifyITA.Handle(new(3, null, fin));
-                else NotifyITA.Handle(new(4, null, fin));
+                if (error.ErrorCode == 1) NotifyITA.Handle(new(3, null, fin)).Subscribe();
+                else NotifyITA.Handle(new(4, null, fin)).Subscribe();
             }
         }
     }

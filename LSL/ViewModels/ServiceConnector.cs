@@ -94,7 +94,7 @@ namespace LSL.ViewModels
         #region 启动前校验配置文件
         public string? VerifyServerConfigBeforeStart(int serverId)
         {
-            if (ServerConfigManager.ServerConfigs.TryGetValue(serverId, out var config)) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
+            if (!ServerConfigManager.ServerConfigs.TryGetValue(serverId, out var config)) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
             else if (config == null) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
             else if (!File.Exists(config.using_java)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
             else

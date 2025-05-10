@@ -21,7 +21,7 @@ namespace LSL.ViewModels
                 await Connector.FindJava();
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    AppState.ITAUnits.NotifyITA.Handle(new(1, "Java搜索完成！", $"搜索到了{AppState.CurrentJavaDict.Count}个Java"));
+                    AppState.ITAUnits.NotifyITA.Handle(new(1, "Java搜索完成！", $"搜索到了{AppState.CurrentJavaDict.Count}个Java")).Subscribe();
                 });
             });// 搜索Java命令-实现
         }
@@ -35,7 +35,7 @@ namespace LSL.ViewModels
                 ArgumentNullException.ThrowIfNull(url);
                 if (url.IndexOf("http://") != 1 && url.IndexOf("https://") != 1) throw new ArgumentException("URL格式错误");
                 Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-                AppState.ITAUnits.NotifyITA.Handle(new NotifyArgs(1, "成功打开了网页！", url));//TODO
+                AppState.ITAUnits.NotifyITA.Handle(new NotifyArgs(1, "成功打开了网页！", url)).Subscribe();
             }
             catch (System.ComponentModel.Win32Exception noBrowser)
             {
