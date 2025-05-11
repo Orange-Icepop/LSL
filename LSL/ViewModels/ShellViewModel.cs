@@ -41,7 +41,6 @@ namespace LSL.ViewModels
             ServerVM = serverVM;
             PublicCmd = publicCommand;
             ITAUnits = ITA;
-            EventBus.Instance.Subscribe<ClosingArgs>(QuitHandler);
 
             // 视图命令
             LeftViewCmd = ReactiveCommand.Create<string>(param => NavigateLeftView(param, false));
@@ -75,10 +74,14 @@ namespace LSL.ViewModels
             NavigateRightView("HomeRight");
         }
 
-
-        public void QuitHandler(ClosingArgs args)// 退出事件处理
+        public bool CheckForExiting()// 退出事件处理
         {
             ServeCon.SaveConfig();
+            if(AppState.CurrentConfigs.TryGetValue("daemon", out var value) && bool.TryParse(value.ToString(), out var res))
+            {
+                return res;
+            }
+            else return false;
         }
 
         public ICommand ShowMainWindowCmd { get; }// 显示主窗口命令
@@ -86,7 +89,7 @@ namespace LSL.ViewModels
 
         public static void ShowMainWindow()
         {
-            EventBus.Instance.Publish(new ViewBroadcastArgs { Target = "MainWindow.axaml.cs", Message = "Show" });
+            MessageBus.Current.SendMessage(new ViewBroadcastArgs { Target = "MainWindow.axaml.cs", Message = "Show" });
         }
         public static void Quit() { Environment.Exit(0); }
 

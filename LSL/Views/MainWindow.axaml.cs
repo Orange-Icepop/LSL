@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -21,8 +22,10 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
     {
         InitializeComponent();
         this.Closing += MainWindow_Closing;// 重定向关闭窗口事件
-        this.Loaded += InitializeViews;
-        EventBus.Instance.Subscribe<ViewBroadcastArgs>(BroadcastHandler);
+        this.Loaded += (s,e)=> this.ViewModel!.InitializeMainWindow();
+        MessageBus.Current.Listen<ViewBroadcastArgs>()
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(BroadcastHandler);
         this.WhenActivated(action =>
         {
             action(this.ViewModel!.ITAUnits.PopupITA.RegisterHandler(HandlePopup));
@@ -42,16 +45,9 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
             FontSize = 12,
         };
     }
-    private void InitializeViews(object? sender, EventArgs e)
-    {
-        var shellViewModel = this.ViewModel!;
-        shellViewModel.InitializeMainWindow();
-    }
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
-        EventBus.Instance.Publish(new ClosingArgs());
-        bool EnableDaemon = (bool)ConfigManager.CurrentConfigs["daemon"];
-        if (EnableDaemon == true)
+        if (this.ViewModel!.CheckForExiting())
         {
             e.Cancel = true;
             this.Hide();
@@ -78,7 +74,7 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
             }
         }
     }
-
+    #region 显示通知
     private void ShowNotification(IInteractionContext<NotifyArgs, Unit> ITA)
     {
         var args = ITA.Input;
@@ -119,6 +115,9 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
         NotifyManager?.Show(new Notification(title, message, type));
         ITA.SetOutput(Unit.Default);
     }
+    #endregion
+
+    #region 弹窗
     private async Task HandlePopup(IInteractionContext<InvokePopupArgs, PopupResult> interaction)
     {
         var args = interaction.Input;
@@ -126,6 +125,7 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
         var result = await dialog.ShowDialog<PopupResult>(this);
         interaction.SetOutput(result);
     }
+    #endregion
 
     #region 文件选择
     private static FilePickerFileType CoreFileType { get; } = new("Minecraft服务器核心文件")

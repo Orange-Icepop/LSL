@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.ReactiveUI;
-using LSL.Services;
 
 namespace LSL.Desktop;
 
@@ -21,7 +20,6 @@ class Program
         }
         catch (NonfatalException ex)
         {
-            EventBus.Instance.PublishAsync(new PopupMessageArgs { Type = 4, Title = "非致命错误", Message = ex.Message });
             Debug.WriteLine(ex.ToString());
         }
     }
