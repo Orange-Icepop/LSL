@@ -6,6 +6,7 @@ using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Media;
+using Avalonia.Threading;
 using LSL.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -20,7 +21,11 @@ namespace LSL.ViewModels
             StopServerCmd = ReactiveCommand.Create(async () => await Connector.StopSelectedServer());
             SaveServerCmd = ReactiveCommand.Create(Connector.SaveSelectedServer);
             EndServerCmd = ReactiveCommand.Create(async () => await Connector.EndSelectedServer());
-            SendCommand = ReactiveCommand.Create(SendCommandToServer);
+            SendCommand = ReactiveCommand.Create(()=>
+            {
+                SendCommandToServer();
+                InputText = "";
+            });
 
             // SelectedServerId的变化触发的属性通知
             var idChanged = AppState.WhenAnyValue(AS => AS.SelectedServerId);
@@ -50,7 +55,6 @@ namespace LSL.ViewModels
                 )
                 .Publish()
                 .RefCount();
-
             // 处理按钮状态
             statusChanges.Subscribe(_ =>
             {
@@ -75,10 +79,14 @@ namespace LSL.ViewModels
                 string endless = value.TrimEnd('\r', '\n');
                 if (endless.Length < value.Length)
                 {
+                    _inputText = endless;
                     SendCommandToServer();
-                    this.RaiseAndSetIfChanged(ref _inputText, "");
+                    Dispatcher.UIThread.Post(() => this.RaiseAndSetIfChanged(ref _inputText, ""));// 避免编译时优化将赋值无效化
                 }
-                else this.RaiseAndSetIfChanged(ref _inputText, endless);
+                else 
+                {
+                    this.RaiseAndSetIfChanged(ref _inputText, endless); 
+                }
             }
         }
         public void StartSelectedServer()//启动服务器方法
@@ -95,22 +103,14 @@ namespace LSL.ViewModels
                 return;
             }
             Connector.SendCommandToServer(InputText);
-            InputText = "";
         }
 
         #endregion
 
         #region 服务器状态及其决定的操作
-        public bool LBCEnabled => CurrentStatus != null &&
-            !(CurrentStatus.IsRunning && !CurrentStatus.IsOnline);
-
-        public ICommand LaunchButtonCmd => CurrentStatus?.IsRunning == true
-            ? StopServerCmd
-            : StartServerCmd;
-
-        public string LaunchButtonContent => CurrentStatus?.IsRunning == true
-            ? "停止服务器"
-            : "启动服务器";
+        public bool LBCEnabled => CurrentStatus != null && !(CurrentStatus.IsRunning && !CurrentStatus.IsOnline);
+        public ICommand LaunchButtonCmd => CurrentStatus?.IsRunning == true ? StopServerCmd : StartServerCmd;
+        public string LaunchButtonContent => CurrentStatus?.IsRunning == true ? "停止服务器" : "启动服务器";
         public ServerStatus CurrentStatus { [ObservableAsProperty] get; }
         #endregion
 
