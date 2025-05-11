@@ -22,10 +22,11 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
     {
         InitializeComponent();
         this.Closing += MainWindow_Closing;// 重定向关闭窗口事件
-        this.Loaded += (s,e)=> this.ViewModel!.InitializeMainWindow();
+        this.Loaded += (s, e) => this.ViewModel!.InitializeMainWindow();
         MessageBus.Current.Listen<ViewBroadcastArgs>()
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(BroadcastHandler);
+                .Where(args => args.Target == "MainWindow.axaml.cs")
+                .Subscribe(args => BroadcastHandler(args.Message));
         this.WhenActivated(action =>
         {
             action(this.ViewModel!.ITAUnits.PopupITA.RegisterHandler(HandlePopup));
@@ -59,19 +60,16 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
     }
     #endregion
 
-    private void BroadcastHandler(ViewBroadcastArgs args)
+    private void BroadcastHandler(string arg)
     {
-        if (args.Target == "MainWindow.axaml.cs")
+        switch (arg)
         {
-            switch (args.Message)
-            {
-                case "Show":
-                    {
-                        this.Show();
-                        break;
-                    }
-                default: return;
-            }
+            case "Show":
+                {
+                    this.Show();
+                    break;
+                }
+            default: return;
         }
     }
     #region 显示通知

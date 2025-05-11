@@ -17,16 +17,16 @@ namespace LSL.ViewModels
         public ServerViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
             StartServerCmd = ReactiveCommand.Create(StartSelectedServer);
-            StopServerCmd = ReactiveCommand.Create(Connector.StopSelectedServer);
+            StopServerCmd = ReactiveCommand.Create(async () => await Connector.StopSelectedServer());
             SaveServerCmd = ReactiveCommand.Create(Connector.SaveSelectedServer);
-            EndServerCmd = ReactiveCommand.Create(Connector.EndSelectedServer);
+            EndServerCmd = ReactiveCommand.Create(async () => await Connector.EndSelectedServer());
             SendCommand = ReactiveCommand.Create(SendCommandToServer);
 
             // SelectedServerId的变化触发的属性通知
             var idChanged = AppState.WhenAnyValue(AS => AS.SelectedServerId);
             idChanged.Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
                 .ToPropertyEx(this, x => x.TerminalText);
-            idChanged.Select(id => new FlatTreeDataGridSource<UUID_User>(AppState.UserDict.GetOrAdd(id, [])) 
+            idChanged.Select(id => new FlatTreeDataGridSource<UUID_User>(AppState.UserDict.GetOrAdd(id, []))
             {
                 Columns =
                 {
@@ -39,13 +39,25 @@ namespace LSL.ViewModels
                 .ToPropertyEx(this, x => x.CurrentUserMessage);
             // status更新
             var statusFlow = idChanged.Select(id => AppState.ServerStatuses.GetOrAdd(id, new ServerStatus()));
-            statusFlow.Select(x => LBCEnabler(x))
-                .ToPropertyEx(this, x => x.LBCEnabled);
-            statusFlow.Select(x => LBCDicider(x))
-                .ToPropertyEx(this, x => x.LaunchButtonCmd);
-            statusFlow.Select(x => x.IsRunning ? "停止服务器" : "启动服务器")
-                .ToPropertyEx(this, x => x.LaunchButtonContent);
             statusFlow.ToPropertyEx(this, x => x.CurrentStatus);
+            // status连带更新
+            var statusChanges = this.WhenAnyValue(x => x.CurrentStatus)
+                .Where(status => status != null)
+                .SelectMany(status => status.WhenAnyValue(
+                    s => s.IsRunning,
+                    s => s.IsOnline,
+                    (running, online) => (running, online))
+                )
+                .Publish()
+                .RefCount();
+
+            // 处理按钮状态
+            statusChanges.Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(LBCEnabled));
+                this.RaisePropertyChanged(nameof(LaunchButtonCmd));
+                this.RaisePropertyChanged(nameof(LaunchButtonContent));
+            });
         }
 
         #region 控制
@@ -89,18 +101,16 @@ namespace LSL.ViewModels
         #endregion
 
         #region 服务器状态及其决定的操作
-        public ICommand LaunchButtonCmd { [ObservableAsProperty] get; }// 绑定到快捷操作钮的命令
-        private ICommand LBCDicider(ServerStatus param)
-        {
-            return param.IsRunning ? StopServerCmd : StartServerCmd;
-        }
-        private bool LBCEnabler(ServerStatus param)
-        {
-            if (param.IsRunning && !param.IsOnline) return false;
-            else return true;
-        }
-        public bool LBCEnabled { [ObservableAsProperty] get; }
-        public string LaunchButtonContent { [ObservableAsProperty] get; }
+        public bool LBCEnabled => CurrentStatus != null &&
+            !(CurrentStatus.IsRunning && !CurrentStatus.IsOnline);
+
+        public ICommand LaunchButtonCmd => CurrentStatus?.IsRunning == true
+            ? StopServerCmd
+            : StartServerCmd;
+
+        public string LaunchButtonContent => CurrentStatus?.IsRunning == true
+            ? "停止服务器"
+            : "启动服务器";
         public ServerStatus CurrentStatus { [ObservableAsProperty] get; }
         #endregion
 

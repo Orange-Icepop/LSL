@@ -1,5 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -20,6 +22,9 @@ namespace LSL.ViewModels
         {
             AppState = appState;
             EventBus.Instance.Subscribe<ColorOutputArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
+            EventBus.Instance.Subscribe<ServerStatusArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
+            EventBus.Instance.Subscribe<PlayerUpdateArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
+            EventBus.Instance.Subscribe<PlayerMessageArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
             Task.Run(() => HandleOutput(OutputCts.Token));
         }
 
@@ -72,17 +77,19 @@ namespace LSL.ViewModels
             AppState.TerminalTexts.TryAdd(AppState.SelectedServerId, new());
             ServerHost.Instance.RunServer(serverId);
         }
-        public void StopSelectedServer()
+        public async Task StopSelectedServer()
         {
-            ServerHost.Instance.StopServer(AppState.SelectedServerId);
+            var confirm = await AppState.ITAUnits.PopupITA.Handle(new(PopupType.Warning_YesNo, "警告", "确定要关闭该服务器吗？" + Environment.NewLine + "将会立刻踢出服务器内所有玩家，服务器上的最新更改会被保存。")).ToTask();
+            if (confirm == PopupResult.Yes) ServerHost.Instance.StopServer(AppState.SelectedServerId);
         }
         public void SaveSelectedServer()
         {
             ServerHost.Instance.SendCommand(AppState.SelectedServerId, "save-all");
         }
-        public void EndSelectedServer()
+        public async Task EndSelectedServer()
         {
-            ServerHost.Instance.EndServer(AppState.SelectedServerId);
+            var confirm = await AppState.ITAUnits.PopupITA.Handle(new(PopupType.Warning_YesNo, "警告", "确定要终止该服务端进程吗？" + Environment.NewLine + "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！")).ToTask();
+            if (confirm == PopupResult.Yes) ServerHost.Instance.EndServer(AppState.SelectedServerId);
         }
         public void SendCommandToServer(string command)
         {
@@ -107,7 +114,7 @@ namespace LSL.ViewModels
         #endregion
 
         #region 读取服务器输出
-        private readonly Channel<ColorOutputArgs> ServerOutputChannel = Channel.CreateUnbounded<ColorOutputArgs>();
+        private readonly Channel<IStorageArgs> ServerOutputChannel = Channel.CreateUnbounded<IStorageArgs>();
         private readonly CancellationTokenSource OutputCts = new();
         private async Task HandleOutput(CancellationToken token)
         {

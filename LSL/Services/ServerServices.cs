@@ -72,7 +72,7 @@ namespace LSL.Services
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
             ServerConfig config = ServerConfigManager.ServerConfigs[serverId];
             var SP = new ServerProcess(config);
-            SP.StatusEventHandler += async (sender, args) => await EventBus.Instance.PublishAsync(new ServerStatusArgs(serverId, args.Item1, args.Item2));
+            SP.StatusEventHandler += (sender, args) => EventBus.Instance.PublishAsync(new ServerStatusArgs(serverId, args.Item1, args.Item2));
             // 启动服务器
             try
             {
@@ -393,9 +393,9 @@ namespace LSL.Services
         #endregion
 
         #region 输出处理
-        private static readonly Regex GetDone = new(@"^\[.*\]\s*Done", RegexOptions.Compiled);
-        private static readonly Regex GetExit = new(@"^\[.*\]\s*Stopping\sthe\sserver", RegexOptions.Compiled);
-        private static readonly Regex GetPlayerMessage = new(@"^\<(?<player>.*)\>\s*(?<message>.*)", RegexOptions.Compiled);
+        private static readonly Regex GetDone = new(@"^\[.*\]:\s*Done", RegexOptions.Compiled);
+        private static readonly Regex GetExit = new(@"^\[.*\]:\s*Stopping\sthe\sserver", RegexOptions.Compiled);
+        private static readonly Regex GetPlayerMessage = new(@"^\[.*\]:\s*\<(?<player>.*)\>\s*(?<message>.*)", RegexOptions.Compiled);
         private void HandleOutput(string? Output)
         {
             if (!string.IsNullOrEmpty(Output) && !GetPlayerMessage.IsMatch(Output))

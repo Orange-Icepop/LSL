@@ -25,7 +25,7 @@ SubProject
 [ ] 修复添加服务器逻辑
 
 3、跨组件协作
-[ ] 将EventBus迁移到MessageBus
+[x] 将EventBus迁移到MessageBus
 [x] 新建跨组件有返回值无耦合的通信方式
 
 4、解决UI问题
