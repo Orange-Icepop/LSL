@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Threading;
 using LSL.Views;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -59,13 +60,16 @@ namespace LSL.ViewModels
                 case GeneralPageState.Settings:
                     SettingsButtonClass = true;
                     break;
-                case GeneralPageState.FullScreen:
-                    FSTitle = AppState.CurrentRightPage switch
+                case GeneralPageState.Empty:
+                    Dispatcher.UIThread.Post(() =>// 使用Post延迟操作以避免CRP未更新
                     {
-                        RightPageState.EditSC => "修改服务器配置",
-                        RightPageState.AddCore => "从核心添加服务器",
-                        _ => ""
-                    };
+                        FSTitle = AppState.CurrentRightPage switch
+                        {
+                            RightPageState.EditSC => "修改服务器配置",
+                            RightPageState.AddCore => "从核心添加服务器",
+                            _ => ""
+                        };
+                    });
                     break;
                 default:
                     break;

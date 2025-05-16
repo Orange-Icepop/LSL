@@ -47,7 +47,6 @@ namespace LSL.ViewModels
                     GeneralPageState.Server => 250,
                     GeneralPageState.Downloads => 150,
                     GeneralPageState.Settings => 150,
-                    GeneralPageState.FullScreen => 0,
                     _ => 150
                 };
                 LeftWidth = lw;

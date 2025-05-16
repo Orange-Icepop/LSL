@@ -1,7 +1,4 @@
 ﻿# LSL Development Info
-Cached:
-[x] 使ServerProcess类能够存储各服务器状态
-[ ] 完善输出存储与通知
 
 Master Priority：重新设计ViewModel的模式
 在github发行版中附带index.txt（或者json？）指明各个平台对应的文件名称
@@ -22,7 +19,6 @@ SubProject
 
 2、解决配置迁移
 [x] 使用WhenAnyValue监听ServerConfig和JavaList的变化，并更新对应的ObservableCollection
-[ ] 修复添加服务器逻辑
 
 3、跨组件协作
 [x] 将EventBus迁移到MessageBus
@@ -32,3 +28,7 @@ SubProject
 [x] 修复右栏的溢出问题
 [x] 将JavaInfo改用TreeDataGrid以优化卡顿，并添加样式
 [x] 为Popup配置边框样式
+
+5、功能修复
+[ ] 修复服务器添加逻辑
+[ ] 修复服务器删除逻辑

@@ -70,6 +70,7 @@
 				<Setter Property="Background" Value="{DynamicResource OBlueLight}"/>
 			</Style>
 		</Style>
+		<!--MyListItem按钮样式-->
 		<Style Selector="^.list">
 			<Setter Property="Template">
 				<ControlTemplate>
@@ -86,6 +87,29 @@
 			</Setter>
 			<Setter Property="BorderThickness" Value="0"/>
 			<Setter Property="FontSize" Value="15"/>
+		</Style>
+		<!--顶栏按钮样式-->
+		<Style Selector="^.bar">
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Border BorderBrush="{TemplateBinding BorderBrush}"
+							BorderThickness="{TemplateBinding BorderThickness}"
+							Background="{TemplateBinding Background}"
+							CornerRadius="5">
+						<ContentPresenter Content="{TemplateBinding Content}"
+										  ContentTemplate="{TemplateBinding ContentTemplate}"
+										  HorizontalAlignment="Left"
+										  VerticalAlignment="Center"/>
+					</Border>
+				</ControlTemplate>
+			</Setter>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="FontSize" Value="15"/>
+			<Style Selector="^:pointerover">
+				<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+				<Setter Property="Background" Value="{DynamicResource OBlueLight}"/>
+			</Style>
 		</Style>
 	</Style>
 

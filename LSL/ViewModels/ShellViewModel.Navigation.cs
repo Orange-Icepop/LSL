@@ -123,7 +123,6 @@ namespace LSL.ViewModels
         Server,
         Downloads,
         Settings,
-        FullScreen,
         Empty,
         Undefined
     }
