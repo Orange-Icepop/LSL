@@ -31,4 +31,4 @@ SubProject
 4、解决UI问题
 [x] 修复右栏的溢出问题
 [x] 将JavaInfo改用TreeDataGrid以优化卡顿，并添加样式
-[ ] 将Popup的配置字典化，并配置边框样式
+[x] 为Popup配置边框样式

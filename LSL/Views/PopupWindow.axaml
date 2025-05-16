@@ -6,6 +6,7 @@
         xmlns:views="clr-namespace:LSL.Views"
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="200"
         x:Class="LSL.Views.PopupWindow"
+		Icon="/Assets/icon.ico"
 		WindowStartupLocation="CenterOwner"
 		SizeToContent="WidthAndHeight"
 		ExtendClientAreaToDecorationsHint="True"

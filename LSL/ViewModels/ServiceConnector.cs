@@ -79,7 +79,7 @@ namespace LSL.ViewModels
         }
         public async Task StopSelectedServer()
         {
-            var confirm = await AppState.ITAUnits.PopupITA.Handle(new(PopupType.Warning_YesNo, "警告", "确定要关闭该服务器吗？" + Environment.NewLine + "将会立刻踢出服务器内所有玩家，服务器上的最新更改会被保存。")).ToTask();
+            var confirm = await AppState.ITAUnits.PopupITA.Handle(new(PopupType.Warning_YesNo, "确定要关闭该服务器吗？", "将会立刻踢出服务器内所有玩家，服务器上的最新更改会被保存。")).ToTask();
             if (confirm == PopupResult.Yes) ServerHost.Instance.StopServer(AppState.SelectedServerId);
         }
         public void SaveSelectedServer()
@@ -88,7 +88,7 @@ namespace LSL.ViewModels
         }
         public async Task EndSelectedServer()
         {
-            var confirm = await AppState.ITAUnits.PopupITA.Handle(new(PopupType.Warning_YesNo, "警告", "确定要终止该服务端进程吗？" + Environment.NewLine + "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！")).ToTask();
+            var confirm = await AppState.ITAUnits.PopupITA.Handle(new(PopupType.Warning_YesNo, "确定要终止该服务端进程吗？", "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！")).ToTask();
             if (confirm == PopupResult.Yes) ServerHost.Instance.EndServer(AppState.SelectedServerId);
         }
         public void SendCommandToServer(string command)
