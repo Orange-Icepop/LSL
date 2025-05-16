@@ -4,23 +4,24 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:LSL.Views"
-		Width="600" Height="300"
-        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="300"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="200"
         x:Class="LSL.Views.PopupWindow"
-		WindowStartupLocation="CenterOwner">
-	<Grid>
-		<Border Width="600"
-				Name="PopupBorder"
-				Padding="10"
-				VerticalAlignment="Center"
-				Background="White"
-				BorderThickness="4"
-				BorderBrush=""
-				CornerRadius="10">
-			<DockPanel>
-				<TextBlock Name="Message" DockPanel.Dock="Top" Margin="10" Text="" TextWrapping="Wrap" />
-				<DockPanel Name="Buttons" DockPanel.Dock="Bottom" Margin="10" />
-			</DockPanel>
-		</Border>
-	</Grid>
+		WindowStartupLocation="CenterOwner"
+		SizeToContent="WidthAndHeight"
+		ExtendClientAreaToDecorationsHint="True"
+		ExtendClientAreaChromeHints="NoChrome"
+		CanResize="False">
+	<Border	Name="PopupBorder"
+			Padding="10"
+			VerticalAlignment="Center"
+			Background="White"
+			BorderThickness="4"
+			BorderBrush=""
+			CornerRadius="10">
+		<StackPanel>
+			<TextBlock Name="Topic" Margin="10" FontSize="20"/>
+			<SelectableTextBlock Name="Message" Margin="10" Text="" TextWrapping="Wrap" />
+			<StackPanel Name="Buttons" Margin="10" Orientation="Horizontal" FlowDirection="RightToLeft" />
+		</StackPanel>
+	</Border>
 </Window>
