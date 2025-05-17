@@ -63,7 +63,7 @@ namespace LSL.Components
             }
         }
 
-        #region ´ÓÂ·¾¶¼ÓÔØÍ¼Æ¬
+        #region ä»è·¯å¾„åŠ è½½å›¾ç‰‡
         private async void LoadImage(string path)
         {
             try

@@ -3,38 +3,89 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
+             xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
+             xmlns:vm="using:LSL.ViewModels"
+             x:DataType="vm:ShellViewModel"
              x:Class="LSL.Views.Download.ASViews.AddCore">
-	<StackPanel>
-		<local:MyCard Text="从核心添加服务器">
-			<StackPanel Margin="25,10,25,15">
-				<DockPanel Margin="30,50,0,5">
-					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器名称</TextBlock>
-					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewServerName}"></TextBox>
-				</DockPanel>
-				<DockPanel Margin="30,10,0,5">
-					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">核心文件</TextBlock>
-					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding CorePath, Mode=TwoWay}"/>
-					<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" Command="{Binding OpenCoreCmd}" Width="100" Height="30" Margin="10,0,10,0">选择核心</local:MyButton>
-				</DockPanel>
-				<DockPanel Margin="30,10,0,5">
-					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">内存大小</TextBlock>
-					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Text="{Binding MinMemory}"/>
-					<TextBlock VerticalAlignment="Center" Margin="10,0,10,0">MB ~</TextBlock>
-					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Text="{Binding MaxMemory}"/>
-					<TextBlock VerticalAlignment="Center" Margin="10,0,10,0">MB</TextBlock>
-				</DockPanel>
-				<DockPanel Margin="30,10,0,5">
-					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">Java选择</TextBlock>
-					<ComboBox Name="Java" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding AddingJavaList}" SelectedIndex="{Binding JavaId}"/>
-					<local:MyButton Name="GetJavaBtn" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Height="30" Margin="10,0,0,0" Command="{Binding SearchJava}">搜索Java</local:MyButton>
-				</DockPanel>
-				<DockPanel Margin="30,10,0,5">
-					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0">附加JVM参数（慎填）</TextBlock>
-					<TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding ExtJvm}"/>
-				</DockPanel>
-				<local:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Height="30" Margin="30,10,0,5" ColorType="Highlight" Command="{Binding ConfirmAddServer}">确认添加</local:MyButton>
-			</StackPanel>
-		</local:MyCard>
-	</StackPanel>
+    <ScrollViewer>
+        <StackPanel>
+            <local:MyCard Text="从核心添加服务器">
+                <StackPanel Margin="25,10,25,15">
+                    <StackPanel Margin="30,50,0,5">
+                        <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器名称</TextBlock>
+                        <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300"
+                                 Text="{Binding FormVM.ServerName}">
+                        </TextBox>
+                    </StackPanel>
+                    <StackPanel Margin="30,10,0,5">
+                        <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">核心文件</TextBlock>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300"
+                                     Text="{Binding FormVM.CorePath}" />
+                            <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left"
+                                            Command="{Binding FormVM.SelectCoreCmd}" Width="100" Height="30"
+                                            Margin="10,0,10,0">
+                                选择核心
+                            </local:MyButton>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Margin="30,10,0,5">
+                        <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">内存大小</TextBlock>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
+                                     Text="{Binding FormVM.MinMem}" />
+                            <TextBlock VerticalAlignment="Center" Margin="10,0,10,0">MB ~</TextBlock>
+                            <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
+                                     Text="{Binding FormVM.MaxMem}" />
+                            <TextBlock VerticalAlignment="Center" Margin="10,0,10,0">MB</TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Margin="30,10,0,5">
+                        <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">Java路径</TextBlock>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox HorizontalAlignment="Left" Width="450" Text="{Binding FormVM.JavaPath}" />
+                            <Border Background="#ffffff">
+                                <Path Data="M14,7 A7,7 0 0,0 0,7 M0,7 A7,7 0 1,0 14,7 M7,3l0,2 M7,6l0,5"
+                                      VerticalAlignment="Center"
+                                      Margin="10"
+                                      Stroke="#019eff"
+                                      StrokeThickness="2">
+                                </Path>
+                                <ToolTip.Tip>
+                                    <TextBlock>
+                                        出于性能考虑，不会即时检查目标可执行文件是否为Java。在提交表单时将会进行检查。
+                                    </TextBlock>
+                                </ToolTip.Tip>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Margin="0,0,10,0" FontSize="10" Foreground="Gray">从搜索到的Java中选择</TextBlock>
+                        <StackPanel Orientation="Horizontal">
+                            <ComboBox Name="Java"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Left"
+                                      Width="300"
+                                      ItemsSource="{Binding FormVM.JavaList}"
+                                      SelectedIndex="{Binding FormVM.SelectedJavaIndex}">
+                            </ComboBox>
+                            <local:MyButton Name="GetJavaBtn" VerticalAlignment="Center" HorizontalAlignment="Left"
+                                            Width="100"
+                                            Height="30" Margin="10,0,0,0" Command="{Binding PublicCmd.SearchJava}">
+                                搜索Java
+                            </local:MyButton>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Margin="30,10,0,5">
+                        <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">附加JVM参数（慎填）</TextBlock>
+                        <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300"
+                                 Text="{Binding FormVM.ExtJvm}" />
+                    </StackPanel>
+                    <local:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
+                                    Height="30" Margin="30,10,0,5" ColorType="Highlight"
+                                    Command="{Binding FormVM.AddServerCmd}">
+                        确认添加
+                    </local:MyButton>
+                </StackPanel>
+            </local:MyCard>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

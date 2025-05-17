@@ -71,24 +71,15 @@ namespace LSL.Services.Validators
         #endregion
 
         #region 服务器配置验证方法 VerifyServerConfig(Dictionary<string, object> config)
-        public static List<VerifyResult> VerifyServerConfig(Dictionary<string, string> config)
+        public static List<VerifyResult> VerifyServerConfig(FormedServerConfig config)
         {
             var result = new List<VerifyResult>();
-            foreach (var item in config)
-            {
-                VerifyResult resCache;
-                switch (item.Key)
-                {
-                    case "ServerName": resCache = CheckComponents.ServerName(item.Value); break;
-                    case "JavaPath": resCache = CheckComponents.JavaPath(item.Value); break;
-                    case "CorePath": resCache = CheckComponents.CorePath(item.Value); break;
-                    case "MinMem": resCache = CheckComponents.MinMem(item.Value); break;
-                    case "MaxMem": resCache = CheckComponents.MinMem(item.Value); break;
-                    case "ExtJvm": resCache = CheckComponents.ExtJvm(item.Value); break;
-                    default: resCache = new VerifyResult(item.Key, false, "未知配置项"); break;
-                }
-                result.Add(resCache);
-            }
+            result.Add(CheckComponents.ServerName(config.ServerName));
+            result.Add(CheckComponents.JavaPath(config.JavaPath));
+            result.Add(CheckComponents.CorePath(config.CorePath));
+            result.Add(CheckComponents.MaxMem(config.MaxMem));
+            result.Add(CheckComponents.MinMem(config.MinMem));
+            result.Add(CheckComponents.ExtJvm(config.ExtJvm));
             return result;
         }
 
@@ -118,7 +109,7 @@ namespace LSL.Services.Validators
             return !path.Any(c => invalidChars.Contains(c));
         }
 
-        public static bool IsValidJavaPath(string? javaPath) //校验Java路径
+        public static bool IsValidJava(string? javaPath) //校验Java路径并确认可执行
         {
             if (!IsValidPath(javaPath)) return false;
             else if (!File.Exists(javaPath)) return false;
@@ -139,7 +130,6 @@ namespace LSL.Services.Validators
         {
             if (!IsValidPath(path)) return new VerifyResult("JavaPath", false, "Java路径不可为空或为非法路径");
             else if (!File.Exists(path)) return new VerifyResult("JavaPath", false, "选定的Java不存在");
-            else if (!IsValidJavaPath(path)) return new VerifyResult("JavaPath", false, "选定的文件不是有效的Java");
             else return new VerifyResult("JavaPath", true, null);
         }
 

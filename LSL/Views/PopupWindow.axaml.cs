@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Windows.Input;
@@ -19,46 +20,59 @@ namespace LSL.Views
             this.Message.Text = content;
             SetButton(type);
         }
+
         private void SetButton(PopupType type)
         {
             switch (type)
             {
                 case PopupType.Info_Confirm:
-                    {
-                        this.Title = "ÌáÊ¾";
-                        this.PopupBorder.BorderBrush = new SolidColorBrush(Color.Parse("#019eff"));
-                        AddButton("Highlight", "È·¶¨", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
-                        break;
-                    }
+                {
+                    this.Title = "æç¤º";
+                    this.PopupBorder.BorderBrush = new SolidColorBrush(Color.Parse("#019eff"));
+                    AddButton("Highlight", "ç¡®å®š", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
+                    break;
+                }
+                case PopupType.Info_YesNo:
+                {
+                    this.Title = "æç¤º";
+                    this.PopupBorder.BorderBrush = new SolidColorBrush(Color.Parse("#019eff"));
+                    AddButton("Highlight", "å¦", ReactiveCommand.Create(() => Close(PopupResult.No)));
+                    AddButton("Default", "æ˜¯", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
+                    break;
+                }
                 case PopupType.Error_Confirm:
-                    {
-                        this.Title = "´íÎó";
-                        this.PopupBorder.BorderBrush = new SolidColorBrush(Colors.Red);
-                        AddButton("Red", "È·¶¨", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
-                        break;
-                    }
+                {
+                    this.Title = "é”™è¯¯";
+                    this.PopupBorder.BorderBrush = new SolidColorBrush(Colors.Red);
+                    AddButton("Red", "ç¡®å®š", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
+                    break;
+                }
                 case PopupType.Warning_YesNo:
-                    {
-                        this.Title = "¾¯¸æ";
-                        this.PopupBorder.BorderBrush = new SolidColorBrush(Colors.Yellow);
-                        AddButton("Default", "·ñ", ReactiveCommand.Create(() => Close(PopupResult.No)));
-                        AddButton("Highlight", "ÊÇ", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
-                        break;
-                    }
+                {
+                    this.Title = "è­¦å‘Š";
+                    this.PopupBorder.BorderBrush = new SolidColorBrush(Colors.Yellow);
+                    AddButton("Default", "å¦", ReactiveCommand.Create(() => Close(PopupResult.No)));
+                    AddButton("Highlight", "æ˜¯", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
+                    break;
+                }
                 case PopupType.Warning_YesNoCancel:
-                    {
-                        this.Title = "¾¯¸æ";
-                        this.PopupBorder.BorderBrush = new SolidColorBrush(Colors.Yellow);
-                        AddButton("Default", "È¡Ïû", ReactiveCommand.Create(() => Close(PopupResult.Cancel)));
-                        AddButton("Default", "·ñ", ReactiveCommand.Create(() => Close(PopupResult.No)));
-                        AddButton("Highlight", "ÊÇ", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
-                        break;
-                    }
+                {
+                    this.Title = "è­¦å‘Š";
+                    this.PopupBorder.BorderBrush = new SolidColorBrush(Colors.Yellow);
+                    AddButton("Default", "å–æ¶ˆ", ReactiveCommand.Create(() => Close(PopupResult.Cancel)));
+                    AddButton("Default", "å¦", ReactiveCommand.Create(() => Close(PopupResult.No)));
+                    AddButton("Highlight", "æ˜¯", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
+                    break;
+                }
+                default:
+                    throw new ArgumentException("æœªå¤„ç†çš„å¼¹çª—ç±»å‹ï¼Œå¼€å‘é”™è¯¯");
             }
         }
+
         private void AddButton(string color, string content, ICommand command)
         {
-            this.Buttons.Children.Add(new MyButton(color, content, command) { Width = 100, Height = 30, Margin = Thickness.Parse("10") });
+            this.Buttons.Children.Add(new MyButton(color, content, command)
+                { Width = 100, Height = 30, Margin = Thickness.Parse("10") });
         }
     }
 }

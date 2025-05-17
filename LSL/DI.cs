@@ -21,6 +21,7 @@ namespace LSL
             collection.AddSingleton<RightRegionVM>();
             collection.AddSingleton<ConfigViewModel>();
             collection.AddSingleton<ServerViewModel>();
+            collection.AddSingleton<FormPageVM>();
             collection.AddSingleton<ShellViewModel>();
         }
     }

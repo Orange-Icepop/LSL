@@ -16,6 +16,7 @@ namespace LSL.ViewModels
         public RightRegionVM RightVM { get; }
         public ConfigViewModel ConfigVM { get; }
         public ServerViewModel ServerVM { get; }
+        public FormPageVM FormVM { get; }
         public PublicCommand PublicCmd { get; }
         // 弹窗交互，这玩意儿和上面的东西没关系
         public InteractionUnits ITAUnits { get; }
@@ -28,6 +29,7 @@ namespace LSL.ViewModels
             RightRegionVM rightVM,
             ConfigViewModel configVM,
             ServerViewModel serverVM,
+            FormPageVM formVM,
             PublicCommand publicCommand,
             InteractionUnits ITA
             )
@@ -39,6 +41,7 @@ namespace LSL.ViewModels
             RightVM = rightVM;
             ConfigVM = configVM;
             ServerVM = serverVM;
+            FormVM = formVM;
             PublicCmd = publicCommand;
             ITAUnits = ITA;
 

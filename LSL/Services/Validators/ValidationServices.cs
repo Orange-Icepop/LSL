@@ -73,6 +73,22 @@ namespace LSL.Services.Validators
         }
     }
 
+    public class JavaPathValidator : ValidationAttribute // Java路径验证器
+    {
+        protected override ValidationResult IsValid(object? value, ValidationContext context)
+        {
+            var result = CheckComponents.JavaPath(value as string);
+            if (result.Passed)
+            {
+                return ValidationResult.Success;
+            }
+            else
+            {
+                return new ValidationResult(result.Reason);
+            }
+        }
+    }
+
     public class ExtJvmValidator : ValidationAttribute // 扩展参数验证器
     {
         protected override ValidationResult IsValid(object? value, ValidationContext context)

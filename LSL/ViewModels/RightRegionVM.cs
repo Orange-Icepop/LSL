@@ -25,7 +25,7 @@ namespace LSL.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(e =>
                 {
-                    if (e.Type == NavigateCommandType.Refresh)
+                    if (e.CommandType == NavigateCommandType.Refresh)
                         MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Undefined, LeftTarget = GeneralPageState.Undefined, RightTarget = AppState.CurrentRightPage });
                 });
         }

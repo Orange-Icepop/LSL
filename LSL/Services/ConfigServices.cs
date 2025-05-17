@@ -370,21 +370,21 @@ namespace LSL.Services
             try
             {
                 mainFile = File.ReadAllText(ConfigManager.ServerConfigPath);
-                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return new();
+                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return new ServiceError();
             }
             catch (FileNotFoundException)
             {
-                return new(2, $"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。");
+                return new ServiceError(2, $"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。");
             }
             try
             {
                 var configs = JsonConvert.DeserializeObject<Dictionary<int, string>>(mainFile);
-                if (configs is null) return new(2, $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
+                if (configs is null) return new ServiceError(2, $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
                 else MainServerConfig = configs;
             }
             catch (JsonException)
             {
-                return new(2, $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
+                return new ServiceError(2, $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
             }
             // 读取各个服务器的LSL配置文件
             foreach (var config in MainServerConfig)
@@ -436,7 +436,7 @@ namespace LSL.Services
         #endregion
 
         #region 注册服务器方法RegisterServer
-        public static void RegisterServer(string serverName, string usingJava, string corePath, uint minMem, uint maxMem, string extJVM)
+        public static void RegisterServer(string serverName, string usingJava, string corePath, uint maxMem, uint minMem, string extJVM)
         {
             if (!File.Exists(ConfigManager.ServerConfigPath))
             {
@@ -519,43 +519,6 @@ namespace LSL.Services
         #endregion
 
     }
-
-    #region 服务器配置记录
-    public class ServerConfig
-    {
-        public int server_id;
-        public string server_path;
-        public string name;
-        public string using_java;
-        public string core_name;
-        public uint min_memory;
-        public uint max_memory;
-        public string ext_jvm;
-        public ServerConfig(int ServerId, string ServerPath, string Name, string UsingJava, string CoreName, uint MinMemory, uint MaxMemory, string ExtJVM)
-        {
-            this.server_id = ServerId;
-            this.server_path = ServerPath;
-            this.name = Name;
-            this.using_java = UsingJava;
-            this.core_name = CoreName;
-            this.min_memory = MinMemory;
-            this.max_memory = MaxMemory;
-            this.ext_jvm = ExtJVM;
-        }
-
-        public ServerConfig(ServerConfig config)// 深拷贝构造函数
-        {
-            this.server_id = config.server_id;
-            this.server_path = config.server_path;
-            this.name = config.name;
-            this.using_java = config.using_java;
-            this.core_name = config.core_name;
-            this.min_memory = config.min_memory;
-            this.max_memory = config.max_memory;
-            this.ext_jvm = config.ext_jvm;
-        }
-    }
-    #endregion
 
     public static class JavaManager//Java相关服务
     {

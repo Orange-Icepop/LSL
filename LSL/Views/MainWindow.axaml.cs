@@ -131,7 +131,7 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
         Patterns = new[] { "*.jar" },
         MimeTypes = new[] { "application/java-archive" }
     };
-    public async Task OpenFileOperation(IInteractionContext<Unit, string> ITA)
+    public async Task OpenFileOperation(IInteractionContext<FilePickerType, string> ITA)
     {
         // 启动异步操作以打开对话框。
         var files = await this.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
@@ -149,5 +149,12 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
         else ITA.SetOutput(string.Empty);
     }
     #endregion
+
+}
+
+public enum FilePickerType
+{
+    CoreFile,
+    ZipFile,
 
 }

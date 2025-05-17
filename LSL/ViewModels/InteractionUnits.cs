@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reactive;
 using LSL.Services;
+using LSL.Views;
 using ReactiveUI;
 
 namespace LSL.ViewModels
@@ -9,11 +10,13 @@ namespace LSL.ViewModels
     {
         public Interaction<InvokePopupArgs, PopupResult> PopupITA { get; } = new();
         public Interaction<NotifyArgs, Unit> NotifyITA { get; } = new();
-        public Interaction<Unit, string> FilePickerITA { get; } = new();
-        public IObservable<PopupResult> ThrowError(string message)
+        public Interaction<FilePickerType, string> FilePickerITA { get; } = new();
+
+        public IObservable<PopupResult> ThrowError(string title, string message)
         {
-            return PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "非致命错误", message));
+            return PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, title, message));
         }
+
         public void ShowServiceError(ServiceError error)
         {
             if (error.ErrorCode == 0) return;
@@ -29,6 +32,7 @@ namespace LSL.ViewModels
             }
         }
     }
+
     public enum PopupType
     {
         Info_Confirm,
@@ -37,6 +41,7 @@ namespace LSL.ViewModels
         Warning_YesNo,
         Error_Confirm,
     }
+
     public enum PopupResult
     {
         Confirm,
@@ -44,6 +49,6 @@ namespace LSL.ViewModels
         No,
         Cancel,
     }
-    public record InvokePopupArgs(PopupType PType, string PTitle, string PContent);
 
+    public record InvokePopupArgs(PopupType PType, string PTitle, string PContent);
 }

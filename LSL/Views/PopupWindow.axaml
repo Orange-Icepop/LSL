@@ -17,7 +17,6 @@
 			VerticalAlignment="Center"
 			Background="White"
 			BorderThickness="4"
-			BorderBrush=""
 			CornerRadius="10">
 		<StackPanel>
 			<TextBlock Name="Topic" Margin="10" FontSize="20"/>

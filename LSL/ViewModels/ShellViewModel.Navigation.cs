@@ -12,21 +12,25 @@ namespace LSL.ViewModels
 {
     public partial class ShellViewModel
     {
+        #region å¯¼èˆªç›¸å…³
 
-        #region µ¼º½Ïà¹Ø
-        //´´½¨ÇĞ»»´¥·¢·½·¨
+        //åˆ›å»ºåˆ‡æ¢è§¦å‘æ–¹æ³•
         public ICommand LeftViewCmd { get; }
         public ICommand RightViewCmd { get; }
         public ICommand FullViewCmd { get; set; }
+
         public ICommand FullViewBackCmd { get; set; }
-        //ÕâÒ»²¿·ÖÊÇ¶à²ÎÊıµ¼º½°´Å¥µÄ²¿·Ö£¬ÓÉÓÚÉèÖÃ±ğµÄVM»áµ¼ÖÂ¶ÑÕ»Òç³öÇÒÔİÊ±Ã»ÕÒµ½Ìæ´ú·½°¸£¬ËùÒÔÏÈ°ÚÁË
-        //»¹ÓĞ¾ÍÊÇ±¾À´Ï£Íû¿ÉÒÔ´´½¨Ò»¸ö·½·¨À´´«µİÁ½¸ö²ÎÊıµÄ£¬µ«ÊÇÌ«Âé·³ÁË£¬»¹ÊÇÏÈ¸éÖÃÁË
+
+        //è¿™ä¸€éƒ¨åˆ†æ˜¯å¤šå‚æ•°å¯¼èˆªæŒ‰é’®çš„éƒ¨åˆ†ï¼Œç”±äºè®¾ç½®åˆ«çš„VMä¼šå¯¼è‡´å †æ ˆæº¢å‡ºä¸”æš‚æ—¶æ²¡æ‰¾åˆ°æ›¿ä»£æ–¹æ¡ˆï¼Œæ‰€ä»¥å…ˆæ‘†äº†
+        //è¿˜æœ‰å°±æ˜¯æœ¬æ¥å¸Œæœ›å¯ä»¥åˆ›å»ºä¸€ä¸ªæ–¹æ³•æ¥ä¼ é€’ä¸¤ä¸ªå‚æ•°çš„ï¼Œä½†æ˜¯å¤ªéº»çƒ¦äº†ï¼Œè¿˜æ˜¯å…ˆæç½®äº†
         public ICommand PanelConfigCmd { get; }
         public ICommand DownloadConfigCmd { get; }
         public ICommand CommonConfigCmd { get; }
+
         #endregion
 
-        #region ×óÊÓÍ¼ÇĞ»»ÃüÁî
+        #region å·¦è§†å›¾åˆ‡æ¢å‘½ä»¤
+
         public void NavigateLeftView(string viewName, bool dislink = false)
         {
             GeneralPageState gps = GeneralPageState.Undefined;
@@ -54,11 +58,14 @@ namespace LSL.ViewModels
                         rps = RightPageState.Common;
                     break;
             }
+
             NavigateToPage(gps, rps);
         }
+
         #endregion
 
-        #region ÓÒÊÓÍ¼ÇĞ»»ÃüÁî
+        #region å³è§†å›¾åˆ‡æ¢å‘½ä»¤
+
         public void NavigateRightView(string viewName, bool force = false)
         {
             if (Enum.TryParse<RightPageState>(viewName, out var RV))
@@ -67,9 +74,11 @@ namespace LSL.ViewModels
             }
             else Debug.WriteLine("Unknown right page name");
         }
+
         #endregion
 
-        #region ÊÓÍ¼ÇĞ»»ÃüÁî
+        #region è§†å›¾åˆ‡æ¢å‘½ä»¤
+
         public void NavigateToPage(GeneralPageState gps, RightPageState rps, bool force = false)
         {
             if (gps == AppState.CurrentGeneralPage && !force) return;
@@ -78,45 +87,57 @@ namespace LSL.ViewModels
             {
                 if (AppState.CurrentGeneralPage == GeneralPageState.Settings) ConfigVM.ConfirmConfig();
                 if (gps == GeneralPageState.Settings) ConfigVM.GetConfig();
-                MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Undefined, LeftTarget = gps, RightTarget = rps });
+                MessageBus.Current.SendMessage(new NavigateArgs
+                    { BarTarget = BarState.Undefined, LeftTarget = gps, RightTarget = rps });
                 Debug.WriteLine("Page Switched:" + gps.ToString() + ", " + rps.ToString());
             }
         }
+
         #endregion
 
-        #region È«ÆÁÊÓÍ¼ÇĞ»»ÃüÁî
+        #region å…¨å±è§†å›¾åˆ‡æ¢å‘½ä»¤
+
         public void NavigateFullScreenView(string viewName)
         {
-            FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateCommand { Type = NavigateCommandType.FS2Common }));
+            FullViewBackCmd = ReactiveCommand.Create(() =>
+                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FS2Common)));
             if (!Enum.TryParse<RightPageState>(viewName, out var RV)) return;
             else if (RV == RightPageState.AddCore || RV == RightPageState.EditSC)
             {
-                MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RV });
+                MessageBus.Current.SendMessage(new NavigateArgs
+                    { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RV });
                 //if (RV == RightPageState.AddCore) MainVM.LoadNewServerConfig();//TODO
                 //if (RV == RightPageState.EditSC) MainVM.LoadCurrentServerConfig();
                 Debug.WriteLine("Successfully navigated to " + viewName);
             }
             else Debug.WriteLine("This view is not a fullscreen view: " + viewName);
         }
+
         #endregion
 
-        #region ÓÒÊÓÍ¼Ç¿ÖÆË¢ĞÂÃüÁî
+        #region å³è§†å›¾å¼ºåˆ¶åˆ·æ–°å‘½ä»¤
+
         public void RefreshRightView()
         {
             var original = AppState.CurrentRightPage;
-            MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Undefined, LeftTarget = GeneralPageState.Undefined, RightTarget = original });
-            MessageBus.Current.SendMessage(new ViewBroadcastArgs { Target = "ServerTerminal.axaml.cs", Message = "ScrollToEnd" });
+            MessageBus.Current.SendMessage(new NavigateArgs
+                { BarTarget = BarState.Undefined, LeftTarget = GeneralPageState.Undefined, RightTarget = original });
+            MessageBus.Current.SendMessage(new ViewBroadcastArgs
+                { Target = "ServerTerminal.axaml.cs", Message = "ScrollToEnd" });
         }
+
         #endregion
     }
 
-    #region Ò³Ãæ×´Ì¬Ã¶¾Ù
+    #region é¡µé¢çŠ¶æ€æšä¸¾
+
     public enum BarState
     {
         Common,
         FullScreen,
         Undefined
     }
+
     public enum GeneralPageState
     {
         Home,
@@ -126,28 +147,34 @@ namespace LSL.ViewModels
         Empty,
         Undefined
     }
+
     public enum RightPageState
     {
         HomeRight,
+
         //Server
         ServerGeneral,
         ServerStat,
         ServerTerminal,
         ServerConf,
+
         //Downloads
         AutoDown,
         ManualDown,
         AddServer,
         ModDown,
+
         //Settings
         Common,
         DownloadSettings,
         PanelSettings,
         StyleSettings,
         About,
+
         //FullScreen
         EditSC,
         AddCore,
+
         //Others
         Empty,
         Undefined,
@@ -160,5 +187,6 @@ namespace LSL.ViewModels
         Refresh,
         FS2Common
     }
+
     #endregion
 }

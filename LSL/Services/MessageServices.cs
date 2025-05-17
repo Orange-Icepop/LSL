@@ -145,38 +145,6 @@ namespace LSL.Services
     EventBus.Instance.Subscribe<【事件类名】>(【事件处理器方法】);
     */
 
-    // 以下事件类仅用于视图层内部通信
-    // 到时候前后端分离了直接挪到视图层
-    // 使用ReactiveUI.MessageBus
-    #region 事件类
-    public record NotifyArgs(int Type, string? Title, string? Message);// 通知条事件
-
-    public class ViewBroadcastArgs// 广播事件
-    {
-        public required string Target { get; set; }
-        public required string Message { get; set; }
-    }
-
-    public class NavigateArgs
-    {
-        public required BarState BarTarget { get; set; } = BarState.Undefined;
-        public required GeneralPageState LeftTarget { get; set; } = GeneralPageState.Undefined;
-        public required RightPageState RightTarget { get; set; } = RightPageState.Undefined;
-    }
-
-    public class NavigateCommand
-    {
-        public NavigateCommandType Type { get; set; } = NavigateCommandType.None;
-    }
-
-    public class PopupArgs(int type, string title, string message)
-    {
-        public int Type { get; set; } = type;
-        public string Title { get; set; } = title;
-        public string Message { get; set; } = message;
-    }
-    #endregion
-
     #region 带返回值的远程调用
     /* 这个类其实没设么用
      * 等到时候IPC搞出来直接JSON通信

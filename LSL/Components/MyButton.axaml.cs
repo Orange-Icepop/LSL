@@ -23,7 +23,7 @@ namespace LSL.Components
         }
         static MyButton()
         {
-            // Äã¿ÉÒÔÔÚÕâÀï×¢²á¸½¼ÓÊôĞÔ£¬Èç¹ûĞèÒªµÄ»°  
+            // ä½ å¯ä»¥åœ¨è¿™é‡Œæ³¨å†Œé™„åŠ å±æ€§ï¼Œå¦‚æœéœ€è¦çš„è¯  
         }
 
         public MyButton()
@@ -40,7 +40,7 @@ namespace LSL.Components
             this.Initialized += (s, e) => UpdateStyles();
         }
 
-        //¸ù¾İColorType¸ü¸Ä°´Å¥ÑùÊ½
+        //æ ¹æ®ColorTypeæ›´æ”¹æŒ‰é’®æ ·å¼
         private void UpdateStyles()
         {
             switch (ColorType)
