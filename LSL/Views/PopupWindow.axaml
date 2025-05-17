@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:LSL.Views"
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="200"
+        MaxWidth="1000" MaxHeight="500"
         x:Class="LSL.Views.PopupWindow"
 		Icon="/Assets/icon.ico"
 		WindowStartupLocation="CenterOwner"

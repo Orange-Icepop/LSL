@@ -74,7 +74,8 @@ namespace LSL.ViewModels
             string result = await AppState.ITAUnits.FilePickerITA.Handle(Views.FilePickerType.CoreFile).ToTask();
             await Dispatcher.UIThread.InvokeAsync(() => { CorePath = result; });
         }
-
+        
+        #region 新增服务器逻辑
         private async Task AddServer()
         {
             FormedServerConfig ServerInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
@@ -104,5 +105,7 @@ namespace LSL.ViewModels
                 }
             }
         }
+        #endregion
+        
     }
 }

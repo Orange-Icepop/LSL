@@ -24,25 +24,33 @@ namespace LSL.ViewModels
                 .Subscribe(args => Navigate(args));
             MessageBus.Current.Listen<NavigateCommand>()
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Where(args => args.CommandType == NavigateCommandType.FS2Common)
-                .Subscribe(_ => Navigate(new NavigateArgs
-                    { BarTarget = LastPage.Item1, LeftTarget = LastPage.Item2, RightTarget = LastPage.Item3 }));
+                .Select(arg => arg.CommandType)
+                .Subscribe(NavigateCommandHandler);
             this.WhenAnyValue(AS => AS.CurrentServerConfigs)
                 .Select(s => new ObservableCollection<int>(s.Keys))
                 .ToPropertyEx(this, x => x.ServerIDs);
             this.WhenAnyValue(AS => AS.CurrentServerConfigs)
                 .Select(s => new ObservableCollection<string>(s.Values.Select(v => v.name)))
                 .ToPropertyEx(this, x => x.ServerNames);
+            var indexChanged = this.WhenAnyValue(AS => AS.SelectedServerIndex);
+            indexChanged.Subscribe(_ => MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh)));
+            indexChanged.Select(index => index < ServerIDs.Count ? ServerIDs[index] : -1) 
+                .ToPropertyEx(this, x => x.SelectedServerId);
         }
 
         #region 导航相关
 
-        [Reactive] public BarState CurrentBarState { get; private set; }
-        [Reactive] public GeneralPageState CurrentGeneralPage { get; private set; }
-        [Reactive] public RightPageState CurrentRightPage { get; private set; }
+        [Reactive] public BarState CurrentBarState { get; set; }
+        [Reactive] public GeneralPageState CurrentGeneralPage { get; set; }
+        [Reactive] public RightPageState CurrentRightPage { get; set; }
 
         private (BarState, GeneralPageState, RightPageState) LastPage = (BarState.Common, GeneralPageState.Undefined,
             RightPageState.Undefined);
+
+        private void Navigate(BarState bar, GeneralPageState gen, RightPageState right)
+        {
+            Navigate(new NavigateArgs() { BarTarget = bar, LeftTarget = gen, RightTarget = right });
+        }
 
         private void Navigate(NavigateArgs args) // ASL不负责查重操作
         {
@@ -87,6 +95,25 @@ namespace LSL.ViewModels
             LastPage = _lastPage;
         }
 
+        private void NavigateCommandHandler(NavigateCommandType command)
+        {
+            switch (command)
+            {
+                case NavigateCommandType.FS2Common:
+                    Navigate(LastPage.Item1, LastPage.Item2, LastPage.Item3);
+                    break;
+                case NavigateCommandType.Refresh:
+                {
+                    var last = CurrentRightPage;
+                    Navigate(BarState.Undefined, GeneralPageState.Undefined, RightPageState.Empty);
+                    Navigate(BarState.Undefined, GeneralPageState.Undefined, last);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
         #endregion
 
         #region 配置相关
@@ -99,17 +126,7 @@ namespace LSL.ViewModels
 
         #region 选项相关
 
-        private int _selectedServerIndex; // 当前选中的服务器在列表中的位置，用于绑定到View
-
-        public int SelectedServerIndex
-        {
-            get => _selectedServerIndex;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _selectedServerIndex, value);
-                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh));
-            }
-        }
+        [Reactive] public int SelectedServerIndex { get; set; }
 
         public int SelectedServerId { [ObservableAsProperty] get; }
         public ObservableCollection<int> ServerIDs { [ObservableAsProperty] get; }

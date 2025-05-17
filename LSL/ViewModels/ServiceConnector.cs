@@ -73,9 +73,8 @@ namespace LSL.ViewModels
 
         #region 服务器命令
 
-        public void StartSelectedServer()
+        public void StartServer(int serverId)
         {
-            int serverId = AppState.SelectedServerId;
             var result = VerifyServerConfigBeforeStart(serverId);
             if (result != null)
             {
@@ -83,34 +82,34 @@ namespace LSL.ViewModels
                 return;
             }
 
-            AppState.TerminalTexts.TryAdd(AppState.SelectedServerId, new ObservableCollection<ColoredLines>());
+            AppState.TerminalTexts.TryAdd(serverId, new ObservableCollection<ColoredLines>());
             ServerHost.Instance.RunServer(serverId);
         }
 
-        public async Task StopSelectedServer()
+        public async Task StopServer(int serverId)
         {
             var confirm = await AppState.ITAUnits.PopupITA
                 .Handle(new InvokePopupArgs(PopupType.Warning_YesNo, "确定要关闭该服务器吗？", "将会立刻踢出服务器内所有玩家，服务器上的最新更改会被保存。"))
                 .ToTask();
-            if (confirm == PopupResult.Yes) ServerHost.Instance.StopServer(AppState.SelectedServerId);
+            if (confirm == PopupResult.Yes) ServerHost.Instance.StopServer(serverId);
         }
 
-        public void SaveSelectedServer()
+        public void SaveServer(int serverId)
         {
-            ServerHost.Instance.SendCommand(AppState.SelectedServerId, "save-all");
+            ServerHost.Instance.SendCommand(serverId, "save-all");
         }
 
-        public async Task EndSelectedServer()
+        public async Task EndServer(int serverId)
         {
             var confirm = await AppState.ITAUnits.PopupITA.Handle(new(PopupType.Warning_YesNo, "确定要终止该服务端进程吗？",
                 "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！")).ToTask();
-            if (confirm == PopupResult.Yes) ServerHost.Instance.EndServer(AppState.SelectedServerId);
+            if (confirm == PopupResult.Yes) ServerHost.Instance.EndServer(serverId);
         }
 
-        public void SendCommandToServer(string command)
+        public void SendCommandToServer(int serverId, string command)
         {
             if (string.IsNullOrEmpty(command)) return;
-            ServerHost.Instance.SendCommand(AppState.SelectedServerId, command);
+            ServerHost.Instance.SendCommand(serverId, command);
         }
 
         #endregion
@@ -213,7 +212,7 @@ namespace LSL.ViewModels
 
         #endregion
 
-        #region 服务器添加与修改
+        #region 服务器添加、修改与删除
 
         public (int, string?) ValidateNewServerConfig(FormedServerConfig config)
         {
@@ -265,6 +264,20 @@ namespace LSL.ViewModels
             }
 
             return true;
+        }
+
+        public string? DeleteServer(int serverId)
+        {
+            try
+            {
+                ServerConfigManager.DeleteServer(serverId);
+                ReadServerConfig(true);
+            }
+            catch(Exception ex)
+            {
+                return ex.Message;
+            }
+            return null;
         }
 
         #endregion

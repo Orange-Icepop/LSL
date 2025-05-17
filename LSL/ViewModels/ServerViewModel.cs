@@ -18,9 +18,9 @@ namespace LSL.ViewModels
         public ServerViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
             StartServerCmd = ReactiveCommand.Create(StartSelectedServer);
-            StopServerCmd = ReactiveCommand.Create(async () => await Connector.StopSelectedServer());
-            SaveServerCmd = ReactiveCommand.Create(Connector.SaveSelectedServer);
-            EndServerCmd = ReactiveCommand.Create(async () => await Connector.EndSelectedServer());
+            StopServerCmd = ReactiveCommand.Create(async () => await Connector.StopServer(AppState.SelectedServerId));
+            SaveServerCmd = ReactiveCommand.Create(()=>Connector.SaveServer(AppState.SelectedServerId));
+            EndServerCmd = ReactiveCommand.Create(async () => await Connector.EndServer(AppState.SelectedServerId));
             SendCommand = ReactiveCommand.Create(()=>
             {
                 SendCommandToServer();
@@ -47,7 +47,7 @@ namespace LSL.ViewModels
             statusFlow.ToPropertyEx(this, x => x.CurrentStatus);
             // status连带更新
             var statusChanges = this.WhenAnyValue(x => x.CurrentStatus)
-                .Where(status => status != null)
+                .Where(status => status is not null)
                 .SelectMany(status => status.WhenAnyValue(
                     s => s.IsRunning,
                     s => s.IsOnline,
@@ -92,17 +92,17 @@ namespace LSL.ViewModels
         public void StartSelectedServer()//启动服务器方法
         {
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
-            Connector.StartSelectedServer();
-            AppState.ITAUnits.NotifyITA.Handle(new(0, "服务器正在启动", "请稍候等待服务器启动完毕")).Subscribe();
+            Connector.StartServer(AppState.SelectedServerId);
+            AppState.ITAUnits.NotifyITA.Handle(new NotifyArgs(0, "服务器正在启动", "请稍候等待服务器启动完毕")).Subscribe();
         }
         public void SendCommandToServer()//发送命令方法
         {
             if (string.IsNullOrEmpty(InputText))
             {
-                AppState.ITAUnits.NotifyITA.Handle(new(0, "输入为空", "请输入要发送的命令")).Subscribe();
+                AppState.ITAUnits.NotifyITA.Handle(new NotifyArgs(0, "输入为空", "请输入要发送的命令")).Subscribe();
                 return;
             }
-            Connector.SendCommandToServer(InputText);
+            Connector.SendCommandToServer(AppState.SelectedServerId, InputText);
         }
 
         #endregion
