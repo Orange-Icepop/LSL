@@ -28,10 +28,9 @@ namespace LSL.ViewModels
             });
 
             // SelectedServerId的变化触发的属性通知
-            var idChanged = AppState.WhenAnyValue(AS => AS.SelectedServerId);
-            idChanged.Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
+            AppState.ServerIdChanged.Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
                 .ToPropertyEx(this, x => x.TerminalText);
-            idChanged.Select(id => new FlatTreeDataGridSource<UUID_User>(AppState.UserDict.GetOrAdd(id, []))
+            AppState.ServerIdChanged.Select(id => new FlatTreeDataGridSource<UUID_User>(AppState.UserDict.GetOrAdd(id, []))
             {
                 Columns =
                 {
@@ -40,10 +39,10 @@ namespace LSL.ViewModels
                 }
             })
                 .ToProperty(this, x => x.CurrentUsers);
-            idChanged.Select(id => AppState.MessageDict.GetOrAdd(id, []))
+            AppState.ServerIdChanged.Select(id => AppState.MessageDict.GetOrAdd(id, []))
                 .ToPropertyEx(this, x => x.CurrentUserMessage);
             // status更新
-            var statusFlow = idChanged.Select(id => AppState.ServerStatuses.GetOrAdd(id, new ServerStatus()));
+            var statusFlow = AppState.ServerIdChanged.Select(id => AppState.ServerStatuses.GetOrAdd(id, new ServerStatus()));
             statusFlow.ToPropertyEx(this, x => x.CurrentStatus);
             // status连带更新
             var statusChanges = this.WhenAnyValue(x => x.CurrentStatus)

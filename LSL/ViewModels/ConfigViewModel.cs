@@ -31,18 +31,16 @@ namespace LSL.ViewModels
                     },
                 })
                 .ToPropertyEx(this, x => x.JavaVersions);
-            var configChanged = AppState.WhenAnyValue(AS => AS.CurrentServerConfigs);
-            configChanged.Where(SC => SC.Count == 1)
+            AppState.ServerConfigChanged.Where(SC => SC.Count == 1)
                 .Select(SC => SC.First().Key != -1)
                 .ToPropertyEx(this, x => x.EnableConfig);
-            configChanged.Subscribe(_ =>
+            AppState.ServerConfigChanged.Subscribe(_ =>
             {
                 this.RaisePropertyChanged(nameof(SelectedServerConfig));
                 this.RaisePropertyChanged(nameof(SelectedServerName));
                 this.RaisePropertyChanged(nameof(SelectedServerPath));
             });
-            AppState.WhenAnyValue(AS => AS.SelectedServerId)
-                .Subscribe(_ =>
+            AppState.ServerIdChanged.Subscribe(_ =>
                 {
                     this.RaisePropertyChanged(nameof(SelectedServerConfig));
                     this.RaisePropertyChanged(nameof(SelectedServerName));

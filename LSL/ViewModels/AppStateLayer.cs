@@ -12,6 +12,9 @@ namespace LSL.ViewModels
     public class AppStateLayer : ReactiveObject
     {
         public InteractionUnits ITAUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
+        public readonly IObservable<Dictionary<int,ServerConfig>> ServerConfigChanged;
+        public readonly IObservable<int> ServerIndexChanged;
+        public readonly IObservable<int> ServerIdChanged;
 
         public AppStateLayer(InteractionUnits interUnit)
         {
@@ -26,15 +29,17 @@ namespace LSL.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Select(arg => arg.CommandType)
                 .Subscribe(NavigateCommandHandler);
-            this.WhenAnyValue(AS => AS.CurrentServerConfigs)
-                .Select(s => new ObservableCollection<int>(s.Keys))
+            // 配置公共监听属性
+            ServerConfigChanged = this.WhenAnyValue(AS => AS.CurrentServerConfigs);
+            ServerIndexChanged = this.WhenAnyValue(AS=>AS.SelectedServerIndex);
+            ServerIdChanged = this.WhenAnyValue(AS => AS.SelectedServerId);
+            // 监听
+            ServerConfigChanged.Select(s => new ObservableCollection<int>(s.Keys))
                 .ToPropertyEx(this, x => x.ServerIDs);
-            this.WhenAnyValue(AS => AS.CurrentServerConfigs)
-                .Select(s => new ObservableCollection<string>(s.Values.Select(v => v.name)))
+            ServerConfigChanged.Select(s => new ObservableCollection<string>(s.Values.Select(v => v.name)))
                 .ToPropertyEx(this, x => x.ServerNames);
-            var indexChanged = this.WhenAnyValue(AS => AS.SelectedServerIndex);
-            indexChanged.Subscribe(_ => MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh)));
-            indexChanged.Select(index => index < ServerIDs.Count ? ServerIDs[index] : -1) 
+            ServerIndexChanged.Subscribe(_ => MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh)));
+            ServerIndexChanged.Select(index => index < ServerIDs.Count ? ServerIDs[index] : -1) 
                 .ToPropertyEx(this, x => x.SelectedServerId);
         }
 
@@ -136,14 +141,12 @@ namespace LSL.ViewModels
 
         #region 服务器相关
 
-        [Reactive]
-        public ConcurrentDictionary<int, ObservableCollection<ColoredLines>> TerminalTexts { get; set; } = new();
+        [Reactive] public ConcurrentDictionary<int, ObservableCollection<ColoredLines>> TerminalTexts { get; set; } = new();
 
         [Reactive] public ConcurrentDictionary<int, ServerStatus> ServerStatuses { get; set; } = new();
         [Reactive] public ConcurrentDictionary<int, ObservableCollection<UUID_User>> UserDict { get; set; } = new();
 
-        [Reactive]
-        public ConcurrentDictionary<int, ObservableCollection<UserMessageLine>> MessageDict { get; set; } = new();
+        [Reactive] public ConcurrentDictionary<int, ObservableCollection<UserMessageLine>> MessageDict { get; set; } = new();
 
         #endregion
     }
