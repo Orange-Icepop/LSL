@@ -109,9 +109,10 @@ namespace LSL.ViewModels
                     break;
                 case NavigateCommandType.Refresh:
                 {
+                    /*
                     var last = CurrentRightPage;
                     Navigate(BarState.Undefined, GeneralPageState.Undefined, RightPageState.Empty);
-                    Navigate(BarState.Undefined, GeneralPageState.Undefined, last);
+                    Navigate(BarState.Undefined, GeneralPageState.Undefined, last);*/
                     break;
                 }
                 default:

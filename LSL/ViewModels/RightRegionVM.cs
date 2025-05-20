@@ -13,20 +13,20 @@ namespace LSL.ViewModels
 {
     public class RightRegionVM : RegionalVMBase
     {
-        public UserControl CurrentView { [ObservableAsProperty] get; }
+        [Reactive] public UserControl CurrentView { get; set; }
 
         public RightRegionVM(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
         {
             AppState.WhenAnyValue(AS => AS.CurrentRightPage)
                 .Where(CV => CV != RightPageState.Undefined)
                 .Select(CV => NavigateRight(CV))
-                .ToPropertyEx(this, t => t.CurrentView);
+                .Subscribe(t => CurrentView = t);
             MessageBus.Current.Listen<NavigateCommand>()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(e =>
                 {
                     if (e.CommandType == NavigateCommandType.Refresh)
-                        MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Undefined, LeftTarget = GeneralPageState.Undefined, RightTarget = AppState.CurrentRightPage });
+                        CurrentView = NavigateRight(AppState.CurrentRightPage);
                 });
         }
 
