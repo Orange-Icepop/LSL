@@ -31,6 +31,23 @@ namespace LSL.ViewModels
                     },
                 })
                 .ToPropertyEx(this, x => x.JavaVersions);
+            var configChanged = AppState.WhenAnyValue(AS => AS.CurrentServerConfigs);
+            configChanged.Where(SC => SC.Count == 1)
+                .Select(SC => SC.First().Key != -1)
+                .ToPropertyEx(this, x => x.EnableConfig);
+            configChanged.Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(SelectedServerConfig));
+                this.RaisePropertyChanged(nameof(SelectedServerName));
+                this.RaisePropertyChanged(nameof(SelectedServerPath));
+            });
+            AppState.WhenAnyValue(AS => AS.SelectedServerId)
+                .Subscribe(_ =>
+                {
+                    this.RaisePropertyChanged(nameof(SelectedServerConfig));
+                    this.RaisePropertyChanged(nameof(SelectedServerName));
+                    this.RaisePropertyChanged(nameof(SelectedServerPath));
+                });
             GetConfig(true); // cached config需要手动同步，不能依赖自动更新
             ReadServerConfig(true); // 服务器配置由于较为复杂，统一为手动控制
             Connector.ReadJavaConfig(true);
@@ -162,6 +179,7 @@ namespace LSL.ViewModels
         }
 
         public ICommand DeleteServerCmd { get; }
+        public bool EnableConfig { [ObservableAsProperty] get; }
 
         public async Task DeleteServer()
         {
@@ -194,6 +212,17 @@ namespace LSL.ViewModels
         #region Java配置
 
         public FlatTreeDataGridSource<JavaInfo> JavaVersions { [ObservableAsProperty] get; }
+
+        #endregion
+
+        #region 服务器当前配置访问器
+
+        public ServerConfig SelectedServerConfig =>
+            AppState.CurrentServerConfigs.TryGetValue(AppState.SelectedServerId, out var value)
+                ? value
+                : ServerConfig.None;
+        public string SelectedServerName => SelectedServerConfig.name;
+        public string SelectedServerPath => SelectedServerConfig.server_path;
 
         #endregion
     }

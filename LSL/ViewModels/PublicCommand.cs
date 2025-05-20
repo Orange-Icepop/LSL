@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
@@ -40,11 +41,11 @@ namespace LSL.ViewModels
             catch (System.ComponentModel.Win32Exception noBrowser)
             {
                 if (noBrowser.ErrorCode == -2147467259)
-                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "打开网页失败", $"LSL未能成功打开网页{url}，请检查您的系统是否设置了默认浏览器。\r错误内容：{noBrowser.Message}")).ToTask();
+                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "打开网页失败", $"LSL未能成功打开网页{url}，请检查您的系统是否设置了默认浏览器。\r错误内容：{noBrowser.Message}"));
             }
             catch (Exception ex)
             {
-                await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "打开网页失败", $"LSL未能成功打开网页{url}，这是由于非浏览器配置错误造成的。\r如果这是在自定义主页中发生的，请检查您的自定义主页是否正确配置了网址；否则，这可能是一个Bug，请您提交一个issue反馈。\r错误内容：{ex.Message}")).ToTask();
+                await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "打开网页失败", $"LSL未能成功打开网页{url}，这是由于非浏览器配置错误造成的。\r如果这是在自定义主页中发生的，请检查您的自定义主页是否正确配置了网址；否则，这可能是一个Bug，请您提交一个issue反馈。\r错误内容：{ex.Message}"));
             }
         }
         #endregion

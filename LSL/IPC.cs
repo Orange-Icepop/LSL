@@ -60,6 +60,8 @@ namespace LSL
             this.max_memory = config.max_memory;
             this.ext_jvm = config.ext_jvm;
         }
+
+        public static readonly ServerConfig None = new ServerConfig(-1, "", "未添加服务器", "", "", 0, 0, "");
     }
     #endregion
 

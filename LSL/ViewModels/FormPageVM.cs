@@ -71,7 +71,7 @@ namespace LSL.ViewModels
 
         private async Task SelectCore()
         {
-            string result = await AppState.ITAUnits.FilePickerITA.Handle(Views.FilePickerType.CoreFile).ToTask();
+            string result = await AppState.ITAUnits.FilePickerITA.Handle(Views.FilePickerType.CoreFile);
             await Dispatcher.UIThread.InvokeAsync(() => { CorePath = result; });
         }
         
@@ -82,7 +82,7 @@ namespace LSL.ViewModels
             var vResult = Connector.ValidateNewServerConfig(ServerInfo);
             if (vResult.Item1 == 0)
             {
-                if (vResult.Item2 is not null) await AppState.ITAUnits.ThrowError("表单错误", vResult.Item2).ToTask();
+                if (vResult.Item2 is not null) await AppState.ITAUnits.ThrowError("表单错误", vResult.Item2);
                 return;
             }
             else if (vResult is { Item1: -1, Item2: not null })

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Reflection.Metadata.Ecma335;
@@ -55,7 +56,12 @@ namespace LSL.ViewModels
                 AppState.ITAUnits.ShowServiceError(result);
             }
 
-            AppState.CurrentServerConfigs = ServerConfigManager.ServerConfigs;
+            var cache = ServerConfigManager.ServerConfigs.ToDictionary(item => item.Key, item => new ServerConfig(item.Value));
+            if (cache.Count == 0)
+            {
+                cache.Add(-1, ServerConfig.None);
+            }
+            AppState.CurrentServerConfigs = cache;
         }
 
         public void SaveConfig()
@@ -89,8 +95,7 @@ namespace LSL.ViewModels
         public async Task StopServer(int serverId)
         {
             var confirm = await AppState.ITAUnits.PopupITA
-                .Handle(new InvokePopupArgs(PopupType.Warning_YesNo, "确定要关闭该服务器吗？", "将会立刻踢出服务器内所有玩家，服务器上的最新更改会被保存。"))
-                .ToTask();
+                .Handle(new InvokePopupArgs(PopupType.Warning_YesNo, "确定要关闭该服务器吗？", "将会立刻踢出服务器内所有玩家，服务器上的最新更改会被保存。"));
             if (confirm == PopupResult.Yes) ServerHost.Instance.StopServer(serverId);
         }
 
@@ -102,7 +107,7 @@ namespace LSL.ViewModels
         public async Task EndServer(int serverId)
         {
             var confirm = await AppState.ITAUnits.PopupITA.Handle(new(PopupType.Warning_YesNo, "确定要终止该服务端进程吗？",
-                "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！")).ToTask();
+                "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！"));
             if (confirm == PopupResult.Yes) ServerHost.Instance.EndServer(serverId);
         }
 
