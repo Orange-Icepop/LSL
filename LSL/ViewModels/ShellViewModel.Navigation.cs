@@ -1,12 +1,14 @@
 using System;
 using System.Diagnostics;
-using System.Reactive;
 using System.Windows.Input;
 using Avalonia.Controls;
 using ReactiveUI;
-using LSL.Services;
-using System.Collections.Generic;
 using LSL.Views;
+using LSL.Views.Download;
+using LSL.Views.Download.ASViews;
+using LSL.Views.Home;
+using LSL.Views.Server;
+using LSL.Views.Settings;
 
 namespace LSL.ViewModels
 {
@@ -189,4 +191,52 @@ namespace LSL.ViewModels
     }
 
     #endregion
+    
+    #region ViewFactory穷举并创建所有视图
+    public static class ViewFactory
+    {
+        private static readonly HomeLeft HomeLeftView = new();
+        private static readonly ServerLeft ServerLeftView = new();
+        private static readonly DownloadsLeft DownloadsLeftView = new();
+        private static readonly SettingsLeft SettingsLeftView = new();
+        public static UserControl CreateView(string viewName)
+        {
+            return viewName switch
+            {
+                //Bar
+                "Bar" => new Bar(),
+                "FSBar" => new FSBar(),
+
+                //Top
+                "HomeLeft" => HomeLeftView,
+                "ServerLeft" => ServerLeftView,
+                "DownloadsLeft" => DownloadsLeftView,
+                "SettingsLeft" => SettingsLeftView,
+                //Home
+                "HomeRight" => new HomeRight(),
+                //Server
+                "ServerGeneral" => new ServerGeneral(),
+                "ServerStat" => new ServerStat(),
+                "ServerTerminal" => new ServerTerminal(),
+                "ServerConf" => new ServerConf(),
+                "EditSC" => new EditSC(),
+                //Download
+                "AutoDown" => new AutoDown(),
+                "ManualDown" => new ManualDown(),
+                "AddServer" => new AddServer(),
+                "ModDown" => new ModDown(),
+                //ASViews
+                "AddCore" => new AddCore(),
+                //Settings
+                "Common" => new Common(),
+                "DownloadSettings" => new DownloadSettings(),
+                "PanelSettings" => new PanelSettings(),
+                "StyleSettings" => new StyleSettings(),
+                "About" => new About(),
+                _ => throw new ArgumentException($"未找到视图: {viewName}，应用程序可能已经损坏。"),
+            };
+        }
+    }
+    #endregion
+
 }

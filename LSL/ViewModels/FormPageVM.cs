@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
-using LSL.Services;
 using LSL.Services.Validators;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;

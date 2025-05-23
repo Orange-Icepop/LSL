@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
-using LSL.Services;
 using ReactiveUI;
 
 namespace LSL.ViewModels
