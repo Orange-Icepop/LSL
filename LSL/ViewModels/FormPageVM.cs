@@ -109,5 +109,40 @@ namespace LSL.ViewModels
         }
         #endregion
         
+        #region 重置表单
+
+        public void ClearForm(RightPageState rps)
+        {
+            switch (rps)
+            {
+                case RightPageState.EditSC:
+                {
+                    if (AppState.CurrentServerConfigs.TryGetValue(AppState.SelectedServerId, out var tmp))
+                    {
+                        ServerName = tmp.name;
+                        CorePath = tmp.server_path;
+                        MinMem = tmp.min_memory.ToString();
+                        MaxMem = tmp.max_memory.ToString();
+                        JavaPath = tmp.using_java;
+                        ExtJvm = tmp.ext_jvm;
+                        break;
+                    }
+                    else
+                    {
+                        throw new ArgumentNullException("选中的服务器不存在已经被读取的配置。"+ Environment.NewLine + "作者认为LSL理论上不应该抛出该异常，因为您不可能在不存在该服务器时编辑其配置。");
+                    }
+                }
+                case RightPageState.AddCore:
+                {
+                    ServerName = string.Empty;
+                    CorePath = string.Empty;
+                    MinMem = string.Empty;
+                    MaxMem = string.Empty;
+                    ExtJvm = "-Dlog4j2.formatMsgNoLookups=true";
+                    break;
+                }
+            }
+        }
+        #endregion
     }
 }

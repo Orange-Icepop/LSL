@@ -27,7 +27,7 @@ namespace LSL.ViewModels
             CurrentRightPage = RightPageState.HomeRight;
             MessageBus.Current.Listen<NavigateArgs>()
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(args => Navigate(args));
+                .Subscribe(Navigate);
             MessageBus.Current.Listen<NavigateCommand>()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Select(arg => arg.CommandType)

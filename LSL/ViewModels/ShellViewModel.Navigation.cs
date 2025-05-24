@@ -20,7 +20,6 @@ namespace LSL.ViewModels
         public ICommand LeftViewCmd { get; }
         public ICommand RightViewCmd { get; }
         public ICommand FullViewCmd { get; set; }
-
         public ICommand FullViewBackCmd { get; set; }
 
         //这一部分是多参数导航按钮的部分，由于设置别的VM会导致堆栈溢出且暂时没找到替代方案，所以先摆了
@@ -83,16 +82,18 @@ namespace LSL.ViewModels
 
         public void NavigateToPage(GeneralPageState gps, RightPageState rps, bool force = false)
         {
+            // 检查左视图重合
             if (gps == AppState.CurrentGeneralPage && !force) return;
-            else if (rps == AppState.CurrentRightPage && !force) return;
-            else
-            {
-                if (AppState.CurrentGeneralPage == GeneralPageState.Settings) ConfigVM.ConfirmConfig();
-                if (gps == GeneralPageState.Settings) ConfigVM.GetConfig();
-                MessageBus.Current.SendMessage(new NavigateArgs
-                    { BarTarget = BarState.Undefined, LeftTarget = gps, RightTarget = rps });
-                Debug.WriteLine("Page Switched:" + gps.ToString() + ", " + rps.ToString());
-            }
+            // 检查右视图重合
+            if (rps == AppState.CurrentRightPage && !force) return;
+            // 自动保存配置
+            if (AppState.CurrentGeneralPage == GeneralPageState.Settings) ConfigVM.ConfirmConfig();
+            // 新视图预操作
+            if (gps == GeneralPageState.Settings) ConfigVM.GetConfig();
+            // 导航
+            MessageBus.Current.SendMessage(new NavigateArgs
+                { BarTarget = BarState.Undefined, LeftTarget = gps, RightTarget = rps });
+            Debug.WriteLine("Page Switched:" + gps.ToString() + ", " + rps.ToString());
         }
 
         #endregion
@@ -108,8 +109,7 @@ namespace LSL.ViewModels
             {
                 MessageBus.Current.SendMessage(new NavigateArgs
                     { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RV });
-                //if (RV == RightPageState.AddCore) MainVM.LoadNewServerConfig();//TODO
-                //if (RV == RightPageState.EditSC) MainVM.LoadCurrentServerConfig();
+                if (RV is RightPageState.AddCore or RightPageState.EditSC) FormVM.ClearForm(RV);
                 Debug.WriteLine("Successfully navigated to " + viewName);
             }
             else Debug.WriteLine("This view is not a fullscreen view: " + viewName);

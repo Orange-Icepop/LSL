@@ -44,7 +44,7 @@
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">Java路径</TextBlock>
                         <StackPanel Orientation="Horizontal">
                             <TextBox HorizontalAlignment="Left" Width="450" Text="{Binding FormVM.JavaPath}" />
-                            <Border Background="#ffffff">
+                            <Border Background="Transparent">
                                 <Path Data="M14,7 A7,7 0 0,0 0,7 M0,7 A7,7 0 1,0 14,7 M7,3l0,2 M7,6l0,5"
                                       VerticalAlignment="Center"
                                       Margin="10"

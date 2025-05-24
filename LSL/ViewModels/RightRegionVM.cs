@@ -14,7 +14,7 @@ namespace LSL.ViewModels
         {
             AppState.WhenAnyValue(AS => AS.CurrentRightPage)
                 .Where(CV => CV != RightPageState.Undefined)
-                .Select(CV => NavigateRight(CV))
+                .Select(NavigateRight)
                 .Subscribe(t => CurrentView = t);
             MessageBus.Current.Listen<NavigateCommand>()
                 .ObserveOn(RxApp.MainThreadScheduler)
