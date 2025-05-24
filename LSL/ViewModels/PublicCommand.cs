@@ -34,7 +34,7 @@ namespace LSL.ViewModels
                 ArgumentNullException.ThrowIfNull(url);
                 if (url.IndexOf("http://") != 1 && url.IndexOf("https://") != 1) throw new ArgumentException("URL格式错误");
                 Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-                AppState.ITAUnits.NotifyITA.Handle(new NotifyArgs(1, "成功打开了网页！", url)).Subscribe();
+                AppState.ITAUnits.Notify(1, "成功打开了网页！", url);
             }
             catch (System.ComponentModel.Win32Exception noBrowser)
             {

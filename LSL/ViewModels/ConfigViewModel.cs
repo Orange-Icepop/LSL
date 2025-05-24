@@ -183,7 +183,7 @@ namespace LSL.ViewModels
             var deleteResult = Connector.DeleteServer(serverId);
             if (string.IsNullOrEmpty(deleteResult))
             {
-                AppState.ITAUnits.NotifyITA.Handle(new NotifyArgs(1, null, $"服务器{serverId}删除成功"));
+                AppState.ITAUnits.Notify(1, null, $"服务器{serverId}删除成功");
             }
             else
             {

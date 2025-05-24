@@ -46,7 +46,7 @@ namespace LSL.ViewModels
             ServerConfigChanged.Subscribe(SC =>
             {
                 if (SC.Count <= 0) return;
-                Dispatcher.UIThread.Post(() => SelectedServerIndex = 0, DispatcherPriority.Background);
+                SelectedServerIndex = 0;
                 Debug.WriteLine("Selected server index reset to 0");
             });
         }
@@ -140,7 +140,7 @@ namespace LSL.ViewModels
 
         #region 选项相关
 
-        [Reactive] public int SelectedServerIndex { get; set; } = -1;
+        [Reactive] public int SelectedServerIndex { get; set; } = -1;// RNMD这玩意儿死活不在启动时触发更新通知，只能先手动设置默认值强制更新了
 
         public int SelectedServerId { [ObservableAsProperty] get; }
         public ObservableCollection<int> ServerIDs { [ObservableAsProperty] get; }

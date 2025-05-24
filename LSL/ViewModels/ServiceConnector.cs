@@ -92,7 +92,11 @@ namespace LSL.ViewModels
         {
             var confirm = await AppState.ITAUnits.PopupITA
                 .Handle(new InvokePopupArgs(PopupType.Warning_YesNo, "确定要关闭该服务器吗？", "将会立刻踢出服务器内所有玩家，服务器上的最新更改会被保存。"));
-            if (confirm == PopupResult.Yes) ServerHost.Instance.StopServer(serverId);
+            if (confirm == PopupResult.Yes)
+            {
+                ServerHost.Instance.StopServer(serverId);
+                AppState.ITAUnits.Notify(0, "正在关闭服务器", "请稍作等待");
+            }
         }
 
         public void SaveServer(int serverId)

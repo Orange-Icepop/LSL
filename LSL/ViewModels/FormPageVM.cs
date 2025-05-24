@@ -21,7 +21,7 @@ namespace LSL.ViewModels
                     {
                         return info.Path;
                     }
-                    else AppState.ITAUnits.NotifyITA.Handle(new NotifyArgs(3, null, "选定的索引没有对应的Java路径")).Subscribe();
+                    else AppState.ITAUnits.Notify(3, null, "选定的索引没有对应的Java路径");
                     return string.Empty;
                 })
                 .Subscribe(val => JavaPath = val);
@@ -95,7 +95,7 @@ namespace LSL.ViewModels
                 var success = Connector.AddServer(ServerInfo);
                 if (success)
                 {
-                    AppState.ITAUnits.NotifyITA.Handle(new NotifyArgs(1, null, "服务器配置成功！")).Subscribe();
+                    AppState.ITAUnits.Notify(1, null, "服务器配置成功！");
                     MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FS2Common));
                 }
             }

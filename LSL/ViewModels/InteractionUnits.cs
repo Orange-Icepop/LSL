@@ -5,10 +5,10 @@ using ReactiveUI;
 
 namespace LSL.ViewModels
 {
-    public class InteractionUnits : ReactiveObject
+    public class InteractionUnits : ViewModelBase
     {
         public Interaction<InvokePopupArgs, PopupResult> PopupITA { get; } = new();
-        public Interaction<NotifyArgs, Unit> NotifyITA { get; } = new();
+        public Interaction<NotifyArgs, Unit> NotifyITA { get; } = new();// 0消息，1成功，2警告，3错误
         public Interaction<FilePickerType, string> FilePickerITA { get; } = new();
 
         public IObservable<PopupResult> ThrowError(string title, string message)
@@ -26,9 +26,14 @@ namespace LSL.ViewModels
                 else if (error.Error is not null) fin = error.Error.Message;
                 else return;
 
-                if (error.ErrorCode == 1) NotifyITA.Handle(new(3, null, fin)).Subscribe();
-                else NotifyITA.Handle(new(4, null, fin)).Subscribe();
+                if (error.ErrorCode == 1) NotifyITA.Handle(new NotifyArgs(3, null, fin)).Subscribe();
+                else NotifyITA.Handle(new NotifyArgs(4, null, fin)).Subscribe();
             }
+        }
+
+        public void Notify(int type, string? title, string? message)
+        {
+            NotifyITA.Handle(new NotifyArgs(type, title, message)).Subscribe();
         }
     }
 

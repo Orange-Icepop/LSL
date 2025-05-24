@@ -393,7 +393,7 @@ namespace LSL.Services
         #endregion
 
         #region 输出处理
-        private static readonly Regex GetDone = new(@"^\[.*\]:\s*Done", RegexOptions.Compiled);
+        private static readonly Regex GetDone = new(@"^\[.*\]:\s*Done\s*\(", RegexOptions.Compiled);
         private static readonly Regex GetExit = new(@"^\[.*\]:\s*Stopping\sthe\sserver", RegexOptions.Compiled);
         private static readonly Regex GetPlayerMessage = new(@"^\[.*\]:\s*\<(?<player>.*)\>\s*(?<message>.*)", RegexOptions.Compiled);
         private void HandleOutput(string? Output)

@@ -17,7 +17,7 @@ namespace LSL.ViewModels
         {
             StartServerCmd = ReactiveCommand.Create(StartSelectedServer);
             StopServerCmd = ReactiveCommand.Create(async () => await Connector.StopServer(AppState.SelectedServerId));
-            SaveServerCmd = ReactiveCommand.Create(()=>Connector.SaveServer(AppState.SelectedServerId));
+            SaveServerCmd = ReactiveCommand.Create(() => Connector.SaveServer(AppState.SelectedServerId));
             EndServerCmd = ReactiveCommand.Create(async () => await Connector.EndServer(AppState.SelectedServerId));
             SendCommand = ReactiveCommand.Create(()=>
             {
@@ -90,13 +90,13 @@ namespace LSL.ViewModels
         {
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
             Connector.StartServer(AppState.SelectedServerId);
-            AppState.ITAUnits.NotifyITA.Handle(new NotifyArgs(0, "服务器正在启动", "请稍候等待服务器启动完毕")).Subscribe();
+            AppState.ITAUnits.Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
         }
         public void SendCommandToServer()//发送命令方法
         {
             if (string.IsNullOrEmpty(InputText))
             {
-                AppState.ITAUnits.NotifyITA.Handle(new NotifyArgs(0, "输入为空", "请输入要发送的命令")).Subscribe();
+                AppState.ITAUnits.Notify(0, "输入为空", "请输入要发送的命令");
                 return;
             }
             Connector.SendCommandToServer(AppState.SelectedServerId, InputText);
