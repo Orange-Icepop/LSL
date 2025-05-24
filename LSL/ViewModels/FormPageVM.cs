@@ -40,6 +40,7 @@ namespace LSL.ViewModels
                 .ToPropertyEx(this, FPVM => FPVM.JavaList);
             SelectCoreCmd = ReactiveCommand.Create(async () => await SelectCore());
             AddServerCmd = ReactiveCommand.Create(async () => await AddServer());
+            EditServerCmd = ReactiveCommand.Create(async () => await EditServer());
         }
 
         #region 表单绑定属性
@@ -63,6 +64,7 @@ namespace LSL.ViewModels
         public ObservableCollection<string> JavaList { [ObservableAsProperty] get; }
         public ICommand SelectCoreCmd { get; }
         public ICommand AddServerCmd { get; }
+        public ICommand EditServerCmd { get; }
 
         private async Task SelectCore()
         {
@@ -90,7 +92,7 @@ namespace LSL.ViewModels
             if (int.Parse(ServerInfo.MaxMem) < 512)
             {
                 var confirm =
-                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃" + Environment.NewLine + "确定要继续吗？"));
+                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。" + Environment.NewLine + "建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
                 if (confirm == PopupResult.No) return;
             }
             var coreType = Connector.GetCoreType(ServerInfo.CorePath);
@@ -106,6 +108,40 @@ namespace LSL.ViewModels
                     MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FS2Common));
                 }
             }
+        }
+        #endregion
+        
+        #region 修改服务器逻辑
+
+        private async Task EditServer()
+        {
+            int id = AppState.SelectedServerId;
+            FormedServerConfig info = new(ServerName, "", MinMem, MaxMem, JavaPath, ExtJvm);
+            var vResult = Connector.ValidateNewServerConfig(info, true);
+            if (vResult.Item1 == 0)
+            {
+                if (vResult.Item2 is not null) await AppState.ITAUnits.ThrowError("表单错误", vResult.Item2);
+                return;
+            }
+            if (int.Parse(info.MaxMem) < 512)
+            {
+                var confirm =
+                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。" + Environment.NewLine + "建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
+                if (confirm == PopupResult.No) return;
+            }
+            var confirmResult = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "确定修改此服务器吗？",
+                $"服务器信息：\r服务器路径：{info.CorePath}\r名称：{info.ServerName}\rJava路径：{info.JavaPath}\r内存范围：{info.MinMem}MB ~ {info.MaxMem}MB\r附加JVM参数：{info.ExtJvm}"));
+            if (confirmResult != PopupResult.Yes) return;
+            else
+            {
+                var success = Connector.EditServer(id, info);
+                if (success)
+                {
+                    AppState.ITAUnits.Notify(1, null, "服务器配置修改成功！");
+                    MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FS2Common));
+                }
+            }
+
         }
         #endregion
         

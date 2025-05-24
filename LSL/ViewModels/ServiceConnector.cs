@@ -219,9 +219,9 @@ namespace LSL.ViewModels
 
         #region 服务器添加、修改与删除
 
-        public (int, string?) ValidateNewServerConfig(FormedServerConfig config)
+        public (int, string?) ValidateNewServerConfig(FormedServerConfig config, bool skipCP = false)
         {
-            var checkResult = CheckService.VerifyServerConfig(config);
+            var checkResult = CheckService.VerifyServerConfig(config, skipCP);
             string ErrorInfo = "";
             foreach (var item in checkResult)
             {
@@ -235,7 +235,7 @@ namespace LSL.ViewModels
             {
                 return (0, ErrorInfo);
             }
-
+            if (skipCP) return (1, null);// 不检查核心，直接返回
             var coreResult = CoreValidationService.Validate(config.CorePath, out var Problem);
             return coreResult switch
             {
@@ -268,6 +268,23 @@ namespace LSL.ViewModels
                 return false;
             }
 
+            return true;
+        }
+
+        public bool EditServer(int id, FormedServerConfig config)
+        {
+            try
+            {
+                ServerConfigManager.EditServer(id, config.ServerName, config.JavaPath, 
+                    uint.Parse(config.MinMem),
+                    uint.Parse(config.MaxMem), config.ExtJvm);
+                ReadServerConfig(true);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return false;
+            }
             return true;
         }
 

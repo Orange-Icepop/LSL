@@ -479,8 +479,7 @@ namespace LSL.Services
         #region 修改服务器方法EditServer
         public static void EditServer(int serverId, string serverName, string usingJava, uint minMem, uint maxMem, string extJVM)
         {
-            string serverPath = MainServerConfig[serverId];
-            if (serverPath != null && Directory.Exists(serverPath))
+            if (MainServerConfig.TryGetValue(serverId, out var serverPath) && Directory.Exists(serverPath))
             {
                 string editedConfigPath = Path.Combine(serverPath, "lslconfig.json");
                 string coreName = ServerConfigs[serverId].core_name;

@@ -72,9 +72,8 @@
                                  Text="{Binding FormVM.ExtJvm}" />
                     </StackPanel>
                     <local:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
-                                    Height="30" Margin="30,10,0,5" ColorType="Highlight"
-                                    Command="{Binding FormVM.AddServerCmd}">
-                        确认添加
+                                    Height="30" Margin="30,10,0,5" ColorType="Highlight" Command="{Binding FormVM.EditServerCmd}">
+                        确认修改
                     </local:MyButton>
                 </StackPanel>
             </local:MyCard>

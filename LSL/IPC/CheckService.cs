@@ -68,12 +68,12 @@ namespace LSL.IPC
         #endregion
 
         #region 服务器配置验证方法 VerifyServerConfig(Dictionary<string, object> config)
-        public static List<VerifyResult> VerifyServerConfig(FormedServerConfig config)
+        public static List<VerifyResult> VerifyServerConfig(FormedServerConfig config, bool skipCP = false)
         {
             var result = new List<VerifyResult>();
             result.Add(CheckComponents.ServerName(config.ServerName));
             result.Add(CheckComponents.JavaPath(config.JavaPath));
-            result.Add(CheckComponents.CorePath(config.CorePath));
+            if(!skipCP) result.Add(CheckComponents.CorePath(config.CorePath));
             result.Add(CheckComponents.MaxMem(config.MaxMem, config.MinMem));
             result.Add(CheckComponents.MinMem(config.MinMem));
             result.Add(CheckComponents.ExtJvm(config.ExtJvm));
