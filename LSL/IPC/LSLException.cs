@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LSL
+namespace LSL.IPC
 {
     public class LSLException : Exception// LSL异常，Exception的包装类
     {

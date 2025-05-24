@@ -7,8 +7,8 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using LSL.IPC;
 using LSL.Services;
-using LSL.Services.Validators;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 

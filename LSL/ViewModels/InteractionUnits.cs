@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reactive;
+using LSL.IPC;
 using LSL.Views;
 using ReactiveUI;
 

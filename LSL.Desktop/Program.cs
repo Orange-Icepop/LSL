@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.ReactiveUI;
+using LSL.IPC;
 
 namespace LSL.Desktop;
 

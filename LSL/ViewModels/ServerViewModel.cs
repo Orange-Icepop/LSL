@@ -121,8 +121,8 @@ namespace LSL.ViewModels
     }
     public class ColoredLines : ReactiveObject
     {
-        [Reactive] string Line { get; init; }
-        [Reactive] ISolidColorBrush LineColor { get; init; }
+        [Reactive] public string Line { get; init; }
+        [Reactive] public ISolidColorBrush LineColor { get; init; }
         public ColoredLines(string line, ISolidColorBrush lineColor)
         {
             Line = line;

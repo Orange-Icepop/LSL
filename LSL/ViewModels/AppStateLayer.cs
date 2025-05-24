@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using Avalonia.Threading;
+using LSL.IPC;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -57,9 +58,9 @@ namespace LSL.ViewModels
 
         #region 导航相关
 
-        [Reactive] public BarState CurrentBarState { get; set; }
-        [Reactive] public GeneralPageState CurrentGeneralPage { get; set; }
-        [Reactive] public RightPageState CurrentRightPage { get; set; }
+        [Reactive] public BarState CurrentBarState { get; private set; }
+        [Reactive] public GeneralPageState CurrentGeneralPage { get; private set; }
+        [Reactive] public RightPageState CurrentRightPage { get; private set; }
 
         private (BarState, GeneralPageState, RightPageState) LastPage = (BarState.Common, GeneralPageState.Undefined,
             RightPageState.Undefined);

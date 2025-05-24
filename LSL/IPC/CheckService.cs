@@ -1,14 +1,11 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using LSL.Services;
 
-namespace LSL.Services.Validators
+namespace LSL.IPC
 {
     public static class CheckService // 适合被整体调用的校验方法
     {
@@ -77,7 +74,7 @@ namespace LSL.Services.Validators
             result.Add(CheckComponents.ServerName(config.ServerName));
             result.Add(CheckComponents.JavaPath(config.JavaPath));
             result.Add(CheckComponents.CorePath(config.CorePath));
-            result.Add(CheckComponents.MaxMem(config.MaxMem));
+            result.Add(CheckComponents.MaxMem(config.MaxMem, config.MinMem));
             result.Add(CheckComponents.MinMem(config.MinMem));
             result.Add(CheckComponents.ExtJvm(config.ExtJvm));
             return result;

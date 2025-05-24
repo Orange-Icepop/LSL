@@ -1,6 +1,5 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
-using LSL.Services.Validators;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
@@ -9,6 +8,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using LSL.IPC;
 
 namespace LSL.ViewModels
 {
@@ -161,10 +161,8 @@ namespace LSL.ViewModels
         {
             Connector.ReadServerConfig(rf);
         }
-
         public ICommand DeleteServerCmd { get; }
         public bool EnableConfig { [ObservableAsProperty] get; }
-
         public async Task DeleteServer()
         {
             int serverId = AppState.SelectedServerId;

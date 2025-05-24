@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
-using LSL.Services.Validators;
+using LSL.IPC;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -80,10 +80,17 @@ namespace LSL.ViewModels
                 if (vResult.Item2 is not null) await AppState.ITAUnits.ThrowError("表单错误", vResult.Item2);
                 return;
             }
-            else if (vResult is { Item1: -1, Item2: not null })
+            if (vResult is { Item1: -1, Item2: not null })
             {
                 var confirm =
                     await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "未知的Minecraft核心文件", vResult.Item2));
+                if (confirm == PopupResult.No) return;
+            }
+
+            if (int.Parse(ServerInfo.MaxMem) < 512)
+            {
+                var confirm =
+                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃" + Environment.NewLine + "确定要继续吗？"));
                 if (confirm == PopupResult.No) return;
             }
             var coreType = Connector.GetCoreType(ServerInfo.CorePath);

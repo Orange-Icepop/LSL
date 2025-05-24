@@ -1,10 +1,10 @@
-﻿using ICSharpCode.SharpZipLib.Zip;
-using System;
+﻿using System;
 using System.IO;
+using ICSharpCode.SharpZipLib.Zip;
 
-namespace LSL.Services.Validators
+namespace LSL.IPC
 {
-    public class CoreValidationService
+    public static class CoreValidationService
     {
         public enum CoreType
         {
