@@ -2,8 +2,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
+using Avalonia.Threading;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -30,17 +32,23 @@ namespace LSL.ViewModels
                 .Select(arg => arg.CommandType)
                 .Subscribe(NavigateCommandHandler);
             // 配置公共监听属性
-            ServerConfigChanged = this.WhenAnyValue(AS => AS.CurrentServerConfigs);
-            ServerIndexChanged = this.WhenAnyValue(AS=>AS.SelectedServerIndex);
-            ServerIdChanged = this.WhenAnyValue(AS => AS.SelectedServerId);
+            ServerConfigChanged = this.WhenAnyValue(AS => AS.CurrentServerConfigs).ObserveOn(RxApp.MainThreadScheduler);
+            ServerIndexChanged = this.WhenAnyValue(AS=>AS.SelectedServerIndex).ObserveOn(RxApp.MainThreadScheduler);
+            ServerIdChanged = this.WhenAnyValue(AS => AS.SelectedServerId).ObserveOn(RxApp.MainThreadScheduler);
             // 监听
-            ServerConfigChanged.Select(s => new ObservableCollection<int>(s.Keys))
-                .ToPropertyEx(this, x => x.ServerIDs);
-            ServerConfigChanged.Select(s => new ObservableCollection<string>(s.Values.Select(v => v.name)))
-                .ToPropertyEx(this, x => x.ServerNames);
             ServerIndexChanged.Subscribe(_ => MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh)));
-            ServerIndexChanged.Select(index => index < ServerIDs.Count ? ServerIDs[index] : -1) 
-                .ToPropertyEx(this, x => x.SelectedServerId);
+            ServerIndexChanged.Select(index => index < ServerIDs?.Count ? ServerIDs[index] : -1) 
+                .ToPropertyEx(this, x => x.SelectedServerId, scheduler: RxApp.MainThreadScheduler);
+            ServerConfigChanged.Select(s => new ObservableCollection<int>(s.Keys))
+                .ToPropertyEx(this, x => x.ServerIDs, scheduler: RxApp.MainThreadScheduler);
+            ServerConfigChanged.Select(s => new ObservableCollection<string>(s.Values.Select(v => v.name)))
+                .ToPropertyEx(this, x => x.ServerNames, scheduler: RxApp.MainThreadScheduler);
+            ServerConfigChanged.Subscribe(SC =>
+            {
+                if (SC.Count <= 0) return;
+                Dispatcher.UIThread.Post(() => SelectedServerIndex = 0, DispatcherPriority.Background);
+                Debug.WriteLine("Selected server index reset to 0");
+            });
         }
 
         #region 导航相关
@@ -132,7 +140,7 @@ namespace LSL.ViewModels
 
         #region 选项相关
 
-        [Reactive] public int SelectedServerIndex { get; set; }
+        [Reactive] public int SelectedServerIndex { get; set; } = -1;
 
         public int SelectedServerId { [ObservableAsProperty] get; }
         public ObservableCollection<int> ServerIDs { [ObservableAsProperty] get; }

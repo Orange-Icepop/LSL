@@ -28,21 +28,10 @@ namespace LSL.ViewModels
                     },
                 })
                 .ToPropertyEx(this, x => x.JavaVersions);
-            AppState.ServerConfigChanged.Where(SC => SC.Count == 1)
-                .Select(SC => SC.First().Key != -1)
+            AppState.ServerIdChanged.Subscribe(Id => RaiseServerConfigChanged(Id, null));
+            AppState.ServerConfigChanged.Select(SC => !SC.TryGetValue(-1, out _))
                 .ToPropertyEx(this, x => x.EnableConfig);
-            AppState.ServerConfigChanged.Subscribe(_ =>
-            {
-                this.RaisePropertyChanged(nameof(SelectedServerConfig));
-                this.RaisePropertyChanged(nameof(SelectedServerName));
-                this.RaisePropertyChanged(nameof(SelectedServerPath));
-            });
-            AppState.ServerIdChanged.Subscribe(_ =>
-                {
-                    this.RaisePropertyChanged(nameof(SelectedServerConfig));
-                    this.RaisePropertyChanged(nameof(SelectedServerName));
-                    this.RaisePropertyChanged(nameof(SelectedServerPath));
-                });
+            AppState.ServerConfigChanged.Subscribe(SC => RaiseServerConfigChanged(null, SC));
             GetConfig(true); // cached config需要手动同步，不能依赖自动更新
             ReadServerConfig(true); // 服务器配置由于较为复杂，统一为手动控制
             Connector.ReadJavaConfig(true);
@@ -212,13 +201,27 @@ namespace LSL.ViewModels
 
         #region 服务器当前配置访问器
 
-        public ServerConfig SelectedServerConfig =>
-            AppState.CurrentServerConfigs.TryGetValue(AppState.SelectedServerId, out var value)
-                ? value
-                : ServerConfig.None;
-        public string SelectedServerName => SelectedServerConfig.name;
-        public string SelectedServerPath => SelectedServerConfig.server_path;
+        [Reactive] public ServerConfig SelectedServerConfig { get; private set; }
+        [Reactive] public string SelectedServerName { get; private set; }
+        [Reactive] public string SelectedServerPath { get; private set; }
 
+        private void RaiseServerConfigChanged(int? serverId, Dictionary<int,ServerConfig>? serverConfig)
+        {
+            var SI = serverId ?? AppState.SelectedServerId;
+            var SCS = serverConfig ?? AppState.CurrentServerConfigs;
+            if (SCS.TryGetValue(SI, out var SC))
+            {
+                SelectedServerConfig = SC;
+                SelectedServerName = SC.name;
+                SelectedServerPath = SC.server_path;
+            }
+            else
+            {
+                SelectedServerConfig = ServerConfig.None;
+                SelectedServerName = ServerConfig.None.name;
+                SelectedServerPath = ServerConfig.None.server_path;
+            }
+        }
         #endregion
     }
 }
