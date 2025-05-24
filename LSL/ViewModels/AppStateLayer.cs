@@ -14,9 +14,9 @@ namespace LSL.ViewModels
     public class AppStateLayer : ReactiveObject
     {
         public InteractionUnits ITAUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
-        public readonly IObservable<Dictionary<int,ServerConfig>> ServerConfigChanged;
-        public readonly IObservable<int> ServerIndexChanged;
-        public readonly IObservable<int> ServerIdChanged;
+        public IObservable<Dictionary<int,ServerConfig>> ServerConfigChanged { get; private set; }
+        public IObservable<int> ServerIndexChanged { get; private set; }
+        public IObservable<int> ServerIdChanged { get; private set; }
 
         public AppStateLayer(InteractionUnits interUnit)
         {

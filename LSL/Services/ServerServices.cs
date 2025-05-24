@@ -124,9 +124,7 @@ namespace LSL.Services
                 if (e.Item2)
                 {
                     outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动成功!"));
-                    SendCommand(serverId, "hello");// 防止某些奇怪的情况导致第一个命令被修改
                 }
-                // storage.TrySendStatus
             };
             return true;
         }
