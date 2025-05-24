@@ -37,7 +37,11 @@ namespace LSL.ViewModels
             ServerIdChanged = this.WhenAnyValue(AS => AS.SelectedServerId).ObserveOn(RxApp.MainThreadScheduler);
             // 监听
             ServerIndexChanged.Subscribe(_ => MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh)));
-            ServerIndexChanged.Select(index => index < ServerIDs?.Count ? ServerIDs[index] : -1) 
+            ServerIndexChanged.Select(index =>
+                {
+                    if (ServerIDs is not null && ServerIDs.Contains(index)) return ServerIDs.ElementAt(index);
+                    else return -1;
+                }) 
                 .ToPropertyEx(this, x => x.SelectedServerId, scheduler: RxApp.MainThreadScheduler);
             ServerConfigChanged.Select(s => new ObservableCollection<int>(s.Keys))
                 .ToPropertyEx(this, x => x.ServerIDs, scheduler: RxApp.MainThreadScheduler);
