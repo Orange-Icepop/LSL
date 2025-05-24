@@ -165,7 +165,24 @@ namespace LSL.ViewModels
         public bool EnableConfig { [ObservableAsProperty] get; }
         public async Task DeleteServer()
         {
+            // 检查是否可以删除
             int serverId = AppState.SelectedServerId;
+            if (serverId < 0)
+            {
+                await AppState.ITAUnits.ThrowError("选定的服务器不存在", "你没有添加过服务器。该服务器是LSL提供的占位符，不支持删除。");
+                return;
+            }
+            if (!AppState.ServerStatuses.TryGetValue(serverId, out var status))
+            {
+                await AppState.ITAUnits.ThrowError("无法删除服务器", "指定的服务器不存在。");
+                return;
+            }
+            else if (status.IsRunning)
+            {
+                await AppState.ITAUnits.ThrowError("无法删除服务器", "指定的服务器正在运行，请先关闭服务器再删除。");
+                return;
+            }
+            
             var result1 = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_YesNo,
                 "确认删除该服务器吗？",
                 "注意！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
