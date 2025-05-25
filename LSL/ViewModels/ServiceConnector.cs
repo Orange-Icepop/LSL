@@ -170,9 +170,7 @@ namespace LSL.ViewModels
                         }));
                     break;
                 case ServerStatusArgs SSA:
-                    await Dispatcher.UIThread.InvokeAsync(() => AppState.ServerStatuses.AddOrUpdate(SSA.ServerId,
-                        new ServerStatus(SSA.IsRunning, SSA.IsOnline),
-                        (key, value) => value.Update(SSA.IsRunning, SSA.IsOnline)));
+                    await Dispatcher.UIThread.InvokeAsync(() => UpdateStatus(SSA));
                     break;
                 case PlayerUpdateArgs PUA:
                     await Dispatcher.UIThread.InvokeAsync(() => UpdateUser(PUA));
@@ -215,6 +213,22 @@ namespace LSL.ViewModels
             }
         }
 
+        private void UpdateStatus(ServerStatusArgs args)
+        {
+            AppState.ServerStatuses.AddOrUpdate(args.ServerId,
+                new ServerStatus(args.IsRunning, args.IsOnline),
+                (key, value) => value.Update(args.IsRunning, args.IsOnline));
+            UpdateRunningServer();
+        }
+
+        private void UpdateRunningServer()
+        {
+            AppState.RunningServerCount = 0;
+            foreach (var item in AppState.ServerStatuses)
+            {
+                if (item.Value.IsRunning) AppState.RunningServerCount++;
+            }
+        }
         #endregion
 
         #region 服务器添加、修改与删除
@@ -334,6 +348,7 @@ namespace LSL.ViewModels
                         kvp => new ServerStatus(kvp.Value)
                     )
                 );
+                await Dispatcher.UIThread.InvokeAsync(UpdateRunningServer);
 
                 AppState.UserDict = new ConcurrentDictionary<int, ObservableCollection<UUID_User>>(
                     storage.PlayerDict
