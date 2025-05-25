@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -18,16 +20,13 @@ namespace LSL.ViewModels
     // 主要成员为void，用于调用服务层方法
     public class ServiceConnector
     {
-        public AppStateLayer AppState { get; set; }
-
+        private AppStateLayer AppState { get; }
         public ServiceConnector(AppStateLayer appState)
         {
             AppState = appState;
-            EventBus.Instance.Subscribe<ColorOutputArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
-            EventBus.Instance.Subscribe<ServerStatusArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
-            EventBus.Instance.Subscribe<PlayerUpdateArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
-            EventBus.Instance.Subscribe<PlayerMessageArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
-            Task.Run(() => HandleOutput(OutputCts.Token));
+            EventBus.Instance.Subscribe<IStorageArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
+            _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
+            CopyServerOutput();
         }
 
         #region 配置部分
@@ -141,7 +140,8 @@ namespace LSL.ViewModels
         #region 读取服务器输出
 
         private readonly Channel<IStorageArgs> ServerOutputChannel = Channel.CreateUnbounded<IStorageArgs>();
-        private readonly CancellationTokenSource OutputCts = new();
+        private CancellationTokenSource OutputCts = new();
+        private Task _handleOutputTask;
 
         private async Task HandleOutput(CancellationToken token)
         {
@@ -179,9 +179,9 @@ namespace LSL.ViewModels
                     break;
                 case PlayerMessageArgs PMA:
                     await Dispatcher.UIThread.InvokeAsync(() => AppState.MessageDict.AddOrUpdate(PMA.ServerId,
-                        [new(PMA.Message)], (key, value) =>
+                        [new UserMessageLine(PMA.Message)], (key, value) =>
                         {
-                            value.Add(new(PMA.Message));
+                            value.Add(new UserMessageLine(PMA.Message));
                             return value;
                         }));
                     break;
@@ -205,7 +205,7 @@ namespace LSL.ViewModels
                 {
                     for (int i = uc.Count - 1; i >= 0; i--)
                     {
-                        if (uc[i].UUID == args.UUID)
+                        if (uc[i].User == args.PlayerName)
                         {
                             uc.RemoveAt(i);
                             break;
@@ -304,9 +304,66 @@ namespace LSL.ViewModels
 
         #endregion
 
-        private void CopyServerOutput()
+        #region 从服务线程拷贝服务器输出字典
+        private async Task CopyServerOutput()
         {
+            var storage = ServerHost.Instance.OutputStorage;
+            // 暂停输出处理
+            Debug.WriteLine("Copy server output. Stopping output handler...");
+            OutputCts.Cancel();
+            try
+            {
+                await _handleOutputTask;
+            }
+            catch (OperationCanceledException) { }
+            Debug.WriteLine("Output handler cancelled.");
+            try
+            {
+                AppState.TerminalTexts = new ConcurrentDictionary<int, ObservableCollection<ColoredLines>>(
+                    storage.OutputDict.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => new ObservableCollection<ColoredLines>(
+                            kvp.Value.Select(line => new ColoredLines(line.Line, line.ColorHex))
+                        )
+                    )
+                );
+
+                AppState.ServerStatuses = new ConcurrentDictionary<int, ServerStatus>(
+                    storage.StatusDict.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => new ServerStatus(kvp.Value)
+                    )
+                );
+
+                AppState.UserDict = new ConcurrentDictionary<int, ObservableCollection<UUID_User>>(
+                    storage.PlayerDict
+                        .GroupBy(kvp => kvp.Key.ServerId)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => new ObservableCollection<UUID_User>(
+                                g.Select(kvp => new UUID_User(kvp.Value, kvp.Key.PlayerName))
+                            )
+                        )
+                );
+
+                AppState.MessageDict = new ConcurrentDictionary<int, ObservableCollection<UserMessageLine>>(
+                    storage.MessageDict.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => new ObservableCollection<UserMessageLine>(
+                            kvp.Value.Select(line => new UserMessageLine(line))
+                        )
+                    )
+                );
+            }
+            finally
+            {
+                // 恢复输出处理
+                OutputCts = new CancellationTokenSource();
+                _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
+                Debug.WriteLine("Output handler restarted.");
+            }
         }
+        #endregion
     }
 
     #region 服务器状态类

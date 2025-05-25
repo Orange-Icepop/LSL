@@ -23,12 +23,12 @@ namespace LSL.Services
     public class ServerHost : IServerHost, IDisposable
     {
         // 启动输出处理器
-        private readonly OutputHandler outputHandler;
-        private readonly ServerOutputStorage outputStorage;
+        public OutputHandler OutputHandler { get; }
+        public ServerOutputStorage OutputStorage { get; }
         private ServerHost()
         {
-            outputStorage = new();
-            outputHandler = new(outputStorage);
+            OutputStorage = new ServerOutputStorage();
+            OutputHandler = new OutputHandler();
             Debug.WriteLine("ServerHost Launched");
         }
         private static readonly Lazy<ServerHost> _lazyInstance = new(() => new ServerHost());
@@ -73,7 +73,7 @@ namespace LSL.Services
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
             ServerConfig config = ServerConfigManager.ServerConfigs[serverId];
             var SP = new ServerProcess(config);
-            SP.StatusEventHandler += (sender, args) => EventBus.Instance.PublishAsync(new ServerStatusArgs(serverId, args.Item1, args.Item2));
+            SP.StatusEventHandler += (sender, args) => EventBus.Instance.PublishAsync<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
             // 启动服务器
             try
             {
@@ -81,17 +81,17 @@ namespace LSL.Services
             }
             catch (InvalidOperationException)
             {
-                outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动失败，请检查配置文件。"));
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动失败，请检查配置文件。"));
                 SP.Dispose();
                 return false;
             }
             LoadServer(serverId, SP);
-            outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器正在启动，请稍后......"));
+            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器正在启动，请稍后......"));
             SP.OutputReceived += (sender, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
-                    outputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data));
+                    OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data));
                 }
             };
 
@@ -99,7 +99,7 @@ namespace LSL.Services
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
-                    outputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data));
+                    OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data));
                 }
             };
             SP.BeginRead();
@@ -116,7 +116,7 @@ namespace LSL.Services
                 finally
                 {
                     string status = $"已关闭，进程退出码为{exitCode}";
-                    outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 当前服务器" + status));
+                    OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 当前服务器" + status));
                     SP.Dispose();
                 }
             };
@@ -124,7 +124,7 @@ namespace LSL.Services
             {
                 if (e.Item2)
                 {
-                    outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动成功!"));
+                    OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动成功!"));
                 }
             };
             return true;
@@ -138,11 +138,11 @@ namespace LSL.Services
             if (server is not null && server.IsRunning)
             {
                 server.Stop();
-                outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
             }
             else
             {
-                outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送"));
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送"));
             }
         }
         #endregion
@@ -155,14 +155,14 @@ namespace LSL.Services
             {
                 if (command == "stop")
                 {
-                    outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
+                    OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
                 }
                 server.SendCommand(command);
                 return true;
             }
             else
             {
-                outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送"));
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送"));
                 return false;
             }
         }
@@ -200,8 +200,8 @@ namespace LSL.Services
         public void Dispose()
         {
             EndAllServers();
-            outputHandler.Dispose();
-            outputStorage.Dispose();
+            OutputHandler.Dispose();
+            OutputStorage.Dispose();
             GC.SuppressFinalize(this);
         }
     }
@@ -413,10 +413,8 @@ namespace LSL.Services
     // 服务端输出预处理
     public class OutputHandler : IDisposable
     {
-        private readonly ServerOutputStorage OutputStorage;
-        public OutputHandler(ServerOutputStorage outputStorage)
+        public OutputHandler()
         {
-            OutputStorage = outputStorage;
             OutputChannel = Channel.CreateUnbounded<TerminalOutputArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
             Task.Run(() => ProcessOutput(OutputCTS.Token));
             Debug.WriteLine("OutputHandler Launched");
@@ -490,7 +488,7 @@ namespace LSL.Services
                 var match = GetTimeStamp.Match(Output);
                 if (GetPlayerMessage.IsMatch(match.Groups["context"].Value))
                 {
-                    EventBus.Instance.PublishAsync(new PlayerMessageArgs(ServerId, match.Groups["context"].Value));
+                    EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerMessageArgs(ServerId, match.Groups["context"].Value));
                 }
                 else
                 {
@@ -510,7 +508,7 @@ namespace LSL.Services
             {
                 colorBrush = "#ff0000";
             }
-            EventBus.Instance.PublishAsync(new ColorOutputArgs(ServerId, final, colorBrush));
+            EventBus.Instance.PublishAsync<IStorageArgs>(new ColorOutputArgs(ServerId, final, colorBrush));
         }
         // 额外处理服务端自身输出所需要更新的操作
         private void ProcessSystem(int ServerId, string Output)
@@ -518,12 +516,12 @@ namespace LSL.Services
             if (GetUUID.IsMatch(Output))
             {
                 var match = GetUUID.Match(Output);
-                EventBus.Instance.PublishAsync(new PlayerUpdateArgs(ServerId, match.Groups["uuid"].Value, match.Groups["player"].Value, true));
+                EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerUpdateArgs(ServerId, match.Groups["uuid"].Value, match.Groups["player"].Value, true));
             }
 
             if (PlayerLeft.IsMatch(Output))
             {
-                EventBus.Instance.PublishAsync(new PlayerUpdateArgs(ServerId, "Unknown", GetUUID.Match(Output).Groups["player"].Value, false));
+                EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerUpdateArgs(ServerId, "Unknown", GetUUID.Match(Output).Groups["player"].Value, false));
             }
         }
         #endregion
@@ -535,17 +533,19 @@ namespace LSL.Services
         public readonly ConcurrentDictionary<int, ObservableCollection<ColorOutputLine>> OutputDict = new();
         public readonly ConcurrentDictionary<int, (bool IsRunning, bool IsOnline)> StatusDict = new();
         public readonly ConcurrentDictionary<(int ServerId, string PlayerName), string> PlayerDict = new();
+        public readonly ConcurrentDictionary<int, ObservableCollection<string>> MessageDict = new();
         private readonly Channel<IStorageArgs> StorageQueue;
         private readonly CancellationTokenSource StorageCTS = new();
         public ServerOutputStorage()
         {
             StorageQueue = Channel.CreateUnbounded<IStorageArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
             Task.Run(() => ProcessStorage(StorageCTS.Token));
+            EventBus.Instance.Subscribe<IStorageArgs>(arg=>TrySendLine(arg));
             Debug.WriteLine("ServerOutputStorage Launched");
         }
 
         #region 排队处理
-        public bool TrySendLine(IStorageArgs args)
+        private bool TrySendLine(IStorageArgs args)
         {
             if (StorageQueue.Writer.TryWrite(args))
             {
@@ -600,6 +600,13 @@ namespace LSL.Services
                             PlayerDict.TryRemove(key, out _);
                             return string.Empty;
                         }
+                    });
+                    break;
+                case PlayerMessageArgs PMA:
+                    MessageDict.AddOrUpdate(PMA.ServerId, _ => [PMA.Message], (key, value) =>
+                    {
+                        value.Add(PMA.Message);
+                        return value;
                     });
                     break;
                 default:
