@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reactive.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Input;
 using Avalonia.Threading;
 using ReactiveUI;
@@ -32,7 +33,7 @@ namespace LSL.ViewModels
             try
             {
                 ArgumentNullException.ThrowIfNull(url);
-                if (url.IndexOf("http://") != 1 && url.IndexOf("https://") != 1) throw new ArgumentException("URL格式错误");
+                if (!Regex.IsMatch(url, "^https?://")) throw new ArgumentException("URL格式错误");
                 Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
                 AppState.ITAUnits.Notify(1, "成功打开了网页！", url);
             }
@@ -43,7 +44,7 @@ namespace LSL.ViewModels
             }
             catch (Exception ex)
             {
-                await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "打开网页失败", $"LSL未能成功打开网页{url}，这是由于非浏览器配置错误造成的。\r如果这是在自定义主页中发生的，请检查您的自定义主页是否正确配置了网址；否则，这可能是一个Bug，请您提交一个issue反馈。\r错误内容：{ex.Message}"));
+                await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "打开网页失败", $"LSL未能成功打开网页{url}，这是由于非浏览器配置错误造成的。\r如果这是在自定义主页中发生的，请检查您的自定义主页是否正确配置了网址；否则，这可能是一个Bug，请您提交一个issue反馈。\r错误内容：{ex}"));
             }
         }
         #endregion

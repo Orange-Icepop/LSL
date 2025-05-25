@@ -8,7 +8,7 @@
 		<UseWindowsForms>False</UseWindowsForms>
 		<UseWPF>False</UseWPF>
 		<StartupObject></StartupObject>
-		<AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 	</PropertyGroup>
 
 
