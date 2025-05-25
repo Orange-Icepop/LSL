@@ -3,22 +3,26 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
+             xmlns:vm="using:LSL.ViewModels"
+             x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.PanelSettings">
-	<StackPanel>
-		<local:MyCard Text="网页面板设置">
-			<StackPanel Margin="25,40,23,15">
-				<CheckBox Margin="0,10,0,5" IsChecked="{Binding PanelEnable}">开启LSL网页面板</CheckBox>
-				<DockPanel Margin="0,5,0,5">
-					<TextBlock VerticalAlignment="Center" Margin="0,0,10,0" Text="监听端口"/>
-					<MaskedTextBox Watermark="0~65535"
-							 HorizontalAlignment="Left"
-							 Width="100"
-							 Text="{Binding PanelPort}"/>
-				</DockPanel>
-				<CheckBox Margin="0,5,0,5" IsChecked="{Binding PanelMonitor}">显示性能占用</CheckBox>
-				<CheckBox Margin="0,5,0,5" IsChecked="{Binding PanelTerminal}">显示终端输出</CheckBox>
-			</StackPanel>
-		</local:MyCard>
-    </StackPanel>
+	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+		<StackPanel>
+			<local:MyCard Text="网页面板设置">
+				<StackPanel Margin="25,40,23,15">
+					<CheckBox Margin="0,10,0,5" IsChecked="{Binding ConfigVM.PanelEnable}">开启LSL网页面板</CheckBox>
+					<DockPanel Margin="0,5,0,5">
+						<TextBlock VerticalAlignment="Center" Margin="0,0,10,0" Text="监听端口"/>
+						<MaskedTextBox Watermark="0~65535"
+								 HorizontalAlignment="Left"
+								 Width="100"
+								 Text="{Binding ConfigVM.PanelPort}"/>
+					</DockPanel>
+					<CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.PanelMonitor}">显示性能占用</CheckBox>
+					<CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.PanelTerminal}">显示终端输出</CheckBox>
+				</StackPanel>
+			</local:MyCard>
+		</StackPanel>
+	</ScrollViewer>
 </UserControl>

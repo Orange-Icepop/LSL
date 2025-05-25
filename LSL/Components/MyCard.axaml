@@ -42,7 +42,7 @@
 			BoxShadow="0 0 10 -2 Gray">
 		<Grid Background="Transparent" Name="stackpanel">
 			<TextBlock Name="titleText"
-					   Text="{Binding $parent[2].Text}"
+					   Text="{Binding Text, RelativeSource={RelativeSource AncestorType=local:MyCard}}"
 					   FontSize="15"
 					   FontWeight="Bold"
 					   Margin="20,15,20,0"

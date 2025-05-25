@@ -2,6 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LSL.ViewModels"
+             x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="50"
              x:Class="LSL.Views.FSBar">
 
@@ -10,7 +12,7 @@
 			<Image Source="avares://LSL/Assets/Built-In-Icons/LArrow.png" Margin="5,5,5,5"/>
 		</Button>
 		<TextBlock Name="Title" 
-				   Text="{Binding FSTitle}" 
+				   Text="{Binding BarVM.FSTitle}" 
 				   FontSize="25" 
 				   FontFamily="{StaticResource SmileySans}"
 				   Margin="15,0,0,0" 

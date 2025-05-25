@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace LSL.Services.Validators
+namespace LSL.IPC
 {
     // 表单验证器
     #region 服务器配置验证器
@@ -62,6 +57,22 @@ namespace LSL.Services.Validators
         protected override ValidationResult IsValid(object? value, ValidationContext context)
         {
             var result = CheckComponents.MaxMem(value as string);
+            if (result.Passed)
+            {
+                return ValidationResult.Success;
+            }
+            else
+            {
+                return new ValidationResult(result.Reason);
+            }
+        }
+    }
+
+    public class JavaPathValidator : ValidationAttribute // Java路径验证器
+    {
+        protected override ValidationResult IsValid(object? value, ValidationContext context)
+        {
+            var result = CheckComponents.JavaPath(value as string);
             if (result.Passed)
             {
                 return ValidationResult.Success;

@@ -1,11 +1,7 @@
+using System;
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Data;
-using LSL.Components;
-using LSL.ViewModels;
-using Avalonia.Media;
-using System.Diagnostics;
-using System;
 
 namespace LSL.Components
 {
@@ -27,22 +23,27 @@ namespace LSL.Components
         }
         static MyButton()
         {
-            // Äã¿ÉÒÔÔÚÕâÀï×¢²á¸½¼ÓÊôĞÔ£¬Èç¹ûĞèÒªµÄ»°  
+            // ä½ å¯ä»¥åœ¨è¿™é‡Œæ³¨å†Œé™„åŠ å±æ€§ï¼Œå¦‚æœéœ€è¦çš„è¯  
         }
 
         public MyButton()
         {
             InitializeComponent();
-            this.Initialized += StartUpdatingStyles;
+            this.Initialized += (s, e) => UpdateStyles();
         }
-        private void StartUpdatingStyles(object sender, EventArgs e)
+        public MyButton(string color, string content, ICommand command)
         {
-            UpdateStyles();
+            InitializeComponent();
+            this.ColorType = Enum.TryParse(color, out ColorType colorType) ? colorType : ColorType.Default;
+            this.Content = content;
+            this.Command = command;
+            this.Initialized += (s, e) => UpdateStyles();
         }
-        //¸ù¾İColorType¸ü¸Ä°´Å¥ÑùÊ½
+
+        //æ ¹æ®ColorTypeæ›´æ”¹æŒ‰é’®æ ·å¼
         private void UpdateStyles()
         {
-            switch(ColorType)
+            switch (ColorType)
             {
                 case ColorType.Highlight:
                     this.Classes.Add("highlight");

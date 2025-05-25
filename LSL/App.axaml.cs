@@ -1,24 +1,16 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Templates;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using System;
-using System.IO;
-using System.Text.Json;
-using System.Net;
 using LSL.ViewModels;
 using LSL.Views;
-using static LSL.Components.MyCard;
-using LSL.Services;
-using System.Threading;
-using System.Windows.Input;
-using ReactiveUI;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net;
 
 namespace LSL;
 public partial class App : Application
 {
-    private Window mainWindow;
+    //private Window mainWindow;
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -30,23 +22,31 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainViewModel()
+                DataContext = shellVM
             };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
             singleViewPlatform.MainView = new MainView
             {
-                DataContext = new MainViewModel()
+                DataContext = shellVM
             };
         }
         ServicePointManager.DefaultConnectionLimit = 512;
         base.OnFrameworkInitializationCompleted();
     }
 
+    private ServiceCollection serviceDescriptors;
+    private ShellViewModel shellVM;
+
     public App()
     {
-        this.DataContext = new MainViewModel();
+        serviceDescriptors = new ServiceCollection();
+        serviceDescriptors.AddServerHost();
+        serviceDescriptors.AddViewModels();
+        var services = serviceDescriptors.BuildServiceProvider();
+        shellVM = services.GetRequiredService<ShellViewModel>();
+        this.DataContext = shellVM;
     }
 
 }

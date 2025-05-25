@@ -10,7 +10,7 @@ namespace LSL.Components
 {
     public partial class MyCard : Grid
     {
-        //¶¨Òåtitle
+        //å®šä¹‰title
         private static readonly StyledProperty<string> TextProperty =
             AvaloniaProperty.Register<MyCard, string>(nameof(Text), defaultBindingMode: BindingMode.OneWay);
 
@@ -21,7 +21,7 @@ namespace LSL.Components
         }
         static MyCard()
         {
-            // Äã¿ÉÒÔÔÚÕâÀï×¢²á¸½¼ÓÊôĞÔ£¬Èç¹ûĞèÒªµÄ»°  
+            // ä½ å¯ä»¥åœ¨è¿™é‡Œæ³¨å†Œé™„åŠ å±æ€§ï¼Œå¦‚æœéœ€è¦çš„è¯  
         }
 
         public MyCard()

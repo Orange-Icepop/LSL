@@ -42,10 +42,9 @@ namespace LSL.Components
             set => SetValue(LogoProperty, value);
         }
 
-        private Bitmap? _logoImage;
         public Bitmap? LogoImage
         {
-            get => _logoImage;
+            get => GetValue(LogoImageProperty);
             set => SetValue(LogoImageProperty, value);
         }
 
@@ -64,7 +63,7 @@ namespace LSL.Components
             }
         }
 
-        #region ´ÓÂ·¾¶¼ÓÔØÍ¼Æ¬
+        #region ä»Žè·¯å¾„åŠ è½½å›¾ç‰‡
         private async void LoadImage(string path)
         {
             try

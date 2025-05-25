@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using LSL.IPC;
 
 namespace LSL.Services
 {
@@ -235,20 +236,4 @@ namespace LSL.Services
             return output;
         }
     }
-
-    public class JavaInfo
-    {
-        public string Path { get; set; }
-        public string Version { get; set; }
-        public string Vendor { get; set; }
-        public string Architecture { get; set; }
-        public JavaInfo(string path, string version, string vendor, string architecture)
-        {
-            Path = path;
-            Version = version;
-            Vendor = vendor;
-            Architecture = architecture;
-        }
-    }
-
 }

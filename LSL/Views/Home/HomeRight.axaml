@@ -5,5 +5,7 @@
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="600"
              x:Class="LSL.Views.Home.HomeRight">
-	<TextBlock Text="自定义主页正在开发中......" FontSize="24" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+		<TextBlock Text="自定义主页正在开发中......" FontSize="24" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+	</ScrollViewer>
 </UserControl>

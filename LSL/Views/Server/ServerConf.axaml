@@ -2,25 +2,46 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
+             xmlns:vm="using:LSL.ViewModels"
+             x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
-			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              x:Class="LSL.Views.Server.ServerConf">
-	<StackPanel>
-		<local:MyCard Text="概述">
-			<Grid HorizontalAlignment="Left" Margin="20,50,10,20" ColumnDefinitions="*,*,*">
-				<DockPanel Grid.Column="0">
-					<Image DockPanel.Dock="Left" Source="/Assets/mc.png" Width="32" Height="32" Margin="10"/>
-					<TextBlock DockPanel.Dock="Top" Text="{Binding CurrentServerName}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Left" Margin="0,5,0,0"/>
-					<TextBlock DockPanel.Dock="Top" Text="{Binding CurrentServerPath}" FontSize="15" Foreground="Gray" HorizontalAlignment="Left" TextWrapping="Wrap"/>
-				</DockPanel>
-			</Grid>
-		</local:MyCard>
-		<local:MyCard Text="配置">
-			<DockPanel Margin="25,50,25,25">
-				<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight" Height="30" Width="100" Margin="10" Command="{Binding FullViewCmd}" CommandParameter="EditSC">修改配置</local:MyButton>
-				<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight" Height="30" Width="100" Margin="10">打开文件夹</local:MyButton>
-				<local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Red" Height="30" Width="100" Margin="10" Command="{Binding DeleteServer}">删除服务器</local:MyButton>
-			</DockPanel>
-		</local:MyCard>
-	</StackPanel>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel>
+            <local:MyCard Text="概述">
+                <Grid HorizontalAlignment="Left" Margin="20,50,10,20" ColumnDefinitions="*,*,*">
+                    <DockPanel Grid.Column="0">
+                        <Image DockPanel.Dock="Left" Source="/Assets/mc.png" Width="32" Height="32" Margin="10" />
+                        <TextBlock DockPanel.Dock="Top" Text="{Binding ConfigVM.SelectedServerName}" FontSize="20"
+                                   FontWeight="Bold" HorizontalAlignment="Left" Margin="0,5,0,0"
+                                   Width="500" />
+                        <TextBlock DockPanel.Dock="Top" Text="{Binding ConfigVM.SelectedServerPath}" FontSize="15"
+                                   Foreground="Gray" HorizontalAlignment="Left" TextWrapping="Wrap"
+                                   Width="500" />
+                    </DockPanel>
+                </Grid>
+            </local:MyCard>
+            <local:MyCard Text="配置">
+                <DockPanel Margin="25,50,25,25">
+                    <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight"
+                                    Height="30" Width="100" Margin="10" Command="{Binding FullViewCmd}"
+                                    IsEnabled="{Binding ConfigVM.EnableConfig}"
+                                    CommandParameter="EditSC">
+                        修改配置
+                    </local:MyButton>
+                    <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight"
+                                    Height="30" Width="100" Margin="10"
+                                    IsEnabled="{Binding ConfigVM.EnableConfig}">
+                        打开文件夹
+                    </local:MyButton>
+                    <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Red" Height="30"
+                                    Width="100" Margin="10" Command="{Binding ConfigVM.DeleteServerCmd}"
+                                    IsEnabled="{Binding ConfigVM.EnableConfig}">
+                        删除服务器
+                    </local:MyButton>
+                </DockPanel>
+            </local:MyCard>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

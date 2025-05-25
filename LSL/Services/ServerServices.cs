@@ -1,43 +1,52 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using LSL.IPC;
 
 namespace LSL.Services
 {
     public interface IServerHost
     {
-
-        Task RunServer(string serverId);
-        Task SendCommand(string serverId, string command);
-        void EndServer(string serverId);
+        bool RunServer(int serverId);
+        void StopServer(int serverId);
+        bool SendCommand(int serverId, string command);
+        void EndServer(int serverId);
         void EndAllServers();
     }
-
-
-    public class ServerHost : IServerHost
+    public class ServerHost : IServerHost, IDisposable
     {
-        private ServerHost() { }
+        // 启动输出处理器
+        public OutputHandler OutputHandler { get; }
+        public ServerOutputStorage OutputStorage { get; }
+        private ServerHost()
+        {
+            OutputStorage = new ServerOutputStorage();
+            OutputHandler = new OutputHandler();
+            Debug.WriteLine("ServerHost Launched");
+        }
         private static readonly Lazy<ServerHost> _lazyInstance = new(() => new ServerHost());
         public static ServerHost Instance => _lazyInstance.Value;
 
-        // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在MainViewModel中将列表项解析为ServerId
+        // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在ViewModel中将列表项解析为ServerId
 
-        private ConcurrentDictionary<string, ServerProcess> _runningServers = [];// 存储正在运行的服务器实例
+        private readonly ConcurrentDictionary<int, ServerProcess> _runningServers = [];// 存储正在运行的服务器实例
 
-        #region 存储服务器进程实例LoadServer(string serverId, Process process)
-        public void LoadServer(string serverId, ServerProcess process)
+        #region 存储服务器进程实例LoadServer(int serverId, Process process)
+        private void LoadServer(int serverId, ServerProcess process)
         {
             _runningServers.AddOrUpdate(serverId, process, (key, value) => process);
         }
         #endregion
 
-        #region 移除服务器进程实例UnloadServer(string serverId)
-        public void UnloadServer(string serverId)
+        #region 移除服务器进程实例UnloadServer(int serverId)
+        private void UnloadServer(int serverId)
         {
             if (_runningServers.TryRemove(serverId, out _))
             {
@@ -50,20 +59,21 @@ namespace LSL.Services
         }
         #endregion
 
-        #region 获取服务器进程实例GetServer(string serverId)
-        public ServerProcess? GetServer(string serverId)
+        #region 获取服务器进程实例GetServer(int serverId)
+        private ServerProcess? GetServer(int serverId)
         {
             return _runningServers.TryGetValue(serverId, out ServerProcess? process) ? process : null;
         }
         #endregion
 
-        #region 启动服务器RunServer(string serverId)
-        public async Task RunServer(string serverId)
+        #region 启动服务器RunServer(int serverId)
+        public bool RunServer(int serverId)
         {
             EnsureExited(serverId);
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
             ServerConfig config = ServerConfigManager.ServerConfigs[serverId];
             var SP = new ServerProcess(config);
+            SP.StatusEventHandler += (sender, args) => EventBus.Instance.PublishAsync<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
             // 启动服务器
             try
             {
@@ -71,18 +81,17 @@ namespace LSL.Services
             }
             catch (InvalidOperationException)
             {
-                EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器启动失败，请检查配置文件。" });
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动失败，请检查配置文件。"));
                 SP.Dispose();
-                return;
+                return false;
             }
             LoadServer(serverId, SP);
-            EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Running = true, Online = false });
-            EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 服务器正在启动，请稍后......" });
+            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器正在启动，请稍后......"));
             SP.OutputReceived += (sender, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
+                    OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data));
                 }
             };
 
@@ -90,7 +99,7 @@ namespace LSL.Services
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = e.Data });
+                    OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data));
                 }
             };
             SP.BeginRead();
@@ -107,35 +116,60 @@ namespace LSL.Services
                 finally
                 {
                     string status = $"已关闭，进程退出码为{exitCode}";
-                    EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = serverId, Running = false, Online = false });
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 当前服务器" + status });
+                    OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 当前服务器" + status));
                     SP.Dispose();
                 }
             };
+            SP.StatusEventHandler += (sender, e) =>
+            {
+                if (e.Item2)
+                {
+                    OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动成功!"));
+                }
+            };
+            return true;
         }
         #endregion
 
-        #region 发送命令SendCommand(string serverId, string command)
-        public async Task SendCommand(string serverId, string command)
+        #region 关闭服务器StopServer(int serverId)
+        public void StopServer(int serverId)
         {
             ServerProcess? server = GetServer(serverId);
-            if (server != null && server.IsRunning)
+            if (server is not null && server.IsRunning)
             {
-                if (command == "stop")
-                {
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 消息]: 关闭服务器命令已发出，请等待......" });
-                }
-                server.SendCommand(command);
+                server.Stop();
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
             }
             else
             {
-                EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = serverId, Output = "[LSL 错误]: 服务器未启动，消息无法发送" });
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送"));
             }
         }
         #endregion
 
-        #region 强制结束服务器进程EndServer(string serverId)
-        public void EndServer(string serverId)
+        #region 发送命令SendCommand(int serverId, string command)
+        public bool SendCommand(int serverId, string command)
+        {
+            ServerProcess? server = GetServer(serverId);
+            if (server is not null && server.IsRunning)
+            {
+                if (command == "stop")
+                {
+                    OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
+                }
+                server.SendCommand(command);
+                return true;
+            }
+            else
+            {
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送"));
+                return false;
+            }
+        }
+        #endregion
+
+        #region 强制结束服务器进程EndServer(int serverId)
+        public void EndServer(int serverId)
         {
             ServerProcess? server = GetServer(serverId);
             server?.Kill();
@@ -147,44 +181,32 @@ namespace LSL.Services
         {
             foreach (var process in _runningServers.Values)
             {
-                process.Dispose();
+                process?.Dispose();
             }
             _runningServers.Clear();
         }
         #endregion
 
-        #region 确保进程退出命令EnsureExited(string serverId)
-        public void EnsureExited(string serverId)
+        #region 确保进程退出命令EnsureExited(int serverId)
+        private void EnsureExited(int serverId)
         {
             ServerProcess? server = GetServer(serverId);
-            if (server == null) return;
-            else
-            {
-                server.Dispose();
-            }
-            if (server != null)
-            {
-                UnloadServer(serverId);
-            }
+            server?.Dispose();
+            UnloadServer(serverId);
         }
         #endregion
 
-        #region 检查服务器进程是否存在CheckProcess(string serverId)
-        public static bool CheckProcess(Process? process)
+        // 释放资源
+        public void Dispose()
         {
-            try
-            {
-                if (process == null) return false;
-                else if (process.HasExited) return false;
-                else return true;
-            }
-            catch (InvalidOperationException) { return false; }
+            EndAllServers();
+            OutputHandler.Dispose();
+            OutputStorage.Dispose();
+            GC.SuppressFinalize(this);
         }
-        #endregion
-
     }
 
-    #region 服务器进程类ServerProcess
+    // 服务器进程类ServerProcess
     public class ServerProcess : IDisposable
     {
         public ServerProcess(ServerConfig config)
@@ -205,9 +227,9 @@ namespace LSL.Services
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
-                StandardInputEncoding = Encoding.UTF8,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8
+                StandardInputEncoding = null,
+                StandardOutputEncoding = null,
+                StandardErrorEncoding = null//神奇的是，把这三个设置为null就能解决乱码问题
             };
         }
         private Process? SProcess { get; set; }
@@ -220,35 +242,97 @@ namespace LSL.Services
         private DataReceivedEventHandler ErrorReceivedHandler;
         private EventHandler ExitedHandler;
 
-        public bool IsRunning => SProcess != null && !SProcess.HasExited;
+        # region 状态获取
+        public EventHandler<(bool, bool)>? StatusEventHandler;// IsRunning, IsOnline
+        private bool isOnline;
+        public bool IsOnline
+        {
+            get => isOnline;
+            private set
+            {
+                if (isOnline == value) return;
+                else
+                {
+                    isOnline = value;
+                    StatusEventHandler?.Invoke(this, (IsRunning, value));
+                }
+            }
+        }
+        private bool isRunning;
+        public bool IsRunning
+        {
+            get => isRunning;
+            private set
+            {
+                if (isRunning == value) return;
+                else
+                {
+                    isRunning = value;
+                    StatusEventHandler?.Invoke(this, (value, IsOnline));
+                }
+            }
+        }
+        /*
+        private async Task MonitorState()
+        {
+            while (true)
+            {
+                if(SProcess is null || SProcess.HasExited)
+                {
+                    IsOnline = false;
+                    IsRunning = false;
+                }
+                await Task.Delay(1000);
+            }
+        }
+        */
+        #endregion
+
         public int? ExitCode { get; private set; }
+
+        #region 命令
         public void Start()
         {
             if (!IsRunning)
             {
                 SProcess = Process.Start(StartInfo);
-                if (!IsRunning) throw new InvalidOperationException("Failed to start server process.");
-                InStream = SProcess.StandardInput;
-                SProcess.EnableRaisingEvents = true;
-                OutputReceivedHandler = (sender, args) => OutputReceived?.Invoke(sender, args);
-                ErrorReceivedHandler = (sender, args) => ErrorReceived?.Invoke(sender, args);
-                ExitedHandler = (sender, args) =>
+                if (SProcess is null || SProcess.HasExited) throw new InvalidOperationException("Failed to start server process.");
+                else
                 {
-                    SProcess.CancelOutputRead();
-                    SProcess.CancelErrorRead();
-                    ExitCode = SProcess.ExitCode;
-                    Exited?.Invoke(sender, args);
-                    SProcess?.Dispose();
-                };
-                SProcess.OutputDataReceived += OutputReceivedHandler;
-                SProcess.ErrorDataReceived += ErrorReceivedHandler;
-                SProcess.Exited += ExitedHandler;
+                    InStream = SProcess.StandardInput;
+                    SProcess.EnableRaisingEvents = true;
+                    OutputReceivedHandler = (sender, args) => OutputReceived?.Invoke(sender, args);
+                    OutputReceivedHandler += (sender, args) => HandleOutput(args.Data);
+                    ErrorReceivedHandler = (sender, args) => ErrorReceived?.Invoke(sender, args);
+                    ExitedHandler = (sender, args) =>
+                    {
+                        IsOnline = false;
+                        IsRunning = false;
+                        CleanupProcessHandlers();
+                        ExitCode = SProcess.ExitCode;
+                        Exited?.Invoke(sender, args);
+                        SProcess?.Dispose();
+                    };
+                    AttachProcessHandlers();
+                    IsRunning = true;
+                }
             }
         }
         public void BeginRead()
         {
-            SProcess.BeginOutputReadLine();
-            SProcess.BeginErrorReadLine();
+            if (SProcess is not null && !SProcess.HasExited)
+            {
+                SProcess.BeginOutputReadLine();
+                SProcess.BeginErrorReadLine();
+            }
+        }
+        public void Stop()
+        {
+            if (SProcess is not null && !SProcess.HasExited)
+            {
+                SProcess.StandardInput.WriteLine("stop");
+                SProcess.StandardInput.Flush();
+            }
         }
         public void SendCommand(string command)
         {
@@ -258,26 +342,39 @@ namespace LSL.Services
                 InStream.FlushAsync();
             }
         }
+        private void AttachProcessHandlers()
+        {
+            if (SProcess is not null)
+            {
+                SProcess.OutputDataReceived += OutputReceivedHandler;
+                SProcess.ErrorDataReceived += ErrorReceivedHandler;
+                SProcess.Exited += ExitedHandler;
+            }
+        }
         private void CleanupProcessHandlers()
         {
-            if (SProcess != null)
+            if (SProcess is not null)
             {
+                // 停止异步读取
                 SProcess.OutputDataReceived -= OutputReceivedHandler;
                 SProcess.ErrorDataReceived -= ErrorReceivedHandler;
                 SProcess.Exited -= ExitedHandler;
+                SProcess.CancelOutputRead();
+                SProcess.CancelErrorRead();
             }
+            StatusEventHandler = null;
         }
         public void Kill()
         {
-            if (SProcess != null)
+            if (SProcess is not null)
             {
                 try
                 {
-                    // 停止异步读取
-                    SProcess.CancelOutputRead();
-                    SProcess.CancelErrorRead();
-                    SProcess.Kill();
-                    SProcess.WaitForExit(5000);
+                    if (!SProcess.HasExited)
+                    {
+                        SProcess.Kill();
+                        SProcess.WaitForExit(5000);
+                    }
                 }
                 finally
                 {
@@ -292,84 +389,238 @@ namespace LSL.Services
             Kill();
             GC.SuppressFinalize(this);
         }
-    }
-    #endregion
+        #endregion
 
-    #region 服务端输出预处理
-    public class OutputHandler
+        #region 输出处理
+        private static readonly Regex GetDone = new(@"^\[.*\]:\s*Done\s*\(", RegexOptions.Compiled);
+        private static readonly Regex GetExit = new(@"^\[.*\]:\s*Stopping\sthe\sserver", RegexOptions.Compiled);
+        private static readonly Regex GetPlayerMessage = new(@"^\[.*\]:\s*\<(?<player>.*)\>\s*(?<message>.*)", RegexOptions.Compiled);
+        private void HandleOutput(string? Output)
+        {
+            if (!string.IsNullOrEmpty(Output) && !GetPlayerMessage.IsMatch(Output))
+            {
+                if (GetDone.IsMatch(Output)) IsOnline = true;
+                else if (GetExit.IsMatch(Output)) IsOnline = false;
+            }
+        }
+        #endregion
+
+    }
+
+    public record TerminalOutputArgs(int ServerId, string Output);// 终端输出事件
+    public record ColorOutputLine(string Line, string ColorHex);// 着色输出行
+
+    // 服务端输出预处理
+    public class OutputHandler : IDisposable
     {
-
-        private static readonly Lazy<OutputHandler> _instance = new(() => new OutputHandler());
-
-        public static OutputHandler Instance => _instance.Value;
-
-        private OutputHandler()
+        public OutputHandler()
         {
-            EventBus.Instance.Subscribe<TerminalOutputArgs>(HandleOutput);
+            OutputChannel = Channel.CreateUnbounded<TerminalOutputArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
+            Task.Run(() => ProcessOutput(OutputCTS.Token));
+            Debug.WriteLine("OutputHandler Launched");
         }
 
-        public void HandleOutput(TerminalOutputArgs args)
+        #region 待处理队列
+        public bool TrySendLine(TerminalOutputArgs args)
         {
-            Task.Run(() => OutputProcessor(args.ServerId, args.Output));
+            if (OutputChannel.Writer.TryWrite(args))
+            {
+                return true;
+            }
+            else
+            {
+                Debug.WriteLine("OutputChannel Writer is full");
+                return false;
+            }
         }
-
-        private Dictionary<string, string> PlayerPool = [];
-
-        private async void OutputProcessor(string ServerId, string Output)
+        private readonly Channel<TerminalOutputArgs> OutputChannel;
+        private readonly CancellationTokenSource OutputCTS = new();
+        private async Task ProcessOutput(CancellationToken ct)
         {
-            if (Output.Substring(1, 3) == "LSL") return;
-            bool isMsgWithTime;
-            string MsgWithoutTime;
+            try
+            {
+                await foreach (var args in OutputChannel.Reader.ReadAllAsync(ct))
+                {
+                    try { await OutputProcessor(args.ServerId, args.Output); }
+                    catch { }
+                }
+            }
+            catch (OperationCanceledException) { }
+        }
+        #endregion
+
+        #region 清理
+        private bool _disposed = false;
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    OutputCTS.Cancel();
+                    OutputChannel.Writer.TryComplete();
+                    OutputCTS.Dispose();
+                }
+                _disposed = true;
+            }
+        }
+        #endregion
+
+        private static readonly Regex GetTimeStamp = new(@"^\[(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2}).*(?<type>[A-Z]{4})\]\s*:\s*(?<context>.*)", RegexOptions.Compiled);
+        private static readonly Regex GetPlayerMessage = new(@"^\<(?<player>.*)\>\s*(?<message>.*)", RegexOptions.Compiled);
+        private static readonly Regex GetUUID = new(@"^UUID\sof\splayer\s(?<player>.*)\sis\s(?<uuid>[\da-f-]*)", RegexOptions.Compiled);
+        private static readonly Regex PlayerLeft = new(@"(?<player>.*)\sleft\sthe\sgame$", RegexOptions.Compiled);
+
+        #region 处理操作
+        private async Task OutputProcessor(int ServerId, string Output)
+        {
+            string colorBrush = "#000000";
+            string final = Output;
             // 检测消息是否带有时间戳
-            if (Output.StartsWith('['))
+            if (Output.StartsWith("[LSL")) { }
+            else if (GetTimeStamp.IsMatch(Output))
             {
-                isMsgWithTime = true;
-                MsgWithoutTime = Output.Substring(Output.IndexOf(']') + 2).Trim();
+                var match = GetTimeStamp.Match(Output);
+                if (GetPlayerMessage.IsMatch(match.Groups["context"].Value))
+                {
+                    EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerMessageArgs(ServerId, match.Groups["context"].Value));
+                }
+                else
+                {
+                    string type = match.Groups["type"].Value;
+                    colorBrush = type switch
+                    {
+                        "INFO" => "#019eff",// 还是这个颜色顺眼 (>v<)
+                        "WARN" => "#ffc125",
+                        "ERRO" => "#ff0000",
+                        "FATA" => "#ff0000",
+                        _ => "#000000"
+                    };
+                    ProcessSystem(ServerId, match.Groups["context"].Value);
+                }
             }
             else
             {
-                isMsgWithTime = false;
-                MsgWithoutTime = Output;
+                colorBrush = "#ff0000";
             }
-            // 检测消息是否为用户消息
-            if (isMsgWithTime && MsgWithoutTime.StartsWith('<'))
+            EventBus.Instance.PublishAsync<IStorageArgs>(new ColorOutputArgs(ServerId, final, colorBrush));
+        }
+        // 额外处理服务端自身输出所需要更新的操作
+        private void ProcessSystem(int ServerId, string Output)
+        {
+            if (GetUUID.IsMatch(Output))
             {
-                EventBus.Instance.PublishAsync(new PlayerMessageArgs { ServerId = ServerId, Message = MsgWithoutTime });
+                var match = GetUUID.Match(Output);
+                EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerUpdateArgs(ServerId, match.Groups["uuid"].Value, match.Groups["player"].Value, true));
             }
-            else
+
+            if (PlayerLeft.IsMatch(Output))
             {
-                if (MsgWithoutTime.StartsWith('['))
-                {
-                    MsgWithoutTime = MsgWithoutTime.Substring(MsgWithoutTime.IndexOf(':') + 1).Trim();
-                }
-                var MessagePieces = MsgWithoutTime.Split(' ');
-                if (MsgWithoutTime.Contains("UUID of player"))
-                {
-                    string PlayerName = MessagePieces[4];
-                    string uuid = MessagePieces[6];
-                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = uuid, PlayerName = PlayerName, Entering = true });
-                }
-
-                if (MsgWithoutTime.Contains("left the game"))
-                {
-                    string PlayerName = MessagePieces[0];
-                    EventBus.Instance.PublishAsync(new PlayerUpdateArgs { ServerId = ServerId, UUID = "lefting", PlayerName = PlayerName, Entering = false });
-                }
-
-                if (MsgWithoutTime.StartsWith("Done"))
-                {
-                    EventBus.Instance.PublishAsync(new TerminalOutputArgs { ServerId = ServerId, Output = "[LSL 消息]: 服务器启动成功！" });
-                    EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Running = true, Online = true });
-                    ServerHost.Instance.SendCommand(ServerId, "hello");
-                    // 现在的情况是这个服务器输入处理方式不知道抽了什么风，第一个发送的命令会被修改，Buffer啥的也都排除掉了，所以这里加了一个hello命令，防止第一个命令被修改影响实际操作
-                }
-
-                if (MsgWithoutTime.StartsWith("Stopping the server"))
-                {
-                    EventBus.Instance.PublishAsync(new ServerStatusArgs { ServerId = ServerId, Running = true, Online = false });
-                }
+                EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerUpdateArgs(ServerId, "Unknown", GetUUID.Match(Output).Groups["player"].Value, false));
             }
         }
+        #endregion
     }
-    #endregion
+
+    // 服务端输出存储
+    public class ServerOutputStorage : IDisposable
+    {
+        public readonly ConcurrentDictionary<int, ObservableCollection<ColorOutputLine>> OutputDict = new();
+        public readonly ConcurrentDictionary<int, (bool IsRunning, bool IsOnline)> StatusDict = new();
+        public readonly ConcurrentDictionary<(int ServerId, string PlayerName), string> PlayerDict = new();
+        public readonly ConcurrentDictionary<int, ObservableCollection<string>> MessageDict = new();
+        private readonly Channel<IStorageArgs> StorageQueue;
+        private readonly CancellationTokenSource StorageCTS = new();
+        public ServerOutputStorage()
+        {
+            StorageQueue = Channel.CreateUnbounded<IStorageArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
+            Task.Run(() => ProcessStorage(StorageCTS.Token));
+            EventBus.Instance.Subscribe<IStorageArgs>(arg=>TrySendLine(arg));
+            Debug.WriteLine("ServerOutputStorage Launched");
+        }
+
+        #region 排队处理
+        private bool TrySendLine(IStorageArgs args)
+        {
+            if (StorageQueue.Writer.TryWrite(args))
+            {
+                return true;
+            }
+            else
+            {
+                Debug.WriteLine("StorageQueue Writer is full");
+                return false;
+            }
+        }
+        private async Task ProcessStorage(CancellationToken ct)
+        {
+            try
+            {
+                await foreach (var args in StorageQueue.Reader.ReadAllAsync(ct))
+                {
+                    try { await StorageProcessor(args); }
+                    catch { }
+                }
+            }
+            catch (OperationCanceledException) { }
+        }
+        private async Task StorageProcessor(IStorageArgs args)
+        {
+            switch (args)
+            {
+                case ColorOutputArgs COA:
+                    OutputDict.AddOrUpdate(COA.ServerId, [new ColorOutputLine(COA.Output, COA.ColorHex)], (key, value) =>
+                    {
+                        value.Add(new ColorOutputLine(COA.Output, COA.ColorHex));
+                        return value;
+                    });
+                    break;
+                case ServerStatusArgs SSA:
+                    StatusDict.AddOrUpdate(SSA.ServerId, (SSA.IsRunning, SSA.IsOnline), (key, value) =>
+                    {
+                        value.IsRunning = SSA.IsRunning;
+                        value.IsOnline = SSA.IsOnline;
+                        return value;
+                    });
+                    break;
+                case PlayerUpdateArgs PUA:
+                    PlayerDict.AddOrUpdate((PUA.ServerId, PUA.PlayerName), PUA.UUID, (key, value) =>
+                    {
+                        if (PUA.Entering)
+                        {
+                            return PUA.UUID;
+                        }
+                        else
+                        {
+                            PlayerDict.TryRemove(key, out _);
+                            return string.Empty;
+                        }
+                    });
+                    break;
+                case PlayerMessageArgs PMA:
+                    MessageDict.AddOrUpdate(PMA.ServerId, _ => [PMA.Message], (key, value) =>
+                    {
+                        value.Add(PMA.Message);
+                        return value;
+                    });
+                    break;
+                default:
+                    break;
+            }
+        }
+        public void Dispose()
+        {
+            StorageCTS.Cancel();
+            StorageQueue.Writer.TryComplete();
+            StorageCTS.Dispose();
+            GC.SuppressFinalize(this);
+        }
+        #endregion
+
+    }
 }

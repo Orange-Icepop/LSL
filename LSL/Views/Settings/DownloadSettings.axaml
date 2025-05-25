@@ -3,41 +3,45 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
+             xmlns:vm="using:LSL.ViewModels"
+             x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.DownloadSettings">
-	<StackPanel>
-		<local:MyCard Text="下载设置">
-			<StackPanel Margin="25,40,23,15">
-				<DockPanel Margin="0,10,0,5">
-					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="下载源"/>
-					<ComboBox Name="DownloadSource" Width="300" SelectedIndex="{Binding DownloadSource}">
-						<ComboBoxItem Content="LSL本地爬取"/>
-						<ComboBoxItem Content="FastMirror"/>
-						<ComboBoxItem Content="MCSLAPI"/>
-						<ComboBoxItem Content="极星镜像站"/>
-						<ComboBoxItem Content="Akira Cloud"/>
-					</ComboBox>
-				</DockPanel>
-				<DockPanel Margin="0,10,0,5">
-					<TextBlock Margin="0,-3,10,0" VerticalAlignment="Center" Text="下载线程数"/>
-					<Slider Name="DownloadThreads"
-							Maximum="128"
-							Minimum="1"
-							Value="{Binding DownloadThreads}"
-							TickFrequency="1"
-							IsSnapToTickEnabled="True"
-							Width="400"
-							HorizontalAlignment="Left"
-							VerticalAlignment="Center"
-							Margin="0,-20,10,-20"/>
-					<TextBlock Text="{Binding #DownloadThreads.Value}" Margin="10,-3,10,0" VerticalAlignment="Center" FontWeight="Bold"/>
-				</DockPanel>
-				<DockPanel Margin="0,10,0,5">
-					<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="下载限速"/>
-					<TextBox Width="150" Text="{Binding DownloadLimit}"></TextBox>
-					<TextBlock Text="KB/s，0表示不限速" Margin="10,0,10,0" VerticalAlignment="Center"/>
-				</DockPanel>
-			</StackPanel>
-		</local:MyCard>
-	</StackPanel>
+	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+		<StackPanel>
+			<local:MyCard Text="下载设置">
+				<StackPanel Margin="25,40,23,15">
+					<DockPanel Margin="0,10,0,5">
+						<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="下载源"/>
+						<ComboBox Name="DownloadSource" Width="300" SelectedIndex="{Binding ConfigVM.DownloadSource}">
+							<ComboBoxItem Content="LSL本地爬取"/>
+							<ComboBoxItem Content="FastMirror"/>
+							<ComboBoxItem Content="MCSLAPI"/>
+							<ComboBoxItem Content="极星镜像站"/>
+							<ComboBoxItem Content="Akira Cloud"/>
+						</ComboBox>
+					</DockPanel>
+					<DockPanel Margin="0,10,0,5">
+						<TextBlock Margin="0,-3,10,0" VerticalAlignment="Center" Text="下载线程数"/>
+						<Slider Name="DownloadThreads"
+								Maximum="128"
+								Minimum="1"
+								Value="{Binding ConfigVM.DownloadThreads}"
+								TickFrequency="1"
+								IsSnapToTickEnabled="True"
+								Width="400"
+								HorizontalAlignment="Left"
+								VerticalAlignment="Center"
+								Margin="0,-20,10,-20"/>
+						<TextBlock Text="{Binding #DownloadThreads.Value}" Margin="10,-3,10,0" VerticalAlignment="Center" FontWeight="Bold"/>
+					</DockPanel>
+					<DockPanel Margin="0,10,0,5">
+						<TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="下载限速"/>
+						<TextBox Width="150" Text="{Binding ConfigVM.DownloadLimit}"></TextBox>
+						<TextBlock Text="KB/s，0表示不限速" Margin="10,0,10,0" VerticalAlignment="Center"/>
+					</DockPanel>
+				</StackPanel>
+			</local:MyCard>
+		</StackPanel>
+	</ScrollViewer>
 </UserControl>

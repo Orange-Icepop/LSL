@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LSL.Components
+namespace LSL.IPC
 {
     public class LSLException : Exception// LSL异常，Exception的包装类
     {
@@ -24,4 +24,34 @@ namespace LSL.Components
         public NonfatalException() { }
 
     }// 非致命错误
+    /*
+     * ServiceError使用说明
+     * ErrorCode为0时表示没有错误。
+     * 1:执行完成，但是包含警告。
+     * 2:出现错误。只代表最基础的错误返回。
+     * -1:在没有执行完成的情况下中断了。
+     */
+    public class ServiceError
+    {
+        public int ErrorCode { get; }
+        public string? Message { get; }
+        public Exception? Error { get; }
+        public ServiceError()
+        {
+            ErrorCode = 0;
+            Message = null;
+            Error = null;
+        }
+        public ServiceError(int errorCode, string message)
+        {
+            ErrorCode = errorCode;
+            Message = message;
+            Error = null;
+        }
+        public ServiceError(int errorCode, Exception error)
+        {
+            ErrorCode = errorCode;
+            Error = error;
+        }
+    }
 }

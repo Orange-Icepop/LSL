@@ -2,14 +2,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LSL.ViewModels"
+             x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.SettingsLeft">
 	<StackPanel Width="150">
 		<TextBlock DockPanel.Dock="Top" Text="设置" Margin="10,10,0,0" Foreground="Gray"/>
-		<Button Width="150" Content="常规" Name="Common" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="Common" />
-		<Button Width="150" Content="下载" Name="Download" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="DownloadSettings"/>
-		<Button Width="150" Content="网页面板" Name="Panel" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="PanelSettings"/>
-		<Button Width="150" Content="个性化" Name="StyleButton" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="StyleSettings"/>
-		<Button Width="150" Content="关于" Name="About" Classes="left" Command="{Binding RightViewCmd}" CommandParameter="About"/>
+		<Button Width="150" Content="常规" Name="Common" Classes="left" Classes.selLeft="{Binding LeftVM.HLCommon}" Command="{Binding RightViewCmd}" CommandParameter="Common" />
+		<Button Width="150" Content="下载" Name="Download" Classes="left" Classes.selLeft="{Binding LeftVM.HLDownloadSettings}" Command="{Binding RightViewCmd}" CommandParameter="DownloadSettings"/>
+		<Button Width="150" Content="网页面板" Name="Panel" Classes="left" Classes.selLeft="{Binding LeftVM.HLPanelSettings}" Command="{Binding RightViewCmd}" CommandParameter="PanelSettings"/>
+		<Button Width="150" Content="个性化" Name="StyleButton" Classes="left" Classes.selLeft="{Binding LeftVM.HLStyleSettings}" Command="{Binding RightViewCmd}" CommandParameter="StyleSettings"/>
+		<Button Width="150" Content="关于" Name="About" Classes="left" Classes.selLeft="{Binding LeftVM.HLAbout}" Command="{Binding RightViewCmd}" CommandParameter="About"/>
 	</StackPanel>
 </UserControl>

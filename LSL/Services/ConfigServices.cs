@@ -1,13 +1,12 @@
-﻿using LSL.Components;
-using LSL.Services.Validators;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using LSL.IPC;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LSL.Services
 {
@@ -63,17 +62,13 @@ namespace LSL.Services
             }
             else
             {
-                switch (token.Type)
+                return token.Type switch
                 {
-                    case JTokenType.String:
-                        return token.Value<string>();
-                    case JTokenType.Integer:
-                        return token.Value<int>();
-                    case JTokenType.Boolean:
-                        return token.Value<bool>();
-                    default:
-                        throw new ArgumentException($"Key '{keyPath}' is not a string, number, or bool.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。");
-                }
+                    JTokenType.String => token.Value<string>()!,
+                    JTokenType.Integer => token.Value<int>(),
+                    JTokenType.Boolean => token.Value<bool>(),
+                    _ => throw new ArgumentException($"Key '{keyPath}' is not a string, number, or bool.这有可能是因为一个配置文件损坏导致的，请备份并删除配置文件再试。"),
+                };
             }
         }
         #endregion
@@ -295,7 +290,7 @@ namespace LSL.Services
             CurrentConfigs.Clear();// 清空当前配置字典
             foreach (var key in ConfigKeys)
             {
-                JToken config = configs[key];
+                JToken config = configs[key]!;
                 object? keyValue = config.Type switch// 根据值类型读取
                 {
                     JTokenType.Boolean => config.Value<bool>(),
@@ -350,9 +345,9 @@ namespace LSL.Services
 
     public class ServerConfigManager//服务器配置相关服务
     {
-        public static Dictionary<string, string> MainServerConfig = [];
+        public static Dictionary<int, string> MainServerConfig = [];
 
-        public static Dictionary<string, ServerConfig> ServerConfigs = [];
+        public static Dictionary<int, ServerConfig> ServerConfigs = [];
 
         public static readonly List<string> ServerConfigKeys =
             [
@@ -365,7 +360,7 @@ namespace LSL.Services
             ];
 
         #region 读取各个服务器的LSL配置文件LoadServerConfigs
-        public static void LoadServerConfigs()
+        public static ServiceError LoadServerConfigs()
         {
             ServerConfigs = [];
             List<string> NotfoundServers = [];
@@ -375,21 +370,21 @@ namespace LSL.Services
             try
             {
                 mainFile = File.ReadAllText(ConfigManager.ServerConfigPath);
-                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return;
+                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return new ServiceError();
             }
             catch (FileNotFoundException)
             {
-                QuickHandler.ThrowError($"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。");
+                return new ServiceError(2, $"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。");
             }
             try
             {
-                var configs = JsonConvert.DeserializeObject<Dictionary<string, string>>(mainFile);
-                if (configs == null) throw new JsonException();
+                var configs = JsonConvert.DeserializeObject<Dictionary<int, string>>(mainFile);
+                if (configs is null) return new ServiceError(2, $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
                 else MainServerConfig = configs;
             }
             catch (JsonException)
             {
-                throw new FatalException($"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
+                return new ServiceError(2, $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
             }
             // 读取各个服务器的LSL配置文件
             foreach (var config in MainServerConfig)
@@ -434,13 +429,14 @@ namespace LSL.Services
                 else if (ConfigErrorServers.Count > 0) ErrorContext += "格式错误的服务器配置文件。";
                 if (NotfoundServers.Count > 0) ErrorContext += "\r不存在的服务器：" + string.Join(", \r", NotfoundServers) + "\r请确保" + ConfigManager.ServerConfigPath + "文件中的服务器名称与实际服务器文件夹名称一致。";
                 if (ConfigErrorServers.Count > 0) ErrorContext += "\r格式错误的服务器配置文件：" + string.Join(", \r", ConfigErrorServers) + "\r请确保这些配置文件的格式正确。";
-                QuickHandler.ThrowError(ErrorContext);
+                return new(1, ErrorContext);
             }
+            return new();
         }
         #endregion
 
         #region 注册服务器方法RegisterServer
-        public static void RegisterServer(string serverName, string usingJava, string corePath, uint minMem, uint maxMem, string extJVM)
+        public static void RegisterServer(string serverName, string usingJava, string corePath, uint maxMem, uint minMem, string extJVM)
         {
             if (!File.Exists(ConfigManager.ServerConfigPath))
             {
@@ -471,7 +467,7 @@ namespace LSL.Services
             File.WriteAllText(Path.Combine(addedServerPath, "eula.txt"), $"# For details of Mojang EULA, go to https://aka.ms/MinecraftEULA\r# Generated by LSL at {time}\reula={eula}");
             //找到空闲id
             int targetId = 0;
-            while (MainServerConfig.ContainsKey(targetId.ToString()))
+            while (MainServerConfig.ContainsKey(targetId))
             {
                 ++targetId;
             }
@@ -481,10 +477,9 @@ namespace LSL.Services
         #endregion
 
         #region 修改服务器方法EditServer
-        public static void EditServer(string serverId, string serverName, string usingJava, uint minMem, uint maxMem, string extJVM)
+        public static void EditServer(int serverId, string serverName, string usingJava, uint minMem, uint maxMem, string extJVM)
         {
-            string serverPath = MainServerConfig[serverId];
-            if (serverPath != null && Directory.Exists(serverPath))
+            if (MainServerConfig.TryGetValue(serverId, out var serverPath) && Directory.Exists(serverPath))
             {
                 string editedConfigPath = Path.Combine(serverPath, "lslconfig.json");
                 string coreName = ServerConfigs[serverId].core_name;
@@ -510,12 +505,12 @@ namespace LSL.Services
         #endregion
 
         #region 删除服务器方法DeleteServer
-        public static void DeleteServer(string serverId)
+        public static void DeleteServer(int serverId)
         {
             string serverPath = ServerConfigs[serverId].server_path;
             if (serverPath != null && Directory.Exists(serverPath))
             {
-                JsonHelper.DeleteJsonKey(ConfigManager.ServerConfigPath, serverId);// 在服务器列表文件中删除服务器
+                JsonHelper.DeleteJsonKey(ConfigManager.ServerConfigPath, serverId.ToString());// 在服务器列表文件中删除服务器
                 Directory.Delete(serverPath, true);// 删除服务器文件夹
                 Debug.WriteLine("Server Deleted:" + serverId);
             }
@@ -524,70 +519,43 @@ namespace LSL.Services
 
     }
 
-    public class ServerConfig// 服务器配置记录
-    {
-        public string server_id;
-        public string server_path;
-        public string name;
-        public string using_java;
-        public string core_name;
-        public uint min_memory;
-        public uint max_memory;
-        public string ext_jvm;
-        public ServerConfig(string ServerId, string ServerPath, string Name, string UsingJava, string CoreName, uint MinMemory, uint MaxMemory, string ExtJVM)
-        {
-            this.server_id = ServerId;
-            this.server_path = ServerPath;
-            this.name = Name;
-            this.using_java = UsingJava;
-            this.core_name = CoreName;
-            this.min_memory = MinMemory;
-            this.max_memory = MaxMemory;
-            this.ext_jvm = ExtJVM;
-        }
-
-        public ServerConfig(ServerConfig config)// 深拷贝构造函数
-        {
-            this.server_id = config.server_id;
-            this.server_path = config.server_path;
-            this.name = config.name;
-            this.using_java = config.using_java;
-            this.core_name = config.core_name;
-            this.min_memory = config.min_memory;
-            this.max_memory = config.max_memory;
-            this.ext_jvm = config.ext_jvm;
-        }
-    }
-
     public static class JavaManager//Java相关服务
     {
 
-        public static Dictionary<string, JavaInfo> JavaDict = [];// 目前读取的Java列表
+        public static Dictionary<int, JavaInfo> JavaDict = [];// 目前读取的Java列表
 
         #region 读取Java列表
-        public static void InitJavaDict()
+        public static bool ReadJavaConfig()
         {
-            var file = File.ReadAllText(ConfigManager.JavaListPath);
-            JObject jsonObj = JObject.Parse(file);
-            JavaDict.Clear();
-            foreach (var item in jsonObj.Properties())//遍历配置文件中的所有Java
+            try
             {
-                JToken? versionObject = item.Value["Version"];
-                JToken? pathObject = item.Value["Path"];
-                JToken? vendorObject = item.Value["Vendor"];
-                JToken? archObject = item.Value["Architecture"];
-                if (versionObject != null &&
-                    pathObject != null &&
-                    vendorObject != null &&
-                    archObject != null &&
-                    versionObject.Type == JTokenType.String &&
-                    pathObject.Type == JTokenType.String &&
-                    vendorObject.Type == JTokenType.String &&
-                    archObject.Type == JTokenType.String)
+                var file = File.ReadAllText(ConfigManager.JavaListPath);
+                JObject jsonObj = JObject.Parse(file);
+                JavaDict.Clear();
+                foreach (var item in jsonObj.Properties())//遍历配置文件中的所有Java
                 {
-                    JavaDict.Add(item.Name, new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(), archObject.ToString()));
+                    JToken? versionObject = item.Value["Version"];
+                    JToken? pathObject = item.Value["Path"];
+                    JToken? vendorObject = item.Value["Vendor"];
+                    JToken? archObject = item.Value["Architecture"];
+                    if (versionObject != null &&
+                        pathObject != null &&
+                        vendorObject != null &&
+                        archObject != null &&
+                        versionObject.Type == JTokenType.String &&
+                        pathObject.Type == JTokenType.String &&
+                        vendorObject.Type == JTokenType.String &&
+                        archObject.Type == JTokenType.String)
+                    {
+                        JavaDict.Add(int.Parse(item.Name), new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(), archObject.ToString()));
+                    }
                 }
             }
+            catch (Exception)
+            {
+                return false;
+            }
+            return true;
         }
         #endregion
 

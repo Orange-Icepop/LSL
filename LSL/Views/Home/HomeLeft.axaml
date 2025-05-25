@@ -3,6 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
+             xmlns:vm="using:LSL.ViewModels"
+             x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="600"
              x:Class="LSL.Views.Home.HomeLeft">
 	<DockPanel Width="350">
@@ -13,14 +15,14 @@
 		</Grid>
 		<local:MyButton DockPanel.Dock="Bottom"
 						FontSize="20" 
-						Content="{Binding LaunchServerButtonContext}" 
+						Content="{Binding ServerVM.LaunchButtonContent}" 
 						ColorType="Highlight" 
 						Margin="0,0,0,20" 
 						VerticalAlignment="Bottom" 
 						HorizontalAlignment="Center" 
 						Height="60" Width="250" 
-						IsEnabled="{Binding LaunchServerButtonEnabled}"
-						Command="{Binding LaunchServerButtonCommand}"/>
-		<ComboBox Name="ServerList" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="30" Width="250" Margin="0,0,0,20" ItemsSource="{Binding ServerNames}" SelectedIndex="{Binding SelectedServerIndex}"></ComboBox>
+						IsEnabled="{Binding ServerVM.LBCEnabled}"
+						Command="{Binding ServerVM.LaunchButtonCmd}"/>
+		<ComboBox Name="ServerList" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="30" Width="250" Margin="0,0,0,20" ItemsSource="{Binding AppState.ServerNames}" SelectedIndex="{Binding AppState.SelectedServerIndex, Mode=TwoWay}"></ComboBox>
 	</DockPanel>
 </UserControl>
