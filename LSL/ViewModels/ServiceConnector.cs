@@ -21,9 +21,13 @@ namespace LSL.ViewModels
     public class ServiceConnector
     {
         private AppStateLayer AppState { get; }
-        public ServiceConnector(AppStateLayer appState)
+        private ServerHost daemonHost { get; }
+        private ServerOutputStorage outputStorage { get; }
+        public ServiceConnector(AppStateLayer appState, ServerHost daemon, ServerOutputStorage optStorage)
         {
             AppState = appState;
+            daemonHost = daemon;
+            outputStorage = optStorage;
             EventBus.Instance.Subscribe<IStorageArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
             _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
             CopyServerOutput();
@@ -84,7 +88,7 @@ namespace LSL.ViewModels
             }
 
             AppState.TerminalTexts.TryAdd(serverId, new ObservableCollection<ColoredLines>());
-            ServerHost.Instance.RunServer(serverId);
+            daemonHost.RunServer(serverId);
         }
 
         public async Task StopServer(int serverId)
@@ -93,27 +97,27 @@ namespace LSL.ViewModels
                 .Handle(new InvokePopupArgs(PopupType.Warning_YesNo, "确定要关闭该服务器吗？", "将会立刻踢出服务器内所有玩家，服务器上的最新更改会被保存。"));
             if (confirm == PopupResult.Yes)
             {
-                ServerHost.Instance.StopServer(serverId);
+                daemonHost.StopServer(serverId);
                 AppState.ITAUnits.Notify(0, "正在关闭服务器", "请稍作等待");
             }
         }
 
         public void SaveServer(int serverId)
         {
-            ServerHost.Instance.SendCommand(serverId, "save-all");
+            daemonHost.SendCommand(serverId, "save-all");
         }
 
         public async Task EndServer(int serverId)
         {
             var confirm = await AppState.ITAUnits.PopupITA.Handle(new(PopupType.Warning_YesNo, "确定要终止该服务端进程吗？",
                 "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！"));
-            if (confirm == PopupResult.Yes) ServerHost.Instance.EndServer(serverId);
+            if (confirm == PopupResult.Yes) daemonHost.EndServer(serverId);
         }
 
         public void SendCommandToServer(int serverId, string command)
         {
             if (string.IsNullOrEmpty(command)) return;
-            ServerHost.Instance.SendCommand(serverId, command);
+            daemonHost.SendCommand(serverId, command);
         }
 
         #endregion
@@ -321,7 +325,6 @@ namespace LSL.ViewModels
         #region 从服务线程拷贝服务器输出字典
         private async Task CopyServerOutput()
         {
-            var storage = ServerHost.Instance.OutputStorage;
             // 暂停输出处理
             Debug.WriteLine("Copy server output. Stopping output handler...");
             OutputCts.Cancel();
@@ -334,7 +337,7 @@ namespace LSL.ViewModels
             try
             {
                 AppState.TerminalTexts = new ConcurrentDictionary<int, ObservableCollection<ColoredLines>>(
-                    storage.OutputDict.ToDictionary(
+                    outputStorage.OutputDict.ToDictionary(
                         kvp => kvp.Key,
                         kvp => new ObservableCollection<ColoredLines>(
                             kvp.Value.Select(line => new ColoredLines(line.Line, line.ColorHex))
@@ -343,7 +346,7 @@ namespace LSL.ViewModels
                 );
 
                 AppState.ServerStatuses = new ConcurrentDictionary<int, ServerStatus>(
-                    storage.StatusDict.ToDictionary(
+                    outputStorage.StatusDict.ToDictionary(
                         kvp => kvp.Key,
                         kvp => new ServerStatus(kvp.Value)
                     )
@@ -351,7 +354,7 @@ namespace LSL.ViewModels
                 await Dispatcher.UIThread.InvokeAsync(UpdateRunningServer);
 
                 AppState.UserDict = new ConcurrentDictionary<int, ObservableCollection<UUID_User>>(
-                    storage.PlayerDict
+                    outputStorage.PlayerDict
                         .GroupBy(kvp => kvp.Key.ServerId)
                         .ToDictionary(
                             g => g.Key,
@@ -362,7 +365,7 @@ namespace LSL.ViewModels
                 );
 
                 AppState.MessageDict = new ConcurrentDictionary<int, ObservableCollection<UserMessageLine>>(
-                    storage.MessageDict.ToDictionary(
+                    outputStorage.MessageDict.ToDictionary(
                         kvp => kvp.Key,
                         kvp => new ObservableCollection<UserMessageLine>(
                             kvp.Value.Select(line => new UserMessageLine(line))

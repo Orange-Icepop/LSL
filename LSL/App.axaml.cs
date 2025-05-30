@@ -42,7 +42,7 @@ public partial class App : Application
     public App()
     {
         serviceDescriptors = new ServiceCollection();
-        serviceDescriptors.AddServerHost();
+        serviceDescriptors.AddService();
         serviceDescriptors.AddViewModels();
         var services = serviceDescriptors.BuildServiceProvider();
         shellVM = services.GetRequiredService<ShellViewModel>();

@@ -23,17 +23,14 @@ namespace LSL.Services
     public class ServerHost : IServerHost, IDisposable
     {
         // 启动输出处理器
-        public OutputHandler OutputHandler { get; }
-        public ServerOutputStorage OutputStorage { get; }
-        private ServerHost()
+        private ServerOutputHandler OutputHandler { get; }
+        private ServerOutputStorage OutputStorage { get; }
+        public ServerHost(ServerOutputHandler outputHandler, ServerOutputStorage outputStorage)
         {
-            OutputStorage = new ServerOutputStorage();
-            OutputHandler = new OutputHandler();
+            OutputStorage = outputStorage;
+            OutputHandler = outputHandler;
             Debug.WriteLine("ServerHost Launched");
         }
-        private static readonly Lazy<ServerHost> _lazyInstance = new(() => new ServerHost());
-        public static ServerHost Instance => _lazyInstance.Value;
-
         // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在ViewModel中将列表项解析为ServerId
 
         private readonly ConcurrentDictionary<int, ServerProcess> _runningServers = [];// 存储正在运行的服务器实例
@@ -418,9 +415,9 @@ namespace LSL.Services
     public record ColorOutputLine(string Line, string ColorHex);// 着色输出行
 
     // 服务端输出预处理
-    public partial class OutputHandler : IDisposable
+    public partial class ServerOutputHandler : IDisposable
     {
-        public OutputHandler()
+        public ServerOutputHandler()
         {
             OutputChannel = Channel.CreateUnbounded<TerminalOutputArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
             Task.Run(() => ProcessOutput(OutputCTS.Token));

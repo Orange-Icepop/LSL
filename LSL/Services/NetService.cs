@@ -9,19 +9,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LSL.Services;
 
-public static class NetService
+public class NetService
 {
-    private static readonly IHttpClientFactory _factory;
+    private readonly IHttpClientFactory _factory;
     private const int bufferSize = 8192;
-    static NetService()
+    public NetService(IHttpClientFactory factory)
     {
-        var provider = new ServiceCollection()
-            .AddHttpClient()
-            .BuildServiceProvider();
-        _factory = provider.GetRequiredService<IHttpClientFactory>();
+        _factory = factory;
     }
 
-    public static async Task GetAsync(string url, string dir, IProgress<double> progress, CancellationToken token) 
+    public async Task GetAsync(string url, string dir, IProgress<double> progress, CancellationToken token) 
     {
         using var client = _factory.CreateClient();
         string? path = null;
