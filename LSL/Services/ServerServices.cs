@@ -207,7 +207,7 @@ namespace LSL.Services
     }
 
     // 服务器进程类ServerProcess
-    public class ServerProcess : IDisposable
+    public partial class ServerProcess : IDisposable
     {
         public ServerProcess(ServerConfig config)
         {
@@ -392,9 +392,16 @@ namespace LSL.Services
         #endregion
 
         #region 输出处理
-        private static readonly Regex GetDone = new(@"^\[.*\]:\s*Done\s*\(", RegexOptions.Compiled);
-        private static readonly Regex GetExit = new(@"^\[.*\]:\s*Stopping\sthe\sserver", RegexOptions.Compiled);
-        private static readonly Regex GetPlayerMessage = new(@"^\[.*\]:\s*\<(?<player>.*)\>\s*(?<message>.*)", RegexOptions.Compiled);
+        [GeneratedRegex(@"^\[.*\]:\s*Done\s*\(")]
+        private static partial Regex GetDoneRegex();
+        [GeneratedRegex(@"^\[.*\]:\s*Stopping\sthe\sserver")]
+        private static partial Regex GetExitRegex();
+        [GeneratedRegex(@"^\[.*\]:\s*\<(?<player>.*)\>\s*(?<message>.*)")]
+        
+        private static partial Regex GetMessageRegex();
+        private static readonly Regex GetDone = GetDoneRegex();
+        private static readonly Regex GetExit = GetExitRegex();
+        private static readonly Regex GetPlayerMessage = GetMessageRegex();
         private void HandleOutput(string? Output)
         {
             if (!string.IsNullOrEmpty(Output) && !GetPlayerMessage.IsMatch(Output))
@@ -411,7 +418,7 @@ namespace LSL.Services
     public record ColorOutputLine(string Line, string ColorHex);// 着色输出行
 
     // 服务端输出预处理
-    public class OutputHandler : IDisposable
+    public partial class OutputHandler : IDisposable
     {
         public OutputHandler()
         {
@@ -471,10 +478,20 @@ namespace LSL.Services
         }
         #endregion
 
-        private static readonly Regex GetTimeStamp = new(@"^\[(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2}).*(?<type>[A-Z]{4})\]\s*:\s*(?<context>.*)", RegexOptions.Compiled);
-        private static readonly Regex GetPlayerMessage = new(@"^\<(?<player>.*)\>\s*(?<message>.*)", RegexOptions.Compiled);
-        private static readonly Regex GetUUID = new(@"^UUID\sof\splayer\s(?<player>.*)\sis\s(?<uuid>[\da-f-]*)", RegexOptions.Compiled);
-        private static readonly Regex PlayerLeft = new(@"(?<player>.*)\sleft\sthe\sgame$", RegexOptions.Compiled);
+        [GeneratedRegex(@"^\[(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2}).*(?<type>[A-Z]{4})\]\s*:\s*(?<context>.*)")] 
+        private static partial Regex TimeStampRegex();
+        [GeneratedRegex(@"^\<(?<player>.*)\>\s*(?<message>.*)")]
+        private static partial Regex MessageRegex();
+        [GeneratedRegex(@"^UUID\sof\splayer\s(?<player>.*)\sis\s(?<uuid>[\da-f-]*)")]
+        private static partial Regex UUIDRegex();
+        [GeneratedRegex(@"(?<player>.*)\sleft\sthe\sgame$")]
+        private static partial Regex PlayerLeftRegex();
+
+        
+        private static readonly Regex GetTimeStamp = TimeStampRegex();
+        private static readonly Regex GetPlayerMessage = MessageRegex();
+        private static readonly Regex GetUUID = UUIDRegex();
+        private static readonly Regex PlayerLeft = PlayerLeftRegex();
 
         #region 处理操作
         private async Task OutputProcessor(int ServerId, string Output)
@@ -524,6 +541,7 @@ namespace LSL.Services
                 EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerUpdateArgs(ServerId, "Unknown", GetUUID.Match(Output).Groups["player"].Value, false));
             }
         }
+
         #endregion
     }
 
