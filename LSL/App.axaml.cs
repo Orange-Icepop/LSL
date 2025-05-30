@@ -42,6 +42,8 @@ public partial class App : Application
     public App()
     {
         serviceDescriptors = new ServiceCollection();
+        serviceDescriptors.AddLogging();
+        serviceDescriptors.AddNetworking();
         serviceDescriptors.AddService();
         serviceDescriptors.AddViewModels();
         var services = serviceDescriptors.BuildServiceProvider();

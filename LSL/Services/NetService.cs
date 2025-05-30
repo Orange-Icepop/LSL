@@ -6,16 +6,19 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace LSL.Services;
 
 public class NetService
 {
-    private readonly IHttpClientFactory _factory;
+    private IHttpClientFactory _factory { get; }
+    private ILogger<NetService> _logger { get; }
     private const int bufferSize = 8192;
-    public NetService(IHttpClientFactory factory)
+    public NetService(IHttpClientFactory factory, ILogger<NetService> logger)
     {
         _factory = factory;
+        _logger = logger;
     }
 
     public async Task GetAsync(string url, string dir, IProgress<double> progress, CancellationToken token) 
