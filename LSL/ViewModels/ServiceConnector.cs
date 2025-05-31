@@ -41,7 +41,7 @@ namespace LSL.ViewModels
         public void GetConfig(bool readFile = false)
         {
             _logger.LogInformation("start loading main config");
-            if (readFile) ConfigManager.LoadConfig();
+            if (readFile) AppState.ITAUnits.SubmitServiceError(ConfigManager.LoadConfig());
             AppState.CurrentConfigs = ConfigManager.CurrentConfigs;
             _logger.LogInformation("loading main config completed");
         }
@@ -49,7 +49,7 @@ namespace LSL.ViewModels
         public void ReadJavaConfig(bool readFile = false)
         {
             _logger.LogInformation("start loading java config");
-            if (readFile) AppState.ITAUnits.ShowServiceError(JavaManager.ReadJavaConfig());
+            if (readFile) AppState.ITAUnits.SubmitServiceError(JavaManager.ReadJavaConfig());
             AppState.CurrentJavaDict = JavaManager.JavaDict;
             _logger.LogInformation("loading java config completed");
         }
@@ -57,12 +57,7 @@ namespace LSL.ViewModels
         public void ReadServerConfig(bool readFile = false)
         {
             _logger.LogInformation("start loading server config");
-            if (readFile)
-            {
-                var result = ServerConfigManager.LoadServerConfigs();
-                AppState.ITAUnits.ShowServiceError(result);
-            }
-
+            if (readFile) AppState.ITAUnits.SubmitServiceError(ServerConfigManager.LoadServerConfigs());
             var cache = ServerConfigManager.ServerConfigs.ToDictionary(item => item.Key, item => new ServerConfig(item.Value));
             if (cache.Count == 0)
             {

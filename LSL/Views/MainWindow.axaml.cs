@@ -22,7 +22,6 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
     {
         InitializeComponent();
         this.Closing += MainWindow_Closing;// 重定向关闭窗口事件
-        this.Loaded += (s, e) => this.ViewModel!.InitializeMainWindow();
         MessageBus.Current.Listen<ViewBroadcastArgs>()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Where(args => args.Target == "MainWindow.axaml.cs")
@@ -32,6 +31,7 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
             action(this.ViewModel!.ITAUnits.PopupITA.RegisterHandler(HandlePopup));
             action(this.ViewModel!.ITAUnits.NotifyITA.RegisterHandler(ShowNotification));
             action(this.ViewModel!.ITAUnits.FilePickerITA.RegisterHandler(OpenFileOperation));
+            this.ViewModel!.InitializeMainWindow();
         });
     }
 

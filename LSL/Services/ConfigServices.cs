@@ -271,7 +271,7 @@ namespace LSL.Services
         // 当前配置字典
         public static readonly Dictionary<string, object> CurrentConfigs = [];
 
-        public static void LoadConfig()
+        public static ServiceError LoadConfig()
         {
             JObject configs;
             try
@@ -280,18 +280,25 @@ namespace LSL.Services
             }
             catch (FileNotFoundException ex)
             {
-                throw new ArgumentException($"位于{ConfigFilePath}的LSL主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL会在启动时自动创建主配置文件。若错误依旧，则LSL可能已经损坏，请重新下载。\r错误信息:{ex.Message}");
+                return new ServiceError(1,
+                    $"位于{ConfigFilePath}的LSL主配置文件不存在，请重启LSL。{Environment.NewLine}注意，这不是一个正常情况，因为LSL会在启动时自动创建主配置文件。若错误依旧，则LSL可能已经损坏，请重新下载。{Environment.NewLine}错误信息:{ex.Message}");
             }
             catch (JsonReaderException ex)
             {
-                throw new ArgumentException($"位于{ConfigFilePath}的LSL主文件已损坏，请删除该文件并重启。\r具备能力的可以将其备份或者进行手动修复。\r错误信息:{ex.Message}");
+                return new ServiceError(1,
+                    $"位于{ConfigFilePath}的LSL主配置文件已损坏，请删除该文件并重启。{Environment.NewLine}具备能力的可以将其备份或者进行手动修复。{Environment.NewLine}错误信息:{ex.Message}");
             }
+            catch (Exception ex)
+            {
+                return new ServiceError(1,
+                    $"在读取位于{ConfigFilePath}的LSL主配置文件时出现未知错误。{Environment.NewLine}错误信息：{ex.Message}");
+            }// TODO:在启动之前添加一个窗口处理Interaction，防止默认覆盖配置
             List<string> keysNeedToRepair = [];// 需要修复的键
             CurrentConfigs.Clear();// 清空当前配置字典
             foreach (var key in ConfigKeys)
             {
-                JToken config = configs[key]!;
-                object? keyValue = config.Type switch// 根据值类型读取
+                var config = configs[key];
+                object? keyValue = config?.Type switch// 根据值类型读取
                 {
                     JTokenType.Boolean => config.Value<bool>(),
                     JTokenType.Integer => config.Value<int>(),
@@ -338,6 +345,7 @@ namespace LSL.Services
                 Debug.WriteLine("Config.json repaired.");
             }
             Debug.WriteLine("Config.json loaded.");
+            return ServiceError.Success;
         }
         #endregion
 
