@@ -32,7 +32,8 @@ namespace LSL.Services
 
         private static void GetWindowsJavaInfos(List<JavaInfo> javaInfos)// 获取Windows系统中的Java信息
         {
-            string pathEnv = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);// 获取系统环境变量中的Path
+            var pathEnv = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);// 获取系统环境变量中的Path
+            if (pathEnv == null) throw new Exception("Environment variable path not found");
             string[] pathParts = pathEnv.Split(Path.PathSeparator);
 
             foreach (var pathPart in pathParts)
@@ -62,23 +63,21 @@ namespace LSL.Services
 
         private static void GetLinuxJavaInfos(List<JavaInfo> javaInfos)// 获取Linux系统中的Java信息
         {
-            string[] jvmDirs = { "/usr/lib/jvm", "/usr/lib32/jvm", "/usr/lib64/jvm" };// 利用Java虚拟机目录查找
+            string[] jvmDirs = ["/usr/lib/jvm", "/usr/lib32/jvm", "/usr/lib64/jvm"];// 利用Java虚拟机目录查找
 
             foreach (var jvmDir in jvmDirs)
             {
-                if (Directory.Exists(jvmDir))
+                if (!Directory.Exists(jvmDir)) continue;
+                foreach (var subdir in Directory.GetDirectories(jvmDir))
                 {
-                    foreach (var subdir in Directory.GetDirectories(jvmDir))
+                    // 查找java可执行文件
+                    string javaPath = Path.Combine(subdir, "bin", "java");
+                    if (File.Exists(javaPath))
                     {
-                        // 查找java可执行文件
-                        string javaPath = Path.Combine(subdir, "bin", "java");
-                        if (File.Exists(javaPath))
+                        var javaInfo = GetJavaInfo(javaPath);
+                        if (javaInfo != null)
                         {
-                            var javaInfo = GetJavaInfo(javaPath);
-                            if (javaInfo != null)
-                            {
-                                javaInfos.Add(javaInfo);
-                            }
+                            javaInfos.Add(javaInfo);
                         }
                     }
                 }

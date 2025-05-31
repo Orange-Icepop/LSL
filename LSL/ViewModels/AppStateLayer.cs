@@ -16,7 +16,7 @@ namespace LSL.ViewModels
     public class AppStateLayer : ReactiveObject
     {
         public ILoggerFactory LoggerFactory { get; }
-        public ILogger<AppStateLayer> Logger { get; }
+        private ILogger<AppStateLayer> Logger { get; }
         public InteractionUnits ITAUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
         public IObservable<Dictionary<int,ServerConfig>> ServerConfigChanged { get; private set; }
         public IObservable<int> ServerIndexChanged { get; private set; }

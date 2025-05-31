@@ -564,7 +564,7 @@ namespace LSL.Services
         {
             if (!File.Exists(ConfigManager.JavaListPath))
             {
-                File.WriteAllText(ConfigManager.JavaListPath, "{}");
+                await File.WriteAllTextAsync(ConfigManager.JavaListPath, "{}");
             }
             Debug.WriteLine("开始获取Java列表");
             var javaList = await Task.Run(JavaFinder.GetInstalledJavaInfosAsync);//调用JavaFinder查找JAVA
@@ -577,7 +577,7 @@ namespace LSL.Services
                 javaDict.Add(writtenId, javainfo);
                 id++;
             }
-            File.WriteAllText(ConfigManager.JavaListPath, JsonConvert.SerializeObject(javaDict, Formatting.Indented));//写入配置文件
+            await File.WriteAllTextAsync(ConfigManager.JavaListPath, JsonConvert.SerializeObject(javaDict, Formatting.Indented));//写入配置文件
         }
         #endregion
 
