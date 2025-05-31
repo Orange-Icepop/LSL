@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Input;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
 namespace LSL.ViewModels
@@ -17,6 +18,8 @@ namespace LSL.ViewModels
         public ServerViewModel ServerVM { get; }
         public FormPageVM FormVM { get; }
         public PublicCommand PublicCmd { get; }
+        //Logger
+        private ILogger<ShellViewModel> _logger { get; }
         // 弹窗交互，这玩意儿和上面的东西没关系
         public InteractionUnits ITAUnits { get; }
 
@@ -43,6 +46,8 @@ namespace LSL.ViewModels
             FormVM = formVM;
             PublicCmd = publicCommand;
             ITAUnits = ITA;
+            
+            _logger = appState.LoggerFactory.CreateLogger<ShellViewModel>();
 
             // 视图命令
             LeftViewCmd = ReactiveCommand.Create<string>(param => NavigateLeftView(param, false));

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using LSL.IPC;
+using Microsoft.Extensions.Logging;
 
 namespace LSL.Services
 {
@@ -25,11 +26,13 @@ namespace LSL.Services
         // 启动输出处理器
         private ServerOutputHandler OutputHandler { get; }
         private ServerOutputStorage OutputStorage { get; }
-        public ServerHost(ServerOutputHandler outputHandler, ServerOutputStorage outputStorage)
+        private ILogger<ServerHost> _logger { get; }
+        public ServerHost(ServerOutputHandler outputHandler, ServerOutputStorage outputStorage, ILogger<ServerHost> logger)
         {
             OutputStorage = outputStorage;
             OutputHandler = outputHandler;
-            Debug.WriteLine("ServerHost Launched");
+            _logger = logger;
+            _logger.LogInformation("ServerHost Launched");
         }
         // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在ViewModel中将列表项解析为ServerId
 
@@ -47,11 +50,11 @@ namespace LSL.Services
         {
             if (_runningServers.TryRemove(serverId, out _))
             {
-                Debug.WriteLine($"服务器{serverId}已成功卸载");
+                _logger.LogInformation("Server with id {id} unloaded successfully", serverId);
             }
             else
             {
-                Debug.WriteLine($"服务器{serverId}未找到，无法卸载");
+                _logger.LogError("Server with id {id} not found", serverId);
             }
         }
         #endregion
@@ -197,8 +200,6 @@ namespace LSL.Services
         public void Dispose()
         {
             EndAllServers();
-            OutputHandler.Dispose();
-            OutputStorage.Dispose();
             GC.SuppressFinalize(this);
         }
     }
@@ -417,11 +418,13 @@ namespace LSL.Services
     // 服务端输出预处理
     public partial class ServerOutputHandler : IDisposable
     {
-        public ServerOutputHandler()
+        private ILogger<ServerOutputHandler> _logger { get; }
+        public ServerOutputHandler(ILogger<ServerOutputHandler> logger)
         {
+            _logger = logger;
             OutputChannel = Channel.CreateUnbounded<TerminalOutputArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
             Task.Run(() => ProcessOutput(OutputCTS.Token));
-            Debug.WriteLine("OutputHandler Launched");
+            _logger.LogInformation("OutputHandler Launched");
         }
 
         #region 待处理队列
@@ -433,7 +436,7 @@ namespace LSL.Services
             }
             else
             {
-                Debug.WriteLine("OutputChannel Writer is full");
+                _logger.LogError("OutputChannel Writer is full");
                 return false;
             }
         }
@@ -551,12 +554,14 @@ namespace LSL.Services
         public readonly ConcurrentDictionary<int, ObservableCollection<string>> MessageDict = new();
         private readonly Channel<IStorageArgs> StorageQueue;
         private readonly CancellationTokenSource StorageCTS = new();
-        public ServerOutputStorage()
+        private ILogger<ServerOutputStorage> _logger { get; }
+        public ServerOutputStorage(ILogger<ServerOutputStorage> logger)
         {
+            _logger = logger;
             StorageQueue = Channel.CreateUnbounded<IStorageArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
             Task.Run(() => ProcessStorage(StorageCTS.Token));
             EventBus.Instance.Subscribe<IStorageArgs>(arg=>TrySendLine(arg));
-            Debug.WriteLine("ServerOutputStorage Launched");
+            _logger.LogInformation("ServerOutputStorage Launched");
         }
 
         #region 排队处理
@@ -568,7 +573,7 @@ namespace LSL.Services
             }
             else
             {
-                Debug.WriteLine("StorageQueue Writer is full");
+                _logger.LogError("StorageQueue Writer is full");
                 return false;
             }
         }

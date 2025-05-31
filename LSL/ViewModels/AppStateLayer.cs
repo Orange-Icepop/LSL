@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using Avalonia.Threading;
 using LSL.IPC;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -14,14 +15,18 @@ namespace LSL.ViewModels
 {
     public class AppStateLayer : ReactiveObject
     {
+        public ILoggerFactory LoggerFactory { get; }
+        public ILogger<AppStateLayer> Logger { get; }
         public InteractionUnits ITAUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
         public IObservable<Dictionary<int,ServerConfig>> ServerConfigChanged { get; private set; }
         public IObservable<int> ServerIndexChanged { get; private set; }
         public IObservable<int> ServerIdChanged { get; private set; }
 
-        public AppStateLayer(InteractionUnits interUnit)
+        public AppStateLayer(InteractionUnits interUnit, ILoggerFactory loggerFactory)
         {
             ITAUnits = interUnit;
+            LoggerFactory = loggerFactory;
+            Logger = LoggerFactory.CreateLogger<AppStateLayer>();
             CurrentBarState = BarState.Common;
             CurrentGeneralPage = GeneralPageState.Home;
             CurrentRightPage = RightPageState.HomeRight;
@@ -54,7 +59,7 @@ namespace LSL.ViewModels
             {
                 if (SC.Count <= 0) return;
                 SelectedServerIndex = 0;
-                Debug.WriteLine("Selected server index reset to 0");
+                Logger.LogInformation("Selected server index reset to 0");
             });
             ServerConfigChanged.Select(SC => SC.Count)
                 .ToPropertyEx(this, x => x.TotalServerCount);

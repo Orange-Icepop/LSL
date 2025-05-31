@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Avalonia.Threading;
 using LSL.IPC;
 using LSL.Services;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -23,11 +24,13 @@ namespace LSL.ViewModels
         private AppStateLayer AppState { get; }
         private ServerHost daemonHost { get; }
         private ServerOutputStorage outputStorage { get; }
+        private ILogger<ServiceConnector> _logger { get; }
         public ServiceConnector(AppStateLayer appState, ServerHost daemon, ServerOutputStorage optStorage)
         {
             AppState = appState;
             daemonHost = daemon;
             outputStorage = optStorage;
+            _logger = AppState.LoggerFactory.CreateLogger<ServiceConnector>();
             EventBus.Instance.Subscribe<IStorageArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
             _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
             CopyServerOutput();
@@ -37,18 +40,23 @@ namespace LSL.ViewModels
 
         public void GetConfig(bool readFile = false)
         {
+            _logger.LogInformation("start loading main config");
             if (readFile) ConfigManager.LoadConfig();
             AppState.CurrentConfigs = ConfigManager.CurrentConfigs;
+            _logger.LogInformation("loading main config completed");
         }
 
         public void ReadJavaConfig(bool readFile = false)
         {
+            _logger.LogInformation("start loading java config");
             if (readFile) JavaManager.ReadJavaConfig();
             AppState.CurrentJavaDict = JavaManager.JavaDict;
+            _logger.LogInformation("loading java config completed");
         }
 
         public void ReadServerConfig(bool readFile = false)
         {
+            _logger.LogInformation("start loading server config");
             if (readFile)
             {
                 var result = ServerConfigManager.LoadServerConfigs();
@@ -61,16 +69,20 @@ namespace LSL.ViewModels
                 cache.Add(-1, ServerConfig.None);
             }
             AppState.CurrentServerConfigs = cache;
+            _logger.LogInformation("loading server config completed");
         }
 
         public void SaveConfig()
         {
             ConfigManager.ConfirmConfig(AppState.CurrentConfigs);
+            _logger.LogInformation("New config saved");
         }
 
         public async Task FindJava()
         {
+            _logger.LogInformation("start finding java");
             await JavaManager.DetectJava();
+            _logger.LogInformation("java detection completed");
             await Dispatcher.UIThread.InvokeAsync(() => ReadJavaConfig());
         }
 
@@ -326,14 +338,14 @@ namespace LSL.ViewModels
         private async Task CopyServerOutput()
         {
             // 暂停输出处理
-            Debug.WriteLine("Copy server output. Stopping output handler...");
+            _logger.LogInformation("Copy server output. Stopping output handler...");
             OutputCts.Cancel();
             try
             {
                 await _handleOutputTask;
             }
             catch (OperationCanceledException) { }
-            Debug.WriteLine("Output handler cancelled.");
+            _logger.LogInformation("Output handler cancelled.");
             try
             {
                 AppState.TerminalTexts = new ConcurrentDictionary<int, ObservableCollection<ColoredLines>>(
@@ -378,7 +390,7 @@ namespace LSL.ViewModels
                 // 恢复输出处理
                 OutputCts = new CancellationTokenSource();
                 _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
-                Debug.WriteLine("Output handler restarted.");
+                _logger.LogInformation("Output handler restarted.");
             }
         }
         #endregion

@@ -9,6 +9,7 @@ using LSL.Views.Download.ASViews;
 using LSL.Views.Home;
 using LSL.Views.Server;
 using LSL.Views.Settings;
+using Microsoft.Extensions.Logging;
 
 namespace LSL.ViewModels
 {
@@ -73,7 +74,7 @@ namespace LSL.ViewModels
             {
                 NavigateToPage(GeneralPageState.Undefined, RV, force);
             }
-            else Debug.WriteLine("Unknown right page name");
+            else _logger.LogError("Unknown right page name {rps}", viewName);
         }
 
         #endregion
@@ -93,7 +94,7 @@ namespace LSL.ViewModels
             // 导航
             MessageBus.Current.SendMessage(new NavigateArgs
                 { BarTarget = BarState.Undefined, LeftTarget = gps, RightTarget = rps });
-            Debug.WriteLine("Page Switched:" + gps.ToString() + ", " + rps.ToString());
+            _logger.LogInformation("Page Switched: {Left}, {Right}",gps.ToString(),rps.ToString());
         }
 
         #endregion
@@ -110,9 +111,9 @@ namespace LSL.ViewModels
                 MessageBus.Current.SendMessage(new NavigateArgs
                     { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RV });
                 if (RV is RightPageState.AddCore or RightPageState.EditSC) FormVM.ClearForm(RV);
-                Debug.WriteLine("Successfully navigated to " + viewName);
+                _logger.LogInformation("Successfully navigated to {FullScreen}.", viewName);
             }
-            else Debug.WriteLine("This view is not a fullscreen view: " + viewName);
+            else _logger.LogError("This view is not a fullscreen view: {name}.", viewName);
         }
 
         #endregion
