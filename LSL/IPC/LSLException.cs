@@ -36,7 +36,7 @@ namespace LSL.IPC
         public int ErrorCode { get; }
         public string? Message { get; }
         public Exception? Error { get; }
-        public ServiceError()
+        private ServiceError()
         {
             ErrorCode = 0;
             Message = null;
@@ -53,5 +53,6 @@ namespace LSL.IPC
             ErrorCode = errorCode;
             Error = error;
         }
+        public static ServiceError Success => new ServiceError();
     }
 }

@@ -49,7 +49,7 @@ namespace LSL.ViewModels
         public void ReadJavaConfig(bool readFile = false)
         {
             _logger.LogInformation("start loading java config");
-            if (readFile) JavaManager.ReadJavaConfig();
+            if (readFile) AppState.ITAUnits.ShowServiceError(JavaManager.ReadJavaConfig());
             AppState.CurrentJavaDict = JavaManager.JavaDict;
             _logger.LogInformation("loading java config completed");
         }

@@ -131,8 +131,8 @@ namespace LSL
                 LogLevel.Debug => "DBUG",
                 LogLevel.Information => "INFO",
                 LogLevel.Warning => "WARN",
-                LogLevel.Error => "ERROR",
-                LogLevel.Critical => "FATAL",
+                LogLevel.Error => "FAIL",
+                LogLevel.Critical => "DEAD",
                 _ => string.Empty,
             };
             var message = $"[{DateTime.Now.ToString("hh:mm:ss")}] [{logEntry.Category}|{level}] ";

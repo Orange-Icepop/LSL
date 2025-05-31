@@ -370,7 +370,7 @@ namespace LSL.Services
             try
             {
                 mainFile = File.ReadAllText(ConfigManager.ServerConfigPath);
-                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return new ServiceError();
+                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return ServiceError.Success;
             }
             catch (FileNotFoundException)
             {
@@ -429,9 +429,9 @@ namespace LSL.Services
                 else if (ConfigErrorServers.Count > 0) ErrorContext += "格式错误的服务器配置文件。";
                 if (NotfoundServers.Count > 0) ErrorContext += "\r不存在的服务器：" + string.Join(", \r", NotfoundServers) + "\r请确保" + ConfigManager.ServerConfigPath + "文件中的服务器名称与实际服务器文件夹名称一致。";
                 if (ConfigErrorServers.Count > 0) ErrorContext += "\r格式错误的服务器配置文件：" + string.Join(", \r", ConfigErrorServers) + "\r请确保这些配置文件的格式正确。";
-                return new(1, ErrorContext);
+                return new ServiceError(1, ErrorContext);
             }
-            return new();
+            return ServiceError.Success;
         }
         #endregion
 
@@ -525,37 +525,83 @@ namespace LSL.Services
         public static Dictionary<int, JavaInfo> JavaDict = [];// 目前读取的Java列表
 
         #region 读取Java列表
-        public static bool ReadJavaConfig()
+        public static ServiceError ReadJavaConfig()
         {
             try
             {
+                // read
                 var file = File.ReadAllText(ConfigManager.JavaListPath);
-                JObject jsonObj = JObject.Parse(file);
-                JavaDict.Clear();
+                var jsonObj = JObject.Parse(file);
+                var tmpDict = new Dictionary<int, JavaInfo>();
                 foreach (var item in jsonObj.Properties())//遍历配置文件中的所有Java
                 {
-                    JToken? versionObject = item.Value["Version"];
-                    JToken? pathObject = item.Value["Path"];
-                    JToken? vendorObject = item.Value["Vendor"];
-                    JToken? archObject = item.Value["Architecture"];
-                    if (versionObject != null &&
-                        pathObject != null &&
-                        vendorObject != null &&
-                        archObject != null &&
+                    var versionObject = item.Value["Version"];
+                    var pathObject = item.Value["Path"];
+                    var vendorObject = item.Value["Vendor"];
+                    var archObject = item.Value["Architecture"];
+                    if (versionObject is not null &&
+                        pathObject is not null &&
+                        vendorObject is not null &&
+                        archObject is not null &&
                         versionObject.Type == JTokenType.String &&
                         pathObject.Type == JTokenType.String &&
                         vendorObject.Type == JTokenType.String &&
                         archObject.Type == JTokenType.String)
                     {
-                        JavaDict.Add(int.Parse(item.Name), new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(), archObject.ToString()));
+                        tmpDict.Add(int.Parse(item.Name), new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(), archObject.ToString()));
                     }
                 }
+                // validate
+                List<string> notFound = [];
+                List<string> notJava = [];
+                foreach (var item in tmpDict)
+                {
+                    var path = item.Value.Path;
+                    if (!File.Exists(path))
+                    {
+                        notFound.Add(path);
+                        tmpDict.Remove(item.Key);
+                        continue;
+                    }
+
+                    if (JavaFinder.GetJavaInfo(path) is null)
+                    {
+                        notJava.Add(path);
+                        tmpDict.Remove(item.Key);
+                    }
+                }
+                // end
+                JavaDict = tmpDict;
+                if (notFound.Count > 0 || notJava.Count > 0)
+                {
+                    var error = "配置文件中的部分Java不存在。" + Environment.NewLine;
+                    if (notFound.Count > 0)
+                    {
+                        error += "以下Java的路径不存在：";
+                        foreach (var item in notFound)
+                        {
+                            error += item + Environment.NewLine;
+                        }
+                    }
+
+                    if (notJava.Count > 0)
+                    {
+                        error += "以下文件不是Java：";
+                        foreach (var item in notJava)
+                        {
+                            error += item + Environment.NewLine;
+                        }
+                    }
+
+                    error += "这些错误一般可以通过重新搜索Java解决。请进入设置-Common选项卡，点击“搜索Java”按钮进行搜索。";
+                    return new ServiceError(1, error);
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                return new ServiceError(2, ex);
             }
-            return true;
+            return ServiceError.Success;
         }
         #endregion
 

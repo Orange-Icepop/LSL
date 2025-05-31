@@ -8,7 +8,7 @@ using LSL.IPC;
 
 namespace LSL.Services
 {
-    public class JavaFinder
+    public static class JavaFinder
     {
         public static async Task<List<JavaInfo>> GetInstalledJavaInfosAsync()// 异步获取已安装的Java信息-总方法
         {
@@ -140,7 +140,7 @@ namespace LSL.Services
 
                 if (!string.IsNullOrEmpty(output))
                 {
-                    var lines = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                    var lines = output.Split([Environment.NewLine], StringSplitOptions.None);
                     if (lines.Length > 1)
                     {
                         string version = "Unknown";
