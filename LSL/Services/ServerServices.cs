@@ -50,7 +50,7 @@ namespace LSL.Services
         {
             if (_runningServers.TryRemove(serverId, out _))
             {
-                _logger.LogInformation("Server with id {id} unloaded successfully", serverId);
+                _logger.LogInformation("Server with id {id} unloaded successfully, 哇袄！", serverId);
             }
             else
             {
@@ -499,7 +499,10 @@ namespace LSL.Services
             string colorBrush = "#000000";
             string final = Output;
             // 检测消息是否带有时间戳
-            if (Output.StartsWith("[LSL")) { }
+            if (Output.StartsWith("[LSL"))
+            {
+                colorBrush = "#019eff";
+            }
             else if (GetTimeStamp.IsMatch(Output))
             {
                 var match = GetTimeStamp.Match(Output);
@@ -514,7 +517,7 @@ namespace LSL.Services
                     {
                         "INFO" => "#019eff",// 还是这个颜色顺眼 (>v<)
                         "WARN" => "#ffc125",
-                        "ERRO" => "#ff0000",
+                        "RROR" => "#ff0000",
                         "FATA" => "#ff0000",
                         _ => "#000000"
                     };

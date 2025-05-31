@@ -1,12 +1,17 @@
 ﻿using System;
+using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using LSL.Services;
 using LSL.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
@@ -22,7 +27,11 @@ namespace LSL
         {
             collection.AddLogging(builder =>
             {
-                builder.AddConsole();
+                builder.AddConsole(options => 
+                {
+                    // 使用支持中文的格式化器
+                    options.FormatterName = "custom";
+                }).AddConsoleFormatter<Utf8ConsoleFormatter, ConsoleFormatterOptions>();
                 builder.AddDebug();
                 #if DEBUG
                 builder.SetMinimumLevel(LogLevel.Debug);
@@ -104,4 +113,40 @@ namespace LSL
                 .CreateLogger("Polly");        
         }
     }
+    #region 自定义日志格式化器
+    public sealed class Utf8ConsoleFormatter : ConsoleFormatter
+    {
+        public Utf8ConsoleFormatter(IOptionsMonitor<ConsoleFormatterOptions> options)
+            : base("custom") { }
+
+        public override void Write<TState>(
+            in LogEntry<TState> logEntry,
+            IExternalScopeProvider? scopeProvider,
+            TextWriter textWriter)
+        {
+            // 强制使用 UTF-8 编码写入
+            var encoding = Encoding.UTF8;
+            var level = logEntry.LogLevel switch
+            {
+                LogLevel.Debug => "DBUG",
+                LogLevel.Information => "INFO",
+                LogLevel.Warning => "WARN",
+                LogLevel.Error => "ERROR",
+                LogLevel.Critical => "FATAL",
+                _ => string.Empty,
+            };
+            var message = $"[{DateTime.Now.ToString("hh:mm:ss")}] [{logEntry.Category}|{level}] ";
+            message += logEntry.Formatter(logEntry.State, logEntry.Exception);
+            
+            if (logEntry.Exception != null)
+            {
+                message += $"\n{logEntry.Exception}";
+            }
+            
+            var bytes = encoding.GetBytes(message + Environment.NewLine);
+            var consoleStream = Console.OpenStandardOutput();
+            consoleStream.Write(bytes, 0, bytes.Length);
+        }
+    }
+    #endregion
 }
