@@ -56,7 +56,7 @@ namespace LSL.ViewModels
         public int SelectedJavaIndex
         {
             get => _selectedJavaIndex;
-            set { this.RaiseAndSetIfChanged(ref _selectedJavaIndex, value); }
+            set => this.RaiseAndSetIfChanged(ref _selectedJavaIndex, value);
         }
 
         #endregion

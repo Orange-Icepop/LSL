@@ -94,7 +94,7 @@ namespace LSL.ViewModels
             // 导航
             MessageBus.Current.SendMessage(new NavigateArgs
                 { BarTarget = BarState.Undefined, LeftTarget = gps, RightTarget = rps });
-            _logger.LogInformation("Page Switched: {Left}, {Right}",gps.ToString(),rps.ToString());
+            _logger.LogDebug("Page Switched: {Left}, {Right}",gps.ToString(),rps.ToString());
         }
 
         #endregion
@@ -111,7 +111,7 @@ namespace LSL.ViewModels
                 MessageBus.Current.SendMessage(new NavigateArgs
                     { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RV });
                 if (RV is RightPageState.AddCore or RightPageState.EditSC) FormVM.ClearForm(RV);
-                _logger.LogInformation("Successfully navigated to {FullScreen}.", viewName);
+                _logger.LogDebug("Successfully navigated to {FullScreen}.", viewName);
             }
             else _logger.LogError("This view is not a fullscreen view: {name}.", viewName);
         }

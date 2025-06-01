@@ -38,26 +38,62 @@ namespace LSL.ViewModels
 
         #region 配置部分
 
-        public void GetConfig(bool readFile = false)
+        public async Task<ServiceError> GetConfig(bool readFile = false)
         {
             _logger.LogInformation("start loading main config");
-            if (readFile) AppState.ITAUnits.SubmitServiceError(ConfigManager.LoadConfig());
+            if (readFile)
+            {
+                var res = ConfigManager.LoadConfig();
+                var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
+                if (shouldShut)
+                {
+                    var err = res.Error?.ToString() ?? res.Message ?? string.Empty;
+                    _logger.LogCritical("Fatal error when loading LSL main config.{nl}{err} ",Environment.NewLine, err);
+                    Environment.Exit(1);
+                    return res;
+                }
+            }
+
             AppState.CurrentConfigs = ConfigManager.CurrentConfigs;
             _logger.LogInformation("loading main config completed");
+            return ServiceError.Success;
         }
 
-        public void ReadJavaConfig(bool readFile = false)
+        public async Task<ServiceError> ReadJavaConfig(bool readFile = false)
         {
             _logger.LogInformation("start loading java config");
-            if (readFile) AppState.ITAUnits.SubmitServiceError(JavaManager.ReadJavaConfig());
+            if (readFile)
+            {
+                var res = JavaManager.ReadJavaConfig();
+                var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
+                if (shouldShut)
+                {
+                    var err = res.Error?.ToString() ?? res.Message ?? string.Empty;
+                    _logger.LogCritical("Fatal error when loading java config.{nl}{err} ",Environment.NewLine, err);
+                    Environment.Exit(1);
+                    return res;
+                }
+            }
             AppState.CurrentJavaDict = JavaManager.JavaDict;
             _logger.LogInformation("loading java config completed");
+            return ServiceError.Success;
         }
 
-        public void ReadServerConfig(bool readFile = false)
+        public async Task<ServiceError> ReadServerConfig(bool readFile = false)
         {
             _logger.LogInformation("start loading server config");
-            if (readFile) AppState.ITAUnits.SubmitServiceError(ServerConfigManager.LoadServerConfigs());
+            if (readFile)
+            {
+                var res = ServerConfigManager.LoadServerConfigs();
+                var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
+                if (shouldShut)
+                {
+                    var err = res.Error?.ToString() ?? res.Message ?? string.Empty;
+                    _logger.LogCritical("Fatal error when loading LSL server config.{nl}{err} ",Environment.NewLine, err);
+                    Environment.Exit(1);
+                    return res;
+                }
+            }
             var cache = ServerConfigManager.ServerConfigs.ToDictionary(item => item.Key, item => new ServerConfig(item.Value));
             if (cache.Count == 0)
             {
@@ -65,6 +101,7 @@ namespace LSL.ViewModels
             }
             AppState.CurrentServerConfigs = cache;
             _logger.LogInformation("loading server config completed");
+            return ServiceError.Success;
         }
 
         public void SaveConfig()

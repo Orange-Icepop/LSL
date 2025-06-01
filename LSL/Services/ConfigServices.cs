@@ -601,7 +601,7 @@ namespace LSL.Services
                         }
                     }
 
-                    error += "这些错误一般可以通过重新搜索Java解决。请进入设置-Common选项卡，点击“搜索Java”按钮进行搜索。";
+                    error += "这些错误一般可以通过重新搜索Java解决。";
                     return new ServiceError(1, error);
                 }
             }

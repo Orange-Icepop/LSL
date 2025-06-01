@@ -1,0 +1,17 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
+        Width="600" Height="400"
+        x:Class="LSL.Views.StartupWindow"
+        Title="StartupWindow"		
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        CanResize="False">
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Image Source="/Assets/icon.ico" Width="200" Height="200"/>
+        <Image Source="/Assets/LSL-WORD.png" Height="40"/>
+        <TextBlock HorizontalAlignment="Center" Margin="30">LSL正在启动......</TextBlock>
+    </StackPanel>
+</Window>

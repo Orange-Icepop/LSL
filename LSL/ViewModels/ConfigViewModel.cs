@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia.Threading;
 using LSL.IPC;
 
 namespace LSL.ViewModels
@@ -32,10 +33,14 @@ namespace LSL.ViewModels
             AppState.ServerConfigChanged.Select(SC => !SC.TryGetValue(-1, out _))
                 .ToPropertyEx(this, x => x.EnableConfig);
             AppState.ServerConfigChanged.Subscribe(SC => RaiseServerConfigChanged(null, SC));
-            GetConfig(true); // cached config需要手动同步，不能依赖自动更新
-            ReadServerConfig(true); // 服务器配置由于较为复杂，统一为手动控制
-            Connector.ReadJavaConfig(true);
             DeleteServerCmd = ReactiveCommand.Create(async () => await DeleteServer());
+        }
+
+        public async Task Init()
+        {
+            await GetConfig(true); // cached config需要手动同步，不能依赖自动更新
+            await ReadServerConfig(true); // 服务器配置由于较为复杂，统一为手动控制
+            await Connector.ReadJavaConfig(true);
         }
 
         private Dictionary<string, object> cachedConfig = [];
@@ -45,97 +50,97 @@ namespace LSL.ViewModels
         public bool AutoEula
         {
             get => (bool)cachedConfig["auto_eula"];
-            set { CacheConfig("auto_eula", value); }
+            set => CacheConfig("auto_eula", value);
         }
 
         public int AppPriority
         {
             get => (int)cachedConfig["app_priority"];
-            set { CacheConfig("app_priority", value); }
+            set => CacheConfig("app_priority", value);
         }
 
         public bool EndServerWhenClose
         {
             get => (bool)cachedConfig["end_server_when_close"];
-            set { CacheConfig("end_server_when_close", value); }
+            set => CacheConfig("end_server_when_close", value);
         }
 
         public bool Daemon
         {
             get => (bool)cachedConfig["daemon"];
-            set { CacheConfig("daemon", value); }
+            set => CacheConfig("daemon", value);
         }
 
         public bool ColoringTerminal
         {
             get => (bool)cachedConfig["coloring_terminal"];
-            set { CacheConfig("coloring_terminal", value); }
+            set => CacheConfig("coloring_terminal", value);
         }
 
         public int DownloadSource
         {
             get => (int)cachedConfig["download_source"];
-            set { CacheConfig("download_source", value); }
+            set => CacheConfig("download_source", value);
         }
 
         public int DownloadThreads
         {
             get => (int)cachedConfig["download_threads"];
-            set { CacheConfig("download_threads", value); }
+            set => CacheConfig("download_threads", value);
         }
 
         [DownloadLimitValidator]
         public string? DownloadLimit
         {
             get => cachedConfig["download_limit"].ToString();
-            set { CacheConfig("download_limit", value); }
+            set => CacheConfig("download_limit", value);
         }
 
         public bool PanelEnable
         {
             get => (bool)cachedConfig["panel_enable"];
-            set { CacheConfig("panel_enable", value); }
+            set => CacheConfig("panel_enable", value);
         }
 
         [PanelPortValidator]
         public string? PanelPort
         {
             get => cachedConfig["panel_port"].ToString();
-            set { CacheConfig("panel_port", value); }
+            set => CacheConfig("panel_port", value);
         }
 
         public bool PanelMonitor
         {
             get => (bool)cachedConfig["panel_monitor"];
-            set { CacheConfig("panel_monitor", value); }
+            set => CacheConfig("panel_monitor", value);
         }
 
         public bool PanelTerminal
         {
             get => (bool)cachedConfig["panel_terminal"];
-            set { CacheConfig("panel_terminal", value); }
+            set => CacheConfig("panel_terminal", value);
         }
 
         public bool AutoUpdate
         {
             get => (bool)cachedConfig["auto_update"];
-            set { CacheConfig("auto_update", value); }
+            set => CacheConfig("auto_update", value);
         }
 
         public bool BetaUpdate
         {
             get => (bool)cachedConfig["beta_update"];
-            set { CacheConfig("auto_eula", value); }
+            set => CacheConfig("auto_eula", value);
         }
 
         #endregion
 
         #region 主配置操作
 
-        public void GetConfig(bool rf = false)
+        public async Task GetConfig(bool rf = false)
         {
-            Connector.GetConfig(rf);
-            cachedConfig = AppState.CurrentConfigs;
+            await Connector.GetConfig(rf);
+            await Dispatcher.UIThread.InvokeAsync(() => cachedConfig = AppState.CurrentConfigs);
         }
 
         private void CacheConfig(string key, object? value) // 向缓存字典中写入新配置
@@ -157,9 +162,9 @@ namespace LSL.ViewModels
 
         #region 服务器配置操作
 
-        public void ReadServerConfig(bool rf = false)
+        public async Task ReadServerConfig(bool rf = false)
         {
-            Connector.ReadServerConfig(rf);
+            await Connector.ReadServerConfig(rf);
         }
         public ICommand DeleteServerCmd { get; }
         public bool EnableConfig { [ObservableAsProperty] get; }

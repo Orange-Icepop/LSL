@@ -57,10 +57,14 @@ namespace LSL
             collection.AddSingleton<ServerOutputStorage>();
             collection.AddSingleton<ServerHost>();
         }
-        public static void AddViewModels(this IServiceCollection collection)
+        public static void AddStartUp(this IServiceCollection collection)
         {
             collection.AddSingleton<InteractionUnits>();
             collection.AddSingleton<AppStateLayer>();
+            collection.AddSingleton<InitializationVM>();
+        }
+        public static void AddViewModels(this IServiceCollection collection)
+        {
             collection.AddSingleton<ServiceConnector>();
             collection.AddSingleton<PublicCommand>();
             collection.AddSingleton<BarRegionVM>();

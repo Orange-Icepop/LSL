@@ -54,8 +54,6 @@ namespace LSL.ViewModels
             RightViewCmd = ReactiveCommand.Create<string>(param => NavigateRightView(param, false));
             FullViewCmd = ReactiveCommand.Create<string>(NavigateFullScreenView);
             FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Undefined, RightTarget = RightPageState.Undefined }));
-            ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
-            QuitCmd = ReactiveCommand.Create(Quit);
 
             #region 多参数导航
             PanelConfigCmd = ReactiveCommand.Create(() =>
@@ -79,7 +77,6 @@ namespace LSL.ViewModels
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Home, RightTarget = RightPageState.HomeRight });
             NavigateLeftView("HomeLeft");
             NavigateRightView("HomeRight");
-            ITAUnits.FlushServiceErrors();
         }
 
         public bool CheckForExiting()// 退出事件处理
@@ -91,16 +88,5 @@ namespace LSL.ViewModels
             }
             else return false;
         }
-
-        public ICommand ShowMainWindowCmd { get; }// 显示主窗口命令
-        public ICommand QuitCmd { get; }// 退出命令
-
-        public static void ShowMainWindow()
-        {
-            MessageBus.Current.SendMessage(new ViewBroadcastArgs { Target = "MainWindow.axaml.cs", Message = "Show" });
-        }
-        public static void Quit() { Environment.Exit(0); }
-
-
     }
 }
