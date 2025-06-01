@@ -30,8 +30,6 @@ namespace LSL.ViewModels
                 })
                 .ToPropertyEx(this, x => x.JavaVersions);
             AppState.ServerIdChanged.Subscribe(Id => RaiseServerConfigChanged(Id, null));
-            AppState.ServerConfigChanged.Select(SC => !SC.TryGetValue(-1, out _))
-                .ToPropertyEx(this, x => x.EnableConfig);
             AppState.ServerConfigChanged.Subscribe(SC => RaiseServerConfigChanged(null, SC));
             DeleteServerCmd = ReactiveCommand.Create(async () => await DeleteServer());
         }
@@ -167,7 +165,6 @@ namespace LSL.ViewModels
             await Connector.ReadServerConfig(rf);
         }
         public ICommand DeleteServerCmd { get; }
-        public bool EnableConfig { [ObservableAsProperty] get; }
         public async Task DeleteServer()
         {
             // 检查是否可以删除
