@@ -61,7 +61,11 @@ namespace LSL.ViewModels
                 SelectedServerIndex = 0;
                 Logger.LogInformation("Selected server index reset to 0");
             });
-            ServerConfigChanged.Select(SC => SC.Count)
+            ServerConfigChanged.Select(SC =>
+                {
+                    if (SC.Count <= 0) return 0;
+                    return SC.TryGetValue(-1, out _) ? 0 : SC.Count;
+                })
                 .ToPropertyEx(this, x => x.TotalServerCount);
             #endregion
         }

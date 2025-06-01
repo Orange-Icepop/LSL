@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 using LSL.IPC;
 using LSL.Views;
@@ -34,7 +35,13 @@ namespace LSL.ViewModels
             else if (error.Error is not null) fin = error.Error.Message;
             else return;
 
-            await PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "服务错误", fin));
+            var level = error.ErrorCode switch
+            {
+                1 => PopupType.Error_Confirm,
+                2 => PopupType.Warning_Confirm,
+                _ => PopupType.Error_Confirm
+            };
+            await PopupITA.Handle(new InvokePopupArgs(level, "服务错误", fin));
         }
 
         public void Notify(int type, string? title, string? message)

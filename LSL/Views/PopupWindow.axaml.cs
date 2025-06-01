@@ -64,6 +64,13 @@ namespace LSL.Views
                     AddButton("Highlight", "是", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
                     break;
                 }
+                case PopupType.Warning_Confirm:
+                {
+                    this.Title = "警告";
+                    this.PopupBorder.BorderBrush = new SolidColorBrush(Colors.Yellow);
+                    AddButton("Default", "确定", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
+                    break;
+                }
                 default:
                     throw new ArgumentException("未处理的弹窗类型，开发错误");
             }

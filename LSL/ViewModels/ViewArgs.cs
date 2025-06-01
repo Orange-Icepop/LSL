@@ -12,6 +12,7 @@ public enum PopupType
     Info_YesNo,
     Warning_YesNoCancel,
     Warning_YesNo,
+    Warning_Confirm,
     Error_Confirm,
 }
 

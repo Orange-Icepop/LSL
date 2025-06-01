@@ -602,7 +602,7 @@ namespace LSL.Services
                     }
 
                     error += "这些错误一般可以通过重新搜索Java解决。";
-                    return new ServiceError(1, error);//TODO:修改为非致命错误
+                    return new ServiceError(2, error);
                 }
             }
             catch (Exception ex)

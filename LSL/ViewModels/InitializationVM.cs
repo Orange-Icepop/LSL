@@ -12,19 +12,16 @@ namespace LSL.ViewModels;
 public class InitializationVM : ViewModelBase
 {
     private ILogger<InitializationVM> _logger { get; }
-    private ServerHost daemonHost { get; }
-    private ServerOutputStorage outputStorage { get; }
     public AppStateLayer AppState { get; }
     public ShellViewModel Shell { get; set; }
 
-    public InitializationVM(ILogger<InitializationVM> logger, ServerHost daemon, ServerOutputStorage optStorage, AppStateLayer appState)
+    public InitializationVM(ILogger<InitializationVM> logger, AppStateLayer appState)
     {
         _logger = logger;
-        daemonHost = daemon;
-        outputStorage = optStorage;
         AppState = appState;
         ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
         QuitCmd = ReactiveCommand.Create(Quit);
+        _logger.LogInformation("Initialization VM ctor complete.");
     }
 
     public async Task Initialize(ShellViewModel shell)
