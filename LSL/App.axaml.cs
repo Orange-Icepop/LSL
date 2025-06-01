@@ -38,7 +38,7 @@ public partial class App : Application
                 // 在后台线程初始化，不阻塞UI
                 await Dispatcher.UIThread.InvokeAsync(() => shellVM = diServices.GetRequiredService<ShellViewModel>());
                 await Task.WhenAll(
-                    Task.Delay(1000),
+                    Task.Delay(3000),
                     startupVM.Initialize(shellVM)
                     );
                 await Dispatcher.UIThread.InvokeAsync(() =>

@@ -5,13 +5,17 @@
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
         Width="600" Height="400"
         x:Class="LSL.Views.StartupWindow"
-        Title="StartupWindow"		
+        Title="StartupWindow"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="NoChrome"
         CanResize="False">
-    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-        <Image Source="/Assets/icon.ico" Width="200" Height="200"/>
-        <Image Source="/Assets/LSL-WORD.png" Height="40"/>
-        <TextBlock HorizontalAlignment="Center" Margin="30">LSL正在启动......</TextBlock>
-    </StackPanel>
+    <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" RowDefinitions="*,20,20" Margin="20">
+        <DockPanel VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="0">
+            <Image Source="/Assets/icon.ico" Width="190" Height="190" Margin="10" DockPanel.Dock="Left" />
+            <Image Source="/Assets/LSL-WORD.png" Width="300" DockPanel.Dock="Bottom" HorizontalAlignment="Center" />
+            <Image Source="/Assets/LSL-Chinese.png" Width="250" DockPanel.Dock="Bottom" HorizontalAlignment="Center" />
+        </DockPanel>
+        <TextBlock Text="Copyright © 2024 Orange-Icepop 橙子冰棒" Grid.Row="1" HorizontalAlignment="Center" />
+        <TextBlock Text="柠方MC服务器启动器 Lime Server Launcher" Grid.Row="2" HorizontalAlignment="Center" />
+    </Grid>
 </Window>

@@ -292,7 +292,7 @@ namespace LSL.Services
             {
                 return new ServiceError(1,
                     $"在读取位于{ConfigFilePath}的LSL主配置文件时出现未知错误。{Environment.NewLine}错误信息：{ex.Message}");
-            }// TODO:在启动之前添加一个窗口处理Interaction，防止默认覆盖配置
+            }
             List<string> keysNeedToRepair = [];// 需要修复的键
             CurrentConfigs.Clear();// 清空当前配置字典
             foreach (var key in ConfigKeys)
@@ -602,7 +602,7 @@ namespace LSL.Services
                     }
 
                     error += "这些错误一般可以通过重新搜索Java解决。";
-                    return new ServiceError(1, error);
+                    return new ServiceError(1, error);//TODO:修改为非致命错误
                 }
             }
             catch (Exception ex)
