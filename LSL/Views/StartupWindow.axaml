@@ -9,13 +9,21 @@
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="NoChrome"
         CanResize="False">
-    <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" RowDefinitions="*,20,20" Margin="20">
-        <DockPanel VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="0">
-            <Image Source="/Assets/icon.ico" Width="190" Height="190" Margin="10" DockPanel.Dock="Left" />
-            <Image Source="/Assets/LSL-WORD.png" Width="300" DockPanel.Dock="Bottom" HorizontalAlignment="Center" />
-            <Image Source="/Assets/LSL-Chinese.png" Width="250" DockPanel.Dock="Bottom" HorizontalAlignment="Center" />
-        </DockPanel>
-        <TextBlock Text="Copyright © 2024 Orange-Icepop 橙子冰棒" Grid.Row="1" HorizontalAlignment="Center" />
-        <TextBlock Text="柠方MC服务器启动器 Lime Server Launcher" Grid.Row="2" HorizontalAlignment="Center" />
-    </Grid>
+    <Border VerticalAlignment="Center"
+            Background="White"
+            BorderThickness="4"
+            CornerRadius="10"
+            BorderBrush="#33f3e5"
+            Width="600" Height="400">
+        <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" RowDefinitions="*,20,20" Margin="20">
+            <DockPanel VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="0">
+                <Image Source="/Assets/icon.ico" Width="190" Height="190" Margin="10" DockPanel.Dock="Left" />
+                <Image Source="/Assets/LSL-WORD.png" Width="300" DockPanel.Dock="Bottom" HorizontalAlignment="Center" />
+                <Image Source="/Assets/LSL-Chinese.png" Width="250" DockPanel.Dock="Bottom"
+                       HorizontalAlignment="Center" />
+            </DockPanel>
+            <TextBlock Text="Copyright © 2024 Orange-Icepop 橙子冰棒" Grid.Row="1" HorizontalAlignment="Center" />
+            <TextBlock Text="柠方MC服务器启动器 Lime Server Launcher" Grid.Row="2" HorizontalAlignment="Center" />
+        </Grid>
+    </Border>
 </Window>

@@ -24,12 +24,14 @@ namespace LSL.ViewModels
         private AppStateLayer AppState { get; }
         private ServerHost daemonHost { get; }
         private ServerOutputStorage outputStorage { get; }
+        private NetService WebHost { get; }
         private ILogger<ServiceConnector> _logger { get; }
-        public ServiceConnector(AppStateLayer appState, ServerHost daemon, ServerOutputStorage optStorage)
+        public ServiceConnector(AppStateLayer appState, ServerHost daemon, ServerOutputStorage optStorage, NetService netService)
         {
             AppState = appState;
             daemonHost = daemon;
             outputStorage = optStorage;
+            WebHost = netService;
             _logger = AppState.LoggerFactory.CreateLogger<ServiceConnector>();
             EventBus.Instance.Subscribe<IStorageArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
             _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
@@ -423,6 +425,38 @@ namespace LSL.ViewModels
                 OutputCts = new CancellationTokenSource();
                 _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
                 _logger.LogInformation("Output handler restarted.");
+            }
+        }
+        #endregion
+        
+        #region 网络项
+
+        public async Task<bool> Download(string url, string dir, IProgress<double>? progress, CancellationToken? token)
+        {
+            var result = token is not null ? await WebHost.GetFileAsync(url, dir, progress, (CancellationToken)token) : await WebHost.GetFileAsync(url, dir, progress);
+            var success = !await AppState.ITAUnits.SubmitServiceError(result);
+            return success;
+        }
+        public async Task CheckForUpdates()
+        {
+            const string url = "https://api.github.com/repos/Orange-Icepop/LSL/releases";
+            try
+            {
+                var result = await WebHost.ApiGet(url);
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_Confirm, "更新检查结果", result))
+                        .Subscribe();
+                });
+            }
+            catch (Exception ex)
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_Confirm, "更新检查出错",
+                            "LSL在检查更新时出现了问题。" + Environment.NewLine + ex.Message))
+                        .Subscribe();
+                });
             }
         }
         #endregion

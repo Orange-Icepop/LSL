@@ -45,7 +45,8 @@ namespace LSL
             collection.AddHttpClient(nameof(NetService))
                 .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
                 {
-                    PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5)
+                    PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),
+                    UseCookies = false,
                 })
                 .AddPolicyHandler((provider, request) => GetRetryPolicy(provider))
                 .AddPolicyHandler((provider, request) => GetCircuitBreakerPolicy(provider));

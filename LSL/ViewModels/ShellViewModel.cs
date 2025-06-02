@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -71,12 +72,21 @@ namespace LSL.ViewModels
             #endregion
         }
 
-        //初始化主窗口
+        //主窗口初始化完毕后的操作
         public void InitializeMainWindow()
         {
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Home, RightTarget = RightPageState.HomeRight });
             NavigateLeftView("HomeLeft");
             NavigateRightView("HomeRight");
+            Task.Run(AutoCheckUpdates);
+        }
+
+        private async Task AutoCheckUpdates()
+        {
+            if (AppState.CurrentConfigs.TryGetValue("auto_update", out var autoUpdate) && autoUpdate is bool update)
+            {
+                await ServeCon.CheckForUpdates();
+            }
         }
 
         public bool CheckForExiting()// 退出事件处理

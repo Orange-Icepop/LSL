@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Flurl.Http;
+using LSL.IPC;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace LSL.Services;
 
@@ -21,7 +25,8 @@ public class NetService
         _logger = logger;
     }
 
-    public async Task GetAsync(string url, string dir, IProgress<double> progress, CancellationToken token) 
+    #region 异步下载请求
+    public async Task<ServiceError> GetFileAsync(string url, string dir, IProgress<double>? progress, CancellationToken token = new()) 
     {
         using var client = _factory.CreateClient();
         string? path = null;
@@ -58,11 +63,11 @@ public class NetService
                         var curProgress = (double)readbytes / size;
                         if (!(curProgress - webProgress >= 0.01) && readbytes != size) continue; // 进度过小则不报告
                         webProgress = curProgress;
-                        progress.Report(webProgress);
+                        progress?.Report(webProgress);
                     }
                     else
                     {
-                        progress.Report(-readbytes); // 用负数表示字节数而不是进度
+                        progress?.Report(-readbytes); // 用负数表示字节数而不是进度
                     }
                 }
             }
@@ -73,9 +78,33 @@ public class NetService
         }
         catch (Exception ex) when (HandleException(ex, fileExists, path))
         {
+            return new ServiceError(1, ex);
+        }
+        return ServiceError.Success;
+    }
+    #endregion
+    
+    #region API获取
+
+    public async Task<string> ApiGet(string url)
+    {
+        _logger.LogInformation("Start getting API: {URL}", url);
+        try
+        {
+            if (string.IsNullOrEmpty(url)) return string.Empty;
+            var result = await url
+                .WithHeader("User-Agent", value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/83.0")
+                .GetStringAsync();
             
+            return result ?? throw new InvalidOperationException("API返回空响应");
+        }
+        catch (FlurlHttpException ex)
+        {
+            _logger.LogError(ex, "API请求失败: {Url}", url);
+            throw new HttpRequestException($"API请求失败: {ex.StatusCode}", ex);
         }
     }
+    #endregion
     
     private static bool HandleException(Exception ex, bool fileCreated, string? path)
     {
