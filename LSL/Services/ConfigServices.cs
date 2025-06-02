@@ -151,27 +151,17 @@ namespace LSL.Services
     // 配置文件管理  
     public class ConfigManager
     {
-        // 配置文件的路径  
-        private static readonly string _configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "Config.json");
-        private static readonly string _serverConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "ServersConfig.json");
-        private static readonly string _javaListPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "JavaList.json");
-        private static readonly string _cJavaListPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "CustomJavaList.json");
-        private static readonly string _serversPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Servers");
-
         // 获取配置文件的路径  
-        public static string ConfigFilePath => _configFilePath;
-        public static string ServerConfigPath => _serverConfigPath;
-        public static string JavaListPath => _javaListPath;
-        public static string CJavaListPath => _cJavaListPath;
-        public static string ServersPath => _serversPath;
+        public static string ConfigFilePath { get; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "Config.json");
+        public static string ServerConfigPath { get; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "ServersConfig.json");
+        public static string JavaListPath { get; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "JavaList.json");
+        public static string CJavaListPath { get; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "CustomJavaList.json");
+        public static string ServersPath { get; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Servers");
 
-        public static void Initialize()
+        static ConfigManager()
         {
-            // 确保LSL文件夹存在  
-            Directory.CreateDirectory(Path.GetDirectoryName(ConfigFilePath)!);
-            Directory.CreateDirectory(ServersPath);
             //初始化配置文件
-            WriteInitialConfig();
+            Initialize();
             //LoadConfig();
         }
 
@@ -202,13 +192,16 @@ namespace LSL.Services
         #endregion
 
         #region 初始化配置文件
-        public static void WriteInitialConfig()
+        private static void Initialize()
         {
+            // 确保LSL文件夹存在  
+            Directory.CreateDirectory(Path.GetDirectoryName(ConfigFilePath));
+            Directory.CreateDirectory(ServersPath);
             if (!File.Exists(ConfigFilePath))
             {
                 // 将初始配置字典序列化成JSON字符串并写入文件  
                 string configString = JsonConvert.SerializeObject(DefaultConfigs, Formatting.Indented);
-                File.WriteAllText(_configFilePath, configString);
+                File.WriteAllText(ConfigFilePath, configString);
                 Debug.WriteLine("Config.json initialized.");
             }
             if (!File.Exists(ServerConfigPath))

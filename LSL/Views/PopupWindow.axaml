@@ -21,7 +21,7 @@
 			CornerRadius="10">
 		<StackPanel>
 			<TextBlock Name="Topic" Margin="10" FontSize="20"/>
-			<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+			<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" MaxHeight="300">
 				<SelectableTextBlock Name="Message" Margin="10" Text="" TextWrapping="Wrap" />
 			</ScrollViewer>
 			<StackPanel Name="Buttons" Margin="10" Orientation="Horizontal" FlowDirection="RightToLeft" />

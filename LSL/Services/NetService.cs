@@ -93,15 +93,20 @@ public class NetService
         {
             if (string.IsNullOrEmpty(url)) return string.Empty;
             var result = await url
-                .WithHeader("User-Agent", value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/83.0")
+                .WithHeader("User-Agent", value: "LSL/0.08.2")
                 .GetStringAsync();
-            
-            return result ?? throw new InvalidOperationException("API返回空响应");
+
+            return result ?? throw new InvalidOperationException("服务器响应为空");
         }
         catch (FlurlHttpException ex)
         {
             _logger.LogError(ex, "API请求失败: {Url}", url);
             throw new HttpRequestException($"API请求失败: {ex.StatusCode}", ex);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "API请求失败: {Url}{NL}{RS}", url, Environment.NewLine, ex.Message);
+            throw new HttpRequestException($"API请求失败: {ex.Message}", ex);
         }
     }
     #endregion
