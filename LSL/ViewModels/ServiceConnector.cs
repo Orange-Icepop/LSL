@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -12,6 +13,7 @@ using Avalonia.Threading;
 using LSL.IPC;
 using LSL.Services;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -439,15 +441,31 @@ namespace LSL.ViewModels
         }
         public async Task CheckForUpdates()
         {
-            const string url = "https://api.github.com/repos/Orange-Icepop/LSL/releases";
+            const string url = "https://api.orllow.cn/lsl/latest";
             try
             {
                 var result = await WebHost.ApiGet(url);
-                await Dispatcher.UIThread.InvokeAsync(() =>
+                var jobj = JsonConvert.DeserializeObject<Dictionary<string, object>>(result) ??
+                           throw new FormatException("Update API Response can't be serialized as dictionary.");
+                var remoteVerString = jobj["tag_name"].ToString() ??
+                                      throw new NullReferenceException(
+                                          "API Response doesn't contain required key tag_name.");
+                var remoteVer = remoteVerString.TrimStart('v');
+                var needUpdate = AlgoServices.IsGreaterVersion(ShellViewModel.Version, remoteVer);
+                if (needUpdate)
                 {
-                    AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_Confirm, "更新检查结果", result))
-                        .Subscribe();
-                });
+                    var updateMessage = jobj["body"].ToString() ??
+                                        throw new NullReferenceException(
+                                            "API Response doesn't contain required key body.");
+                    var message = $"LSL已经推出了新版本：{remoteVerString}。可前往https://github.com/Orange-Icepop/LSL/releases下载。{Environment.NewLine}{updateMessage}";
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_Confirm, "LSL更新提示", message))
+                            .Subscribe();
+                    });
+                }
+                else _logger.LogInformation("Got remote version update. Local:{LC}, remote:{RM}.", ShellViewModel.Version, remoteVer);
+                _logger.LogInformation("Check for updates completed.");
             }
             catch (Exception ex)
             {
@@ -457,6 +475,7 @@ namespace LSL.ViewModels
                             "LSL在检查更新时出现了问题。" + Environment.NewLine + ex.Message))
                         .Subscribe();
                 });
+                _logger.LogInformation("Error checking for updates:{ex}", ex.Message);
             }
         }
         #endregion
