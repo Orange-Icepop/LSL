@@ -264,7 +264,7 @@ namespace LSL.Services
         // 当前配置字典
         public static readonly Dictionary<string, object> CurrentConfigs = [];
 
-        public static ServiceError LoadConfig()
+        public static ServiceResult LoadConfig()
         {
             JObject configs;
             try
@@ -273,18 +273,18 @@ namespace LSL.Services
             }
             catch (FileNotFoundException ex)
             {
-                return new ServiceError(1,
-                    $"位于{ConfigFilePath}的LSL主配置文件不存在，请重启LSL。{Environment.NewLine}注意，这不是一个正常情况，因为LSL会在启动时自动创建主配置文件。若错误依旧，则LSL可能已经损坏，请重新下载。{Environment.NewLine}错误信息:{ex.Message}");
+                return ServiceResult.Fail(new FileNotFoundException(
+                    $"位于{ConfigFilePath}的LSL主配置文件不存在，请重启LSL。{Environment.NewLine}注意，这不是一个正常情况，因为LSL会在启动时自动创建主配置文件。若错误依旧，则LSL可能已经损坏，请重新下载。{Environment.NewLine}错误信息:{ex.Message}"));
             }
             catch (JsonReaderException ex)
             {
-                return new ServiceError(1,
-                    $"位于{ConfigFilePath}的LSL主配置文件已损坏，请删除该文件并重启。{Environment.NewLine}具备能力的可以将其备份或者进行手动修复。{Environment.NewLine}错误信息:{ex.Message}");
+                return ServiceResult.Fail(new JsonReaderException(
+                    $"位于{ConfigFilePath}的LSL主配置文件已损坏，请删除该文件并重启。{Environment.NewLine}具备能力的可以将其备份或者进行手动修复。{Environment.NewLine}错误信息:{ex.Message}"));
             }
             catch (Exception ex)
             {
-                return new ServiceError(1,
-                    $"在读取位于{ConfigFilePath}的LSL主配置文件时出现未知错误。{Environment.NewLine}错误信息：{ex.Message}");
+                return ServiceResult.Fail(new Exception(
+                    $"在读取位于{ConfigFilePath}的LSL主配置文件时出现未知错误。{Environment.NewLine}错误信息：{ex.Message}"));
             }
             List<string> keysNeedToRepair = [];// 需要修复的键
             CurrentConfigs.Clear();// 清空当前配置字典
@@ -338,7 +338,7 @@ namespace LSL.Services
                 Debug.WriteLine("Config.json repaired.");
             }
             Debug.WriteLine("Config.json loaded.");
-            return ServiceError.Success;
+            return ServiceResult.Success;
         }
         #endregion
 
@@ -361,7 +361,7 @@ namespace LSL.Services
             ];
 
         #region 读取各个服务器的LSL配置文件LoadServerConfigs
-        public static ServiceError LoadServerConfigs()
+        public static ServiceResult LoadServerConfigs()
         {
             ServerConfigs = [];
             List<string> NotfoundServers = [];
@@ -371,21 +371,23 @@ namespace LSL.Services
             try
             {
                 mainFile = File.ReadAllText(ConfigManager.ServerConfigPath);
-                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return ServiceError.Success;
+                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return ServiceResult.Success;
             }
             catch (FileNotFoundException)
             {
-                return new ServiceError(2, $"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。");
+                return ServiceResult.Fail(new FileNotFoundException(
+                    $"位于{ConfigManager.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。"));
             }
             try
             {
                 var configs = JsonConvert.DeserializeObject<Dictionary<int, string>>(mainFile);
-                if (configs is null) return new ServiceError(2, $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
+                if (configs is null) throw new JsonException();
                 else MainServerConfig = configs;
             }
             catch (JsonException)
             {
-                return new ServiceError(2, $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。");
+                return ServiceResult.Fail(new JsonReaderException(
+                    $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigManager.ServerConfigPath}文件的格式正确。"));
             }
             // 读取各个服务器的LSL配置文件
             foreach (var config in MainServerConfig)
@@ -404,10 +406,9 @@ namespace LSL.Services
                     continue;
                 }
                 // 解析步骤
-                Dictionary<string, string>? serverConfig = [];
                 try
                 {
-                    serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile);
+                    var serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile);
                     if (serverConfig == null) throw new JsonException();
                     foreach (var item in ServerConfigKeys)
                     {
@@ -430,9 +431,9 @@ namespace LSL.Services
                 else if (ConfigErrorServers.Count > 0) ErrorContext += "格式错误的服务器配置文件。";
                 if (NotfoundServers.Count > 0) ErrorContext += "\r不存在的服务器：" + string.Join(", \r", NotfoundServers) + "\r请确保" + ConfigManager.ServerConfigPath + "文件中的服务器名称与实际服务器文件夹名称一致。";
                 if (ConfigErrorServers.Count > 0) ErrorContext += "\r格式错误的服务器配置文件：" + string.Join(", \r", ConfigErrorServers) + "\r请确保这些配置文件的格式正确。";
-                return new ServiceError(1, ErrorContext);
+                return new ServiceResult(ServiceResultType.FinishWithError, new Exception(ErrorContext));
             }
-            return ServiceError.Success;
+            return ServiceResult.Success;
         }
         #endregion
 
@@ -526,7 +527,7 @@ namespace LSL.Services
         public static Dictionary<int, JavaInfo> JavaDict = [];// 目前读取的Java列表
 
         #region 读取Java列表
-        public static ServiceError ReadJavaConfig()
+        public static ServiceResult ReadJavaConfig()
         {
             try
             {
@@ -595,14 +596,14 @@ namespace LSL.Services
                     }
 
                     error += "这些错误一般可以通过重新搜索Java解决。";
-                    return new ServiceError(2, error);
+                    return new ServiceResult(ServiceResultType.FinishWithError, new Exception(error));
                 }
             }
             catch (Exception ex)
             {
-                return new ServiceError(2, ex);
+                return new ServiceResult(ServiceResultType.Error, ex);
             }
-            return ServiceError.Success;
+            return ServiceResult.Success;
         }
         #endregion
 

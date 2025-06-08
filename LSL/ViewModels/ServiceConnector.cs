@@ -42,7 +42,7 @@ namespace LSL.ViewModels
 
         #region 配置部分
 
-        public async Task<ServiceError> GetConfig(bool readFile = false)
+        public async Task<ServiceResult> GetConfig(bool readFile = false)
         {
             _logger.LogInformation("start loading main config");
             if (readFile)
@@ -51,7 +51,7 @@ namespace LSL.ViewModels
                 var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
                 if (shouldShut)
                 {
-                    var err = res.Error?.ToString() ?? res.Message ?? string.Empty;
+                    var err = res.Error?.ToString() ?? string.Empty;
                     _logger.LogCritical("Fatal error when loading LSL main config.{nl}{err} ",Environment.NewLine, err);
                     Environment.Exit(1);
                     return res;
@@ -60,10 +60,10 @@ namespace LSL.ViewModels
 
             AppState.CurrentConfigs = ConfigManager.CurrentConfigs;
             _logger.LogInformation("loading main config completed");
-            return ServiceError.Success;
+            return ServiceResult.Success;
         }
 
-        public async Task<ServiceError> ReadJavaConfig(bool readFile = false)
+        public async Task<ServiceResult> ReadJavaConfig(bool readFile = false)
         {
             _logger.LogInformation("start loading java config");
             if (readFile)
@@ -72,7 +72,7 @@ namespace LSL.ViewModels
                 var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
                 if (shouldShut)
                 {
-                    var err = res.Error?.ToString() ?? res.Message ?? string.Empty;
+                    var err = res.Error?.ToString() ?? string.Empty;
                     _logger.LogCritical("Fatal error when loading java config.{nl}{err} ",Environment.NewLine, err);
                     Environment.Exit(1);
                     return res;
@@ -80,10 +80,10 @@ namespace LSL.ViewModels
             }
             AppState.CurrentJavaDict = JavaManager.JavaDict;
             _logger.LogInformation("loading java config completed");
-            return ServiceError.Success;
+            return ServiceResult.Success;
         }
 
-        public async Task<ServiceError> ReadServerConfig(bool readFile = false)
+        public async Task<ServiceResult> ReadServerConfig(bool readFile = false)
         {
             _logger.LogInformation("start loading server config");
             if (readFile)
@@ -92,7 +92,7 @@ namespace LSL.ViewModels
                 var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
                 if (shouldShut)
                 {
-                    var err = res.Error?.ToString() ?? res.Message ?? string.Empty;
+                    var err = res.Error?.ToString() ?? string.Empty;
                     _logger.LogCritical("Fatal error when loading LSL server config.{nl}{err} ",Environment.NewLine, err);
                     Environment.Exit(1);
                     return res;
@@ -105,7 +105,7 @@ namespace LSL.ViewModels
             }
             AppState.CurrentServerConfigs = cache;
             _logger.LogInformation("loading server config completed");
-            return ServiceError.Success;
+            return ServiceResult.Success;
         }
 
         public void SaveConfig()
@@ -445,13 +445,13 @@ namespace LSL.ViewModels
             try
             {
                 var result = await WebHost.ApiGet(url);
-                var jobj = JsonConvert.DeserializeObject<Dictionary<string, object>>(result) ??
+                var jobj = JsonConvert.DeserializeObject<Dictionary<string, object>>(result.Result) ??
                            throw new FormatException("Update API Response can't be serialized as dictionary.");
                 var remoteVerString = jobj["tag_name"].ToString() ??
                                       throw new NullReferenceException(
                                           "API Response doesn't contain required key tag_name.");
                 var remoteVer = remoteVerString.TrimStart('v');
-                var needUpdate = AlgoServices.IsGreaterVersion(ShellViewModel.Version, remoteVer);
+                var needUpdate = AlgoServices.IsGreaterVersion(Constant.Version, remoteVer);
                 if (needUpdate)
                 {
                     var updateMessage = jobj["body"].ToString() ??
@@ -464,7 +464,7 @@ namespace LSL.ViewModels
                             .Subscribe();
                     });
                 }
-                else _logger.LogInformation("Got remote version update. Local:{LC}, remote:{RM}.", ShellViewModel.Version, remoteVer);
+                else _logger.LogInformation("Got remote version update. Local:{LC}, remote:{RM}.", Constant.Version, remoteVer);
                 _logger.LogInformation("Check for updates completed.");
             }
             catch (Exception ex)

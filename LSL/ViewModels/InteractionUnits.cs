@@ -21,24 +21,23 @@ namespace LSL.ViewModels
             return PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, title, message));
         }
         
-        public async Task<bool> SubmitServiceError(ServiceError error)
+        public async Task<bool> SubmitServiceError(IServiceResult result)
         {
-            if (error.ErrorCode == 0) return false;
-            await ShowServiceError(error);
-            return error.ErrorCode == 1;
+            if (result.ErrorCode == 0) return false;
+            await ShowServiceError(result);
+            return result.ErrorCode == ServiceResultType.Error;
         }
 
-        private async Task ShowServiceError(ServiceError error)
+        private async Task ShowServiceError(IServiceResult result)
         {
             string fin;
-            if (error.Message is not null) fin = error.Message;
-            else if (error.Error is not null) fin = error.Error.Message;
+            if (result.Error is not null) fin = result.Error.Message;
             else return;
 
-            var level = error.ErrorCode switch
+            var level = result.ErrorCode switch
             {
-                1 => PopupType.Error_Confirm,
-                2 => PopupType.Warning_Confirm,
+                ServiceResultType.Error => PopupType.Error_Confirm,
+                ServiceResultType.FinishWithError => PopupType.Warning_Confirm,
                 _ => PopupType.Error_Confirm
             };
             await PopupITA.Handle(new InvokePopupArgs(level, "服务错误", fin));

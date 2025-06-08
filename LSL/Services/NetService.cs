@@ -26,7 +26,7 @@ public class NetService
     }
 
     #region 异步下载请求
-    public async Task<ServiceError> GetFileAsync(string url, string dir, IProgress<double>? progress, CancellationToken token = new()) 
+    public async Task<ServiceResult> GetFileAsync(string url, string dir, IProgress<double>? progress, CancellationToken token = new()) 
     {
         using var client = _factory.CreateClient();
         string? path = null;
@@ -78,35 +78,35 @@ public class NetService
         }
         catch (Exception ex) when (HandleException(ex, fileExists, path))
         {
-            return new ServiceError(1, ex);
+            return ServiceResult.Fail(ex);
         }
-        return ServiceError.Success;
+        return ServiceResult.Success;
     }
     #endregion
     
     #region API获取
 
-    public async Task<string> ApiGet(string url)
+    public async Task<ServiceResult<string>> ApiGet(string url)
     {
         _logger.LogInformation("Start getting API: {URL}", url);
         try
         {
-            if (string.IsNullOrEmpty(url)) return string.Empty;
+            if (string.IsNullOrEmpty(url)) return new ServiceResult<string>(string.Empty);
             var result = await url
                 .WithHeader("User-Agent", value: "LSL/0.08.2")
                 .GetStringAsync();
 
-            return result ?? throw new InvalidOperationException("服务器响应为空");
+            return new ServiceResult<string>(result) ?? throw new InvalidOperationException("服务器响应为空");
         }
         catch (FlurlHttpException ex)
         {
             _logger.LogError(ex, "API请求失败: {Url}", url);
-            throw new HttpRequestException($"API请求失败: {ex.StatusCode}", ex);
+            return ServiceResult<string>.Fail(string.Empty, ex.InnerException ?? ex);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API请求失败: {Url}{NL}{RS}", url, Environment.NewLine, ex.Message);
-            throw new HttpRequestException($"API请求失败: {ex.Message}", ex);
+            return ServiceResult<string>.Fail(string.Empty, ex);
         }
     }
     #endregion

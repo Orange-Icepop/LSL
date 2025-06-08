@@ -14,7 +14,6 @@ using Avalonia.Threading;
 namespace LSL;
 public partial class App : Application
 {
-    //private Window mainWindow;
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -96,5 +95,12 @@ public partial class App : Application
         startupVM = diServices.GetRequiredService<InitializationVM>();
         this.DataContext = startupVM;
     }
-
 }
+
+#region 全局常量
+
+public class Constant
+{
+    public const string Version = "0.08.2";
+}
+#endregion
