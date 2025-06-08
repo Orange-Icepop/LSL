@@ -52,7 +52,7 @@ namespace LSL.Services
         {
             if (_runningServers.TryRemove(serverId, out _))
             {
-                _logger.LogInformation("Server with id {id} unloaded successfully, 哇袄！", serverId);
+                _logger.LogInformation("Server with id {id} unloaded successfully", serverId);
             }
             else
             {
