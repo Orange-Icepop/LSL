@@ -88,7 +88,8 @@ public partial class App : Application
         serviceDescriptors = new ServiceCollection();
         serviceDescriptors.AddLogging();
         serviceDescriptors.AddNetworking();
-        serviceDescriptors.AddService();
+        serviceDescriptors.AddConfigManager();
+        serviceDescriptors.AddServerHost();
         serviceDescriptors.AddStartUp();
         serviceDescriptors.AddViewModels();
         diServices = serviceDescriptors.BuildServiceProvider();

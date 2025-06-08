@@ -1,5 +1,9 @@
 ﻿# LSL Development Info
 
+## Cached target
+
+ - [ ] 对刚刚去static化的几个类添加访问器与logger
+
 ## SubProject
 
 ### 平台更新

@@ -24,13 +24,19 @@ namespace LSL.ViewModels
     public class ServiceConnector
     {
         private AppStateLayer AppState { get; }
+        private ConfigManager configManager { get; }
+        private JavaManager javaManager { get; }
+        private ServerConfigManager serverConfigManager { get; }
         private ServerHost daemonHost { get; }
         private ServerOutputStorage outputStorage { get; }
         private NetService WebHost { get; }
         private ILogger<ServiceConnector> _logger { get; }
-        public ServiceConnector(AppStateLayer appState, ServerHost daemon, ServerOutputStorage optStorage, NetService netService)
+        public ServiceConnector(AppStateLayer appState, ConfigManager cfm, JavaManager jm, ServerConfigManager scm, ServerHost daemon, ServerOutputStorage optStorage, NetService netService)
         {
             AppState = appState;
+            configManager = cfm;
+            javaManager = jm;
+            serverConfigManager = scm;
             daemonHost = daemon;
             outputStorage = optStorage;
             WebHost = netService;
@@ -42,25 +48,22 @@ namespace LSL.ViewModels
 
         #region 配置部分
 
-        public async Task<ServiceResult> GetConfig(bool readFile = false)
+        public async Task GetConfig(bool readFile = false)
         {
             _logger.LogInformation("start loading main config");
             if (readFile)
             {
-                var res = ConfigManager.LoadConfig();
+                var res = configManager.LoadConfig();
                 var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
                 if (shouldShut)
                 {
                     var err = res.Error?.ToString() ?? string.Empty;
                     _logger.LogCritical("Fatal error when loading LSL main config.{nl}{err} ",Environment.NewLine, err);
                     Environment.Exit(1);
-                    return res;
                 }
             }
-
-            AppState.CurrentConfigs = ConfigManager.CurrentConfigs;
+            AppState.CurrentConfigs = configManager.CurrentConfigs;
             _logger.LogInformation("loading main config completed");
-            return ServiceResult.Success;
         }
 
         public async Task<ServiceResult> ReadJavaConfig(bool readFile = false)
@@ -68,7 +71,7 @@ namespace LSL.ViewModels
             _logger.LogInformation("start loading java config");
             if (readFile)
             {
-                var res = JavaManager.ReadJavaConfig();
+                var res = javaManager.ReadJavaConfig();
                 var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
                 if (shouldShut)
                 {
@@ -78,7 +81,7 @@ namespace LSL.ViewModels
                     return res;
                 }
             }
-            AppState.CurrentJavaDict = JavaManager.JavaDict;
+            AppState.CurrentJavaDict = javaManager.JavaDict;
             _logger.LogInformation("loading java config completed");
             return ServiceResult.Success;
         }
@@ -88,7 +91,7 @@ namespace LSL.ViewModels
             _logger.LogInformation("start loading server config");
             if (readFile)
             {
-                var res = ServerConfigManager.LoadServerConfigs();
+                var res = serverConfigManager.LoadServerConfigs();
                 var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
                 if (shouldShut)
                 {
@@ -98,7 +101,7 @@ namespace LSL.ViewModels
                     return res;
                 }
             }
-            var cache = ServerConfigManager.ServerConfigs.ToDictionary(item => item.Key, item => new ServerConfig(item.Value));
+            var cache = serverConfigManager.ServerConfigs.ToDictionary(item => item.Key, item => new ServerConfig(item.Value));
             if (cache.Count == 0)
             {
                 cache.Add(-1, ServerConfig.None);
@@ -110,14 +113,14 @@ namespace LSL.ViewModels
 
         public void SaveConfig()
         {
-            ConfigManager.ConfirmConfig(AppState.CurrentConfigs);
+            configManager.ConfirmConfig(AppState.CurrentConfigs);
             _logger.LogInformation("New config saved");
         }
 
         public async Task FindJava()
         {
             _logger.LogInformation("start finding java");
-            await JavaManager.DetectJava();
+            await javaManager.DetectJava();
             _logger.LogInformation("java detection completed");
             await Dispatcher.UIThread.InvokeAsync(() => ReadJavaConfig());
         }
@@ -174,7 +177,7 @@ namespace LSL.ViewModels
 
         public string? VerifyServerConfigBeforeStart(int serverId)
         {
-            if (!ServerConfigManager.ServerConfigs.TryGetValue(serverId, out var config))
+            if (!serverConfigManager.ServerConfigs.TryGetValue(serverId, out var config))
                 return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
             else if (config is null) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
             else if (!File.Exists(config.using_java)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
@@ -324,7 +327,7 @@ namespace LSL.ViewModels
         {
             try
             {
-                ServerConfigManager.RegisterServer(config.ServerName, config.JavaPath, config.CorePath,
+                serverConfigManager.RegisterServer(config.ServerName, config.JavaPath, config.CorePath,
                     uint.Parse(config.MaxMem),
                     uint.Parse(config.MinMem), config.ExtJvm);
                 ReadServerConfig(true);
@@ -341,7 +344,7 @@ namespace LSL.ViewModels
         {
             try
             {
-                ServerConfigManager.EditServer(id, config.ServerName, config.JavaPath, 
+                serverConfigManager.EditServer(id, config.ServerName, config.JavaPath, 
                     uint.Parse(config.MinMem),
                     uint.Parse(config.MaxMem), config.ExtJvm);
                 ReadServerConfig(true);
@@ -358,7 +361,7 @@ namespace LSL.ViewModels
         {
             try
             {
-                ServerConfigManager.DeleteServer(serverId);
+                serverConfigManager.DeleteServer(serverId);
                 ReadServerConfig(true);
             }
             catch(Exception ex)

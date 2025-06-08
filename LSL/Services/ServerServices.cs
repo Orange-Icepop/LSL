@@ -26,11 +26,13 @@ namespace LSL.Services
         // 启动输出处理器
         private ServerOutputHandler OutputHandler { get; }
         private ServerOutputStorage OutputStorage { get; }
+        private ServerConfigManager serverConfigManager { get; }
         private ILogger<ServerHost> _logger { get; }
-        public ServerHost(ServerOutputHandler outputHandler, ServerOutputStorage outputStorage, ILogger<ServerHost> logger)
+        public ServerHost(ServerOutputHandler outputHandler, ServerOutputStorage outputStorage, ServerConfigManager scm, ILogger<ServerHost> logger)
         {
             OutputStorage = outputStorage;
             OutputHandler = outputHandler;
+            serverConfigManager = scm;
             _logger = logger;
             _logger.LogInformation("ServerHost Launched");
         }
@@ -71,7 +73,7 @@ namespace LSL.Services
         {
             EnsureExited(serverId);
             //if (GetServer(serverId) != null||!GetServer(serverId).HasExited) return;
-            ServerConfig config = ServerConfigManager.ServerConfigs[serverId];
+            ServerConfig config = serverConfigManager.ServerConfigs[serverId];
             var SP = new ServerProcess(config);
             SP.StatusEventHandler += (sender, args) => EventBus.Instance.PublishAsync<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
             // 启动服务器

@@ -52,7 +52,14 @@ namespace LSL
                 .AddPolicyHandler((provider, request) => GetCircuitBreakerPolicy(provider));
             collection.AddSingleton<NetService>();
         }
-        public static void AddService(this IServiceCollection collection)
+
+        public static void AddConfigManager(this IServiceCollection collection)
+        {
+            collection.AddSingleton<ConfigManager>();
+            collection.AddSingleton<JavaManager>();
+            collection.AddSingleton<ServerConfigManager>();
+        }
+        public static void AddServerHost(this IServiceCollection collection)
         {
             collection.AddSingleton<ServerOutputHandler>();
             collection.AddSingleton<ServerOutputStorage>();
