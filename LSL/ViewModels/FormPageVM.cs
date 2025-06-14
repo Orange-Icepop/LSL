@@ -101,7 +101,7 @@ namespace LSL.ViewModels
             if (confirmResult != PopupResult.Yes) return;
             else
             {
-                var success = Connector.AddServer(ServerInfo);
+                var success = await Connector.AddServer(ServerInfo);
                 if (success)
                 {
                     AppState.ITAUnits.Notify(1, null, "服务器配置成功！");
@@ -134,7 +134,7 @@ namespace LSL.ViewModels
             if (confirmResult != PopupResult.Yes) return;
             else
             {
-                var success = Connector.EditServer(id, info);
+                var success = await Connector.EditServer(id, info);
                 if (success)
                 {
                     AppState.ITAUnits.Notify(1, null, "服务器配置修改成功！");

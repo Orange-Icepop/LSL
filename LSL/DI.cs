@@ -55,9 +55,10 @@ namespace LSL
 
         public static void AddConfigManager(this IServiceCollection collection)
         {
-            collection.AddSingleton<ConfigManager>();
-            collection.AddSingleton<JavaManager>();
+            collection.AddSingleton<JavaConfigManager>();
             collection.AddSingleton<ServerConfigManager>();
+            collection.AddSingleton<ConfigManager>();
+            collection.AddSingleton<MainConfigManager>();
         }
         public static void AddServerHost(this IServiceCollection collection)
         {

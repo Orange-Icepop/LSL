@@ -80,7 +80,7 @@ public class NetService
         {
             return ServiceResult.Fail(ex);
         }
-        return ServiceResult.Success;
+        return ServiceResult.Success();
     }
     #endregion
     
@@ -91,22 +91,22 @@ public class NetService
         _logger.LogInformation("Start getting API: {URL}", url);
         try
         {
-            if (string.IsNullOrEmpty(url)) return new ServiceResult<string>(string.Empty);
+            if (string.IsNullOrEmpty(url)) return ServiceResult.Success(string.Empty);
             var result = await url
                 .WithHeader("User-Agent", value: "LSL/0.08.2")
                 .GetStringAsync();
 
-            return new ServiceResult<string>(result) ?? throw new InvalidOperationException("服务器响应为空");
+            return !string.IsNullOrEmpty(result) ? ServiceResult.Success(result) : throw new InvalidOperationException("服务器响应为空");
         }
         catch (FlurlHttpException ex)
         {
             _logger.LogError(ex, "API请求失败: {Url}", url);
-            return ServiceResult<string>.Fail(string.Empty, ex.InnerException ?? ex);
+            return ServiceResult.Fail(string.Empty, ex.InnerException ?? ex);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API请求失败: {Url}{NL}{RS}", url, Environment.NewLine, ex.Message);
-            return ServiceResult<string>.Fail(string.Empty, ex);
+            return ServiceResult.Fail(string.Empty, ex);
         }
     }
     #endregion

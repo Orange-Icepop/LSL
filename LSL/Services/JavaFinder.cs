@@ -33,7 +33,7 @@ namespace LSL.Services
         private static void GetWindowsJavaInfos(List<JavaInfo> javaInfos)// 获取Windows系统中的Java信息
         {
             var pathEnv = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);// 获取系统环境变量中的Path
-            if (pathEnv == null) throw new Exception("Environment variable path not found");
+            if (pathEnv is null) throw new Exception("Environment variable path not found");
             string[] pathParts = pathEnv.Split(Path.PathSeparator);
 
             foreach (var pathPart in pathParts)
@@ -47,7 +47,6 @@ namespace LSL.Services
                     {
                         javaInfos.Add(javaInfo);
                     }
-                    continue;
                 }
                 else if (File.Exists(javawPath))
                 {
@@ -56,7 +55,6 @@ namespace LSL.Services
                     {
                         javaInfos.Add(javaInfo);
                     }
-                    continue;
                 }
             }
         }

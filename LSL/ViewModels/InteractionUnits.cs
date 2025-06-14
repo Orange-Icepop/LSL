@@ -23,9 +23,9 @@ namespace LSL.ViewModels
         
         public async Task<bool> SubmitServiceError(IServiceResult result)
         {
-            if (result.ErrorCode == 0) return false;
+            if (result.ErrorCode == ServiceResultType.Success) return true;
             await ShowServiceError(result);
-            return result.ErrorCode == ServiceResultType.Error;
+            return result.ErrorCode != ServiceResultType.Error;
         }
 
         private async Task ShowServiceError(IServiceResult result)
@@ -37,7 +37,7 @@ namespace LSL.ViewModels
             var level = result.ErrorCode switch
             {
                 ServiceResultType.Error => PopupType.Error_Confirm,
-                ServiceResultType.FinishWithError => PopupType.Warning_Confirm,
+                ServiceResultType.FinishWithWarning => PopupType.Warning_Confirm,
                 _ => PopupType.Error_Confirm
             };
             await PopupITA.Handle(new InvokePopupArgs(level, "服务错误", fin));
@@ -47,5 +47,8 @@ namespace LSL.ViewModels
         {
             NotifyITA.Handle(new NotifyArgs(type, title, message)).Subscribe();
         }
+
+        public async Task WaitNotify(int type, string? title, string? message) =>
+            await NotifyITA.Handle(new NotifyArgs(type, title, message));
     }
 }

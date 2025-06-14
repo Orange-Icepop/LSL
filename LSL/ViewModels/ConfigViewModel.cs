@@ -197,14 +197,10 @@ namespace LSL.ViewModels
                 "最后一次确认，你确定要删除该服务器吗？",
                 "这是最后一次警告！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
             if (result3 == PopupResult.No) return;
-            var deleteResult = Connector.DeleteServer(serverId);
-            if (string.IsNullOrEmpty(deleteResult))
+            var deleteResult = await Connector.DeleteServer(serverId);
+            if (deleteResult)
             {
                 AppState.ITAUnits.Notify(1, null, $"服务器{serverId}删除成功");
-            }
-            else
-            {
-                AppState.ITAUnits.ThrowError("删除服务器出错", deleteResult);
             }
         }
 

@@ -19,24 +19,23 @@ using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels
 {
-    // 用于连接视图模型与服务层
-    // 主要成员为void，用于调用服务层方法
+    /* 用于连接视图模型与服务层
+     主要成员为void，用于调用服务层方法
+     编写原则：
+     永不调用Notify（因为没有可执行保证）
+     */
     public class ServiceConnector
     {
         private AppStateLayer AppState { get; }
         private ConfigManager configManager { get; }
-        private JavaManager javaManager { get; }
-        private ServerConfigManager serverConfigManager { get; }
         private ServerHost daemonHost { get; }
         private ServerOutputStorage outputStorage { get; }
         private NetService WebHost { get; }
         private ILogger<ServiceConnector> _logger { get; }
-        public ServiceConnector(AppStateLayer appState, ConfigManager cfm, JavaManager jm, ServerConfigManager scm, ServerHost daemon, ServerOutputStorage optStorage, NetService netService)
+        public ServiceConnector(AppStateLayer appState, ConfigManager cfm, ServerHost daemon, ServerOutputStorage optStorage, NetService netService)
         {
             AppState = appState;
             configManager = cfm;
-            javaManager = jm;
-            serverConfigManager = scm;
             daemonHost = daemon;
             outputStorage = optStorage;
             WebHost = netService;
@@ -53,16 +52,16 @@ namespace LSL.ViewModels
             _logger.LogInformation("start loading main config");
             if (readFile)
             {
-                var res = configManager.LoadConfig();
-                var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
-                if (shouldShut)
+                var res = configManager.ReadMainConfig();
+                var notCritical = await AppState.ITAUnits.SubmitServiceError(res);
+                if (!notCritical)
                 {
                     var err = res.Error?.ToString() ?? string.Empty;
                     _logger.LogCritical("Fatal error when loading LSL main config.{nl}{err} ",Environment.NewLine, err);
                     Environment.Exit(1);
                 }
             }
-            AppState.CurrentConfigs = configManager.CurrentConfigs;
+            AppState.CurrentConfigs = configManager.MainConfigs;
             _logger.LogInformation("loading main config completed");
         }
 
@@ -71,9 +70,9 @@ namespace LSL.ViewModels
             _logger.LogInformation("start loading java config");
             if (readFile)
             {
-                var res = javaManager.ReadJavaConfig();
-                var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
-                if (shouldShut)
+                var res = configManager.ReadJavaConfig();
+                var notCritical = await AppState.ITAUnits.SubmitServiceError(res);
+                if (!notCritical)
                 {
                     var err = res.Error?.ToString() ?? string.Empty;
                     _logger.LogCritical("Fatal error when loading java config.{nl}{err} ",Environment.NewLine, err);
@@ -81,9 +80,9 @@ namespace LSL.ViewModels
                     return res;
                 }
             }
-            AppState.CurrentJavaDict = javaManager.JavaDict;
+            AppState.CurrentJavaDict = configManager.JavaConfigs;
             _logger.LogInformation("loading java config completed");
-            return ServiceResult.Success;
+            return ServiceResult.Success();
         }
 
         public async Task<ServiceResult> ReadServerConfig(bool readFile = false)
@@ -91,9 +90,9 @@ namespace LSL.ViewModels
             _logger.LogInformation("start loading server config");
             if (readFile)
             {
-                var res = serverConfigManager.LoadServerConfigs();
-                var shouldShut = await AppState.ITAUnits.SubmitServiceError(res);
-                if (shouldShut)
+                var res = configManager.ReadServerConfig();
+                var notCritical = await AppState.ITAUnits.SubmitServiceError(res);
+                if (!notCritical)
                 {
                     var err = res.Error?.ToString() ?? string.Empty;
                     _logger.LogCritical("Fatal error when loading LSL server config.{nl}{err} ",Environment.NewLine, err);
@@ -101,28 +100,36 @@ namespace LSL.ViewModels
                     return res;
                 }
             }
-            var cache = serverConfigManager.ServerConfigs.ToDictionary(item => item.Key, item => new ServerConfig(item.Value));
+
+            var cache = configManager.ServerConfigs.ToDictionary(
+                item => item.Key,
+                item => new ServerConfig(item.Value));
             if (cache.Count == 0)
             {
                 cache.Add(-1, ServerConfig.None);
             }
             AppState.CurrentServerConfigs = cache;
             _logger.LogInformation("loading server config completed");
-            return ServiceResult.Success;
+            return ServiceResult.Success();
         }
-
-        public void SaveConfig()
+        public async Task<bool> SaveConfig()
         {
-            configManager.ConfirmConfig(AppState.CurrentConfigs);
-            _logger.LogInformation("New config saved");
+            var result = configManager.ConfirmMainConfig(AppState.CurrentConfigs);
+            await AppState.ITAUnits.SubmitServiceError(result);
+            bool success = result.ErrorCode == ServiceResultType.Success;
+            if(success) _logger.LogInformation("New config saved");
+            return success;
         }
 
-        public async Task FindJava()
+        public async Task<bool> FindJava()
         {
             _logger.LogInformation("start finding java");
-            await javaManager.DetectJava();
-            _logger.LogInformation("java detection completed");
+            var result = await configManager.DetectJava();
+            await AppState.ITAUnits.SubmitServiceError(result);
+            bool success = result.ErrorCode == ServiceResultType.Success;
+            if(success) _logger.LogInformation("java detection completed");
             await Dispatcher.UIThread.InvokeAsync(() => ReadJavaConfig());
+            return success;
         }
 
         #endregion
@@ -177,7 +184,7 @@ namespace LSL.ViewModels
 
         public string? VerifyServerConfigBeforeStart(int serverId)
         {
-            if (!serverConfigManager.ServerConfigs.TryGetValue(serverId, out var config))
+            if (!configManager.ServerConfigs.TryGetValue(serverId, out var config))
                 return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
             else if (config is null) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
             else if (!File.Exists(config.using_java)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
@@ -323,52 +330,28 @@ namespace LSL.ViewModels
             return CoreValidationService.Validate(corePath, out var Problem).ToString();
         }
 
-        public bool AddServer(FormedServerConfig config)
-        {
-            try
-            {
-                serverConfigManager.RegisterServer(config.ServerName, config.JavaPath, config.CorePath,
-                    uint.Parse(config.MaxMem),
-                    uint.Parse(config.MinMem), config.ExtJvm);
-                ReadServerConfig(true);
-            }
-            catch
-            {
-                return false;
-            }
-
-            return true;
+        public async Task<bool> AddServer(FormedServerConfig config)
+        { 
+            var result = configManager.RegisterServer(config);
+            await AppState.ITAUnits.SubmitServiceError(result);
+            await ReadServerConfig(true);
+            return result.ErrorCode == ServiceResultType.Success;
         }
 
-        public bool EditServer(int id, FormedServerConfig config)
+        public async Task<bool> EditServer(int id, FormedServerConfig config)
         {
-            try
-            {
-                serverConfigManager.EditServer(id, config.ServerName, config.JavaPath, 
-                    uint.Parse(config.MinMem),
-                    uint.Parse(config.MaxMem), config.ExtJvm);
-                ReadServerConfig(true);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                return false;
-            }
-            return true;
+            var result = configManager.EditServer(id, config);
+            await AppState.ITAUnits.SubmitServiceError(result);
+            await ReadServerConfig(true);
+            return result.ErrorCode == ServiceResultType.Success;
         }
 
-        public string? DeleteServer(int serverId)
+        public async Task<bool> DeleteServer(int serverId)
         {
-            try
-            {
-                serverConfigManager.DeleteServer(serverId);
-                ReadServerConfig(true);
-            }
-            catch(Exception ex)
-            {
-                return ex.Message;
-            }
-            return null;
+            var result = configManager.DeleteServer(serverId); 
+            await AppState.ITAUnits.SubmitServiceError(result);
+            await ReadServerConfig(true);
+            return result.ErrorCode == ServiceResultType.Success;
         }
 
         #endregion
