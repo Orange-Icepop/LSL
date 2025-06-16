@@ -1,4 +1,6 @@
-﻿namespace LSL.ViewModels;
+﻿using System;
+
+namespace LSL.ViewModels;
 
 #region 事件类
 
@@ -24,11 +26,10 @@ public enum PopupResult
     Cancel,
 }
 
-
-public class ViewBroadcastArgs // 广播事件
+public class ViewBroadcastArgs(Type target, string msg)
 {
-    public required string Target { get; set; }
-    public required string Message { get; set; }
+    public Type Target { get; } = target;
+    public string Message { get; } = msg;
 }
 
 public class NavigateArgs
@@ -48,6 +49,19 @@ public class PopupArgs(int type, string title, string message)
     public int Type { get; set; } = type;
     public string Title { get; set; } = title;
     public string Message { get; set; } = message;
+}
+
+public enum WindowOperationArgType
+{
+    Raise,
+    Confirm,
+    ForceClose,
+    Hide,
+}
+
+public class WindowOperationArgs(WindowOperationArgType cType)
+{
+    public WindowOperationArgType Body { get; } = cType;
 }
 
 #endregion

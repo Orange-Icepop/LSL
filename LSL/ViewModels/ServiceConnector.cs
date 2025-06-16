@@ -172,6 +172,8 @@ namespace LSL.ViewModels
             if (confirm == PopupResult.Yes) daemonHost.EndServer(serverId);
         }
 
+        public void EndAllServers() => daemonHost.EndAllServers();
+
         public void SendCommandToServer(int serverId, string command)
         {
             if (string.IsNullOrEmpty(command)) return;
@@ -425,11 +427,25 @@ namespace LSL.ViewModels
             var success = !await AppState.ITAUnits.SubmitServiceError(result);
             return success;
         }
+        #endregion
+        
+        #region 配置与自启项
         public async Task CheckForUpdates()
         {
-            const string url = "https://api.orllow.cn/lsl/latest";
             try
             {
+                if (!AppState.CurrentConfigs.TryGetValue("beta_update", out var betaUpdateObj))
+                {
+                    throw new KeyNotFoundException("Config key beta_update not found.");
+                }
+
+                if (!bool.TryParse(betaUpdateObj.ToString(), out var betaUpdate))
+                {
+                    throw new FormatException("Config beta_update are not valid boolean.");
+                }
+
+                Dispatcher.UIThread.Post(() => AppState.ITAUnits.Notify(0, "更新检查", "开始检查LSL更新......"));
+                string url = betaUpdate ? "https://api.orllow.cn/lsl/latest/prerelease" : "https://api.orllow.cn/lsl/latest/stable";
                 var result = await WebHost.ApiGet(url);
                 var jobj = JsonConvert.DeserializeObject<Dictionary<string, object>>(result.Result) ??
                            throw new FormatException("Update API Response can't be serialized as dictionary.");
@@ -438,26 +454,31 @@ namespace LSL.ViewModels
                                           "API Response doesn't contain required key tag_name.");
                 var remoteVer = remoteVerString.TrimStart('v');
                 var needUpdate = AlgoServices.IsGreaterVersion(Constant.Version, remoteVer);
+                _logger.LogInformation("Got remote version update. Local:{LC}, remote:{RM}.", Constant.Version, remoteVer);
                 if (needUpdate)
                 {
                     var updateMessage = jobj["body"].ToString() ??
                                         throw new NullReferenceException(
                                             "API Response doesn't contain required key body.");
-                    var message = $"LSL已经推出了新版本：{remoteVerString}。可前往https://github.com/Orange-Icepop/LSL/releases下载。{Environment.NewLine}{updateMessage}";
+                    var message =
+                        $"LSL已经推出了新版本：{remoteVerString}。可前往https://github.com/Orange-Icepop/LSL/releases下载。{Environment.NewLine}{updateMessage}";
                     await Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_Confirm, "LSL更新提示", message))
+                        AppState.ITAUnits.PopupITA
+                            .Handle(new InvokePopupArgs(PopupType.Info_Confirm, "LSL更新提示", message))
                             .Subscribe();
                     });
                 }
-                else _logger.LogInformation("Got remote version update. Local:{LC}, remote:{RM}.", Constant.Version, remoteVer);
+                else
+                    Dispatcher.UIThread.Post(() =>
+                        AppState.ITAUnits.Notify(1, "更新检查完毕", $"当前LSL版本已为最新：{Constant.Version}"));
                 _logger.LogInformation("Check for updates completed.");
             }
             catch (Exception ex)
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_Confirm, "更新检查出错",
+                    AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "更新检查出错",
                             "LSL在检查更新时出现了问题。" + Environment.NewLine + ex.Message))
                         .Subscribe();
                 });

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using LSL.IPC;
 using LSL.Services;
+using LSL.Views;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
@@ -35,7 +36,7 @@ public class InitializationVM : ViewModelBase
 
     public static void ShowMainWindow()
     {
-        MessageBus.Current.SendMessage(new ViewBroadcastArgs { Target = "MainWindow.axaml.cs", Message = "Show" });
+        MessageBus.Current.SendMessage(new ViewBroadcastArgs(typeof(MainWindow), "Show"));
     }
     public static void Quit() { Environment.Exit(0); }
 }

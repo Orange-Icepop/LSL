@@ -5,8 +5,10 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.ReactiveUI;
+using Avalonia.Threading;
 using LSL.Services;
 using LSL.ViewModels;
 using ReactiveUI;
@@ -23,9 +25,13 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
         InitializeComponent();
         this.Closing += MainWindow_Closing;// 重定向关闭窗口事件
         MessageBus.Current.Listen<ViewBroadcastArgs>()
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Where(args => args.Target == "MainWindow.axaml.cs")
-                .Subscribe(args => BroadcastHandler(args.Message));
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Where(args => args.Target == typeof(MainWindow))
+            .Subscribe(args => BroadcastHandler(args.Message));
+        MessageBus.Current.Listen<WindowOperationArgs>()
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Where(args => args.Body is not WindowOperationArgType.Raise)
+            .Subscribe(args => CloseHandler(args.Body));
         this.WhenActivated(action =>
         {
             action(this.ViewModel!.ITAUnits.PopupITA.RegisterHandler(HandlePopup));
@@ -46,16 +52,32 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
             FontSize = 12,
         };
     }
+    private bool confirmClose = false;
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
-        if (this.ViewModel!.CheckForExiting())
-        {
-            e.Cancel = true;
-            this.Hide();
-        }
+        if (confirmClose) e.Cancel = false;
         else
         {
-            e.Cancel = false;
+            e.Cancel = true;
+            MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.Raise));
+        }
+        //TODO:add good force exit in initvm or sth else
+    }
+
+    private void CloseHandler(WindowOperationArgType cType)
+    {
+        switch (cType)
+        {
+            case WindowOperationArgType.Raise: return;
+            case WindowOperationArgType.Confirm: 
+            case WindowOperationArgType.ForceClose:
+                confirmClose = true;
+                this.Close();
+                break;
+            case WindowOperationArgType.Hide:
+                this.Hide();
+                break;
+            default: return;
         }
     }
     #endregion
@@ -65,10 +87,15 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
         switch (arg)
         {
             case "Show":
-                {
-                    this.Show();
-                    break;
-                }
+            {
+                this.Show();
+                break;
+            }
+            case "Close":
+            {
+                this.Close();
+                break;
+            }
             default: return;
         }
     }
@@ -78,7 +105,6 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
         var args = ITA.Input;
         var title = args.Title;
         var message = args.Message;
-        title ??= "通知";
         message ??= "未知消息";
         NotificationType type;
         switch (args.Type)
@@ -128,17 +154,17 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
     #region 文件选择
     private static FilePickerFileType CoreFileType { get; } = new("Minecraft服务器核心文件")
     {
-        Patterns = new[] { "*.jar" },
-        MimeTypes = new[] { "application/java-archive" }
+        Patterns = ["*.jar"],
+        MimeTypes = ["application/java-archive"]
     };
-    public async Task OpenFileOperation(IInteractionContext<FilePickerType, string> ITA)
+    private async Task OpenFileOperation(IInteractionContext<FilePickerType, string> ITA)
     {
         // 启动异步操作以打开对话框。
         var files = await this.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "打开Minecraft核心文件",
             AllowMultiple = false,
-            FileTypeFilter = new[] { CoreFileType },
+            FileTypeFilter = [CoreFileType],
         });
 
         if (files.Count >= 1)

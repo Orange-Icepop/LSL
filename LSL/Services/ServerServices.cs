@@ -186,6 +186,7 @@ namespace LSL.Services
                 process?.Dispose();
             }
             _runningServers.Clear();
+            _logger.LogInformation("Ended all servers.");
         }
         #endregion
 

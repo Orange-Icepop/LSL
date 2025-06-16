@@ -10,6 +10,9 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using Microsoft.Extensions.Hosting.Internal;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace LSL;
 public partial class App : Application
@@ -23,6 +26,8 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var logger = diServices.GetRequiredService<ILogger<App>>();
+            logger.LogInformation("===== Starting App =====");
             var startupWindow = new StartupWindow
             {
                 DataContext = startupVM,
@@ -30,8 +35,11 @@ public partial class App : Application
                 WindowStartupLocation = WindowStartupLocation.CenterScreen
             };
 
-            startupWindow.Show();
-
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                startupWindow.Show();
+            });
+            logger.LogInformation("Splash window loaded, loading main window");
             try
             {
                 // 在后台线程初始化，不阻塞UI
@@ -49,7 +57,8 @@ public partial class App : Application
                         ViewModel = shellVM
                     };
                     desktop.MainWindow.Show();
-                });         
+                });
+                logger.LogInformation("===== App started =====");
             }
             catch (Exception ex)
             {
@@ -85,6 +94,8 @@ public partial class App : Application
 
     public App()
     {
+        DI.InitSerilog();
+        Log.Information("Building LSL DI Container");
         serviceDescriptors = new ServiceCollection();
         serviceDescriptors.AddLogging();
         serviceDescriptors.AddNetworking();
@@ -93,6 +104,7 @@ public partial class App : Application
         serviceDescriptors.AddStartUp();
         serviceDescriptors.AddViewModels();
         diServices = serviceDescriptors.BuildServiceProvider();
+        Log.Information("DI Completed");
         startupVM = diServices.GetRequiredService<InitializationVM>();
         this.DataContext = startupVM;
     }

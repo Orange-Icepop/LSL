@@ -16,23 +16,51 @@ using Polly;
 using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
 using Polly.Retry;
+using Serilog;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace LSL
 {
     public static class DI
     {
-        
+        public static void InitSerilog()
+        {
+            var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSL", "logs");
+            #if DEBUG
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Logger( lc => lc
+                    .WriteTo.Console(
+                        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss}] [{SourceContext}|{Level}] {Message}{NewLine}{Exception}")
+                    .WriteTo.File(
+                        path: Path.Combine(logPath, "log-.log"),
+                        rollingInterval: RollingInterval.Minute,
+                        retainedFileCountLimit: 10,
+                        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss}] [{SourceContext}|{Level}] {Message}{NewLine}{Exception}",
+                        encoding: Encoding.UTF8)
+                    .WriteTo.Debug(outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss}] [{SourceContext}|{Level}] {Message}{NewLine}{Exception}"))
+                .CreateLogger();
+            #else
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.Console(
+                    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss}] [{SourceContext}|{Level}] {Message}{NewLine}{Exception}")
+                .WriteTo.File(
+                    path: Path.Combine(logPath, "log-.log"),
+                    rollingInterval: RollingInterval.Hour,
+                    retainedFileCountLimit: 100,
+                    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss}] [{SourceContext}|{Level}] {Message}{NewLine}{Exception}",
+                    encoding: Encoding.UTF8)
+                .CreateLogger();
+            #endif
+        }
         #region 添加单例
         public static void AddLogging(this IServiceCollection collection)
         {
             collection.AddLogging(builder =>
             {
-                builder.AddConsole(options => 
-                {
-                    // 使用支持中文的格式化器
-                    options.FormatterName = "custom";
-                }).AddConsoleFormatter<Utf8ConsoleFormatter, ConsoleFormatterOptions>();
-                builder.AddDebug();
+                builder.ClearProviders();
+                builder.AddSerilog(dispose: true);
                 #if DEBUG
                 builder.SetMinimumLevel(LogLevel.Debug);
                 #else

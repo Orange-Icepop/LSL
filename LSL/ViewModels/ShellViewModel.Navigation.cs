@@ -125,8 +125,7 @@ namespace LSL.ViewModels
             var original = AppState.CurrentRightPage;
             MessageBus.Current.SendMessage(new NavigateArgs
                 { BarTarget = BarState.Undefined, LeftTarget = GeneralPageState.Undefined, RightTarget = original });
-            MessageBus.Current.SendMessage(new ViewBroadcastArgs
-                { Target = "ServerTerminal.axaml.cs", Message = "ScrollToEnd" });
+            MessageBus.Current.SendMessage(new ViewBroadcastArgs(typeof(ServerTerminal), "ScrollToEnd"));
         }
 
         #endregion

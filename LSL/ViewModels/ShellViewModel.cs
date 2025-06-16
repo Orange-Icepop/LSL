@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using LSL.Views;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
@@ -69,17 +71,29 @@ namespace LSL.ViewModels
                 NavigateToPage(GeneralPageState.Settings, RightPageState.Common);
             });
             #endregion
+
+            MessageBus.Current.Listen<WindowOperationArgs>()
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Where(args => args.Body is WindowOperationArgType.Raise)
+                .Subscribe(async _ => await ExitHandler());
         }
 
+        #region 生命周期
         //主窗口初始化完毕后的操作
         public void InitializeMainWindow()
         {
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Home, RightTarget = RightPageState.HomeRight });
             NavigateLeftView("HomeLeft");
             NavigateRightView("HomeRight");
-            Task.Run(AutoCheckUpdates);
+            Task.Run(DoStartUp);
         }
 
+        private async Task DoStartUp()
+        {
+            await Task.WhenAll(
+                AutoCheckUpdates()
+            );
+        }
         private async Task AutoCheckUpdates()
         {
             if (AppState.CurrentConfigs.TryGetValue("auto_update", out var autoUpdate) && autoUpdate is bool update)
@@ -88,14 +102,49 @@ namespace LSL.ViewModels
             }
         }
 
-        public bool CheckForExiting()// 退出事件处理
+        private async Task ExitHandler()
         {
-            ServeCon.SaveConfig();
-            if(AppState.CurrentConfigs.TryGetValue("daemon", out var value) && bool.TryParse(value.ToString(), out var res))
+            var result = await PreExitOperations();
+            switch (result)
             {
-                return res;
+                case 1: MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.Hide)); break;
+                case 0: MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.Confirm)); break;
+                default: return;
             }
-            else return false;
         }
+        private async Task<int> PreExitOperations()// 退出事件处理
+        {
+            await ServeCon.SaveConfig();
+            bool daemon = (AppState.CurrentConfigs.TryGetValue("daemon", out var daemonObj) && bool.TryParse(daemonObj.ToString(), out var daemonConf)) && daemonConf;
+            if (daemon) return 1;
+            else
+            {
+                if (AppState.CurrentConfigs.TryGetValue("end_server_when_close", out var ESWCObj) &&
+                    bool.TryParse(ESWCObj.ToString(), out var ESWC) && ESWC)
+                {
+                    ServeCon.EndAllServers();
+                }
+                else if (AppState.RunningServerCount > 0)
+                {
+                    var res = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_YesNoCancel,
+                        "是否要关闭所有服务器？",
+                        $"你正在尝试关闭LSL，但是有服务器正在运行。{Environment.NewLine}点击是将立刻关闭所有服务器；{Environment.NewLine}点击否将让这些服务器进程在后台运行，并且LSL不再管理它们；{Environment.NewLine}点击取消以取消关闭LSL的操作。"));
+                    switch (res)
+                    {
+                        case PopupResult.Yes:
+                        {
+                            ServeCon.EndAllServers();
+                            return 0;
+                        }
+                        case PopupResult.No: return 0;
+                        case PopupResult.Cancel:
+                        default: return -1;
+                    }
+                }
+
+                return 0;
+            }
+        }
+        #endregion
     }
 }

@@ -32,7 +32,7 @@ namespace LSL.Views.Server
         }
         public void ForceScroll(ViewBroadcastArgs args)
         {
-            if (args.Target == "ServerTerminal.axaml.cs" && args.Message == "ScrollToEnd")
+            if (args.Target == typeof(ServerTerminal) && args.Message == "ScrollToEnd")
             {
                 TerminalScroll.ScrollToEnd();
             }
