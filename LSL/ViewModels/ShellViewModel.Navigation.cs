@@ -57,7 +57,7 @@ namespace LSL.ViewModels
                 case "SettingsLeft":
                     gps = GeneralPageState.Settings;
                     if (!dislink)
-                        rps = RightPageState.Common;
+                        rps = RightPageState.CommonSettings;
                     break;
             }
 
@@ -167,7 +167,7 @@ namespace LSL.ViewModels
         ModDown,
 
         //Settings
-        Common,
+        CommonSettings,
         DownloadSettings,
         PanelSettings,
         StyleSettings,
@@ -228,7 +228,7 @@ namespace LSL.ViewModels
                 //ASViews
                 "AddCore" => new AddCore(),
                 //Settings
-                "Common" => new Common(),
+                "CommonSettings" => new CommonSettings(),
                 "DownloadSettings" => new DownloadSettings(),
                 "PanelSettings" => new PanelSettings(),
                 "StyleSettings" => new StyleSettings(),

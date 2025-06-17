@@ -1,4 +1,4 @@
-﻿namespace LSL.IPC
+﻿namespace LSL.Common.Contracts
 {
     // 共享数据存储类
     #region Java信息

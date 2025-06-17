@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>12</LangVersion>
 		<OutputType>Library</OutputType>
 		<ApplicationIcon>Assets\icon.ico</ApplicationIcon>
 		<UseWindowsForms>False</UseWindowsForms>
@@ -158,5 +158,13 @@
 	  <AvaloniaXaml Update="Views\Server\EditSC.axaml">
 	    <SubType>Designer</SubType>
 	  </AvaloniaXaml>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Common\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\LSL.Common\LSL.Common.csproj" />
 	</ItemGroup>
 </Project>

@@ -6,13 +6,12 @@ using System.Collections.Generic;
 namespace LSL.Views.Settings
 {
     
-    public partial class Common : UserControl
+    public partial class CommonSettings : UserControl
     {
 
-        public Common()
+        public CommonSettings()
         {
             InitializeComponent();
-            
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LSL.IPC;
+namespace LSL.Common.Contracts;
 
 public interface IServiceResult
 {

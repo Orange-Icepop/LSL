@@ -4,7 +4,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
-using LSL.IPC;
+using LSL.Common.Contracts;
 using LSL.Views;
 using ReactiveUI;
 

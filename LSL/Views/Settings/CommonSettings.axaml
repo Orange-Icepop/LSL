@@ -6,7 +6,7 @@
              xmlns:vm="using:LSL.ViewModels"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
-             x:Class="LSL.Views.Settings.Common">
+             x:Class="LSL.Views.Settings.CommonSettings">
 	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 		<StackPanel>
 			<local:MyCard Text="常规设置">

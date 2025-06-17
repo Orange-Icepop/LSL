@@ -1,18 +1,18 @@
 ﻿using System;
 
-namespace LSL.IPC
+namespace LSL.Common.Contracts
 {
-    public class LSLException : Exception // LSL异常，Exception的包装类
+    public abstract class LSLException : Exception // LSL异常，Exception的包装类
     {
-        public LSLException(string message, Exception innerException) : base(message, innerException)
+        protected LSLException(string message, Exception innerException) : base(message, innerException)
         {
         }
 
-        public LSLException(string message) : base(message)
+        protected LSLException(string message) : base(message)
         {
         }
 
-        public LSLException()
+        protected LSLException()
         {
         }
     }

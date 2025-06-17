@@ -9,7 +9,9 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
-using LSL.IPC;
+using LSL.Common.Contracts;
+using LSL.Common.Helpers;
+using LSL.Common.Helpers.Validators;
 
 namespace LSL.ViewModels
 {

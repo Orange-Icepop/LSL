@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using LSL.Services;
+using LSL.Common.Contracts;
 
-namespace LSL.IPC
+namespace LSL.Common.Helpers.Validators
 {
     public static class CheckService // 适合被整体调用的校验方法
     {

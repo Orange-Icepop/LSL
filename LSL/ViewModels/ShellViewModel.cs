@@ -68,7 +68,7 @@ namespace LSL.ViewModels
             });
             CommonConfigCmd = ReactiveCommand.Create(() =>
             {
-                NavigateToPage(GeneralPageState.Settings, RightPageState.Common);
+                NavigateToPage(GeneralPageState.Settings, RightPageState.CommonSettings);
             });
             #endregion
 

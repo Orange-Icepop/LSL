@@ -49,21 +49,24 @@
             <local:MyCard Text="开源库使用声明">
                 <StackPanel Margin="25,40,23,15">
                     <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/dotnet.ico" Title=".NET Runtime"
-                                      Info="开放公共语言运行库" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                      Info="开放公共语言运行库，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/dotnet/runtime" />
                     <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/AvaloniaUI.png" Title="AvaloniaUI"
-                                      Info="UI框架" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                      Info="UI框架，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/AvaloniaUI/Avalonia" />
                     <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/ReactiveUI.png" Title="ReactiveUI"
-                                      Info="反应式UI辅助框架" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                      Info="反应式UI辅助框架，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/reactiveui/reactiveui" />
                     <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/Json.Net.png"
-                                      Title="Newtonsoft.Json" Info="Json编解码器"
+                                      Title="Newtonsoft.Json" Info="Json编解码器，MIT"
                                       Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/JamesNK/Newtonsoft.Json" />
                     <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/sharpziplib.png" Title="SharpZipLib"
-                                      Info="解压缩库" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                      Info="解压缩库，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/icsharpcode/SharpZipLib" />
+                    <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/Serilog.png" Title="Serilog"
+                                      Info="日志记录库，Apache-2.0" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                      CommandParameter="https://github.com/serilog/serilog" />
                 </StackPanel>
             </local:MyCard>
         </StackPanel>

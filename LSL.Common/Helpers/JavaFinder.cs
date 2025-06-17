@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using LSL.IPC;
+using LSL.Common.Contracts;
 
-namespace LSL.Services
+namespace LSL.Common.Helpers
 {
     public static class JavaFinder
     {
@@ -192,14 +192,7 @@ namespace LSL.Services
                         }
                         // get architecture
                         string architectureLine = lines[2];
-                        if (architectureLine.Contains("64-Bit"))
-                        {
-                            architecture = "64-Bit";
-                        }
-                        else
-                        {
-                            architecture = "32-Bit";
-                        }
+                        architecture = architectureLine.Contains("64-Bit") ? "64-Bit" : "32-Bit";
                         return new JavaInfo(javaPath, version, vendor, architecture);
                     }
                     else return null;

@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using LSL.IPC;
+using LSL.Common.Contracts;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services

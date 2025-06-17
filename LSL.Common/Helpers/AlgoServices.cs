@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LSL.Services
+namespace LSL.Common.Helpers
 {
     public static class AlgoServices
     {

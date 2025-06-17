@@ -2,7 +2,7 @@
 using System.IO;
 using ICSharpCode.SharpZipLib.Zip;
 
-namespace LSL.IPC
+namespace LSL.Common.Helpers.Validators
 {
     public static class CoreValidationService
     {

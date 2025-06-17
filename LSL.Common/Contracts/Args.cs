@@ -1,6 +1,6 @@
 ﻿
 
-namespace LSL.IPC
+namespace LSL.Common.Contracts
 {
     public interface IStorageArgs;
     public record ColorOutputArgs(int ServerId, string Output, string ColorHex) : IStorageArgs;// 彩色终端输出事件

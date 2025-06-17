@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using Avalonia.Threading;
-using LSL.IPC;
+using LSL.Common.Contracts;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;

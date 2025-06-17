@@ -59,7 +59,7 @@ namespace LSL.ViewModels
         [Reactive] public bool HLManualDown { get; set; }
         [Reactive] public bool HLAddServer { get; set; }
         [Reactive] public bool HLModDown { get; set; }
-        [Reactive] public bool HLCommon { get; set; }
+        [Reactive] public bool HLCommonSettings { get; set; }
         [Reactive] public bool HLDownloadSettings { get; set; }
         [Reactive] public bool HLPanelSettings { get; set; }
         [Reactive] public bool HLStyleSettings { get; set; }
@@ -74,7 +74,7 @@ namespace LSL.ViewModels
             HLManualDown = false;
             HLAddServer = false;
             HLModDown = false;
-            HLCommon = false;
+            HLCommonSettings = false;
             HLDownloadSettings = false;
             HLPanelSettings = false;
             HLStyleSettings = false;
@@ -93,7 +93,7 @@ namespace LSL.ViewModels
                 case RightPageState.ManualDown: HLManualDown = true; break;
                 case RightPageState.AddServer: HLAddServer = true; break;
                 case RightPageState.ModDown: HLModDown = true; break;
-                case RightPageState.Common: HLCommon = true; break;
+                case RightPageState.CommonSettings: HLCommonSettings = true; break;
                 case RightPageState.DownloadSettings: HLDownloadSettings = true; break;
                 case RightPageState.PanelSettings: HLPanelSettings = true; break;
                 case RightPageState.StyleSettings: HLStyleSettings = true; break;

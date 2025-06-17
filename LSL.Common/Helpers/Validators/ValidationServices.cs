@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace LSL.IPC
+namespace LSL.Common.Helpers.Validators
 {
     // 表单验证器
     #region 服务器配置验证器

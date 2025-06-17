@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using LSL.IPC;
 using LSL.Services;
 using LSL.Views;
 using Microsoft.Extensions.Logging;
