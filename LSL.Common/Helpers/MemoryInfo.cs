@@ -5,11 +5,15 @@ using System.Runtime.InteropServices;
 
 namespace LSL.Common.Helpers;
 
-public static partial class MemoryHelper
+public static partial class MemoryInfo
 {
     // 获取系统总内存（跨平台实现）
     public static ulong GetTotalSystemMemory()
     {
+        
+        var gcInfo = GC.GetGCMemoryInfo();
+        return (ulong)gcInfo.TotalAvailableMemoryBytes;
+        // 额，好像下面这些没用了
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             return GetWindowsTotalMemory();

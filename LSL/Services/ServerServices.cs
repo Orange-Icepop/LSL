@@ -244,7 +244,7 @@ namespace LSL.Services
         private EventHandler ExitedHandler;
 
         # region 状态获取
-        public EventHandler<(bool, bool)>? StatusEventHandler;// IsRunning, IsOnline
+        public event EventHandler<(bool, bool)>? StatusEventHandler;// IsRunning, IsOnline
         private bool isOnline;
         public bool IsOnline
         {

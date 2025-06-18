@@ -9,13 +9,13 @@ namespace LSL.Services;
 
 public class ProcessMetricsMonitor : IDisposable
 {
-    public event EventHandler<ProcessMetricsEventArgs> MetricsUpdated;
+    public event EventHandler<ProcessMetricsEventArgs>? MetricsUpdated;
     private readonly Timer _timer;
     private readonly Process _process;
     private TimeSpan _prevCpuTime;
     private DateTime _prevTime;
-    private static readonly ulong _totalMemoryBytes = MemoryHelper.GetTotalSystemMemory();
-    private readonly object _lock = new object();
+    private static readonly ulong _totalMemoryBytes = MemoryInfo.GetTotalSystemMemory();
+    private readonly object _lock = new();
     private bool _disposed;
 
     public ProcessMetricsMonitor(Process process, int interval = 1000)
@@ -35,7 +35,7 @@ public class ProcessMetricsMonitor : IDisposable
             if (_disposed) return;
 
             double cpuUsage = 0;
-            double memoryUsage = 0;
+            long processMemory = 0;
             bool isExited = false;
 
             try
@@ -62,8 +62,7 @@ public class ProcessMetricsMonitor : IDisposable
                     }
 
                     // 计算内存使用率
-                    var processMemory = _process.WorkingSet64;
-                    memoryUsage = (double)processMemory / _totalMemoryBytes * 100;
+                    processMemory = _process.WorkingSet64;
                 }
             }
             catch (InvalidOperationException)
@@ -81,7 +80,7 @@ public class ProcessMetricsMonitor : IDisposable
             // 触发事件（即使进程已退出也通知）
             MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(
                 cpuUsage, 
-                memoryUsage, 
+                processMemory, 
                 isExited
             ));
         }
@@ -106,7 +105,7 @@ public class ProcessMetricsEventArgs : EventArgs
     public double CpuUsagePercent { get; }
     
     /// <summary>内存使用百分比</summary>
-    public double MemoryUsagePercent { get; }
+    public long MemoryUsageBytes { get; }
     
     /// <summary>进程是否已退出</summary>
     public bool IsProcessExited { get; }
@@ -116,12 +115,12 @@ public class ProcessMetricsEventArgs : EventArgs
 
     public ProcessMetricsEventArgs(
         double cpuUsagePercent, 
-        double memoryUsagePercent, 
+        long memoryUsageBytes, 
         bool isProcessExited,
         string error = null)
     {
         CpuUsagePercent = cpuUsagePercent;
-        MemoryUsagePercent = memoryUsagePercent;
+        MemoryUsageBytes = memoryUsageBytes;
         IsProcessExited = isProcessExited;
         Error = error;
     }

@@ -45,6 +45,7 @@ namespace LSL.ViewModels
             EventBus.Instance.Subscribe<IStorageArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
             _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
             CopyServerOutput();
+            _logger.LogInformation("Total RAM:{ram}", LSL.Common.Helpers.MemoryInfo.GetTotalSystemMemory());
         }
 
         #region 配置部分

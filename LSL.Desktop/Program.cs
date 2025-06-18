@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.ReactiveUI;
-using LSL.Common.Contracts;
+using Serilog;
 
 namespace LSL.Desktop;
 
@@ -19,9 +19,10 @@ class Program
             BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
         }
-        catch (NonfatalException ex)
+        catch (Exception ex)
         {
-            Debug.WriteLine(ex.ToString());
+            Log.Information(ex, "LSL threw an unhandeled exception.");
+            throw;
         }
     }
     // Avalonia configuration, don't remove; also used by visual designer.
