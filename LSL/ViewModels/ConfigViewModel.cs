@@ -232,9 +232,10 @@ namespace LSL.ViewModels
             }
             else
             {
-                SelectedServerConfig = ServerConfig.None;
-                SelectedServerName = ServerConfig.None.name;
-                SelectedServerPath = ServerConfig.None.server_path;
+                var cache = ServerConfig.None;
+                SelectedServerConfig = cache;
+                SelectedServerName = cache.name;
+                SelectedServerPath = cache.server_path;
             }
         }
         #endregion

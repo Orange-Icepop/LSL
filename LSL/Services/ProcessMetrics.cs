@@ -14,7 +14,7 @@ public class ProcessMetricsMonitor : IDisposable
     private readonly Process _process;
     private TimeSpan _prevCpuTime;
     private DateTime _prevTime;
-    private static readonly ulong _totalMemoryBytes = MemoryInfo.GetTotalSystemMemory();
+    //private static readonly ulong _totalMemoryBytes = MemoryInfo.GetTotalSystemMemory();
     private readonly object _lock = new();
     private bool _disposed;
 
@@ -91,7 +91,7 @@ public class ProcessMetricsMonitor : IDisposable
         {
             if (_disposed) return;
             
-            _timer?.Dispose();
+            _timer.Dispose();
             _disposed = true;
             GC.SuppressFinalize(this);
         }

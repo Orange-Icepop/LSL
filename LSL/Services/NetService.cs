@@ -101,12 +101,12 @@ public class NetService
         catch (FlurlHttpException ex)
         {
             _logger.LogError(ex, "API请求失败: {Url}", url);
-            return ServiceResult.Fail(string.Empty, ex.InnerException ?? ex);
+            return ServiceResult.Fail<string>(ex.InnerException ?? ex);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API请求失败: {Url}{NL}{RS}", url, Environment.NewLine, ex.Message);
-            return ServiceResult.Fail(string.Empty, ex);
+            return ServiceResult.Fail<string>(ex);
         }
     }
     #endregion

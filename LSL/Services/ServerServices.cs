@@ -242,6 +242,12 @@ namespace LSL.Services
         private DataReceivedEventHandler OutputReceivedHandler;
         private DataReceivedEventHandler ErrorReceivedHandler;
         private EventHandler ExitedHandler;
+        
+        #region 性能监控
+        private ProcessMetricsMonitor? _monitor;
+        public event EventHandler<ProcessMetricsEventArgs>? MetricsHandler;
+        
+        #endregion
 
         # region 状态获取
         public event EventHandler<(bool, bool)>? StatusEventHandler;// IsRunning, IsOnline
@@ -294,29 +300,27 @@ namespace LSL.Services
         #region 命令
         public void Start()
         {
-            if (!IsRunning)
+            if (IsRunning) return;
+            SProcess = Process.Start(StartInfo);
+            if (SProcess is null || SProcess.HasExited) throw new InvalidOperationException("Failed to start server process.");
+            else
             {
-                SProcess = Process.Start(StartInfo);
-                if (SProcess is null || SProcess.HasExited) throw new InvalidOperationException("Failed to start server process.");
-                else
+                InStream = SProcess.StandardInput;
+                SProcess.EnableRaisingEvents = true;
+                OutputReceivedHandler = (sender, args) => OutputReceived?.Invoke(sender, args);
+                OutputReceivedHandler += (sender, args) => HandleOutput(args.Data);
+                ErrorReceivedHandler = (sender, args) => ErrorReceived?.Invoke(sender, args);
+                ExitedHandler = (sender, args) =>
                 {
-                    InStream = SProcess.StandardInput;
-                    SProcess.EnableRaisingEvents = true;
-                    OutputReceivedHandler = (sender, args) => OutputReceived?.Invoke(sender, args);
-                    OutputReceivedHandler += (sender, args) => HandleOutput(args.Data);
-                    ErrorReceivedHandler = (sender, args) => ErrorReceived?.Invoke(sender, args);
-                    ExitedHandler = (sender, args) =>
-                    {
-                        IsOnline = false;
-                        IsRunning = false;
-                        CleanupProcessHandlers();
-                        ExitCode = SProcess.ExitCode;
-                        Exited?.Invoke(sender, args);
-                        SProcess?.Dispose();
-                    };
-                    AttachProcessHandlers();
-                    IsRunning = true;
-                }
+                    IsOnline = false;
+                    IsRunning = false;
+                    CleanupProcessHandlers();
+                    ExitCode = SProcess.ExitCode;
+                    Exited?.Invoke(sender, args);
+                    SProcess?.Dispose();
+                };
+                AttachProcessHandlers();
+                IsRunning = true;
             }
         }
         public void BeginRead()
@@ -534,7 +538,7 @@ namespace LSL.Services
             EventBus.Instance.PublishAsync<IStorageArgs>(new ColorOutputArgs(ServerId, final, colorBrush));
         }
         // 额外处理服务端自身输出所需要更新的操作
-        private void ProcessSystem(int ServerId, string Output)
+        private static void ProcessSystem(int ServerId, string Output)
         {
             if (GetUUID.IsMatch(Output))
             {

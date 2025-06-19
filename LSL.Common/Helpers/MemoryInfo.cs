@@ -37,7 +37,7 @@ public static partial class MemoryInfo
         {
             dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>()
         };
-        return GlobalMemoryStatusEx(ref memStatus) ? memStatus.ullTotalPhys : (ulong)0;
+        return GlobalMemoryStatusEx(ref memStatus) ? memStatus.ullTotalPhys : 0;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -83,11 +83,7 @@ public static partial class MemoryInfo
     {
         const string command = "sysctl -n hw.memsize";
         var output = RunCommand("/bin/bash", $"-c \"{command}\"");
-        if (ulong.TryParse(output, out var memoryBytes))
-        {
-            return memoryBytes;
-        }
-        return 0;
+        return ulong.TryParse(output, out var memoryBytes) ? memoryBytes : 0;
     }
 
     private static string RunCommand(string fileName, string arguments)

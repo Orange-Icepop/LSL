@@ -95,7 +95,7 @@ namespace LSL.Common.Helpers
 
         private static void GetMacOSJavaInfos(List<JavaInfo> javaInfos)// 获取MacOS系统中的Java信息
         {
-            string jvmDir = "/Library/Java/JavaVirtualMachines";// 利用Java虚拟机目录查找
+            const string jvmDir = "/Library/Java/JavaVirtualMachines";// 利用Java虚拟机目录查找
 
             if (Directory.Exists(jvmDir))
             {

@@ -12,12 +12,12 @@ namespace LSL.ViewModels
         protected RegionalVMBase(AppStateLayer appState, ServiceConnector connector)
         {
             AppState = appState;
-            SetupRxSubscripions();
+            //SetupRxSubscripions();
             Connector = connector;
             var t = GetType();
             Logger = appState.LoggerFactory.CreateLogger(t);
             Logger.LogDebug("{TypeName}'s base initialized", t.Name);
         }
-        protected virtual void SetupRxSubscripions() { }
+        //protected virtual void SetupRxSubscripions() { }
     }
 }

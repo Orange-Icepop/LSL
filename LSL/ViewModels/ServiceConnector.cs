@@ -45,7 +45,7 @@ namespace LSL.ViewModels
             EventBus.Instance.Subscribe<IStorageArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
             _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
             CopyServerOutput();
-            _logger.LogInformation("Total RAM:{ram}", LSL.Common.Helpers.MemoryInfo.GetTotalSystemMemory());
+            _logger.LogInformation("Total RAM:{ram}", MemoryInfo.GetTotalSystemMemory());
         }
 
         #region 配置部分
@@ -119,8 +119,8 @@ namespace LSL.ViewModels
         {
             var result = configManager.ConfirmMainConfig(AppState.CurrentConfigs);
             await AppState.ITAUnits.SubmitServiceError(result);
-            bool success = result.ErrorCode == ServiceResultType.Success;
-            if(success) _logger.LogInformation("New config saved");
+            bool success = result.IsFullSuccess;
+            if (success) _logger.LogInformation("New config saved");
             return success;
         }
 
@@ -129,8 +129,8 @@ namespace LSL.ViewModels
             _logger.LogInformation("start finding java");
             var result = await configManager.DetectJava();
             await AppState.ITAUnits.SubmitServiceError(result);
-            bool success = result.ErrorCode == ServiceResultType.Success;
-            if(success) _logger.LogInformation("java detection completed");
+            bool success = result.IsFullSuccess;
+            if (success) _logger.LogInformation("java detection completed");
             await Dispatcher.UIThread.InvokeAsync(() => ReadJavaConfig());
             return success;
         }
@@ -302,7 +302,7 @@ namespace LSL.ViewModels
 
         public (int, string?) ValidateNewServerConfig(FormedServerConfig config, bool skipCP = false)
         {
-            var checkResult = CheckService.VerifyServerConfig(config, skipCP);
+            var checkResult = CheckService.VerifyFormedServerConfig(config, skipCP);
             string ErrorInfo = "";
             foreach (var item in checkResult)
             {
@@ -340,7 +340,7 @@ namespace LSL.ViewModels
             var result = configManager.RegisterServer(config);
             await AppState.ITAUnits.SubmitServiceError(result);
             await ReadServerConfig(true);
-            return result.ErrorCode == ServiceResultType.Success;
+            return result.IsFullSuccess;
         }
 
         public async Task<bool> EditServer(int id, FormedServerConfig config)
@@ -348,7 +348,7 @@ namespace LSL.ViewModels
             var result = configManager.EditServer(id, config);
             await AppState.ITAUnits.SubmitServiceError(result);
             await ReadServerConfig(true);
-            return result.ErrorCode == ServiceResultType.Success;
+            return result.IsFullSuccess;
         }
 
         public async Task<bool> DeleteServer(int serverId)
@@ -356,7 +356,7 @@ namespace LSL.ViewModels
             var result = configManager.DeleteServer(serverId); 
             await AppState.ITAUnits.SubmitServiceError(result);
             await ReadServerConfig(true);
-            return result.ErrorCode == ServiceResultType.Success;
+            return result.IsFullSuccess;
         }
 
         #endregion

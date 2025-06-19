@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using LSL.Common.Contracts;
@@ -500,48 +501,65 @@ namespace LSL.Services
 
         public ServiceResult ReadServerConfig()
         {
-            ServerConfigs = [];
-            List<string> NotfoundServers = [];
-            List<string> ConfigErrorServers = [];
+            string mainPath = ConfigPathProvider.ServerConfigPath;
             // 读取服务器主配置文件
-            string mainFile = "";
-            try
-            {
-                mainFile = File.ReadAllText(ConfigPathProvider.ServerConfigPath);
-                if (string.IsNullOrEmpty(mainFile) || mainFile == "{}") return ServiceResult.Success();
-            }
-            catch (FileNotFoundException)
-            {
-                return ServiceResult.Fail(new FileNotFoundException(
-                    $"位于{ConfigPathProvider.ServerConfigPath}的服务器主配置文件不存在，请重启LSL。\r注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。"));
-            }
-
+            var indexRes = GetIndexConfig(mainPath);
+            if (indexRes.HasError || indexRes.Result is null) return ServiceResult.Fail(indexRes.Error ?? new Exception($"Error reading main server config {mainPath}."));
+            MainServerConfig = indexRes.Result;
+            var detailRes = GetServerDetails(MainServerConfig);
+            if (detailRes.HasError || detailRes.Result is null) return ServiceResult.Fail(detailRes.Error ?? new Exception($"Error reading main server config {mainPath}."));
+            ServerConfigs = detailRes.Result;
+            return ServiceResult.Success();
+        }
+        #endregion
+        
+        #region 刷新服务器主配置文件
+        private static ServiceResult<Dictionary<int, string>> GetIndexConfig(string path)
+        {
+            if (!File.Exists(path))return ServiceResult.Fail<Dictionary<int, string>>(new FileNotFoundException(
+                $"位于{path}的服务器主配置文件不存在，请重启LSL。{Environment.NewLine}注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。"));
+            string mainFile = File.ReadAllText(path);
+            if (string.IsNullOrWhiteSpace(mainFile) || mainFile == "{}")
+                return ServiceResult.Success(new Dictionary<int, string>());
             try
             {
                 var configs = JsonConvert.DeserializeObject<Dictionary<int, string>>(mainFile);
-                if (configs is null) throw new JsonException();
-                else MainServerConfig = configs;
+                if (configs is null) throw new JsonException("The Main Server Config file cannot be converted.");
+                return ServiceResult.Success(configs);
             }
             catch (JsonException)
             {
-                return ServiceResult.Fail(new JsonReaderException(
-                    $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。\r请确保{ConfigPathProvider.ServerConfigPath}文件的格式正确。"));
+                return ServiceResult.Fail<Dictionary<int, string>>(new JsonReaderException(
+                    $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。{Environment.NewLine}请确保{path}文件的格式正确。"));
             }
+        }
 
+        #endregion
+
+        #region 逐个获取服务器各自的配置文件
+
+        private static ServiceResult<Dictionary<int, ServerConfig>> GetServerDetails(
+            Dictionary<int, string> mainConfigs)
+        {
+            List<string> NotfoundServers = [];
+            List<string> ConfigErrorServers = [];
             // 读取各个服务器的LSL配置文件
-            foreach (var config in MainServerConfig)
+            Dictionary<int, ServerConfig> scCache = [];
+            foreach (var (key, targetDir) in mainConfigs)
             {
                 // 读取步骤
-                string targetPath = Path.Combine(ConfigPathProvider.ServersFolder, config.Value, "lslconfig.json");
+                string targetPath = Path.Combine(targetDir, "lslconfig.json");
                 string configFile = "";
-                try
+                if (!File.Exists(targetPath))
                 {
-                    configFile = File.ReadAllText(targetPath);
-                    if (string.IsNullOrEmpty(configFile) || configFile == "{}") throw new FileNotFoundException();
+                    NotfoundServers.Add(targetDir);
+                    continue;
                 }
-                catch (FileNotFoundException)
+
+                configFile = File.ReadAllText(targetPath);
+                if (string.IsNullOrWhiteSpace(configFile) || configFile == "{}")
                 {
-                    NotfoundServers.Add(config.Value);
+                    NotfoundServers.Add(targetDir);
                     continue;
                 }
 
@@ -549,16 +567,10 @@ namespace LSL.Services
                 try
                 {
                     var serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile);
-                    if (serverConfig == null) throw new JsonException();
-                    foreach (var item in ServerConfigKeys)
-                    {
-                        if (!serverConfig.ContainsKey(item)) throw new JsonException();
-                    }
-
-                    ServerConfigs.Add(config.Key,
-                        new ServerConfig(config.Key, config.Value, serverConfig["name"], serverConfig["using_java"],
-                            serverConfig["core_name"], uint.Parse(serverConfig["min_memory"]),
-                            uint.Parse(serverConfig["max_memory"]), serverConfig["ext_jvm"]));
+                    if (serverConfig == null) throw new FormatException("Error parsing server config to dictionary.");
+                    var vResult = CheckService.VerifyServerConfig(key, serverConfig);
+                    if (vResult.IsFullSuccess && vResult.Result is not null) scCache.Add(key, vResult.Result);
+                    else ConfigErrorServers.Add(targetPath);
                 }
                 catch (JsonException)
                 {
@@ -570,22 +582,29 @@ namespace LSL.Services
             // 检查错误
             if (NotfoundServers.Count > 0 || ConfigErrorServers.Count > 0)
             {
-                string ErrorContext = "LSL读取了服务器主配置文件，但是它包含了一些";
-                if (NotfoundServers.Count > 0 && ConfigErrorServers.Count > 0) ErrorContext += "不存在的服务器和格式错误的服务器配置文件。";
-                else if (NotfoundServers.Count > 0) ErrorContext += "不存在的服务器。";
-                else if (ConfigErrorServers.Count > 0) ErrorContext += "格式错误的服务器配置文件。";
+                StringBuilder error = new("LSL在读取服务器配置文件时发现了以下错误：");
                 if (NotfoundServers.Count > 0)
-                    ErrorContext += "\r不存在的服务器：" + string.Join(", \r", NotfoundServers) + "\r请确保" +
-                                    ConfigPathProvider.ServerConfigPath + "文件中的服务器名称与实际服务器文件夹名称一致。";
+                {
+                    error.AppendLine()
+                        .AppendLine($"有{NotfoundServers.Count}个已注册的服务器不存在：")
+                        .AppendJoin(Environment.NewLine, NotfoundServers);
+                }
+
                 if (ConfigErrorServers.Count > 0)
-                    ErrorContext += "\r格式错误的服务器配置文件：" + string.Join(", \r", ConfigErrorServers) + "\r请确保这些配置文件的格式正确。";
-                return new ServiceResult(ServiceResultType.FinishWithWarning, new Exception(ErrorContext));
+                {
+                    error.AppendLine()
+                        .AppendLine($"有{ConfigErrorServers.Count}个服务器的配置文件格式不正确：")
+                        .AppendJoin(Environment.NewLine, ConfigErrorServers);
+                }
+
+                return ServiceResult.FinishWithWarning(scCache, new Exception(error.ToString()));
             }
 
-            return ServiceResult.Success();
+            return ServiceResult.Success(scCache);
         }
 
         #endregion
+        
         // 注册与删除服务器均不会立刻更新字典
         #region 注册服务器方法RegisterServer
 

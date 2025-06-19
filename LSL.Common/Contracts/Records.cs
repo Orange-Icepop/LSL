@@ -48,7 +48,7 @@
         {
         }
 
-        public static readonly ServerConfig None = new ServerConfig(-1, "", "未添加服务器", "", "", 0, 0, "");
+        public static ServerConfig None => new ServerConfig(-1, "", "未添加服务器", "", "", 0, 0, "");
     }
 
     #endregion

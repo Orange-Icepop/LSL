@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -9,6 +10,16 @@ namespace LSL.Common.Helpers.Validators
 {
     public static class CheckService // 适合被整体调用的校验方法
     {
+        private static readonly IReadOnlyList<string> ServerConfigKeys =
+        [
+            "name",
+            "using_java",
+            "core_name",
+            "min_memory",
+            "max_memory",
+            "ext_jvm"
+        ];
+
         #region 校验LSL核心配置方法 VerifyConfig(string key, object value)
         public static bool VerifyConfig(string key, object value)
         {
@@ -67,8 +78,8 @@ namespace LSL.Common.Helpers.Validators
         }
         #endregion
 
-        #region 服务器配置验证方法 VerifyServerConfig(Dictionary<string, object> config)
-        public static List<VerifyResult> VerifyServerConfig(FormedServerConfig config, bool skipCP = false)
+        #region 准服务器配置验证方法 VerifyFormedServerConfig
+        public static List<VerifyResult> VerifyFormedServerConfig(FormedServerConfig config, bool skipCP = false)
         {
             var result = new List<VerifyResult>();
             result.Add(CheckComponents.ServerName(config.ServerName));
@@ -80,6 +91,82 @@ namespace LSL.Common.Helpers.Validators
             return result;
         }
 
+        #endregion
+        
+        #region 服务器配置验证方法
+        
+        public static ServiceResult<ServerConfig> VerifyServerConfig(int id, IDictionary<string, string> config)
+        {
+            if (id < 0) return ServiceResult.Fail<ServerConfig>(new ArgumentException($"Server id of {id} is not valid."));
+            ServerConfig cache = ServerConfig.None;
+            foreach (var item in ServerConfigKeys)
+            {
+                if (!config.TryGetValue(item, out var value))
+                    return ServiceResult.Fail<ServerConfig>(
+                        new KeyNotFoundException($"key {item} not found in server with id {id}."));
+                VerifyResult vResult;
+                switch(item)
+                {
+                    case "name":
+                    {
+                        vResult = CheckComponents.ServerName(value);
+                        cache.name = value;
+                        break;
+                    }
+                    case "using_java":
+                    {
+                        vResult = CheckComponents.JavaPath(value);
+                        cache.using_java = value;
+                        break;
+                    }
+                    case "core_name":
+                    {
+                        vResult = VerifyResult.Success("core_name");
+                        cache.core_name = value;
+                        break;
+                    }
+                    case "min_memory":
+                    {
+                        var tmp1 = CheckComponents.MinMem(value);
+                        if (!tmp1.Passed) vResult = tmp1;
+                        else if (!uint.TryParse(value, out var minmem)) vResult = VerifyResult.Fail(item, "min_memory's value is not an unsigned integer.");
+                        else
+                        {
+                            cache.min_memory = minmem;
+                            vResult = VerifyResult.Success("min_memory");
+                        }
+                        break;
+                    }
+                    case "max_memory":
+                    {
+                        var tmp1 = CheckComponents.MaxMem(value);
+                        if (!tmp1.Passed) vResult = tmp1;
+                        else if (!uint.TryParse(value, out var maxmem)) vResult = VerifyResult.Fail(item, "max_memory's value is not an unsigned integer.");
+                        else
+                        {
+                            cache.max_memory = maxmem;
+                            vResult = VerifyResult.Success("max_memory");
+                        }
+                        break;
+                    }
+                    case "ext_jvm":
+                    {
+                        vResult = CheckComponents.ExtJvm(value);
+                        cache.ext_jvm = value;
+                        break;
+                    }
+                    default:
+                    {
+                        vResult = VerifyResult.Fail(string.IsNullOrEmpty(value) ? "string.Empty" : value,
+                            "what fucking key it is?");
+                        break;
+                    }
+                };
+                if (!vResult.Passed) return ServiceResult.Fail<ServerConfig>(
+                    new ValidationException($"Error validating server config with id {id} at key {vResult.Key}:{Environment.NewLine}{vResult.Reason}"));
+            }
+            return ServiceResult.Success(cache);
+        }
         #endregion
     }
 
@@ -249,5 +336,12 @@ namespace LSL.Common.Helpers.Validators
         #endregion
     }
 
-    public record VerifyResult(string Key, bool Passed, string? Reason);
+    public class VerifyResult(string key, bool passed, string? reason)
+    {
+        public string Key { get; } = key;
+        public bool Passed { get; } = passed;
+        public string? Reason { get; } = reason;
+        public static VerifyResult Fail(string key, string? reason) => new(key, false, reason);
+        public static VerifyResult Success(string key) => new(key, true, null);
+    }
 }
