@@ -1,52 +1,47 @@
-<Grid xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
-             x:Class="LSL.Components.MyCard"
-			 PointerEntered="OnPointerEnter"
-			 PointerExited="OnPointerLeave"
-			 HorizontalAlignment="Stretch"
-			 VerticalAlignment="Stretch"
-			 ColumnDefinitions="*">
-	<Grid.Resources>
-		<SolidColorBrush x:Key="TransWhite"/>
-		<SolidColorBrush x:Key="HeadTextColor"/>
-	</Grid.Resources>
-	<Grid.Styles>
-		<Style Selector="local|MyCard">
-			<Style Selector="^ > Border">
-				<Setter Property="Background" Value="{DynamicResource TransWhite}"/>
-				<Setter Property="Transitions">
-					<Transitions>
-						<BrushTransition Property="Background" Duration="0:0:0.2"/>
-					</Transitions>
-				</Setter>
-
-				<Style Selector="^ TextBlock#titleText">
-					<Setter Property="Foreground" Value="{DynamicResource HeadTextColor}"/>
-					<Setter Property="Transitions">
-						<Transitions>
-							<BrushTransition Property="Foreground" Duration="0:0:0.2"/>
-						</Transitions>
-					</Setter>
-				</Style>
-			</Style>
-		</Style>
-	</Grid.Styles>
-	<Border Name="border"
-			Margin="10"
-			Padding="0"
-			BorderThickness="0"
-			CornerRadius="10"
-			BoxShadow="0 0 10 -2 Gray">
-		<Grid Background="Transparent" Name="stackpanel">
-			<TextBlock Name="titleText"
-					   Text="{Binding Text, RelativeSource={RelativeSource AncestorType=local:MyCard}}"
-					   FontSize="15"
-					   FontWeight="Bold"
-					   Margin="20,15,20,0"
-					   Grid.Row="0"/>
-		</Grid>
-	</Border>
-</Grid>
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:LSL.Components;assembly=LSL">
+    <Style Selector="local|MyCard">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      ColumnDefinitions="*">
+                    <Border Name="border"
+                            Margin="10"
+                            Padding="0"
+                            BorderThickness="0"
+                            CornerRadius="10"
+                            BoxShadow="0 0 10 -2 Gray"
+                            Background="{TemplateBinding CardBackground}">
+                        <Border.Transitions>
+                            <Transitions>
+                                <BrushTransition Property="Background" Duration="0:0:0.2"/>
+                            </Transitions>
+                        </Border.Transitions>
+                        <Grid Background="Transparent" Name="PART_Container" RowDefinitions="Auto,*">
+                            <TextBlock Name="titleText"
+                                       Text="{TemplateBinding Text}"
+                                       FontSize="15"
+                                       FontWeight="Bold"
+                                       Margin="20,15,20,0"
+                                       Grid.Row="0"
+                                       Foreground="{TemplateBinding TitleColor}">
+                                <TextBlock.Transitions>
+                                    <Transitions>
+                                        <BrushTransition Property="Foreground" Duration="0:0:0.2"/>
+                                    </Transitions>
+                                </TextBlock.Transitions>
+                            </TextBlock>
+                            <ContentPresenter Name="PART_ContentPresenter"
+                                              Grid.Row="1"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              Content="{TemplateBinding Content}"
+                                              Margin="0, -35, 0, 0"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

@@ -62,7 +62,7 @@ namespace LSL.ViewModels
                 Logger.LogInformation("Selected server index reset to 0");
             });
             ServerConfigChanged.Select(SC => !SC.TryGetValue(-1, out _))
-                .ToPropertyEx(this, x => x.IsTrueServer);
+                .ToPropertyEx(this, x => x.NotTemplateServer);
             ServerConfigChanged.Select(SC =>
                 {
                     if (SC.Count <= 0) return 0;
@@ -177,7 +177,7 @@ namespace LSL.ViewModels
         [Reactive] public ConcurrentDictionary<int, ObservableCollection<UserMessageLine>> MessageDict { get; set; } = new();
         public int TotalServerCount { [ObservableAsProperty] get; }
         [Reactive] public int RunningServerCount { get; set; } = 0;
-        public bool IsTrueServer { [ObservableAsProperty] get; }
+        public bool NotTemplateServer { [ObservableAsProperty] get; }
 
         #endregion
     }

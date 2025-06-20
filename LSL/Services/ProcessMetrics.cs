@@ -12,15 +12,16 @@ public class ProcessMetricsMonitor : IDisposable
     public event EventHandler<ProcessMetricsEventArgs>? MetricsUpdated;
     private readonly Timer _timer;
     private readonly Process _process;
+    private readonly long _allocatedMemoryBytes;
     private TimeSpan _prevCpuTime;
     private DateTime _prevTime;
-    //private static readonly ulong _totalMemoryBytes = MemoryInfo.GetTotalSystemMemory();
     private readonly object _lock = new();
     private bool _disposed;
 
-    public ProcessMetricsMonitor(Process process, int interval = 1000)
+    public ProcessMetricsMonitor(Process process, long allocatedMemoryBytes, int interval = 1000)
     {
         _process = process;
+        _allocatedMemoryBytes = allocatedMemoryBytes;
         _prevCpuTime = process.TotalProcessorTime;
         _prevTime = DateTime.UtcNow;
         
@@ -61,7 +62,7 @@ public class ProcessMetricsMonitor : IDisposable
                         cpuUsage /= Environment.ProcessorCount; // 多核百分比
                     }
 
-                    // 计算内存使用率
+                    // 计算内存使用量
                     processMemory = _process.WorkingSet64;
                 }
             }
@@ -73,7 +74,7 @@ public class ProcessMetricsMonitor : IDisposable
             catch (Exception ex)
             {
                 // 触发包含错误信息的事件
-                MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(0, 0, true, ex.Message));
+                MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(0, 0, 0, true, ex.Message));
                 return;
             }
 
@@ -81,6 +82,7 @@ public class ProcessMetricsMonitor : IDisposable
             MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(
                 cpuUsage, 
                 processMemory, 
+                _allocatedMemoryBytes,
                 isExited
             ));
         }
@@ -99,29 +101,26 @@ public class ProcessMetricsMonitor : IDisposable
 }
 
 // 事件参数类
-public class ProcessMetricsEventArgs : EventArgs
+public class ProcessMetricsEventArgs(
+    double cpuUsagePercent,
+    long memoryUsageBytes,
+    long allocatedMemoryBytes,
+    bool isProcessExited,
+    string? error = null)
+    : EventArgs
 {
     /// <summary>多核CPU使用百分比</summary>
-    public double CpuUsagePercent { get; }
-    
+    public double CpuUsagePercent { get; } = cpuUsagePercent;
+
+    /// <summary>内存使用量</summary>
+    public long MemoryUsageBytes { get; } = memoryUsageBytes;
+
     /// <summary>内存使用百分比</summary>
-    public long MemoryUsageBytes { get; }
+    public double MemoryUsagePercent { get; } = (double)memoryUsageBytes / allocatedMemoryBytes * 100;
     
     /// <summary>进程是否已退出</summary>
-    public bool IsProcessExited { get; }
-    
-    /// <summary>错误信息（如果有）</summary>
-    public string Error { get; }
+    public bool IsProcessExited { get; } = isProcessExited;
 
-    public ProcessMetricsEventArgs(
-        double cpuUsagePercent, 
-        long memoryUsageBytes, 
-        bool isProcessExited,
-        string error = null)
-    {
-        CpuUsagePercent = cpuUsagePercent;
-        MemoryUsageBytes = memoryUsageBytes;
-        IsProcessExited = isProcessExited;
-        Error = error;
-    }
+    /// <summary>错误信息（如果有）</summary>
+    public string? Error { get; } = error;
 }

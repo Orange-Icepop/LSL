@@ -26,18 +26,18 @@
                 <DockPanel Margin="25,50,25,25">
                     <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight"
                                     Height="30" Width="100" Margin="10" Command="{Binding FullViewCmd}"
-                                    IsEnabled="{Binding AppState.IsTrueServer}"
+                                    IsEnabled="{Binding AppState.NotTemplateServer}"
                                     CommandParameter="EditSC">
                         修改配置
                     </local:MyButton>
                     <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight"
                                     Height="30" Width="100" Margin="10"
-                                    IsEnabled="{Binding AppState.IsTrueServer}">
+                                    IsEnabled="{Binding AppState.NotTemplateServer}">
                         打开文件夹
                     </local:MyButton>
                     <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Red" Height="30"
                                     Width="100" Margin="10" Command="{Binding ConfigVM.DeleteServerCmd}"
-                                    IsEnabled="{Binding AppState.IsTrueServer}">
+                                    IsEnabled="{Binding AppState.NotTemplateServer}">
                         删除服务器
                     </local:MyButton>
                 </DockPanel>

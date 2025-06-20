@@ -1,59 +1,65 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Media;
-using System.Linq;
 
 namespace LSL.Components
 {
-    public partial class MyCard : Grid
+    public class MyCard : ContentControl
     {
-        //定义title
-        private static readonly StyledProperty<string> TextProperty =
-            AvaloniaProperty.Register<MyCard, string>(nameof(Text), defaultBindingMode: BindingMode.OneWay);
+        public static readonly StyledProperty<string> TextProperty =
+            AvaloniaProperty.Register<MyCard, string>(nameof(Text));
+        
+        public static readonly StyledProperty<IBrush> TitleColorProperty =
+            AvaloniaProperty.Register<MyCard, IBrush>(nameof(TitleColor));
+        
+        public static readonly StyledProperty<IBrush> CardBackgroundProperty =
+            AvaloniaProperty.Register<MyCard, IBrush>(nameof(CardBackground));
 
         public string Text
         {
             get => GetValue(TextProperty);
             set => SetValue(TextProperty, value);
         }
-        static MyCard()
+
+        public IBrush TitleColor
         {
-            // 你可以在这里注册附加属性，如果需要的话  
+            get => GetValue(TitleColorProperty);
+            set => SetValue(TitleColorProperty, value);
         }
+
+        public IBrush CardBackground
+        {
+            get => GetValue(CardBackgroundProperty);
+            set => SetValue(CardBackgroundProperty, value);
+        }
+        
+        private static readonly IBrush defaultBackground = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255));
+        private static readonly IBrush orllowBrush = new SolidColorBrush(Color.Parse("#33f3e5"));
 
         public MyCard()
         {
-            InitializeComponent();
-            this.Loaded += MyCardLoaded;
+            // 初始化资源
+            CardBackground = defaultBackground;
+            TitleColor = Brushes.Black;
+            
+            // 绑定事件
+            PointerEntered += OnPointerEnter;
+            PointerExited += OnPointerLeave;
         }
 
-        private void OnPointerEnter(object sender, PointerEventArgs e)
+        private void OnPointerEnter(object? sender, PointerEventArgs e)
         {
-            this.Resources["TransWhite"] = new SolidColorBrush(Colors.White);
-            this.Resources["HeadTextColor"] = new SolidColorBrush(Color.Parse("#33f3e9"));
+            CardBackground = Brushes.White;
+            TitleColor = orllowBrush;
         }
 
-        private void OnPointerLeave(object sender, PointerEventArgs e)
+        private void OnPointerLeave(object? sender, PointerEventArgs e)
         {
-            this.Resources["TransWhite"] = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255));
-            this.Resources["HeadTextColor"] = new SolidColorBrush(Colors.Black);
-        }
-
-        private void MyCardLoaded(object? sender, RoutedEventArgs e)
-        {
-            this.Resources["TransWhite"] = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255));
-            this.Resources["HeadTextColor"] = new SolidColorBrush(Colors.Black);
-            foreach (var item in this.Children.ToList())
-            {
-                if (item != border)
-                {
-                    this.Children.Remove(item);
-                    stackpanel.Children.Add(item);
-                }
-            }
+            CardBackground = defaultBackground;
+            TitleColor = Brushes.Black;
         }
     }
 }

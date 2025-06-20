@@ -21,6 +21,7 @@
 		<StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml"/>
 		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
 		<StyleInclude Source="avares://LSL/Assets/Dictionaries/GlobalStyles.axaml"/>
+		<StyleInclude Source="avares://LSL/Assets/Dictionaries/TemplatedStyles.axaml"/>
 	</Application.Styles>
 	<!--托盘图标-->
 	<TrayIcon.Icons>
