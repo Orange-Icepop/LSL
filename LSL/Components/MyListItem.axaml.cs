@@ -15,16 +15,14 @@ using Avalonia.Interactivity;
 
 namespace LSL.Components
 {
-    public partial class MyListItem : Button
+    public class MyListItem : Button
     {
-        private static readonly StyledProperty<string> TitleProperty =
-            AvaloniaProperty.Register<MyCard, string>(nameof(Title), defaultBindingMode: BindingMode.OneWay);
-        private static readonly StyledProperty<string> InfoProperty =
-            AvaloniaProperty.Register<MyCard, string>(nameof(Info), defaultBindingMode: BindingMode.OneWay);
-        public static readonly StyledProperty<string> LogoProperty =
-            AvaloniaProperty.Register<MyCard, string>(nameof(Logo), defaultBindingMode: BindingMode.OneWay);
-        public static readonly StyledProperty<Bitmap?> LogoImageProperty =
-            AvaloniaProperty.Register<MyCard, Bitmap?>(nameof(LogoImage), defaultBindingMode: BindingMode.OneWay);
+        public static readonly StyledProperty<string> TitleProperty =
+            AvaloniaProperty.Register<MyListItem, string>(nameof(Title));
+        public static readonly StyledProperty<string> InfoProperty =
+            AvaloniaProperty.Register<MyListItem, string>(nameof(Info));
+        public static readonly StyledProperty<IImage?> LogoProperty =
+            AvaloniaProperty.Register<MyListItem, IImage?>(nameof(Logo));
 
         public string Title
         {
@@ -36,72 +34,15 @@ namespace LSL.Components
             get => GetValue(InfoProperty);
             set => SetValue(InfoProperty, value);
         }
-        public string Logo
+        public IImage? Logo
         {
             get => GetValue(LogoProperty);
             set => SetValue(LogoProperty, value);
         }
-
-        public Bitmap? LogoImage
-        {
-            get => GetValue(LogoImageProperty);
-            set => SetValue(LogoImageProperty, value);
-        }
-
+        
         public MyListItem()
         {
-            InitializeComponent();
-            this.Loaded += LoadResources;
+            Padding = new Thickness(10, 5);
         }
-
-        private void LoadResources(object? sender, RoutedEventArgs e)
-        {
-            var tmp = new string(Logo);
-            if (!string.IsNullOrEmpty(tmp) && !string.IsNullOrEmpty(tmp))
-            {
-                Task.Run(() => LoadImage(tmp));
-            }
-        }
-
-        #region 从路径加载图片
-        private async void LoadImage(string path)
-        {
-            try
-            {
-                if (path.StartsWith("http") || path.StartsWith("https"))
-                {
-                    var bitmap = await LoadFromWeb(new Uri(path));
-                    await Dispatcher.UIThread.InvokeAsync(() => LogoImage = bitmap);
-                }
-                else
-                {
-                    var bitmap = LoadFromResource(new Uri(path));
-                    await Dispatcher.UIThread.InvokeAsync(() => LogoImage = bitmap);
-                }
-            }
-            catch { }
-        }
-        private static Bitmap LoadFromResource(Uri resourceUri)
-        {
-            return new Bitmap(AssetLoader.Open(resourceUri));
-        }
-
-        private static async Task<Bitmap?> LoadFromWeb(Uri url)
-        {
-            using var httpClient = new HttpClient();
-            try
-            {
-                var response = await httpClient.GetAsync(url);
-                response.EnsureSuccessStatusCode();
-                var data = await response.Content.ReadAsByteArrayAsync();
-                return new Bitmap(new MemoryStream(data));
-            }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine($"An error occurred while downloading image '{url}' : {ex.Message}");
-                return null;
-            }
-        }
-        #endregion
     }
 }

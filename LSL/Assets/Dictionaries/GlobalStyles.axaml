@@ -40,11 +40,6 @@
 				<BrushTransition Property="Foreground" Duration="0:0:0.1"/>
 			</Transitions>
 		</Setter>
-		<!--首选蓝色按钮样式定义-->
-		<Style Selector="^.blue">
-			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
-			<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
-		</Style>
 		<!--普通按钮鼠标悬停样式定义-->
 		<Style Selector="^:pointerover">
 			<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>

@@ -1,42 +1,37 @@
-<Button xmlns="https://github.com/avaloniaui"
+<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
-        x:Class="LSL.Components.MyListItem"
-		HorizontalAlignment="Stretch"
-		Padding="10,5">
-	<Button.Styles>
-		<Style Selector="local|MyListItem">
-			<Setter Property="Template">
-				<ControlTemplate>
-					<Border BorderThickness="0"
-							Background="{TemplateBinding Background}"
-							Padding="{TemplateBinding Padding}"
-							CornerRadius="5">
-						<DockPanel>
-							<Image Source="{TemplateBinding LogoImage}" Width="30" Height="30" DockPanel.Dock="Left" Margin="0,0,10,0" />
-							<TextBlock Text="{TemplateBinding Title}" DockPanel.Dock="Top" />
-							<TextBlock Foreground="Gray" FontSize="12" Text="{TemplateBinding Info}" DockPanel.Dock="Bottom" />
-						</DockPanel>
-					</Border>
-				</ControlTemplate>
-			</Setter>
-			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="Foreground" Value="Black"/>
-			<Setter Property="FontSize" Value="15"/>
-			<Style Selector="^:pointerover">
-				<Setter Property="Background" Value="{StaticResource OBlueLight}"/>
-			</Style>
-			<Style Selector="^:pressed">
-				<Setter Property="RenderTransform" Value="scale(0.99)" />
-			</Style>
-			<Setter Property="Transitions">
-				<Transitions>
-					<BrushTransition Property="Background" Duration="0:0:0.2"/>
-					<TransformOperationsTransition Property="RenderTransform" Duration="0:0:.075" />
-				</Transitions>
-			</Setter>
-		</Style>
-	</Button.Styles>
-</Button>
+        xmlns:local="clr-namespace:LSL.Components;assembly=LSL">
+    <Style Selector="local|MyListItem">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border BorderThickness="0"
+                        Background="{TemplateBinding Background}"
+                        Padding="{TemplateBinding Padding}"
+                        CornerRadius="5">
+                    <DockPanel>
+                        <Image Source="{TemplateBinding Logo}" Width="30" Height="30" DockPanel.Dock="Left"
+                               Margin="0,0,10,0" />
+                        <TextBlock Text="{TemplateBinding Title}" DockPanel.Dock="Top" />
+                        <TextBlock Foreground="Gray" FontSize="12" Text="{TemplateBinding Info}"
+                                   DockPanel.Dock="Bottom" />
+                    </DockPanel>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="FontSize" Value="15" />
+        <Style Selector="^:pointerover">
+            <Setter Property="Background" Value="{StaticResource OBlueLight}" />
+        </Style>
+        <Style Selector="^:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.99)" />
+        </Style>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.2" />
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:.075" />
+            </Transitions>
+        </Setter>
+    </Style>
+</Styles>

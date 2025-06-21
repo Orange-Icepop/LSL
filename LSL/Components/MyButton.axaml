@@ -1,74 +1,69 @@
-<Button xmlns="https://github.com/avaloniaui"
+<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
-        x:Class="LSL.Components.MyButton">
-	<Button.Styles>
-		<Style Selector="local|MyButton">
-			<Setter Property="Template">
-				<ControlTemplate>
-					<Border BorderBrush="{TemplateBinding BorderBrush}"
-							BorderThickness="{TemplateBinding BorderThickness}"
-							Background="{TemplateBinding Background}"
-							Padding="{TemplateBinding Padding}"
-							CornerRadius="5">
-						<ContentPresenter x:Name="PART_ContentPresenter"
-										  Content="{TemplateBinding Content}"
-										  ContentTemplate="{TemplateBinding ContentTemplate}"
-										  HorizontalAlignment="Center"
-										  VerticalAlignment="Center"/>
-					</Border>
-				</ControlTemplate>
-			</Setter>
-			<Setter Property="Background" Value="White"/>
-			<Setter Property="Foreground" Value="Black"/>
-			<Setter Property="BorderThickness" Value="2"/>
-			<Setter	Property="BorderBrush" Value="Black"/>
-			<Setter Property="FontSize" Value="15"/>
-			<!--按钮样式过渡-->
-			<Setter Property="Transitions">
-				<Transitions>
-					<BrushTransition Property="Background" Duration="0:0:0.1"/>
-					<BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
-					<BrushTransition Property="Foreground" Duration="0:0:0.1"/>
-					<TransformOperationsTransition Property="RenderTransform" Duration="0:0:.075" />
-				</Transitions>
-			</Setter>
-			<!--鼠标按下样式定义-->
-			<Style Selector="^:pressed">
-				<Setter Property="RenderTransform" Value="scale(0.98)" />
-			</Style>
-			<!--普通按钮鼠标悬停样式定义-->
-			<Style Selector="^:pointerover">
-				<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
-				<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
-				<Setter Property="Background" Value="{DynamicResource OBlueLight}"/>
-			</Style>
-			<!--禁用样式-->
-			<Style Selector="^:disabled">
-				<Setter Property="Background" Value="gray"/>
-				<Setter Property="Foreground" Value="black"/>
-				<Setter Property="BorderBrush" Value="black"/>
-			</Style>
-			<!--首选蓝色按钮样式定义-->
-			<Style Selector="^.highlight">
-				<Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
-				<Setter	Property="BorderBrush" Value="{DynamicResource OBlue}"/>
-				<Style Selector="^:disabled">
-					<Setter Property="Background" Value="gray"/>
-					<Setter Property="Foreground" Value="black"/>
-					<Setter Property="BorderBrush" Value="black"/>
-				</Style>
-			</Style>
-			<!--红色按钮样式定义-->
-			<Style Selector="^.red">
-				<Setter Property="Foreground" Value="Red"/>
-				<Setter	Property="BorderBrush" Value="Red"/>
-				<Style Selector="^:pointerover">
-					<Setter Property="Background" Value="#ffb3b3"/>
-				</Style>
-			</Style>
-		</Style>
-	</Button.Styles>
-</Button>
+        xmlns:local="clr-namespace:LSL.Components;assembly=LSL">
+    <Style Selector="local|MyButton">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        Background="{TemplateBinding Background}"
+                        Padding="{TemplateBinding Padding}"
+                        CornerRadius="5">
+                    <ContentPresenter x:Name="PART_ContentPresenter"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Setter Property="Background" Value="White" />
+        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="BorderBrush" Value="Black" />
+        <Setter Property="FontSize" Value="15" />
+        <!--按钮样式过渡-->
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.1" />
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+                <BrushTransition Property="Foreground" Duration="0:0:0.1" />
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:.075" />
+            </Transitions>
+        </Setter>
+        <!--鼠标按下样式定义-->
+        <Style Selector="^:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.98)" />
+        </Style>
+        <!--普通按钮鼠标悬停样式定义-->
+        <Style Selector="^:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource OBlue}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource OBlue}" />
+            <Setter Property="Background" Value="{DynamicResource OBlueLight}" />
+        </Style>
+        <!--禁用样式-->
+        <Style Selector="^:disabled">
+            <Setter Property="Background" Value="gray" />
+            <Setter Property="Foreground" Value="black" />
+            <Setter Property="BorderBrush" Value="black" />
+        </Style>
+        <!--首选蓝色按钮样式定义-->
+        <Style Selector="^:highlight">
+            <Setter Property="Foreground" Value="{DynamicResource OBlue}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource OBlue}" />
+            <Style Selector="^:disabled">
+                <Setter Property="Background" Value="gray" />
+                <Setter Property="Foreground" Value="black" />
+                <Setter Property="BorderBrush" Value="black" />
+            </Style>
+        </Style>
+        <!--红色按钮样式定义-->
+        <Style Selector="^:red">
+            <Setter Property="Foreground" Value="Red" />
+            <Setter Property="BorderBrush" Value="Red" />
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="#ffb3b3" />
+            </Style>
+        </Style>
+    </Style>
+</Styles>

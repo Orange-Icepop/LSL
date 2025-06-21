@@ -5,55 +5,42 @@ using Avalonia.Controls;
 
 namespace LSL.Components
 {
-    public enum ColorType
+    public enum MyButtonColorType
     {
         Default,
         Highlight,
         Red
     }
-    public partial class MyButton : Button
+    public class MyButton : Button
     {
-        public static readonly StyledProperty<ColorType> ColorTypeProperty =
-            AvaloniaProperty.Register<MyButton, ColorType>(nameof(ColorType), ColorType.Default);
+        public static readonly StyledProperty<MyButtonColorType> ColorTypeProperty =
+            AvaloniaProperty.Register<MyButton, MyButtonColorType>(nameof(ColorType), MyButtonColorType.Default);
 
-        public ColorType ColorType
+        public MyButtonColorType ColorType
         {
             get => GetValue(ColorTypeProperty);
             set => SetValue(ColorTypeProperty, value);
         }
         static MyButton()
         {
-            // 你可以在这里注册附加属性，如果需要的话  
+            ColorTypeProperty.Changed.AddClassHandler<MyButton>((o, e) => o.UpdateStyles());
+            AffectsRender<MyButton>(ColorTypeProperty);
         }
-
         public MyButton()
         {
-            InitializeComponent();
-            this.Initialized += (s, e) => UpdateStyles();
         }
         public MyButton(string color, string content, ICommand command)
         {
-            InitializeComponent();
-            this.ColorType = Enum.TryParse(color, out ColorType colorType) ? colorType : ColorType.Default;
+            this.ColorType = Enum.TryParse(color, out MyButtonColorType colorType) ? colorType : MyButtonColorType.Default;
             this.Content = content;
             this.Command = command;
-            this.Initialized += (s, e) => UpdateStyles();
         }
 
         //根据ColorType更改按钮样式
         private void UpdateStyles()
         {
-            switch (ColorType)
-            {
-                case ColorType.Highlight:
-                    this.Classes.Add("highlight");
-                    break;
-                case ColorType.Red:
-                    this.Classes.Add("red");
-                    break;
-                default:
-                    break;
-            }
+            PseudoClasses.Set(":highlight", ColorType == MyButtonColorType.Highlight);
+            PseudoClasses.Set(":red", ColorType == MyButtonColorType.Red);
         }
     }
 }

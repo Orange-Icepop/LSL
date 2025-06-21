@@ -6,5 +6,7 @@
         </Border>
     </Design.PreviewWith>
 
+    <StyleInclude Source="avares://LSL/Components/MyButton.axaml"/>
     <StyleInclude Source="avares://LSL/Components/MyCard.axaml"/>
+    <StyleInclude Source="avares://LSL/Components/MyListItem.axaml"/>
 </Styles>
