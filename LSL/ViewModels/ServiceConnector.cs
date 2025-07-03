@@ -120,7 +120,7 @@ namespace LSL.ViewModels
             var result = configManager.ConfirmMainConfig(AppState.CurrentConfigs);
             await AppState.ITAUnits.SubmitServiceError(result);
             bool success = result.IsFullSuccess;
-            if (success) _logger.LogInformation("New config saved");
+            if (success) _logger.LogInformation("Main config saved");
             return success;
         }
 

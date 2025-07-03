@@ -108,6 +108,7 @@ namespace LSL
             collection.AddSingleton<LeftRegionVM>();
             collection.AddSingleton<RightRegionVM>();
             collection.AddSingleton<ConfigViewModel>();
+            collection.AddSingleton<MonitorViewModel>();
             collection.AddSingleton<ServerViewModel>();
             collection.AddSingleton<FormPageVM>();
             collection.AddSingleton<ShellViewModel>();

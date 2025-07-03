@@ -43,11 +43,11 @@
         public string ext_jvm { get; set; } = extJvm;
 
         public ServerConfig(ServerConfig config) // 深拷贝构造函数
-            : this(config.server_id, config.server_path, config.name, config.using_java, config.core_name,
-                config.min_memory, config.max_memory, config.ext_jvm)
-        {
-        }
+            : this(config.server_id, config.server_path, config.name, config.using_java, config.core_name, config.min_memory, config.max_memory, config.ext_jvm){}
 
+        /// <summary>
+        /// Returns a server info which will be recognized as not added.
+        /// </summary>
         public static ServerConfig None => new ServerConfig(-1, "", "未添加服务器", "", "", 0, 0, "");
     }
 

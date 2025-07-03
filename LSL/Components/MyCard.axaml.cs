@@ -27,13 +27,13 @@ namespace LSL.Components
         public IBrush TitleColor
         {
             get => GetValue(TitleColorProperty);
-            set => SetValue(TitleColorProperty, value);
+            private set => SetValue(TitleColorProperty, value);
         }
 
         public IBrush CardBackground
         {
             get => GetValue(CardBackgroundProperty);
-            set => SetValue(CardBackgroundProperty, value);
+            private set => SetValue(CardBackgroundProperty, value);
         }
         
         private static readonly IBrush defaultBackground = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255));

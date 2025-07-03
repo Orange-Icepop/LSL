@@ -17,6 +17,7 @@ namespace LSL.ViewModels
         public LeftRegionVM LeftVM { get; }
         public RightRegionVM RightVM { get; }
         public ConfigViewModel ConfigVM { get; }
+        public MonitorViewModel MonitorVM { get; }
         public ServerViewModel ServerVM { get; }
         public FormPageVM FormVM { get; }
         public PublicCommand PublicCmd { get; }
@@ -32,6 +33,7 @@ namespace LSL.ViewModels
             LeftRegionVM leftVM,
             RightRegionVM rightVM,
             ConfigViewModel configVM,
+            MonitorViewModel monitorVM,
             ServerViewModel serverVM,
             FormPageVM formVM,
             PublicCommand publicCommand,
@@ -44,6 +46,7 @@ namespace LSL.ViewModels
             LeftVM = leftVM;
             RightVM = rightVM;
             ConfigVM = configVM;
+            MonitorVM = monitorVM;
             ServerVM = serverVM;
             FormVM = formVM;
             PublicCmd = publicCommand;
