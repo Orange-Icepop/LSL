@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
-using LSL.Common.Helpers;
+using LSL.Common.Contracts;
 
-namespace LSL.Services;
+namespace LSL.Services.ServerServices;
 
 public class ProcessMetricsMonitor : IDisposable
 {
+    private readonly int ID;
     public event EventHandler<ProcessMetricsEventArgs>? MetricsUpdated;
     private readonly Timer _timer;
     private readonly Process _process;
@@ -18,9 +17,10 @@ public class ProcessMetricsMonitor : IDisposable
     private readonly object _lock = new();
     private bool _disposed;
 
-    public ProcessMetricsMonitor(Process process, long allocatedMemoryBytes, int interval = 1000)
+    public ProcessMetricsMonitor(Process process, int id, long allocatedMemoryBytes, int interval = 1000)
     {
         _process = process;
+        ID = id;
         _allocatedMemoryBytes = allocatedMemoryBytes;
         _prevCpuTime = process.TotalProcessorTime;
         _prevTime = DateTime.UtcNow;
@@ -74,12 +74,13 @@ public class ProcessMetricsMonitor : IDisposable
             catch (Exception ex)
             {
                 // 触发包含错误信息的事件
-                MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(0, 0, 0, true, ex.Message));
+                MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(ID, 0, 0, 0, true, ex.Message));
                 return;
             }
 
             // 触发事件（即使进程已退出也通知）
             MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(
+                ID,
                 cpuUsage, 
                 processMemory, 
                 _allocatedMemoryBytes,
@@ -98,29 +99,4 @@ public class ProcessMetricsMonitor : IDisposable
             GC.SuppressFinalize(this);
         }
     }
-}
-
-// 事件参数类
-public class ProcessMetricsEventArgs(
-    double cpuUsagePercent,
-    long memoryUsageBytes,
-    long allocatedMemoryBytes,
-    bool isProcessExited,
-    string? error = null)
-    : EventArgs
-{
-    /// <summary>多核CPU使用百分比</summary>
-    public double CpuUsagePercent { get; } = cpuUsagePercent;
-
-    /// <summary>内存使用量</summary>
-    public long MemoryUsageBytes { get; } = memoryUsageBytes;
-
-    /// <summary>内存使用百分比</summary>
-    public double MemoryUsagePercent { get; } = (double)memoryUsageBytes / allocatedMemoryBytes * 100;
-    
-    /// <summary>进程是否已退出</summary>
-    public bool IsProcessExited { get; } = isProcessExited;
-
-    /// <summary>错误信息（如果有）</summary>
-    public string? Error { get; } = error;
 }

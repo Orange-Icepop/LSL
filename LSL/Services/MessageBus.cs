@@ -112,10 +112,7 @@ namespace LSL.Services
                     // 使用委托的DynamicInvoke方法来避免显式类型转换  
                     foreach (var handler in snapshot.Cast<Action<TEvent>>())
                     {
-                        // 使用PublishAsync可以异步处理事件，避免阻塞主线程
-                        // 比较适用于把东西一丢就不管的情况
-                        // 但请注意，这并不会改变事件处理的顺序，只是并行执行  
-                        await Task.Run(() => handler(e)); // 同步执行  
+                        await Task.Run(() => handler(e)); // 异步执行  
                     }
                 }
             }

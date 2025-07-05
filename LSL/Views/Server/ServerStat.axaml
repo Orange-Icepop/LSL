@@ -9,11 +9,11 @@
              x:Class="LSL.Views.Server.ServerStat">
     <DockPanel>
         <local:MyCard Text="资源占用" DockPanel.Dock="Top" Height="200">
-            <Grid Margin="30,50,10,10" ColumnDefinitions="*,*,*" RowDefinitions="15,*">
+            <Grid Margin="30,50,10,10" ColumnDefinitions="*,*" RowDefinitions="15,*">
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="CPU占用" FontSize="12" />
-                <local:MyPlot Grid.Row="1" Grid.Column="0" LineColor="#019eff" FillColor="#80019eff" ItemsSource="{Binding MonitorVM.CpuMetrics}" Margin="5" />
+                <local:MyPlot Grid.Row="1" Grid.Column="0" LineColor="#019eff" FillColor="#80019eff" ItemsSource="{Binding MonitorVM.CurrentCpuMetrics}" Margin="5" />
                 <TextBlock Grid.Row="0" Grid.Column="1" Text="内存占用" FontSize="12" />
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="网络占用" FontSize="12" />
+                <local:MyPlot Grid.Row="1" Grid.Column="1" LineColor="#FFE39A6B" FillColor="#80E39A6B" ItemsSource="{Binding MonitorVM.CurrentRamMetrics}" Margin="5" />
             </Grid>
         </local:MyCard>
         <local:MyCard Text="玩家列表" DockPanel.Dock="Left" Width="250">

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -11,8 +12,8 @@ public class MyPlot : Control
 {
     // properties
     // source
-    public static readonly DirectProperty<MyPlot, RangedObservableCollection<uint>> ItemsSourceProperty =
-        AvaloniaProperty.RegisterDirect<MyPlot, RangedObservableCollection<uint>>(
+    public static readonly DirectProperty<MyPlot, RangedObservableLinkedList<uint>> ItemsSourceProperty =
+        AvaloniaProperty.RegisterDirect<MyPlot, RangedObservableLinkedList<uint>>(
             nameof(ItemsSource),
             obj => obj.ItemsSource,
             (obj, val) => obj.ItemsSource = val);
@@ -24,8 +25,8 @@ public class MyPlot : Control
         AvaloniaProperty.Register<MyPlot, IBrush>(nameof(LineColor), Brushes.Blue);
 
     private bool _isSubscribed;
-    private RangedObservableCollection<uint> _itemsSource = new(30);
-    public RangedObservableCollection<uint> ItemsSource
+    private RangedObservableLinkedList<uint> _itemsSource = new(30);
+    public RangedObservableLinkedList<uint> ItemsSource
     {
         get => _itemsSource;
         set
@@ -81,8 +82,8 @@ public class MyPlot : Control
         base.OnPropertyChanged(change);
         if (change.Property == ItemsSourceProperty)
         {
-            if (change.OldValue is RangedObservableCollection<uint> oc) oc.CollectionChanged -= OnCollectionChanged;
-            if (change.NewValue is RangedObservableCollection<uint> nc)
+            if (change.OldValue is RangedObservableLinkedList<uint> oc) oc.CollectionChanged -= OnCollectionChanged;
+            if (change.NewValue is RangedObservableLinkedList<uint> nc)
             {
                 nc.CollectionChanged += OnCollectionChanged;
                 InvalidateVisual();
@@ -111,6 +112,7 @@ public class MyPlot : Control
     public override void Render(DrawingContext context)
     {
         base.Render(context);
+        context.FillRectangle(Brushes.LightGray, new Rect(0, 0, _controlSize.Width, _controlSize.Height));
         if (ItemsSource is null || ItemsSource.Count < 2 || 
             _controlSize.Width <= 0 || _controlSize.Height <= 0)
             return;        // region
@@ -119,9 +121,11 @@ public class MyPlot : Control
         {
             regionContent.BeginFigure(new Point(0, _controlSize.Height), true);
             uint count = ItemsSource.Count < 0 ? 0 : (uint)ItemsSource.Count;
-            for (int i = 0; i < count; i++)
+            int i = 0;
+            foreach (var item in ItemsSource)
             {
-                regionContent.LineTo(CalculatePoint(i, ItemsSource[i]));
+                regionContent.LineTo(CalculatePoint(i, item));
+                i++;
             }
             regionContent.LineTo(new Point(_controlSize.Width, _controlSize.Height));
             regionContent.EndFigure(true);
@@ -130,10 +134,11 @@ public class MyPlot : Control
         var lineGeometry = new StreamGeometry();
         using (var ctx = lineGeometry.Open())
         {
-            ctx.BeginFigure(CalculatePoint(0, ItemsSource[0]), false);
-            for (int i = 1; i < ItemsSource.Count; i++)
+            ctx.BeginFigure(CalculatePoint(0, ItemsSource.FirstOrDefault()), false);
+            int i = 1;
+            foreach (var item in ItemsSource.Skip(1))
             {
-                ctx.LineTo(CalculatePoint(i, ItemsSource[i]));
+                ctx.LineTo(CalculatePoint(i, item));
             }
             ctx.EndFigure(false);
         }

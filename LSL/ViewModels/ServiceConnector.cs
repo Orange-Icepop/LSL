@@ -14,6 +14,7 @@ using LSL.Common.Contracts;
 using LSL.Common.Helpers;
 using LSL.Common.Helpers.Validators;
 using LSL.Services;
+using LSL.Services.ServerServices;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ReactiveUI;
@@ -43,6 +44,7 @@ namespace LSL.ViewModels
             WebHost = netService;
             _logger = AppState.LoggerFactory.CreateLogger<ServiceConnector>();
             EventBus.Instance.Subscribe<IStorageArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
+            EventBus.Instance.Subscribe<IMetricsArgs>(ReceiveMetrics);
             _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
             CopyServerOutput();
             _logger.LogInformation("Total RAM:{ram}", MemoryInfo.GetTotalSystemMemory());
@@ -294,6 +296,37 @@ namespace LSL.ViewModels
             foreach (var item in AppState.ServerStatuses)
             {
                 if (item.Value.IsRunning) AppState.RunningServerCount++;
+            }
+        }
+        #endregion
+        
+        #region 接收服务器资源占用信息
+        private void ReceiveMetrics(IMetricsArgs args)
+        {
+            switch (args)
+            {
+                case MetricsUpdateArgs MUA: ProcessSecondlyMetrics(MUA); break;
+                case GeneralMetricsArgs GMA: ProcessMinutelyMetrics(GMA); break;
+            }
+        }
+
+        private void ProcessSecondlyMetrics(MetricsUpdateArgs args)
+        {
+            
+        }
+
+        private void ProcessMinutelyMetrics(GeneralMetricsArgs args)
+        {
+            RangedObservableLinkedList<uint> cpu = new(30);
+            RangedObservableLinkedList<uint> ram = new(30);
+            foreach (var c in args.CpuHistory)
+            {
+                cpu.Add((uint)c);
+            }
+
+            foreach (var r in args.RamHistory)
+            {
+                ram.Add((uint)r);
             }
         }
         #endregion

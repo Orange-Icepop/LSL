@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using LSL.Services;
+using LSL.Services.ServerServices;
 using LSL.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,7 @@ using Polly.Extensions.Http;
 using Polly.Retry;
 using Serilog;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
+using ServerOutputHandler = LSL.Services.ServerServices.ServerOutputHandler;
 
 namespace LSL
 {
@@ -92,6 +94,7 @@ namespace LSL
         {
             collection.AddSingleton<ServerOutputHandler>();
             collection.AddSingleton<ServerOutputStorage>();
+            collection.AddSingleton<ServerMetricsBuffer>();
             collection.AddSingleton<ServerHost>();
         }
         public static void AddStartUp(this IServiceCollection collection)

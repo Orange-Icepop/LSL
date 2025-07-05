@@ -4,13 +4,15 @@ using System.IO;
 using System.Text.RegularExpressions;
 using LSL.Common.Contracts;
 
-namespace LSL.Services;
+namespace LSL.Services.ServerServices;
 
     // 服务器进程类ServerProcess
     public partial class ServerProcess : IDisposable
     {
+        public int ID { get; }
         public ServerProcess(ServerConfig config)
         {
+            ID = config.server_id;
             string serverPath = config.server_path;
             string corePath = Path.Combine(serverPath, config.core_name);
             string javaPath = config.using_java;
@@ -49,6 +51,7 @@ namespace LSL.Services;
         private ProcessMetricsMonitor? _monitor;
         public event EventHandler<ProcessMetricsEventArgs>? MetricsReceived;
         private EventHandler<ProcessMetricsEventArgs> _metricsHandler;
+        // Monitor is used in AttachProcessHandlers method.
         #endregion
 
         # region 状态获取
@@ -124,7 +127,9 @@ namespace LSL.Services;
                 InStream.FlushAsync();
             }
         }
+        #endregion
 
+        #region 句柄与生命周期
         private void InitProcessHandlers()
         {
             OutputReceivedHandler = (sender, args) => OutputReceived?.Invoke(sender, args);
@@ -147,7 +152,7 @@ namespace LSL.Services;
             SProcess.OutputDataReceived += OutputReceivedHandler;
             SProcess.ErrorDataReceived += ErrorReceivedHandler;
             SProcess.Exited += ExitedHandler;
-            _monitor = new ProcessMetricsMonitor(SProcess, allocatedMemoryBytes);
+            _monitor = new ProcessMetricsMonitor(SProcess, ID, allocatedMemoryBytes);
             _monitor.MetricsUpdated += _metricsHandler;
         }
         private void CleanupProcessHandlers()
@@ -185,6 +190,7 @@ namespace LSL.Services;
         }
         public void Dispose()
         {
+            _monitor?.Dispose();
             Kill();
             GC.SuppressFinalize(this);
         }

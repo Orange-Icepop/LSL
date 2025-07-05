@@ -39,7 +39,7 @@ namespace LSL.ViewModels
                 .Subscribe(NavigateCommandHandler);
             // 配置公共监听属性
             ServerConfigChanged = this.WhenAnyValue(AS => AS.CurrentServerConfigs).ObserveOn(RxApp.MainThreadScheduler);
-            ServerIndexChanged = this.WhenAnyValue(AS=>AS.SelectedServerIndex).ObserveOn(RxApp.MainThreadScheduler);
+            ServerIndexChanged = this.WhenAnyValue(AS => AS.SelectedServerIndex).ObserveOn(RxApp.MainThreadScheduler);
             ServerIdChanged = this.WhenAnyValue(AS => AS.SelectedServerId).ObserveOn(RxApp.MainThreadScheduler);
             #region 监听
             // 在索引更新时刷新右视图
@@ -179,6 +179,12 @@ namespace LSL.ViewModels
         [Reactive] public int RunningServerCount { get; set; } = 0;
         public bool NotTemplateServer { [ObservableAsProperty] get; }
 
+        #endregion
+        
+        #region 性能监控相关
+        [Reactive] public ConcurrentDictionary<int, RangedObservableLinkedList<uint>> MetricsDict { get; set; } = new();  
+        [Reactive] public RangedObservableLinkedList<uint> GeneralCpuMetrics { get; set; } = new(30, 0);
+        [Reactive] public RangedObservableLinkedList<uint> GeneralRamMetrics { get; set; } = new(30, 0);
         #endregion
     }
 }
