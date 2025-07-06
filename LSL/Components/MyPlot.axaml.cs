@@ -4,7 +4,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using LSL.Common.Contracts;
+using LSL.Common.Collections;
 
 namespace LSL.Components;
 
@@ -112,7 +112,7 @@ public class MyPlot : Control
     public override void Render(DrawingContext context)
     {
         base.Render(context);
-        context.FillRectangle(Brushes.LightGray, new Rect(0, 0, _controlSize.Width, _controlSize.Height));
+        context.DrawRectangle(null, null, new Rect(0, 0, _controlSize.Width, _controlSize.Height), 0, 0, BoxShadows.Parse("0 0 10 -2 LightGray"));
         if (ItemsSource is null || ItemsSource.Count < 2 || 
             _controlSize.Width <= 0 || _controlSize.Height <= 0)
             return;        // region

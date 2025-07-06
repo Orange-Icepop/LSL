@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Specialized;
 
-namespace LSL.Common.Contracts;
+namespace LSL.Common.Collections;
 
 public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionChanged
 {
@@ -35,7 +35,7 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
     {
         if (maxLength <= 0) throw new ArgumentOutOfRangeException(nameof(maxLength), "The maxLength must be greater than zero.");
         _list = new LinkedList<T>();
-        _lock = new ReaderWriterLockSlim();
+        _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         _maxLength = maxLength;
         _notifiable = notify;
     }
@@ -96,7 +96,19 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
         if (_notifiable && !_suppressNotification) CollectionChanged?.Invoke(this, e);
     }
 
-    public IEnumerator<T> GetEnumerator() => new SafeLinkedListEnumerator<T>(_list, _lock);
-    
+    public IEnumerator<T> GetEnumerator()
+    {
+        _lock.EnterReadLock();
+        try
+        {
+            // 创建链表快照避免长时间持有锁
+            var snapshot = new List<T>(_list);
+            return snapshot.GetEnumerator();
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }    
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

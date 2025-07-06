@@ -6,7 +6,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using Avalonia.Threading;
+using LSL.Common.Collections;
 using LSL.Common.Contracts;
+using LSL.Common.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -41,6 +43,7 @@ namespace LSL.ViewModels
             ServerConfigChanged = this.WhenAnyValue(AS => AS.CurrentServerConfigs).ObserveOn(RxApp.MainThreadScheduler);
             ServerIndexChanged = this.WhenAnyValue(AS => AS.SelectedServerIndex).ObserveOn(RxApp.MainThreadScheduler);
             ServerIdChanged = this.WhenAnyValue(AS => AS.SelectedServerId).ObserveOn(RxApp.MainThreadScheduler);
+            
             #region 监听
             // 在索引更新时刷新右视图
             ServerIndexChanged.Subscribe(_ => MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh)));
@@ -70,6 +73,7 @@ namespace LSL.ViewModels
                 })
                 .ToPropertyEx(this, x => x.TotalServerCount);
             #endregion
+            
         }
 
         #region 导航相关
@@ -182,7 +186,7 @@ namespace LSL.ViewModels
         #endregion
         
         #region 性能监控相关
-        [Reactive] public ConcurrentDictionary<int, RangedObservableLinkedList<uint>> MetricsDict { get; set; } = new();  
+        [Reactive] public ConcurrentDictionary<int, MetricsStorage> MetricsDict { get; set; } = new();
         [Reactive] public RangedObservableLinkedList<uint> GeneralCpuMetrics { get; set; } = new(30, 0);
         [Reactive] public RangedObservableLinkedList<uint> GeneralRamMetrics { get; set; } = new(30, 0);
         #endregion

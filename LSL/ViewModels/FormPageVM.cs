@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
 using LSL.Common.Contracts;
-using LSL.Common.Helpers;
-using LSL.Common.Helpers.Validators;
+using LSL.Common.Models;
+using LSL.Common.Validation;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 

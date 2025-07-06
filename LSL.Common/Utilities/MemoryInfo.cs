@@ -1,9 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace LSL.Common.Helpers;
+namespace LSL.Common.Utilities;
 
 public static partial class MemoryInfo
 {

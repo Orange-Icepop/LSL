@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 using LSL.Common.Contracts;
+using LSL.Common.Models;
 using LSL.Views;
 using ReactiveUI;
 
@@ -16,9 +18,9 @@ namespace LSL.ViewModels
         public Interaction<NotifyArgs, Unit> NotifyITA { get; } = new();// 0消息，1成功，2警告，3错误
         public Interaction<FilePickerType, string> FilePickerITA { get; } = new();
 
-        public IObservable<PopupResult> ThrowError(string title, string message)
+        public Task<PopupResult> ThrowError(string title, string message)
         {
-            return PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, title, message));
+            return PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, title, message)).ToTask();
         }
         
         public async Task<bool> SubmitServiceError(IServiceResult result)

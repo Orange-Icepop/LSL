@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LSL.Common.Helpers
+﻿namespace LSL.Common.Utilities
 {
     public static class AlgoServices
     {

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LSL.Common.Contracts;
+﻿namespace LSL.Common.Models;
 
 public interface IServiceResult
 {

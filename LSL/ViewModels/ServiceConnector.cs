@@ -10,15 +10,19 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using LSL.Common.Collections;
 using LSL.Common.Contracts;
-using LSL.Common.Helpers;
-using LSL.Common.Helpers.Validators;
+using LSL.Common.Models;
+using LSL.Common.Utilities;
+using LSL.Common.Validation;
 using LSL.Services;
+using LSL.Services.ConfigServices;
 using LSL.Services.ServerServices;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using MemoryInfo = LSL.Common.Utilities.MemoryInfo;
 
 namespace LSL.ViewModels
 {
@@ -321,12 +325,12 @@ namespace LSL.ViewModels
             RangedObservableLinkedList<uint> ram = new(30);
             foreach (var c in args.CpuHistory)
             {
-                cpu.Add((uint)c);
+                cpu.Add(c);
             }
 
             foreach (var r in args.RamHistory)
             {
-                ram.Add((uint)r);
+                ram.Add(r);
             }
         }
         #endregion

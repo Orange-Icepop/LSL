@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 
-namespace LSL.Common.Contracts;
+namespace LSL.Common.Collections;
 /// <summary>
 /// A thread-safe enumerator class for LinkedList.
+/// The lock must support recursion.
 /// MUST BE DISPOSED MANUALLY IF NOT USING foreach() or using()!
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>

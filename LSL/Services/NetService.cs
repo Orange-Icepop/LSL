@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
 using LSL.Common.Contracts;
+using LSL.Common.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;

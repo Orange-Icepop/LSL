@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using LSL.Common.Contracts;
+using LSL.Common.Models;
+using LSL.Services.ConfigServices;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services.ServerServices;
@@ -62,6 +64,7 @@ public class ServerHost : IServerHost, IDisposable
         if (GetServer(serverId) is not null)
         {
             OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器已经在运行中。"));
+            _logger.LogError("Server with id {id} is already running.", serverId);
             return false;
         }
         ServerConfig config = serverConfigManager.ServerConfigs[serverId];
@@ -74,11 +77,13 @@ public class ServerHost : IServerHost, IDisposable
         }
         catch (InvalidOperationException)
         {
-            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动失败，请检查配置文件。"));
             SP.Dispose();
+            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动失败，请检查配置文件。"));
+            _logger.LogError("Server with id {id} failed to run.", serverId);
             return false;
         }
         LoadServer(serverId, SP);
+        _logger.LogInformation("Server with id {id} is mounted.", serverId);
         OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器正在启动，请稍后......"));
         SP.OutputReceived += (sender, e) =>
         {
@@ -110,6 +115,7 @@ public class ServerHost : IServerHost, IDisposable
             {
                 string status = $"已关闭，进程退出码为{exitCode}";
                 OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 当前服务器" + status));
+                _logger.LogInformation("Server with id {id} is stopped.", serverId);
                 SP.Dispose();
             }
         };
@@ -118,12 +124,14 @@ public class ServerHost : IServerHost, IDisposable
             if (e.Item2)
             {
                 OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动成功!"));
+                _logger.LogInformation("Server with id {id} is online now.", serverId);
             }
         };
         SP.MetricsReceived += (sender, e) =>
         {
             metricsHandler.TryWrite(e);
         };
+        _logger.LogInformation("Server with id {id} is started.", serverId);
         return true;
     }
     #endregion
