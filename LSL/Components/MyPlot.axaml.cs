@@ -139,6 +139,7 @@ public class MyPlot : Control
             foreach (var item in ItemsSource.Skip(1))
             {
                 ctx.LineTo(CalculatePoint(i, item));
+                i++;
             }
             ctx.EndFigure(false);
         }
