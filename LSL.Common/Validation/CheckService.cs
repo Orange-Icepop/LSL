@@ -102,6 +102,7 @@ public static class CheckService
         ServerConfig cache = ServerConfig.None;
         var pResult = CheckComponents.ServerPath(path);
         if (!pResult.Passed) return ServiceResult.Fail<ServerConfig>(new ValidationException($"Error validating server config with id {id} because of nonexistent server path."));
+        cache.server_id = id;
         cache.server_path = path;
         foreach (var item in ServerConfigKeys)
         {

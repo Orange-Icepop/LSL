@@ -5,6 +5,9 @@ using LSL.Common.Contracts;
 
 namespace LSL.Services.ServerServices;
 
+/// <summary>
+/// A metrics monitor attached to a Process instance.
+/// </summary>
 public class ProcessMetricsMonitor : IDisposable
 {
     private readonly int ID;
@@ -94,6 +97,13 @@ public class ProcessMetricsMonitor : IDisposable
         {
             if (_disposed) return;
             
+            MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(
+                ID,
+                0, 
+                0, 
+                _allocatedMemoryBytes,
+                true
+            ));
             _timer.Dispose();
             _disposed = true;
             GC.SuppressFinalize(this);

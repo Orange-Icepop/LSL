@@ -7,6 +7,8 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using LSL.Common.Collections;
 using LSL.Common.Contracts;
+using LSL.Common.Models;
+using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services.ServerServices;
@@ -17,102 +19,171 @@ namespace LSL.Services.ServerServices;
 /// </summary>
 public class ServerMetricsBuffer : IDisposable
 {
-    private readonly CancellationTokenSource CTS;
-    private Task _processTask;
-    private Task _reportTask;
-    private readonly Channel<ProcessMetricsEventArgs> metricsChannel;
-    private readonly RangedObservableLinkedList<uint> generalCpuHistory = new(30, 0, false);
-    private readonly RangedObservableLinkedList<uint> generalRamHistory = new(30, 0, false);
-    private readonly List<double> thisMinuteCpuUsage = [];
-    private readonly List<double> thisMinuteRamUsage = [];
-    private DateTime lastMinute;
-        
-    private ILogger<ServerMetricsBuffer> _logger { get; }
+    private const int HISTORY_MINUTES = 30;
+    private const int REPORT_INTERVAL_MS = 1000;
+    private const int MINUTE_INTERVAL_MS = 60000;
+    
+    private readonly CancellationTokenSource _cts;
+    private readonly ILogger<ServerMetricsBuffer> _logger;
+    private readonly Channel<ProcessMetricsEventArgs> _metricsChannel;
+    
+    // 历史记录队列
+    private readonly RangedObservableLinkedList<uint> _cpuHistory = new(HISTORY_MINUTES, 0, false);
+    private readonly RangedObservableLinkedList<uint> _ramPercentHistory = new(HISTORY_MINUTES, 0, false);
+    private readonly RangedObservableLinkedList<long> _ramBytesAvgHistory = new(HISTORY_MINUTES, 0, false);
+    private readonly RangedObservableLinkedList<long> _ramBytesPeakHistory = new(HISTORY_MINUTES, 0, false);
+    
+    // 当前分钟数据
+    private readonly List<double> _minuteCpuSamples = new();
+    private readonly List<double> _minuteRamPercentSamples = new();
+    private readonly List<long> _minuteRamBytesSamples = new();
+    
+    // 当前秒数据
+    private readonly ConcurrentDictionary<int, (double Cpu, long RamBytes, double RamPercent)> _currentMetrics = new();
+    private DateTime _lastMinuteReportTime = DateTime.Now;
+    
+    private Task _processingTask;
+    private Task _reportingTask;
 
     public ServerMetricsBuffer(ILogger<ServerMetricsBuffer> logger)
     {
         _logger = logger;
-        lastMinute = DateTime.Now;
-        CTS = new CancellationTokenSource();
-        metricsChannel = Channel.CreateUnbounded<ProcessMetricsEventArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
-        _processTask = Task.Run(() => ProcessMetrics(CTS.Token));
-        _reportTask = Task.Run(() => ReportMetrics(CTS.Token));
-        _logger.LogInformation("ServerMetricsBuffer Launched");
+        _cts = new CancellationTokenSource();
+        _metricsChannel = Channel.CreateUnbounded<ProcessMetricsEventArgs>(
+            new UnboundedChannelOptions { SingleReader = true });
+        
+        _processingTask = Task.Run(() => ProcessMetricsAsync(_cts.Token));
+        _reportingTask = Task.Run(() => ReportMetricsAsync(_cts.Token));
+        
+        _logger.LogInformation("ServerMetricsBuffer initialized");
     }
-    
-    #region 处理业务逻辑
-    public bool TryWrite(ProcessMetricsEventArgs args) => metricsChannel.Writer.TryWrite(args);
-    private readonly ConcurrentDictionary<int,(double CpuUsage, long MemBytes, double MemUsage)> currentMetrics = new();
-    private async Task ProcessMetrics(CancellationToken ct)
+
+    public bool TryWrite(ProcessMetricsEventArgs args) => 
+        _metricsChannel.Writer.TryWrite(args);
+
+    private async Task ProcessMetricsAsync(CancellationToken ct)
     {
         try
         {
-            await foreach (var args in metricsChannel.Reader.ReadAllAsync(ct))
+            await foreach (var args in _metricsChannel.Reader.ReadAllAsync(ct))
             {
-                currentMetrics.AddOrUpdate(args.ServerId,
-                    (args.CpuUsagePercent, args.MemoryUsageBytes, args.MemoryUsagePercent),
-                    (id, value) => (args.CpuUsagePercent, args.MemoryUsageBytes, args.MemoryUsagePercent));
+                var metrics = GetValidatedMetrics(args);
+                _currentMetrics.AddOrUpdate(args.ServerId, k => metrics, (k, v) => metrics);
             }
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("Metrics processing is canceled.");
+            _logger.LogInformation("Metrics processing stopped");
         }
     }
 
-    private async Task ReportMetrics(CancellationToken ct)
+    private async Task ReportMetricsAsync(CancellationToken ct)
     {
-        while (!ct.IsCancellationRequested)
+        var secondTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(REPORT_INTERVAL_MS));
+        try
         {
-            var met = currentMetrics
-                .Select(kvp => new MetricsReport(kvp.Key, CastAndRecCpu(kvp.Value.CpuUsage), kvp.Value.MemBytes,
-                    CastAndRecMem(kvp.Value.MemUsage)))
-                .ToList();
-            EventBus.Instance.PublishAsync(new MetricsUpdateArgs(met));
-            // calc minutely metrics sum-up
-            var now = DateTime.Now;
-            if (now - lastMinute > TimeSpan.FromMinutes(1))
+            while (!ct.IsCancellationRequested)
             {
-                lastMinute = now;
-                generalCpuHistory.Add((uint)thisMinuteCpuUsage.Average());
-                generalRamHistory.Add((uint)thisMinuteRamUsage.Average());
-                thisMinuteCpuUsage.Clear();
-                thisMinuteRamUsage.Clear();
-                EventBus.Instance.PublishAsync(new GeneralMetricsArgs(generalCpuHistory, generalRamHistory));
+                // 每秒报告
+                await secondTimer.WaitForNextTickAsync(ct);
+                ReportPerSecondMetrics();
+                
+                // 每分钟报告
+                if (DateTime.Now.Subtract(_lastMinuteReportTime).TotalMilliseconds > MINUTE_INTERVAL_MS)
+                {
+                    ReportPerMinuteMetrics();
+                    _lastMinuteReportTime = DateTime.Now;
+                }
             }
-            // wait
-            await Task.Delay(1000, ct);
         }
-        _logger.LogInformation("Metrics reporting stopped.");
-    }
-    #endregion
-
-    #region 辅助方法
-    private static int CastToInt(double val)
-    {
-        if (double.IsInfinity(val)) return 100;
-        if (double.IsNaN(val)) return 0;
-        return (int)Math.Round(val);
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Metrics reporting stopped");
+        }
     }
 
-    private int CastAndRecCpu(double val)
+    private void ReportPerSecondMetrics()
     {
-        thisMinuteCpuUsage.Add(val);
-        return CastToInt(val);
+        var reports = _currentMetrics.Select(kvp => 
+            new MetricsReport(
+                kvp.Key,
+                SanitizeValue(kvp.Value.Cpu),
+                kvp.Value.RamBytes,
+                SanitizeValue(kvp.Value.RamPercent)))
+            .ToList();
+
+        EventBus.Instance.PublishAsync<IMetricsArgs>(new MetricsUpdateArgs(reports));
     }
-    private int CastAndRecMem(double val)
+
+    private void ReportPerMinuteMetrics()
     {
-        thisMinuteRamUsage.Add(val);
-        return CastToInt(val);
+        // 计算分钟级指标
+        uint cpuAvg = _minuteCpuSamples.Count > 0 
+            ? (uint)Math.Round(_minuteCpuSamples.Average()) 
+            : 0;
+        
+        uint ramPercentAvg = _minuteRamPercentSamples.Count > 0 
+            ? (uint)Math.Round(_minuteRamPercentSamples.Average()) 
+            : 0;
+        
+        long ramBytesAvg = _minuteRamBytesSamples.Count > 0 
+            ? (long)_minuteRamBytesSamples.Average()
+            : 0;
+        
+        long ramBytesPeak = _minuteRamBytesSamples.Count > 0 
+            ? _minuteRamBytesSamples.Max()
+            : 0;
+
+        // 更新历史记录
+        _cpuHistory.Add(cpuAvg);
+        _ramPercentHistory.Add(ramPercentAvg);
+        _ramBytesAvgHistory.Add(ramBytesAvg);
+        _ramBytesPeakHistory.Add(ramBytesPeak);
+
+        // 发布历史报告
+        EventBus.Instance.PublishAsync<IMetricsArgs>(new GeneralMetricsArgs(
+            _cpuHistory,
+            _ramPercentHistory,
+            _ramBytesAvgHistory,
+            _ramBytesPeakHistory));
+
+        // 重置分钟数据
+        _minuteCpuSamples.Clear();
+        _minuteRamPercentSamples.Clear();
+        _minuteRamBytesSamples.Clear();
+        
+        _lastMinuteReportTime = DateTime.Now;
     }
-    #endregion
-    
+
+    private (double Cpu, long RamBytes, double RamPercent) GetValidatedMetrics(ProcessMetricsEventArgs args)
+    {
+        if (args.IsProcessExited || args.Error != null)
+            return (0, 0, 0);
+        
+        // 收集分钟级样本
+        _minuteCpuSamples.Add(args.CpuUsagePercent);
+        _minuteRamPercentSamples.Add(args.MemoryUsagePercent);
+        _minuteRamBytesSamples.Add(args.MemoryUsageBytes);
+        
+        return (args.CpuUsagePercent, args.MemoryUsageBytes, args.MemoryUsagePercent);
+    }
+
+    private static int SanitizeValue(double value)
+    {
+        if (double.IsNaN(value)) return 0;
+        if (double.IsInfinity(value)) return 100;
+        return (int)Math.Round(Math.Clamp(value, 0, 100));
+    }
+
     public void Dispose()
     {
-        CTS.Cancel();
-        metricsChannel.Writer.TryComplete();
-        Task.WaitAll([_processTask, _reportTask], TimeSpan.FromSeconds(3));
-        CTS.Dispose();
+        _cts.Cancel();
+        _metricsChannel.Writer.Complete();
+        
+        Task.WaitAll([_processingTask, _reportingTask], TimeSpan.FromSeconds(3));
+        _cts.Dispose();
+        
         GC.SuppressFinalize(this);
+        _logger.LogInformation("ServerMetricsBuffer disposed");
     }
 }

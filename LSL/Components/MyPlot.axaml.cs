@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Threading;
 using LSL.Common.Collections;
 
 namespace LSL.Components;
@@ -74,7 +75,7 @@ public class MyPlot : Control
 
     private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        UpdatePoints();
+        Dispatcher.UIThread.Post(UpdatePoints);
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

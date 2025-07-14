@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using LSL.Common.Collections;
@@ -17,6 +18,11 @@ public class MonitorViewModel : RegionalVMBase
 
     public MonitorViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
-        
+        AppState.ServerIdChanged.Select(id => AppState.MetricsDict.GetOrAdd(id, i => new MetricsStorage(true)))
+            .Subscribe(ms =>
+            {
+                CurrentCpuMetrics = ms.CpuPct;
+                CurrentRamMetrics = ms.MemPct;
+            });
     }
 }

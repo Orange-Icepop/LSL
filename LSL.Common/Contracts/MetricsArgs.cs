@@ -17,6 +17,7 @@ public record MetricsUpdateArgs(IEnumerable<MetricsReport> Metrics) : IMetricsAr
 
 
 /// <summary>Minutely metrics report of recent 30 mins.</summary>
-/// <param name="CpuHistory"></param>
-/// <param name="RamHistory"></param>
-public record GeneralMetricsArgs(IEnumerable<uint> CpuHistory, IEnumerable<uint> RamHistory) : IMetricsArgs;
+public record GeneralMetricsArgs(IEnumerable<uint> CpuHistory, 
+    IEnumerable<uint> RamPctHistory, 
+    IEnumerable<long> RamBytesAvgHistory, 
+    IEnumerable<long> RamBytesHeapHistory) : IMetricsArgs;

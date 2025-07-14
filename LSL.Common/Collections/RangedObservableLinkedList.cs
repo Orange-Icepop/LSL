@@ -13,6 +13,36 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
     
     private bool _suppressNotification = false;
 
+    public T? FirstItem
+    {
+        get
+        {
+            _lock.EnterReadLock();
+            try
+            {
+                return _list.First is null ? default : _list.First.Value;
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
+        }
+    }
+    public T? LastItem
+    {
+        get
+        {
+            _lock.EnterReadLock();
+            try
+            {
+                return _list.Last is null ? default : _list.Last.Value;
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
+        }
+    }
     public int Count
     {
         get
@@ -68,14 +98,14 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
             }
             else
             {
-                args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add);
+                args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, _list.Count - 1);
             }
         }
         finally
         {
             _lock.ExitWriteLock();
         }
-        if (args is not null) OnCollectionChanged(args);
+        if (args is not null) CollectionChanged?.Invoke(this, args);
     }
 
     public void Clear()
@@ -91,11 +121,6 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
         }
     }
     
-    protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-    {
-        if (_notifiable && !_suppressNotification) CollectionChanged?.Invoke(this, e);
-    }
-
     public IEnumerator<T> GetEnumerator()
     {
         _lock.EnterReadLock();

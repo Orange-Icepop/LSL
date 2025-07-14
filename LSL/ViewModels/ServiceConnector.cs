@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using Flurl.Util;
 using LSL.Common.Collections;
 using LSL.Common.Contracts;
 using LSL.Common.Models;
@@ -316,7 +317,11 @@ namespace LSL.ViewModels
 
         private void ProcessSecondlyMetrics(MetricsUpdateArgs args)
         {
-            
+            foreach (var item in args.Metrics)
+            {
+                AppState.MetricsDict.AddOrUpdate(item.ServerId, id => new MetricsStorage(item),
+                    (id, storage) => storage.Add(item));
+            }
         }
 
         private void ProcessMinutelyMetrics(GeneralMetricsArgs args)
@@ -328,10 +333,13 @@ namespace LSL.ViewModels
                 cpu.Add(c);
             }
 
-            foreach (var r in args.RamHistory)
+            foreach (var r in args.RamPctHistory)
             {
                 ram.Add(r);
             }
+
+            AppState.GeneralCpuMetrics = cpu;
+            AppState.GeneralRamMetrics = ram;
         }
         #endregion
 

@@ -24,10 +24,11 @@ public class MetricsStorage
         this.Add(report);
     }
 
-    public void Add(MetricsReport report)
+    public MetricsStorage Add(MetricsReport report)
     {
         CpuPct.Add((uint)report.CpuUsage);
         MemCnt.Add(report.MemBytes);
         MemPct.Add((uint)report.MemUsage);
+        return this;
     }
 }
