@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using LSL.Common.Models;
@@ -71,9 +72,9 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
     #region 集体修改配置方法 ConfirmConfig(Dictionary<string, object> confs)
 
-    public ServiceResult<Dictionary<string, object>> ConfirmConfig(IDictionary<string, object> confs)
+    public ServiceResult<ConcurrentDictionary<string, object>> ConfirmConfig(IDictionary<string, object> confs)
     {
-        Dictionary<string, object> fin = [];
+        ConcurrentDictionary<string, object> fin = [];
         foreach (var conf in confs)
         {
             if (CheckService.VerifyConfig(conf.Key, conf.Value))
@@ -92,7 +93,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
     #region 读取配置键值
 
     // 当前配置字典
-    public Dictionary<string, object> CurrentConfigs { get; private set; } = [];
+    public ConcurrentDictionary<string, object> CurrentConfigs { get; private set; } = [];
 
     public ServiceResult LoadConfig()
     {
@@ -120,7 +121,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
                 $"在读取位于{ConfigPathProvider.ConfigFilePath}的LSL主配置文件时出现未知错误。{Environment.NewLine}错误信息：{ex.Message}"));
         }
 
-        Dictionary<string, object> cache = [];
+        ConcurrentDictionary<string, object> cache = [];
         List<string> KNTR = [];
         foreach (var key in ConfigKeys)
         {
@@ -141,12 +142,12 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
                     return ServiceResult.Fail(new Exception(msg));
                 }
 
-                cache.Add(key, defaultConfig);
+                cache.AddOrUpdate(key, k => defaultConfig, (k, v) => defaultConfig);
                 KNTR.Add(key);
             }
             else
             {
-                cache.Add(key, keyValue);
+                cache.AddOrUpdate(key, k => keyValue, (k, v) => keyValue);
             }
         }
 

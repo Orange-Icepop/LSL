@@ -3,6 +3,7 @@ using Avalonia.Controls.Models.TreeDataGrid;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
@@ -43,7 +44,7 @@ namespace LSL.ViewModels
             await Connector.ReadJavaConfig(true);
         }
 
-        private Dictionary<string, object> cachedConfig = [];
+        private ConcurrentDictionary<string, object> cachedConfig = [];
 
         #region 核心配置数据
 
@@ -220,7 +221,7 @@ namespace LSL.ViewModels
         [Reactive] public string SelectedServerName { get; private set; }
         [Reactive] public string SelectedServerPath { get; private set; }
 
-        private void RaiseServerConfigChanged(int? serverId, Dictionary<int,ServerConfig>? serverConfig)
+        private void RaiseServerConfigChanged(int? serverId, ConcurrentDictionary<int,ServerConfig>? serverConfig)
         {
             var SI = serverId ?? AppState.SelectedServerId;
             var SCS = serverConfig ?? AppState.CurrentServerConfigs;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -79,11 +80,11 @@ public class ConfigManager
         
     #region 配置文件代理操作
     // 主配置文件
-    public Dictionary<string, object> MainConfigs => MCM.CurrentConfigs;
-    public ServiceResult<Dictionary<string, object>> ConfirmMainConfig(IDictionary<string, object> confs) => MCM.ConfirmConfig(confs);
+    public ConcurrentDictionary<string, object> MainConfigs => MCM.CurrentConfigs;
+    public ServiceResult<ConcurrentDictionary<string, object>> ConfirmMainConfig(IDictionary<string, object> confs) => MCM.ConfirmConfig(confs);
     public ServiceResult ReadMainConfig() => MCM.LoadConfig();
     // 服务器配置
-    public Dictionary<int, ServerConfig> ServerConfigs => SCM.ServerConfigs;
+    public ConcurrentDictionary<int, ServerConfig> ServerConfigs => SCM.ServerConfigs;
     public ServiceResult ReadServerConfig() => SCM.ReadServerConfig();
 
     public ServiceResult RegisterServer(FormedServerConfig config) => SCM.RegisterServer(config.ServerName,
@@ -93,7 +94,7 @@ public class ConfigManager
         uint.Parse(config.MaxMem), config.ExtJvm);
     public ServiceResult DeleteServer(int id) => SCM.DeleteServer(id);
     // Java配置
-    public Dictionary<int, JavaInfo> JavaConfigs => JCM.JavaDict;
+    public ConcurrentDictionary<int, JavaInfo> JavaConfigs => JCM.JavaDict;
     public ServiceResult ReadJavaConfig() => JCM.ReadJavaConfig();
     public async Task<ServiceResult> DetectJava() => await JCM.DetectJava();
 

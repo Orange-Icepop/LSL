@@ -20,7 +20,7 @@ namespace LSL.ViewModels
         public ILoggerFactory LoggerFactory { get; }
         private ILogger<AppStateLayer> Logger { get; }
         public InteractionUnits ITAUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
-        public IObservable<Dictionary<int,ServerConfig>> ServerConfigChanged { get; private set; }
+        public IObservable<ConcurrentDictionary<int,ServerConfig>> ServerConfigChanged { get; private set; }
         public IObservable<int> ServerIndexChanged { get; private set; }
         public IObservable<int> ServerIdChanged { get; private set; }
 
@@ -157,9 +157,9 @@ namespace LSL.ViewModels
 
         #region 配置相关
 
-        [Reactive] public Dictionary<string, object> CurrentConfigs { get; set; } = [];
-        [Reactive] public Dictionary<int, ServerConfig> CurrentServerConfigs { get; set; } = [];
-        [Reactive] public Dictionary<int, JavaInfo> CurrentJavaDict { get; set; } = [];
+        [Reactive] public ConcurrentDictionary<string, object> CurrentConfigs { get; set; } = [];
+        [Reactive] public ConcurrentDictionary<int, ServerConfig> CurrentServerConfigs { get; set; } = [];
+        [Reactive] public ConcurrentDictionary<int, JavaInfo> CurrentJavaDict { get; set; } = [];
 
         #endregion
 

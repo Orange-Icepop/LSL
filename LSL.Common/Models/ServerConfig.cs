@@ -1,4 +1,6 @@
-﻿namespace LSL.Common.Models;
+﻿using System.Collections.Concurrent;
+
+namespace LSL.Common.Models;
 
 /// <summary>
 /// 
@@ -37,4 +39,18 @@ public class ServerConfig(
     /// Returns a server info which will be recognized as not added.
     /// </summary>
     public static ServerConfig None => new ServerConfig(-1, "", "未添加服务器", "", "", 0, 0, "");
+}
+
+public static class ServerConfigExtensions
+{
+    public static ConcurrentDictionary<int, ServerConfig> Clone(
+        this ConcurrentDictionary<int, ServerConfig> serverConfigs)
+    {
+        var result = new ConcurrentDictionary<int, ServerConfig>();
+        foreach (var serverConfig in serverConfigs)
+        {
+            result.TryAdd(serverConfig.Key, new ServerConfig(serverConfig.Value));
+        }
+        return result;
+    }
 }

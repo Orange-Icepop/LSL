@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -17,7 +18,7 @@ namespace LSL.Services.ConfigServices;
 public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关服务
 {
     private ILogger<JavaConfigManager> _logger { get; } = logger;
-    public Dictionary<int, JavaInfo> JavaDict { get; private set; } = []; // 目前读取的Java列表
+    public ConcurrentDictionary<int, JavaInfo> JavaDict { get; private set; } = []; // 目前读取的Java列表
 
     #region 读取Java列表
     public ServiceResult ReadJavaConfig()
@@ -27,7 +28,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             // read
             var file = File.ReadAllText(ConfigPathProvider.JavaListPath);
             var jsonObj = JObject.Parse(file);
-            var tmpDict = new Dictionary<int, JavaInfo>();
+            ConcurrentDictionary<int, JavaInfo> tmpDict = [];
             foreach (var item in jsonObj.Properties()) //遍历配置文件中的所有Java
             {
                 var versionObject = item.Value["Version"];
@@ -43,9 +44,9 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                     vendorObject.Type == JTokenType.String &&
                     archObject.Type == JTokenType.String)
                 {
-                    tmpDict.Add(int.Parse(item.Name),
-                        new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(),
-                            archObject.ToString()));
+                    var res = new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(),
+                        archObject.ToString());
+                    tmpDict.AddOrUpdate(int.Parse(item.Name), k => res, (k, v) => res);
                 }
             }
 
@@ -58,14 +59,14 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                 if (!File.Exists(path))
                 {
                     notFound.Add(path);
-                    tmpDict.Remove(item.Key);
+                    tmpDict.Remove(item.Key, out _);
                     continue;
                 }
 
                 if (JavaFinder.GetJavaInfo(path) is null)
                 {
                     notJava.Add(path);
-                    tmpDict.Remove(item.Key);
+                    tmpDict.Remove(item.Key, out _);
                 }
             }
 

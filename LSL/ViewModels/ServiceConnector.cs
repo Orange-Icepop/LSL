@@ -111,12 +111,10 @@ namespace LSL.ViewModels
                 }
             }
 
-            var cache = configManager.ServerConfigs.ToDictionary(
-                item => item.Key,
-                item => new ServerConfig(item.Value));
+            var cache = configManager.ServerConfigs.Clone();
             if (cache.Count == 0)
             {
-                cache.Add(-1, ServerConfig.None);
+                cache.AddOrUpdate(-1, k => ServerConfig.None, (k, v) => ServerConfig.None);
             }
             AppState.CurrentServerConfigs = cache;
             _logger.LogInformation("loading server config completed");

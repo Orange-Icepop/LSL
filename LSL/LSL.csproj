@@ -115,9 +115,6 @@
 		  <SubType>Code</SubType>
 		  <DependentUpon>EditSC.axaml</DependentUpon>
 		</Compile>
-		<Compile Update="Views\Server\Monitors\CpuStat.axaml.cs">
-			<DependentUpon>CpuStat.axaml</DependentUpon>
-		</Compile>
 		<Compile Update="Views\Settings\StyleSettings.axaml.cs">
 			<DependentUpon>StyleSettings.axaml</DependentUpon>
 		</Compile>

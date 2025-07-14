@@ -49,6 +49,7 @@ public class ProcessMetricsMonitor : IDisposable
                 
                 if (!isExited)
                 {
+                    _process.Refresh();
                     // 计算CPU使用率
                     var currentTime = DateTime.UtcNow;
                     var currentCpuTime = _process.TotalProcessorTime;
@@ -66,7 +67,7 @@ public class ProcessMetricsMonitor : IDisposable
                     }
 
                     // 计算内存使用量
-                    processMemory = _process.WorkingSet64;
+                    processMemory = _process.PrivateMemorySize64;
                 }
             }
             catch (InvalidOperationException)

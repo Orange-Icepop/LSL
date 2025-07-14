@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -17,8 +18,8 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 {
     private ILogger<ServerConfigManager> _logger { get; } = logger;
     private MainConfigManager _mainConfigManager { get; } = mcm;
-    public Dictionary<int, string> MainServerConfig { get; private set; } = [];
-    public Dictionary<int, ServerConfig> ServerConfigs { get; private set; } = [];
+    public ConcurrentDictionary<int, string> MainServerConfig { get; private set; } = [];
+    public ConcurrentDictionary<int, ServerConfig> ServerConfigs { get; private set; } = [];
 
     private readonly IReadOnlyList<string> ServerConfigKeys =
     [
@@ -47,22 +48,22 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     #endregion
         
     #region 刷新服务器主配置文件
-    private static ServiceResult<Dictionary<int, string>> GetIndexConfig(string path)
+    private static ServiceResult<ConcurrentDictionary<int, string>> GetIndexConfig(string path)
     {
-        if (!File.Exists(path))return ServiceResult.Fail<Dictionary<int, string>>(new FileNotFoundException(
+        if (!File.Exists(path))return ServiceResult.Fail<ConcurrentDictionary<int, string>>(new FileNotFoundException(
             $"位于{path}的服务器主配置文件不存在，请重启LSL。{Environment.NewLine}注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。"));
         string mainFile = File.ReadAllText(path);
         if (string.IsNullOrWhiteSpace(mainFile) || mainFile == "{}")
-            return ServiceResult.Success(new Dictionary<int, string>());
+            return ServiceResult.Success(new ConcurrentDictionary<int, string>());
         try
         {
-            var configs = JsonConvert.DeserializeObject<Dictionary<int, string>>(mainFile);
+            var configs = JsonConvert.DeserializeObject<ConcurrentDictionary<int, string>>(mainFile);
             if (configs is null) throw new JsonException("The Main Server Config file cannot be converted.");
             return ServiceResult.Success(configs);
         }
         catch (JsonException)
         {
-            return ServiceResult.Fail<Dictionary<int, string>>(new JsonReaderException(
+            return ServiceResult.Fail<ConcurrentDictionary<int, string>>(new JsonReaderException(
                 $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。{Environment.NewLine}请确保{path}文件的格式正确。"));
         }
     }
@@ -70,13 +71,13 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     #endregion
 
     #region 逐个获取服务器各自的配置文件
-    private static ServiceResult<Dictionary<int, ServerConfig>> GetServerDetails(
-        Dictionary<int, string> mainConfigs)
+    private static ServiceResult<ConcurrentDictionary<int, ServerConfig>> GetServerDetails(
+        IDictionary<int, string> mainConfigs)
     {
         List<string> NotfoundServers = [];
         List<string> ConfigErrorServers = [];
         // 读取各个服务器的LSL配置文件
-        Dictionary<int, ServerConfig> scCache = [];
+        ConcurrentDictionary<int, ServerConfig> scCache = [];
         foreach (var (key, targetDir) in mainConfigs)
         {
             // 读取步骤
@@ -102,7 +103,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 if (serverConfig == null) throw new FormatException("Error parsing server config to dictionary.");
                 var vResult = CheckService.VerifyServerConfig(key, targetDir, serverConfig);
                 if (!vResult.IsFullSuccess || vResult.Result is null) ConfigErrorServers.Add(targetConfig);
-                else scCache.Add(key, vResult.Result);
+                else scCache.AddOrUpdate(key, k => vResult.Result, (k, v) => vResult.Result);
             }
             catch (JsonException)
             {
