@@ -49,7 +49,8 @@ public class MyPlot : Control
             }
             
             InvalidateVisual();
-        }    }
+        }
+    }
 
     public IBrush FillColor
     {
@@ -107,16 +108,15 @@ public class MyPlot : Control
         InvalidateVisual();
     }
 
-    private uint Correct(uint value) => value <= 100 ? value : 100;
+    private static uint Correct(uint value) => value <= 100 ? value : 100;
 
     // rendering
     public override void Render(DrawingContext context)
     {
         base.Render(context);
-        context.DrawRectangle(null, null, new Rect(0, 0, _controlSize.Width, _controlSize.Height), 0, 0, BoxShadows.Parse("0 0 10 -2 LightGray"));
         if (ItemsSource is null || ItemsSource.Count < 2 || 
             _controlSize.Width <= 0 || _controlSize.Height <= 0)
-            return;        // region
+            return;
         var regionGeometry = new StreamGeometry();
         using (var regionContent = regionGeometry.Open())
         {
@@ -145,9 +145,10 @@ public class MyPlot : Control
             ctx.EndFigure(false);
         }
 
-        // 绘制填充和折线
+        // 绘制填充、折线与边框
         context.DrawGeometry(null, new Pen(LineColor, 1), lineGeometry);
         context.DrawGeometry(FillColor, null, regionGeometry);
+        context.DrawRectangle(null, new Pen(Brushes.DarkGray), new Rect(0, 0, _controlSize.Width, _controlSize.Height), 0, 0, BoxShadows.Parse("0 0 10 -2 LightGray"));
     }
     
     // size control
