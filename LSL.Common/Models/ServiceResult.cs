@@ -12,7 +12,10 @@ public class ServiceResult<T> : IServiceResult
         get 
         {
             if (!HasResult) 
-                throw new InvalidOperationException("Cannot access Result on failed operation");
+            {
+                if (Error is not null) throw Error; 
+                else throw new InvalidOperationException("Cannot access Result on failed operation");
+            }
             return _result;
         }
     }

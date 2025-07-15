@@ -97,12 +97,22 @@ public class NetService
                 .WithHeader("User-Agent", value: "LSL/0.08.2")
                 .GetStringAsync();
 
-            return !string.IsNullOrEmpty(result) ? ServiceResult.Success(result) : throw new InvalidOperationException("服务器响应为空");
+            return !string.IsNullOrEmpty(result)
+                ? ServiceResult.Success(result)
+                : throw new InvalidOperationException("服务器响应为空");
+        }
+        catch (FlurlHttpTimeoutException ex)
+        {
+            return ServiceResult.Fail<string>(ex);
         }
         catch (FlurlHttpException ex)
         {
-            _logger.LogError(ex, "API请求失败: {Url}", url);
-            return ServiceResult.Fail<string>(ex.InnerException ?? ex);
+            string msg = Environment.NewLine + (ex.InnerException?.Message ?? ex.Message);
+            string code = Environment.NewLine + (ex.StatusCode is null ? "No content is returned." : $"Response code:{ex.StatusCode}");
+            string info =
+                $"Error getting API: {url}.{msg}{code}";
+            _logger.LogError(ex, "{}", info);
+            return ServiceResult.Fail<string>(new HttpRequestException(info));
         }
         catch (Exception ex)
         {
