@@ -67,5 +67,5 @@ public class WindowOperationArgs(WindowOperationArgType cType)
 #endregion
 
 #region EventHandler事件类
-public record GeneralMetricsEventArgs(uint CpuUsage, uint RamUsage, long RamValue);
+public record GeneralMetricsEventArgs(double CpuUsage, double RamUsage, long RamValue);
 #endregion

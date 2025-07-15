@@ -10,7 +10,7 @@ public interface IMetricsArgs;
 /// <param name="CpuUsage">The CPU multicore usage percent that has been kept integer.</param>
 /// <param name="MemUsage">The RAM usage percent that has been kept integer.</param>
 /// <param name="MemBytes">How many bytes of RAM has been used by this server.</param>
-public record MetricsReport(int ServerId, int CpuUsage, long MemBytes, int MemUsage);
+public record MetricsReport(int ServerId, double CpuUsage, long MemBytes, double MemUsage);
 
 
 /// <summary>Message that contains the current second's metrics of all servers that are running now.</summary>
@@ -19,7 +19,7 @@ public record MetricsUpdateArgs(IEnumerable<MetricsReport> Metrics) : IMetricsAr
 
 
 /// <summary>Minutely metrics report of recent 30 mins.</summary>
-public record GeneralMetricsArgs(RangedObservableLinkedList<uint> CpuHistory, 
-    RangedObservableLinkedList<uint> RamPctHistory, 
+public record GeneralMetricsArgs(RangedObservableLinkedList<double> CpuHistory, 
+    RangedObservableLinkedList<double> RamPctHistory, 
     RangedObservableLinkedList<long> RamBytesAvgHistory, 
     RangedObservableLinkedList<long> RamBytesHeapHistory) : IMetricsArgs;

@@ -29,8 +29,8 @@ public class ServerMetricsBuffer : IDisposable
     private readonly Channel<ProcessMetricsEventArgs> _metricsChannel;
     
     // 历史记录队列
-    private readonly RangedObservableLinkedList<uint> _cpuHistory = new(HISTORY_MINUTES, 0, false);
-    private readonly RangedObservableLinkedList<uint> _ramPercentHistory = new(HISTORY_MINUTES, 0, false);
+    private readonly RangedObservableLinkedList<double> _cpuHistory = new(HISTORY_MINUTES, 0, false);
+    private readonly RangedObservableLinkedList<double> _ramPercentHistory = new(HISTORY_MINUTES, 0, false);
     private readonly RangedObservableLinkedList<long> _ramBytesAvgHistory = new(HISTORY_MINUTES, 0, false);
     private readonly RangedObservableLinkedList<long> _ramBytesPeakHistory = new(HISTORY_MINUTES, 0, false);
     
@@ -118,15 +118,15 @@ public class ServerMetricsBuffer : IDisposable
     private void ReportPerMinuteMetrics()
     {
         // 计算分钟级指标
-        uint cpuAvg = _minuteCpuSamples.Count > 0 
-            ? (uint)Math.Round(_minuteCpuSamples.Average()) 
+        double cpuAvg = _minuteCpuSamples.Count > 0 
+            ? _minuteCpuSamples.Average()
             : 0;
 
         long ramBytesAvg = _minuteRamBytesSamples.Count > 0
             ? (long)_minuteRamBytesSamples.Average()
             : 0;
 
-        uint ramPercentAvg = (uint)Math.Round((double)ramBytesAvg / _systemMem);
+        double ramPercentAvg = (double)ramBytesAvg / _systemMem * 100;
         
         long ramBytesPeak = _minuteRamBytesSamples.Count > 0 
             ? _minuteRamBytesSamples.Max()
@@ -164,11 +164,11 @@ public class ServerMetricsBuffer : IDisposable
         return (args.CpuUsagePercent, args.MemoryUsageBytes, args.MemoryUsagePercent);
     }
 
-    private static int SanitizeValue(double value)
+    private static double SanitizeValue(double value)
     {
         if (double.IsNaN(value)) return 0;
         if (double.IsInfinity(value)) return 100;
-        return (int)Math.Round(Math.Clamp(value, 0, 100));
+        return Math.Clamp(value, 0, 100);
     }
 
     public void Dispose()

@@ -17,20 +17,20 @@ namespace LSL.ViewModels;
 public class MonitorViewModel : RegionalVMBase
 {
     #region 当前性能占用绑定器
-    [Reactive] public RangedObservableLinkedList<uint> CurrentCpuMetrics { get; set; } = new(30, 0);
-    [Reactive] public RangedObservableLinkedList<uint> CurrentRamMetrics { get; set; } = new(30, 0);
+    [Reactive] public RangedObservableLinkedList<double> CurrentCpuMetrics { get; set; } = new(30, 0);
+    [Reactive] public RangedObservableLinkedList<double> CurrentRamMetrics { get; set; } = new(30, 0);
     [Reactive] public RangedObservableLinkedList<long> CurrentRamValueMetrics { get; set; } = new(30, 0);
-    [Reactive] public uint CurrentCpuUsage { get; private set; }
-    [Reactive] public uint CurrentRamUsage { get; private set; }
+    [Reactive] public double CurrentCpuUsage { get; private set; }
+    [Reactive] public double CurrentRamUsage { get; private set; }
     [Reactive] public long CurrentRamValue { get; private set; }
     [Reactive] public long CurrentRamMax { get; private set; }
     #endregion
     
     #region 全局性能占用绑定器
-    [Reactive] public uint CurrentGeneralCpuUsage { get; private set; }
-    [Reactive] public uint CurrentGeneralRamUsage { get; private set; }
+    [Reactive] public double CurrentGeneralCpuUsage { get; private set; }
+    [Reactive] public double CurrentGeneralRamUsage { get; private set; }
     [Reactive] public long CurrentGeneralRamValue { get; private set; }
-    public static long SystemRamMax { get; } = (long)MemoryInfo.GetTotalSystemMemory();
+    public static long SystemRamMax { get; } = MemoryInfo.GetTotalSystemMemory();
     #endregion
 
     public MonitorViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)

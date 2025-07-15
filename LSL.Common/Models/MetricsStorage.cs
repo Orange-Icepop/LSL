@@ -8,15 +8,15 @@ namespace LSL.Common.Models;
 /// </summary>
 public class MetricsStorage
 {
-    public RangedObservableLinkedList<uint> CpuPct { get; }
+    public RangedObservableLinkedList<double> CpuPct { get; }
     public RangedObservableLinkedList<long> MemCnt { get; }
-    public RangedObservableLinkedList<uint> MemPct { get; }
+    public RangedObservableLinkedList<double> MemPct { get; }
 
     public MetricsStorage(bool notifiable = false)
     {
-        CpuPct = new RangedObservableLinkedList<uint>(30, 0, notifiable);
+        CpuPct = new RangedObservableLinkedList<double>(30, 0, notifiable);
         MemCnt = new RangedObservableLinkedList<long>(30, 0, notifiable);
-        MemPct = new RangedObservableLinkedList<uint>(30, 0, notifiable);
+        MemPct = new RangedObservableLinkedList<double>(30, 0, notifiable);
     }
 
     public MetricsStorage(MetricsReport report, bool notifiable = false) : this(notifiable)
@@ -26,9 +26,9 @@ public class MetricsStorage
 
     public MetricsStorage Add(MetricsReport report)
     {
-        CpuPct.Add((uint)report.CpuUsage);
+        CpuPct.Add(report.CpuUsage);
         MemCnt.Add(report.MemBytes);
-        MemPct.Add((uint)report.MemUsage);
+        MemPct.Add(report.MemUsage);
         return this;
     }
 }

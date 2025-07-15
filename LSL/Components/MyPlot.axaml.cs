@@ -13,8 +13,8 @@ public class MyPlot : Control
 {
     // properties
     // source
-    public static readonly DirectProperty<MyPlot, RangedObservableLinkedList<uint>> ItemsSourceProperty =
-        AvaloniaProperty.RegisterDirect<MyPlot, RangedObservableLinkedList<uint>>(
+    public static readonly DirectProperty<MyPlot, RangedObservableLinkedList<double>> ItemsSourceProperty =
+        AvaloniaProperty.RegisterDirect<MyPlot, RangedObservableLinkedList<double>>(
             nameof(ItemsSource),
             obj => obj.ItemsSource,
             (obj, val) => obj.ItemsSource = val);
@@ -26,8 +26,8 @@ public class MyPlot : Control
         AvaloniaProperty.Register<MyPlot, IBrush>(nameof(LineColor), Brushes.Blue);
 
     private bool _isSubscribed;
-    private RangedObservableLinkedList<uint> _itemsSource = new(30);
-    public RangedObservableLinkedList<uint> ItemsSource
+    private RangedObservableLinkedList<double> _itemsSource = new(30);
+    public RangedObservableLinkedList<double> ItemsSource
     {
         get => _itemsSource;
         set
@@ -84,8 +84,8 @@ public class MyPlot : Control
         base.OnPropertyChanged(change);
         if (change.Property == ItemsSourceProperty)
         {
-            if (change.OldValue is RangedObservableLinkedList<uint> oc) oc.CollectionChanged -= OnCollectionChanged;
-            if (change.NewValue is RangedObservableLinkedList<uint> nc)
+            if (change.OldValue is RangedObservableLinkedList<double> oc) oc.CollectionChanged -= OnCollectionChanged;
+            if (change.NewValue is RangedObservableLinkedList<double> nc)
             {
                 nc.CollectionChanged += OnCollectionChanged;
                 InvalidateVisual();
@@ -108,7 +108,7 @@ public class MyPlot : Control
         InvalidateVisual();
     }
 
-    private static uint Correct(uint value) => value <= 100 ? value : 100;
+    private static double Correct(double value) => value <= 100 ? value : 100;
 
     // rendering
     public override void Render(DrawingContext context)
@@ -121,7 +121,7 @@ public class MyPlot : Control
         using (var regionContent = regionGeometry.Open())
         {
             regionContent.BeginFigure(new Point(0, _controlSize.Height), true);
-            uint count = ItemsSource.Count < 0 ? 0 : (uint)ItemsSource.Count;
+            double count = ItemsSource.Count < 0 ? 0 : (double)ItemsSource.Count;
             int i = 0;
             foreach (var item in ItemsSource)
             {
@@ -161,7 +161,7 @@ public class MyPlot : Control
         return finalSize;
     }
 
-    private Point CalculatePoint(int index, uint value)
+    private Point CalculatePoint(int index, double value)
     {
         double x = _controlSize.Width * index / Math.Max(1, ItemsSource.Count - 1);
         double y = _controlSize.Height * (100 - Correct(value)) / 100.0;

@@ -187,11 +187,11 @@ namespace LSL.ViewModels
         
         #region 性能监控相关
         [Reactive] public ConcurrentDictionary<int, MetricsStorage> MetricsDict { get; set; } = new();
-        [Reactive] public RangedObservableLinkedList<uint> GeneralCpuMetrics { get; set; } = new(30, 0);
-        [Reactive] public RangedObservableLinkedList<uint> GeneralRamMetrics { get; set; } = new(30, 0);
+        [Reactive] public RangedObservableLinkedList<double> GeneralCpuMetrics { get; set; } = new(30, 0);
+        [Reactive] public RangedObservableLinkedList<double> GeneralRamMetrics { get; set; } = new(30, 0);
         public event EventHandler<GeneralMetricsEventArgs>? GeneralMetricsEventHandler;
 
-        public void OnGeneralMetricsUpdated(uint cpu, uint ram, long memVal)
+        public void OnGeneralMetricsUpdated(double cpu, double ram, long memVal)
         {
             GeneralMetricsEventHandler?.Invoke(this, new GeneralMetricsEventArgs(cpu, ram, memVal));
         }

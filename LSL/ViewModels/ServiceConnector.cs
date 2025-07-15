@@ -324,8 +324,8 @@ namespace LSL.ViewModels
 
         private void ProcessMinutelyMetrics(GeneralMetricsArgs args)
         {
-            RangedObservableLinkedList<uint> cpu = new(30);
-            RangedObservableLinkedList<uint> ram = new(30);
+            RangedObservableLinkedList<double> cpu = new(30);
+            RangedObservableLinkedList<double> ram = new(30);
             foreach (var c in args.CpuHistory)
             {
                 cpu.Add(c);
