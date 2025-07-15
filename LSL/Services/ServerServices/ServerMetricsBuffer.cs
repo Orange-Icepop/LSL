@@ -22,6 +22,7 @@ public class ServerMetricsBuffer : IDisposable
     private const int HISTORY_MINUTES = 30;
     private const int REPORT_INTERVAL_MS = 1000;
     private const int MINUTE_INTERVAL_MS = 60000;
+    private static readonly long _systemMem = MemoryInfo.GetTotalSystemMemory();
     
     private readonly CancellationTokenSource _cts;
     private readonly ILogger<ServerMetricsBuffer> _logger;
@@ -34,9 +35,8 @@ public class ServerMetricsBuffer : IDisposable
     private readonly RangedObservableLinkedList<long> _ramBytesPeakHistory = new(HISTORY_MINUTES, 0, false);
     
     // 当前分钟数据
-    private readonly List<double> _minuteCpuSamples = new();
-    private readonly List<double> _minuteRamPercentSamples = new();
-    private readonly List<long> _minuteRamBytesSamples = new();
+    private readonly List<double> _minuteCpuSamples = [];
+    private readonly List<long> _minuteRamBytesSamples = [];
     
     // 当前秒数据
     private readonly ConcurrentDictionary<int, (double Cpu, long RamBytes, double RamPercent)> _currentMetrics = new();
@@ -121,14 +121,12 @@ public class ServerMetricsBuffer : IDisposable
         uint cpuAvg = _minuteCpuSamples.Count > 0 
             ? (uint)Math.Round(_minuteCpuSamples.Average()) 
             : 0;
-        
-        uint ramPercentAvg = _minuteRamPercentSamples.Count > 0 
-            ? (uint)Math.Round(_minuteRamPercentSamples.Average()) 
-            : 0;
-        
-        long ramBytesAvg = _minuteRamBytesSamples.Count > 0 
+
+        long ramBytesAvg = _minuteRamBytesSamples.Count > 0
             ? (long)_minuteRamBytesSamples.Average()
             : 0;
+
+        uint ramPercentAvg = (uint)Math.Round((double)ramBytesAvg / _systemMem);
         
         long ramBytesPeak = _minuteRamBytesSamples.Count > 0 
             ? _minuteRamBytesSamples.Max()
@@ -149,7 +147,6 @@ public class ServerMetricsBuffer : IDisposable
 
         // 重置分钟数据
         _minuteCpuSamples.Clear();
-        _minuteRamPercentSamples.Clear();
         _minuteRamBytesSamples.Clear();
         
         _lastMinuteReportTime = DateTime.Now;
@@ -162,7 +159,6 @@ public class ServerMetricsBuffer : IDisposable
         
         // 收集分钟级样本
         _minuteCpuSamples.Add(args.CpuUsagePercent);
-        _minuteRamPercentSamples.Add(args.MemoryUsagePercent);
         _minuteRamBytesSamples.Add(args.MemoryUsageBytes);
         
         return (args.CpuUsagePercent, args.MemoryUsageBytes, args.MemoryUsagePercent);

@@ -6,23 +6,23 @@ namespace LSL.Common.Utilities;
 public static partial class MemoryInfo
 {
     // 获取系统总内存（跨平台实现）
-    public static ulong GetTotalSystemMemory()
+    public static long GetTotalSystemMemory()
     {
         
         var gcInfo = GC.GetGCMemoryInfo();
-        return (ulong)gcInfo.TotalAvailableMemoryBytes;
+        return gcInfo.TotalAvailableMemoryBytes;
         // 额，好像下面这些没用了
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return GetWindowsTotalMemory();
+            return (long)GetWindowsTotalMemory();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            return GetLinuxTotalMemory();
+            return (long)GetLinuxTotalMemory();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            return GetMacOSTotalMemory();
+            return (long)GetMacOSTotalMemory();
         }
         throw new PlatformNotSupportedException("Unsupported operating system");
     }
