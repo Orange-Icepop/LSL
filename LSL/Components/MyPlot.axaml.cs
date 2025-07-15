@@ -33,7 +33,7 @@ public class MyPlot : Control
         set
         {
             // 取消旧集合的订阅
-            if (_isSubscribed && _itemsSource != null)
+            if (_isSubscribed && _itemsSource is not null)
             {
                 _itemsSource.CollectionChanged -= OnCollectionChanged;
                 _isSubscribed = false;
@@ -42,7 +42,7 @@ public class MyPlot : Control
             // 设置新集合并订阅
             SetAndRaise(ItemsSourceProperty, ref _itemsSource, value);
             
-            if (value != null)
+            if (value is not null)
             {
                 value.CollectionChanged += OnCollectionChanged;
                 _isSubscribed = true;

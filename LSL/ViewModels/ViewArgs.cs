@@ -2,7 +2,7 @@
 
 namespace LSL.ViewModels;
 
-#region 事件类
+#region MessageBus事件类
 
 public record NotifyArgs(int Type, string? Title, string? Message); // 通知条事件
 // 0消息，1成功，2警告，3错误
@@ -64,4 +64,8 @@ public class WindowOperationArgs(WindowOperationArgType cType)
     public WindowOperationArgType Body { get; } = cType;
 }
 
+#endregion
+
+#region EventHandler事件类
+public record GeneralMetricsEventArgs(uint CpuUsage, uint RamUsage, long RamValue);
 #endregion

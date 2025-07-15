@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using LSL.Common.Collections;
 using LSL.Common.Contracts;
 using LSL.Common.Models;
+using LSL.Common.Utilities;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -15,6 +16,7 @@ namespace LSL.ViewModels;
 
 public class MonitorViewModel : RegionalVMBase
 {
+    #region 当前性能占用绑定器
     [Reactive] public RangedObservableLinkedList<uint> CurrentCpuMetrics { get; set; } = new(30, 0);
     [Reactive] public RangedObservableLinkedList<uint> CurrentRamMetrics { get; set; } = new(30, 0);
     [Reactive] public RangedObservableLinkedList<long> CurrentRamValueMetrics { get; set; } = new(30, 0);
@@ -22,6 +24,14 @@ public class MonitorViewModel : RegionalVMBase
     [Reactive] public uint CurrentRamUsage { get; private set; }
     [Reactive] public long CurrentRamValue { get; private set; }
     [Reactive] public long CurrentRamMax { get; private set; }
+    #endregion
+    
+    #region 全局性能占用绑定器
+    [Reactive] public uint CurrentGeneralCpuUsage { get; private set; }
+    [Reactive] public uint CurrentGeneralRamUsage { get; private set; }
+    [Reactive] public long CurrentGeneralRamValue { get; private set; }
+    public static long SystemRamMax { get; } = (long)MemoryInfo.GetTotalSystemMemory();
+    #endregion
 
     public MonitorViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
@@ -43,6 +53,12 @@ public class MonitorViewModel : RegionalVMBase
             {
                 CurrentRamMax = (long)sc.max_memory * 1024 * 1024;
             });
+        AppState.GeneralMetricsEventHandler += (sender, args) =>
+        {
+            CurrentGeneralCpuUsage = args.CpuUsage;
+            CurrentGeneralRamUsage = args.RamUsage;
+            CurrentGeneralRamValue = args.RamValue;
+        };
     }
 
     private void OnCpuMetricsChanged(object? sender, NotifyCollectionChangedEventArgs e)

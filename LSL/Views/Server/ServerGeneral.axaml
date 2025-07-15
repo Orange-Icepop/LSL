@@ -4,9 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:LSL.Components;assembly=LSL"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:server="using:LSL.Views.Server"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerGeneral">
+	<UserControl.Resources>
+		<server:GeneralCpuMetricsConverter x:Key="GCMC"/>
+		<server:GeneralMemMetricsConverter x:Key="GMMC"/>
+	</UserControl.Resources>
 	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 		<StackPanel>
 			<local:MyCard Text="服务器概览">
@@ -19,6 +24,28 @@
 						<Run Text="正在运行的服务器数量："/>
 						<Run Text="{Binding AppState.RunningServerCount}"/>
 					</TextBlock>
+				</StackPanel>
+			</local:MyCard>
+			<local:MyCard Text="近30分钟性能记录">
+				<StackPanel Margin="25,40,23,15">
+					<TextBlock FontSize="12">
+						<TextBlock.Text>
+							<MultiBinding Converter="{StaticResource GCMC}">
+								<Binding Path="MonitorVM.CurrentGeneralCpuUsage"/>
+							</MultiBinding>
+						</TextBlock.Text>
+					</TextBlock>
+					<local:MyPlot LineColor="#019eff" FillColor="#80019eff" ItemsSource="{Binding AppState.GeneralCpuMetrics}" Margin="5" Height="100" />
+					<TextBlock FontSize="12">
+						<TextBlock.Text>
+							<MultiBinding Converter="{StaticResource GMMC}">
+								<Binding Path="MonitorVM.CurrentGeneralRamUsage"/>
+								<Binding Path="MonitorVM.CurrentGeneralRamValue"/>
+								<Binding Path="MonitorVM.SystemRamMax" Mode="OneWay"/>
+							</MultiBinding>
+						</TextBlock.Text>
+					</TextBlock>
+					<local:MyPlot LineColor="#FFE39A6B" FillColor="#80E39A6B" ItemsSource="{Binding AppState.GeneralRamMetrics}" Margin="5" Height="100" />
 				</StackPanel>
 			</local:MyCard>
 		</StackPanel>

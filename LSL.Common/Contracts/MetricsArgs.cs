@@ -1,4 +1,6 @@
-﻿namespace LSL.Common.Contracts;
+﻿using LSL.Common.Collections;
+
+namespace LSL.Common.Contracts;
 
 /// <summary>Contracts for methods handling server metrics information in LSL.</summary>
 public interface IMetricsArgs;
@@ -17,7 +19,7 @@ public record MetricsUpdateArgs(IEnumerable<MetricsReport> Metrics) : IMetricsAr
 
 
 /// <summary>Minutely metrics report of recent 30 mins.</summary>
-public record GeneralMetricsArgs(IEnumerable<uint> CpuHistory, 
-    IEnumerable<uint> RamPctHistory, 
-    IEnumerable<long> RamBytesAvgHistory, 
-    IEnumerable<long> RamBytesHeapHistory) : IMetricsArgs;
+public record GeneralMetricsArgs(RangedObservableLinkedList<uint> CpuHistory, 
+    RangedObservableLinkedList<uint> RamPctHistory, 
+    RangedObservableLinkedList<long> RamBytesAvgHistory, 
+    RangedObservableLinkedList<long> RamBytesHeapHistory) : IMetricsArgs;

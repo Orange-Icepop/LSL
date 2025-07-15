@@ -338,6 +338,7 @@ namespace LSL.ViewModels
 
             AppState.GeneralCpuMetrics = cpu;
             AppState.GeneralRamMetrics = ram;
+            AppState.OnGeneralMetricsUpdated(args.CpuHistory.LastItem, args.RamPctHistory.LastItem, args.RamBytesAvgHistory.LastItem);
         }
         #endregion
 
