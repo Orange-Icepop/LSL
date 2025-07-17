@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using Avalonia.Threading;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
-using Serilog;
+using NLog;
 
 namespace LSL;
 public partial class App : Application
@@ -91,11 +91,10 @@ public partial class App : Application
     private ServiceProvider diServices { get; }
     private ShellViewModel shellVM { get; set; }
     private InitializationVM startupVM { get; }
-
+    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
     public App()
     {
-        DI.InitSerilog();
-        Log.Information("Building LSL DI Container");
+        Log.Info("Building LSL DI Container");
         serviceDescriptors = new ServiceCollection();
         serviceDescriptors.AddLogging();
         serviceDescriptors.AddNetworking();
@@ -104,7 +103,7 @@ public partial class App : Application
         serviceDescriptors.AddStartUp();
         serviceDescriptors.AddViewModels();
         diServices = serviceDescriptors.BuildServiceProvider();
-        Log.Information("DI Completed");
+        Log.Info("DI Completed");
         startupVM = diServices.GetRequiredService<InitializationVM>();
         this.DataContext = startupVM;
     }

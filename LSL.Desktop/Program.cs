@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.ReactiveUI;
-using Serilog;
 
 namespace LSL.Desktop;
 
@@ -14,17 +13,10 @@ class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        try
-        {
-            BuildAvaloniaApp()
+        BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
-        }
-        catch (Exception ex)
-        {
-            Log.Information(ex, "LSL threw an unhandeled exception.");
-            throw;
-        }
     }
+
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
