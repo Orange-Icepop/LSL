@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reactive.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -59,7 +60,6 @@ namespace LSL.ViewModels
 
         public async Task GetConfig(bool readFile = false)
         {
-            _logger.LogInformation("start loading main config");
             if (readFile)
             {
                 var res = configManager.ReadMainConfig();
@@ -67,37 +67,52 @@ namespace LSL.ViewModels
                 if (!notCritical)
                 {
                     var err = res.Error?.ToString() ?? string.Empty;
-                    _logger.LogCritical("Fatal error when loading LSL main config.{nl}{err} ",Environment.NewLine, err);
                     Environment.Exit(1);
                 }
             }
             AppState.CurrentConfigs = configManager.MainConfigs;
-            _logger.LogInformation("loading main config completed");
         }
 
-        public async Task<ServiceResult> ReadJavaConfig(bool readFile = false)
+        public async Task ReadJavaConfig(bool readFile = false)
         {
-            _logger.LogInformation("start loading java config");
             if (readFile)
             {
                 var res = configManager.ReadJavaConfig();
-                var notCritical = await AppState.ITAUnits.SubmitServiceError(res);
-                if (!notCritical)
+                if (res.ErrorCode is ServiceResultType.Error)
                 {
                     var err = res.Error?.ToString() ?? string.Empty;
-                    _logger.LogCritical("Fatal error when loading java config.{nl}{err} ",Environment.NewLine, err);
                     Environment.Exit(1);
-                    return res;
                 }
+                if (res.Result is not null)
+                {
+                    if (res.Result.NotFound.Any() || res.Result.NotJava.Any())
+                    {
+                        var error = new StringBuilder("在读取已保存的Java列表时出现了一些非致命错误:");
+                        error.AppendLine();
+                        if (res.Result.NotFound.Any())
+                        {
+                            error.AppendLine("以下Java不存在或无法被访问:");
+                            error.AppendJoin(Environment.NewLine, res.Result.NotFound);
+                        }
+
+                        if (res.Result.NotJava.Any())
+                        {
+                            error.AppendLine("以下文件不是Java:");
+                            error.AppendJoin(Environment.NewLine, res.Result.NotJava);
+                        }
+
+                        error.AppendLine("这些配置没有被读取。你可以通过重新搜索Java来解决这个问题。");
+                        _logger.LogWarning("{}", error.ToString());
+                        await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_Confirm, "读取Java配置时出错", error.ToString()));
+                    }
+                }
+
             }
             AppState.CurrentJavaDict = configManager.JavaConfigs;
-            _logger.LogInformation("loading java config completed");
-            return ServiceResult.Success();
         }
 
         public async Task<ServiceResult> ReadServerConfig(bool readFile = false)
         {
-            _logger.LogInformation("start loading server config");
             if (readFile)
             {
                 var res = configManager.ReadServerConfig();
@@ -105,19 +120,17 @@ namespace LSL.ViewModels
                 if (!notCritical)
                 {
                     var err = res.Error?.ToString() ?? string.Empty;
-                    _logger.LogCritical("Fatal error when loading LSL server config.{nl}{err} ",Environment.NewLine, err);
                     Environment.Exit(1);
                     return res;
                 }
             }
 
             var cache = configManager.ServerConfigs.Clone();
-            if (cache.Count == 0)
+            if (cache.IsEmpty)
             {
                 cache.AddOrUpdate(-1, k => ServerConfig.None, (k, v) => ServerConfig.None);
             }
             AppState.CurrentServerConfigs = cache;
-            _logger.LogInformation("loading server config completed");
             return ServiceResult.Success();
         }
         public async Task<bool> SaveConfig()
@@ -125,17 +138,14 @@ namespace LSL.ViewModels
             var result = configManager.ConfirmMainConfig(AppState.CurrentConfigs);
             await AppState.ITAUnits.SubmitServiceError(result);
             bool success = result.IsFullSuccess;
-            if (success) _logger.LogInformation("Main config saved");
             return success;
         }
 
         public async Task<bool> FindJava()
         {
-            _logger.LogInformation("start finding java");
             var result = await configManager.DetectJava();
             await AppState.ITAUnits.SubmitServiceError(result);
             bool success = result.IsFullSuccess;
-            if (success) _logger.LogInformation("java detection completed");
             await Dispatcher.UIThread.InvokeAsync(() => ReadJavaConfig());
             return success;
         }

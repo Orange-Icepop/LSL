@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using LSL.Common.Models;
 using LSL.Common.Validation;
 using Microsoft.Extensions.Logging;
@@ -85,6 +86,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
         CurrentConfigs = fin;
         File.WriteAllText(ConfigPathProvider.ConfigFilePath,
             JsonConvert.SerializeObject(fin, Formatting.Indented));
+        _logger.LogInformation("New LSL main config is written.");
         return ServiceResult.Success(fin);
     }
 
@@ -97,6 +99,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
     public ServiceResult LoadConfig()
     {
+        _logger.LogInformation("Loading main config...");
         JObject configs;
         try
         {
@@ -104,21 +107,18 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
         }
         catch (FileNotFoundException ex)
         {
-            _logger.LogError("Config file not found.{NL}{info}", Environment.NewLine, ex.Message);
-            return ServiceResult.Fail(new FileNotFoundException(
-                $"位于{ConfigPathProvider.ConfigFilePath}的LSL主配置文件不存在，请重启LSL。{Environment.NewLine}注意，这不是一个正常情况，因为LSL会在启动时自动创建主配置文件。若错误依旧，则LSL可能已经损坏，请重新下载。{Environment.NewLine}错误信息:{ex.Message}"));
+            _logger.LogError(ex, "LSL main config file not found.");
+            return ServiceResult.Fail(ex);
         }
         catch (JsonReaderException ex)
         {
-            _logger.LogError("Config file is not parsable.{NL}{info}", Environment.NewLine, ex.Message);
-            return ServiceResult.Fail(new JsonReaderException(
-                $"位于{ConfigPathProvider.ConfigFilePath}的LSL主配置文件已损坏，请删除该文件并重启LSL。{Environment.NewLine}具备能力的可以将其备份或者进行手动修复。{Environment.NewLine}错误信息:{ex.Message}"));
+            _logger.LogError(ex, "LSL main config file is not parsable.");
+            return ServiceResult.Fail(ex);
         }
         catch (Exception ex)
         {
-            _logger.LogError("{info}", ex.Message);
-            return ServiceResult.Fail(new Exception(
-                $"在读取位于{ConfigPathProvider.ConfigFilePath}的LSL主配置文件时出现未知错误。{Environment.NewLine}错误信息：{ex.Message}"));
+            _logger.LogError(ex, "An error occured while reading main config file.");
+            return ServiceResult.Fail(ex);
         }
 
         ConcurrentDictionary<string, object> cache = [];
@@ -155,10 +155,11 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
         {
             File.WriteAllText(ConfigPathProvider.ConfigFilePath, JsonConvert.SerializeObject(cache, Formatting.Indented));
             CurrentConfigs = cache;
-            string list = "由于检查到配置文件的值类型错误，以下LSL主配置键值被重置为其默认值:";
-            foreach (var key in KNTR) list += $"{Environment.NewLine}{key}";
+            var list = new StringBuilder("The following main config keys are reset due to value type mismatch:");
+            list.AppendJoin(", ", KNTR);
+            _logger.LogWarning("{}", list.ToString());
             _logger.LogInformation("Config.json loaded and repaired.");
-            return ServiceResult.FinishWithWarning(new Exception(list));
+            return ServiceResult.FinishWithWarning(new Exception(list.ToString()));
         }
         CurrentConfigs = cache;
         _logger.LogInformation("Config.json loaded.");
@@ -170,9 +171,6 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
     #region 初始化
     public ServiceResult Init()
     {
-        if (!ConfigPathProvider.HasReadWriteAccess(ConfigPathProvider.LSLFolder))
-            return ServiceResult.Fail(new UnauthorizedAccessException(
-                $"LSL does not have write access to config folder:{ConfigPathProvider.LSLFolder}"));
         // 将初始配置字典序列化成JSON字符串并写入文件  
         string configString = JsonConvert.SerializeObject(DefaultConfigs, Formatting.Indented);
         File.WriteAllText(ConfigPathProvider.ConfigFilePath, configString);

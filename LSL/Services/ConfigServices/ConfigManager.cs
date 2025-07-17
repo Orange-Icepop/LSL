@@ -42,13 +42,13 @@ public class ConfigManager
         if (!ConfigPathProvider.HasReadWriteAccess(ConfigPathProvider.LSLFolder))
         {
             var error = $"LSL does not have write access to config folder:{ConfigPathProvider.LSLFolder}";
-            _logger.LogError("{}", error);
+            _logger.LogCritical("{}", error);
             return ServiceResult.Fail(new UnauthorizedAccessException(error));
         }
         if (!ConfigPathProvider.HasReadWriteAccess(ConfigPathProvider.ServersFolder))
         {
             var error = $"LSL does not have write access to the servers folder:{ConfigPathProvider.ServersFolder}";
-            _logger.LogError("{}", error);
+            _logger.LogCritical("{}", error);
             return ServiceResult.Fail(new UnauthorizedAccessException(error));
         }
         // 确保LSL文件夹存在  
@@ -95,7 +95,7 @@ public class ConfigManager
     public ServiceResult DeleteServer(int id) => SCM.DeleteServer(id);
     // Java配置
     public ConcurrentDictionary<int, JavaInfo> JavaConfigs => JCM.JavaDict;
-    public ServiceResult ReadJavaConfig() => JCM.ReadJavaConfig();
+    public ServiceResult<JavaConfigReadResult> ReadJavaConfig() => JCM.ReadJavaConfig();
     public async Task<ServiceResult> DetectJava() => await JCM.DetectJava();
 
     #endregion

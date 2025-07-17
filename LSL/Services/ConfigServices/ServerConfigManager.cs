@@ -35,6 +35,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     public ServiceResult ReadServerConfig()
     {
+        _logger.LogInformation("Start reading server config...");
         string mainPath = ConfigPathProvider.ServerConfigPath;
         // 读取服务器主配置文件
         var indexRes = GetIndexConfig(mainPath);
@@ -43,18 +44,26 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         var detailRes = GetServerDetails(MainServerConfig);
         if (detailRes.HasError || detailRes.Result is null) return ServiceResult.Fail(detailRes.Error ?? new Exception($"Error reading main server config {mainPath}."));
         ServerConfigs = detailRes.Result;
+        _logger.LogInformation("Finished reading server config.");
         return ServiceResult.Success();
     }
     #endregion
         
     #region 刷新服务器主配置文件
-    private static ServiceResult<ConcurrentDictionary<int, string>> GetIndexConfig(string path)
+    private ServiceResult<ConcurrentDictionary<int, string>> GetIndexConfig(string path)
     {
-        if (!File.Exists(path))return ServiceResult.Fail<ConcurrentDictionary<int, string>>(new FileNotFoundException(
-            $"位于{path}的服务器主配置文件不存在，请重启LSL。{Environment.NewLine}注意，这不是一个正常情况，因为LSL通常会在启动时创建该文件。若错误依旧，则LSL已经损坏，请重新下载。"));
+        if (!File.Exists(path))
+        {
+            var ex = new FileNotFoundException($"Server main config at {path} not found.");
+            _logger.LogError(ex, "");
+            return ServiceResult.Fail<ConcurrentDictionary<int, string>>(ex);
+        }
         string mainFile = File.ReadAllText(path);
         if (string.IsNullOrWhiteSpace(mainFile) || mainFile == "{}")
+        {
+            _logger.LogInformation("No server is registered in the main server config file.");
             return ServiceResult.Success(new ConcurrentDictionary<int, string>());
+        }
         try
         {
             var configs = JsonConvert.DeserializeObject<ConcurrentDictionary<int, string>>(mainFile);
@@ -63,15 +72,16 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         }
         catch (JsonException)
         {
-            return ServiceResult.Fail<ConcurrentDictionary<int, string>>(new JsonReaderException(
-                $"LSL读取到了服务器主配置文件，但是它是一个非法的Json文件。{Environment.NewLine}请确保{path}文件的格式正确。"));
+            var err = new JsonReaderException($"The main server config file at {path} is not a valid LSL server config file.");
+            _logger.LogError(err, "");
+            return ServiceResult.Fail<ConcurrentDictionary<int, string>>(err);
         }
     }
 
     #endregion
 
     #region 逐个获取服务器各自的配置文件
-    private static ServiceResult<ConcurrentDictionary<int, ServerConfig>> GetServerDetails(
+    private ServiceResult<ConcurrentDictionary<int, ServerConfig>> GetServerDetails(
         IDictionary<int, string> mainConfigs)
     {
         List<string> NotfoundServers = [];

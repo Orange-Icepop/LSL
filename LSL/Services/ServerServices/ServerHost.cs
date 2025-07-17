@@ -42,11 +42,11 @@ public class ServerHost : IServerHost, IDisposable
     {
         if (_runningServers.TryRemove(serverId, out _))
         {
-            _logger.LogInformation("Server with id {id} unloaded successfully", serverId);
+            _logger.LogInformation("Server with id {id} unloaded successfully.", serverId);
         }
         else
         {
-            _logger.LogError("Server with id {id} not found", serverId);
+            _logger.LogError("Server with id {id} not found.", serverId);
         }
     }
     #endregion
@@ -61,10 +61,11 @@ public class ServerHost : IServerHost, IDisposable
     #region 启动服务器RunServer(int serverId)
     public bool RunServer(int serverId)
     {
+        _logger.LogInformation("Starting server with id {id}...", serverId);
         if (GetServer(serverId) is not null)
         {
             OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器已经在运行中。"));
-            _logger.LogError("Server with id {id} is already running.", serverId);
+            _logger.LogError("Server with id {id} is already running. Not running another instance.", serverId);
             return false;
         }
         ServerConfig config = serverConfigManager.ServerConfigs[serverId];
@@ -142,6 +143,7 @@ public class ServerHost : IServerHost, IDisposable
         ServerProcess? server = GetServer(serverId);
         if (server is not null && server.IsRunning)
         {
+            _logger.LogInformation("Stopping server with id {id}...", serverId);
             server.Stop();
             OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
         }

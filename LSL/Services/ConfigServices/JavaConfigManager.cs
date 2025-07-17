@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using LSL.Common.Models;
 using LSL.Common.Utilities;
@@ -21,8 +22,9 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
     public ConcurrentDictionary<int, JavaInfo> JavaDict { get; private set; } = []; // 目前读取的Java列表
 
     #region 读取Java列表
-    public ServiceResult ReadJavaConfig()
+    public ServiceResult<JavaConfigReadResult> ReadJavaConfig()
     {
+        _logger.LogInformation("Start reading JavaConfig...");
         try
         {
             // read
@@ -72,38 +74,34 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
 
             // end
             JavaDict = tmpDict;
+            _logger.LogInformation("JavaConfig reading complete.");
             if (notFound.Count > 0 || notJava.Count > 0)
             {
-                var error = "配置文件中的部分Java不存在。" + Environment.NewLine;
+                var error = new StringBuilder("Some nonfatal error occured when reading java config:");
+                error.AppendLine();
                 if (notFound.Count > 0)
                 {
-                    error += "以下Java的路径不存在：";
-                    foreach (var item in notFound)
-                    {
-                        error += item + Environment.NewLine;
-                    }
+                    error.AppendLine("The following items cannot be found:");
+                    error.AppendJoin(Environment.NewLine, notFound);
                 }
 
                 if (notJava.Count > 0)
                 {
-                    error += "以下文件不是Java：";
-                    foreach (var item in notJava)
-                    {
-                        error += item + Environment.NewLine;
-                    }
+                    error.AppendLine("The following items are not an executable java file:");
+                    error.AppendJoin(Environment.NewLine, notJava);
                 }
 
-                error += "这些错误一般可以通过重新搜索Java解决。";
-                return new ServiceResult(ServiceResultType.FinishWithWarning, new Exception(error));
+                error.AppendLine("You may need to re-detect java config to solve this problem.");
+                _logger.LogWarning("{}", error.ToString());
+                return ServiceResult.FinishWithWarning(new JavaConfigReadResult(notFound, notJava), new Exception(error.ToString()));
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error Reading JavaConfig");
-            return new ServiceResult(ServiceResultType.Error, ex);
+            _logger.LogError(ex, "An error occured when reading java config.");
+            return ServiceResult.Fail<JavaConfigReadResult>(ex);
         }
-
-        return ServiceResult.Success();
+        return ServiceResult.Success(new JavaConfigReadResult());
     }
 
     #endregion
@@ -117,7 +115,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "{}");
         }
 
-        Debug.WriteLine("开始获取Java列表");
+        _logger.LogInformation("Start detecting Java...");
         List<JavaInfo> javaList = [];
         try
         {
@@ -125,21 +123,22 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error Detecting Java");
-            return ServiceResult.Fail(new KeyNotFoundException($"在搜索Java时出现错误：{e.Message}"));
+            _logger.LogError(e, "Error Detecting Java.");
+            return ServiceResult.Fail(new KeyNotFoundException(e.Message));
         }
         Dictionary<string, JavaInfo> javaDict = [];
         //遍历写入Java信息
         int id = 0;
-        foreach (var javainfo in javaList)
+        foreach (var javaInfo in javaList)
         {
             string writtenId = id.ToString();
-            javaDict.Add(writtenId, javainfo);
+            javaDict.Add(writtenId, javaInfo);
             id++;
         }
 
         await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath,
             JsonConvert.SerializeObject(javaDict, Formatting.Indented)); //写入配置文件
+        _logger.LogInformation("Java detection completed, found {count} javas.", javaDict.Count);
         return ServiceResult.Success();
     }
 
