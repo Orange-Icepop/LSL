@@ -5,12 +5,12 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Threading;
-using Flurl.Util;
 using LSL.Common.Collections;
 using LSL.Common.Contracts;
 using LSL.Common.Models;
@@ -494,7 +494,14 @@ namespace LSL.ViewModels
                 Dispatcher.UIThread.Post(() => AppState.ITAUnits.Notify(0, "更新检查", "开始检查LSL更新......"));
                 string url = betaUpdate ? "https://api.orllow.cn/lsl/latest/prerelease" : "https://api.orllow.cn/lsl/latest/stable";
                 var result = await WebHost.ApiGet(url);
-                var jobj = JsonConvert.DeserializeObject<Dictionary<string, object>>(result.Result) ??
+                switch (result.StatusCode)
+                {
+                    case 0:
+                        throw new HttpRequestException("Cannot connect to the server.");
+                    case < 200 or >= 300:
+                        throw new HttpRequestException($"Error getting update API(code {result.StatusCode}){Environment.NewLine}{result.Message}");
+                }
+                var jobj = JsonConvert.DeserializeObject<Dictionary<string, object>>(result.Message) ??
                            throw new FormatException("Update API Response can't be serialized as dictionary.");
                 var remoteVerString = jobj["tag_name"].ToString() ??
                                       throw new NullReferenceException(

@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Flurl.Http;
 using LSL.Common.Contracts;
 using LSL.Common.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -87,37 +86,41 @@ public class NetService
     
     #region API获取
 
-    public async Task<ServiceResult<string>> ApiGet(string url)
+    public async Task<ApiResult> ApiGet(string url)
     {
         _logger.LogInformation("Start getting API: {URL}", url);
+        if (string.IsNullOrWhiteSpace(url)) return new ApiResult(0, "The requested URL is empty.");
+        using var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("LSL/0.08.2");
         try
         {
-            if (string.IsNullOrEmpty(url)) return ServiceResult.Success(string.Empty);
-            var result = await url
-                .WithHeader("User-Agent", value: "LSL/0.08.2")
-                .GetStringAsync();
+            using var response =
+                await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, CancellationToken.None);
+            if (!response.IsSuccessStatusCode)
+            {
+                var code = (int)response.StatusCode;
+                var msg = response.ReasonPhrase ?? string.Empty;
+                _logger.LogError("API returned error code: {c}.\n{m}", code, msg);
+                return new ApiResult(code, msg);
+            }
 
-            return !string.IsNullOrEmpty(result)
-                ? ServiceResult.Success(result)
-                : throw new InvalidOperationException("服务器响应为空");
+            var content = await response.Content.ReadAsStringAsync();
+            return new ApiResult((int)response.StatusCode, content);
         }
-        catch (FlurlHttpTimeoutException ex)
+        catch (TaskCanceledException ex)
         {
-            return ServiceResult.Fail<string>(ex);
+            _logger.LogError("API connection timed out: {ex}", ex);
+            return new ApiResult((int)HttpStatusCode.RequestTimeout, ex.Message);
         }
-        catch (FlurlHttpException ex)
+        catch (HttpRequestException ex)
         {
-            string msg = Environment.NewLine + (ex.InnerException?.Message ?? ex.Message);
-            string code = Environment.NewLine + (ex.StatusCode is null ? "No content is returned." : $"Response code:{ex.StatusCode}");
-            string info =
-                $"Error getting API: {url}.{msg}{code}";
-            _logger.LogError(ex, "{}", info);
-            return ServiceResult.Fail<string>(new HttpRequestException(info));
+            _logger.LogError("API returned error: {ex}", ex);
+            return new ApiResult((int?)ex.StatusCode ?? 0, ex.Message);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "API请求失败: {Url}{NL}{RS}", url, Environment.NewLine, ex.Message);
-            return ServiceResult.Fail<string>(ex);
+            _logger.LogError("API returned error: {e}", ex.Message);
+            return new ApiResult(0, ex.Message);
         }
     }
     #endregion
