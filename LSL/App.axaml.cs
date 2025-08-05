@@ -113,6 +113,6 @@ public partial class App : Application
 
 public class Constant
 {
-    public const string Version = "0.08.2";
+    public const string Version = "0.09";
 }
 #endregion
