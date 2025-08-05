@@ -22,8 +22,9 @@ public class Program
             string finPath;
             try
             {
-                finPath = FileHelper.Move(result.BaseDirectory, result.TempDirectory,
-                    Path.GetFileName(Environment.ProcessPath ?? throw new InvalidOperationException()));
+                var name = File.Exists("LSL.Updater") ? "LSL.Updater" : "LSL.Updater.exe";
+                finPath = FileHelper.Move(result.BaseDirectory, result.TempDirectory, name);
+                FileHelper.Move(finPath, result.TempDirectory, "LSL.Updater.dll");
             }
             catch (Exception ex)
             {
@@ -47,13 +48,18 @@ public class Program
             return;
         }
 
-        if (result.TempDirectory != Constant.BaseDirectory)
+        var currentDir = Path.GetFullPath(result.BaseDirectory);
+        Console.WriteLine($"Called base directory: {currentDir}");
+        Console.WriteLine($"Program Location directory: {Constant.BaseDirectory}");
+        if (currentDir == Constant.BaseDirectory)
         {
-            Console.WriteLine("Error:The updater is not at the temp directory. ");
-            Console.WriteLine("Unable to update, press any key to exit.");
-            Console.ReadKey();
-            Environment.Exit(1);
-            return;
+            Console.WriteLine("Error:The updater is at the BASE directory! This could cause IOException during Update. Do you still want to update it? Press y to continue.");
+            var res = Console.ReadKey();
+            if (res.Key != ConsoleKey.Y)
+            {
+                Environment.Exit(1);
+                return;
+            }
         }
         Console.WriteLine("Starting to unzip update file into the temp directory.");
         try
@@ -101,5 +107,5 @@ public class Program
 
 internal static class Constant
 {
-    internal static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+    internal static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 }

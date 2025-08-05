@@ -14,9 +14,4 @@
       </PackageReference>
       <PackageReference Include="SharpZipLib" Version="1.4.2" />
     </ItemGroup>
-
-    <ItemGroup>
-        <!-- 嵌入主程序集到资源 -->
-        <EmbeddedResource Include="$(OutputPath)$(AssemblyName).dll" />
-    </ItemGroup>
 </Project>

@@ -13,7 +13,7 @@ internal static class ArgumentMatcher
     {
         try
         {
-            if (args.Length != 3) throw new ArgumentException($"Invalid argument count: {args.Length}");
+            if (args.Length != Arguments.Count) throw new ArgumentException($"Invalid argument count: {args.Length}");
             string? br = null;
             string? tr = null;
             string? zfp = null;
