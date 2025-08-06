@@ -10,8 +10,13 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
     private readonly bool _notifiable;
     private readonly ReaderWriterLockSlim _lock;
     public event NotifyCollectionChangedEventHandler? CollectionChanged;
-    
-    private bool _suppressNotification = false;
+    private void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+    {
+        if (_notifiable)
+        {
+            CollectionChanged?.Invoke(this, e);
+        }
+    }
 
     public T? FirstItem
     {
@@ -72,21 +77,14 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
 
     public RangedObservableLinkedList(int maxLength, T defaultValue, bool notify = true) : this(maxLength, notify)
     {
-        _suppressNotification = true;
-        try
-        {
-            for (int i = maxLength - 1; i >= 0; i--) _list.AddLast(defaultValue);
-        }
-        finally
-        {
-            _suppressNotification = false;
-        }
+        for (int i = maxLength - 1; i >= 0; i--) _list.AddLast(defaultValue);
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
     }
 
     public void Add(T item)
     {
         NotifyCollectionChangedEventArgs? args = null;
-        bool reset = _list.Count >= _maxLength;;
+        bool reset = _list.Count >= _maxLength;
         _lock.EnterWriteLock();
         try
         {
@@ -105,7 +103,7 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
         {
             _lock.ExitWriteLock();
         }
-        if (args is not null) CollectionChanged?.Invoke(this, args);
+        if (args is not null) OnCollectionChanged(args);
     }
 
     public void Clear()
@@ -118,6 +116,7 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
         finally
         {
             _lock.ExitWriteLock();
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
     }
     
