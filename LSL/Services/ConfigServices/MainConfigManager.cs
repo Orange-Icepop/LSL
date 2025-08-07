@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -20,7 +21,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
     
     #region 默认配置字典
 
-    private static readonly IReadOnlyDictionary<string, object> DefaultConfigs = new Dictionary<string, object>()
+    private static readonly FrozenDictionary<string, object> DefaultConfigs = new Dictionary<string, object>()
     {
         //Common
         { "auto_eula", true },
@@ -41,7 +42,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
         //About
         { "auto_update", true },
         { "beta_update", false }
-    }.AsReadOnly();
+    }.ToFrozenDictionary();
 
     #endregion
 

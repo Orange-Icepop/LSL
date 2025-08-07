@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -52,7 +51,7 @@ namespace LSL.ViewModels
             EventBus.Instance.Subscribe<IStorageArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
             EventBus.Instance.Subscribe<IMetricsArgs>(ReceiveMetrics);
             _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
-            CopyServerOutput();
+            _initializationTask = CopyServerOutput();
             _logger.LogInformation("Total RAM:{ram}", MemoryInfo.GetTotalSystemMemory());
         }
 
@@ -154,17 +153,18 @@ namespace LSL.ViewModels
 
         #region 服务器命令
 
-        public void StartServer(int serverId)
+        public bool StartServer(int serverId)
         {
             var result = VerifyServerConfigBeforeStart(serverId);
             if (result != null)
             {
                 AppState.ITAUnits.ThrowError("服务器配置校验发生错误", result);
-                return;
+                return false;
             }
 
-            AppState.TerminalTexts.TryAdd(serverId, new ObservableCollection<ColoredLines>());
+            AppState.TerminalTexts.TryAdd(serverId, []);
             daemonHost.RunServer(serverId);
+            return true;
         }
 
         public async Task StopServer(int serverId)
@@ -227,15 +227,27 @@ namespace LSL.ViewModels
 
         private async Task HandleOutput(CancellationToken token)
         {
-            await foreach (var args in ServerOutputChannel.Reader.ReadAllAsync(token))
+            try
             {
-                try
+                await foreach (var args in ServerOutputChannel.Reader.ReadAllAsync(token))
                 {
-                    await ArgsProcessor(args);
+                    try
+                    {
+                        await ArgsProcessor(args);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "An error occured while processing server output in ServiceConnector.");
+                    }
                 }
-                catch
-                {
-                }
+            }
+            catch(OperationCanceledException)
+            {
+                _logger.LogInformation("Output handling task cancelled.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occured in output handling task.");
             }
         }
 
@@ -416,19 +428,19 @@ namespace LSL.ViewModels
         #endregion
 
         #region 从服务线程拷贝服务器输出字典
+        private readonly Task _initializationTask;
+        private readonly SemaphoreSlim _copyLock = new(1, 1);
         private async Task CopyServerOutput()
         {
-            // 暂停输出处理
-            _logger.LogInformation("Copy server output. Stopping output handler...");
-            OutputCts.Cancel();
+            // 保险起见用锁Throttle一下，别瞎玩搞竞态了
+            await _copyLock.WaitAsync();
             try
             {
+                // 暂停输出处理
+                _logger.LogInformation("Copy server output. Stopping output handler...");
+                OutputCts.Cancel();
                 await _handleOutputTask;
-            }
-            catch (OperationCanceledException) { }
-            _logger.LogInformation("Output handler cancelled.");
-            try
-            {
+                // 拷贝输出字典
                 AppState.TerminalTexts = new ConcurrentDictionary<int, ObservableCollection<ColoredLines>>(
                     outputStorage.OutputDict.ToDictionary(
                         kvp => kvp.Key,
@@ -472,6 +484,8 @@ namespace LSL.ViewModels
                 OutputCts = new CancellationTokenSource();
                 _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
                 _logger.LogInformation("Output handler restarted.");
+                // 释放锁
+                _copyLock.Release();
             }
         }
         #endregion

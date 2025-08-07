@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Text;
 using LSL.Common.Models;
@@ -21,7 +22,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     public ConcurrentDictionary<int, string> MainServerConfig { get; private set; } = [];
     public ConcurrentDictionary<int, ServerConfig> ServerConfigs { get; private set; } = [];
 
-    private readonly IReadOnlyList<string> ServerConfigKeys =
+    private readonly ImmutableArray<string> ServerConfigKeys =
     [
         "name",
         "using_java",
@@ -67,8 +68,9 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         try
         {
             var configs = JsonConvert.DeserializeObject<ConcurrentDictionary<int, string>>(mainFile);
-            if (configs is null) throw new JsonException("The Main Server Config file cannot be converted.");
-            return ServiceResult.Success(configs);
+            return configs is null
+                ? throw new JsonException("The Main Server Config file cannot be converted.")
+                : ServiceResult.Success(configs);
         }
         catch (JsonException)
         {
@@ -81,7 +83,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     #endregion
 
     #region 逐个获取服务器各自的配置文件
-    private ServiceResult<ConcurrentDictionary<int, ServerConfig>> GetServerDetails(
+    private static ServiceResult<ConcurrentDictionary<int, ServerConfig>> GetServerDetails(
         IDictionary<int, string> mainConfigs)
     {
         List<string> NotfoundServers = [];
@@ -109,8 +111,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             // 解析步骤
             try
             {
-                var serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile);
-                if (serverConfig == null) throw new FormatException("Error parsing server config to dictionary.");
+                var serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile) ?? throw new FormatException("Error parsing server config to dictionary.");
                 var vResult = CheckService.VerifyServerConfig(key, targetDir, serverConfig);
                 if (!vResult.IsFullSuccess || vResult.Result is null) ConfigErrorServers.Add(targetConfig);
                 else scCache.AddOrUpdate(key, k => vResult.Result, (k, v) => vResult.Result);

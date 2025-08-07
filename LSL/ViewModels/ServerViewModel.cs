@@ -89,8 +89,9 @@ namespace LSL.ViewModels
         public void StartSelectedServer()//启动服务器方法
         {
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
-            Connector.StartServer(AppState.SelectedServerId);
-            AppState.ITAUnits.Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
+            var success = Connector.StartServer(AppState.SelectedServerId);
+            if (success) AppState.ITAUnits.Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
+            else AppState.ITAUnits.Notify(0, "服务器启动失败", "配置检查不通过，请检查配置是否存在错误");
         }
         public void SendCommandToServer()//发送命令方法
         {

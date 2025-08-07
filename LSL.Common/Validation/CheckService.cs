@@ -1,8 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
-using LSL.Common.Contracts;
+﻿using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
 using LSL.Common.Models;
-using LSL.Common.Utilities;
 
 namespace LSL.Common.Validation;
 
@@ -11,7 +9,7 @@ namespace LSL.Common.Validation;
 /// </summary>
 public static class CheckService
 {
-    private static readonly IReadOnlyList<string> ServerConfigKeys =
+    private static readonly ImmutableArray<string> ServerConfigKeys =
     [
         "name",
         "using_java",
@@ -82,9 +80,11 @@ public static class CheckService
     #region 准服务器配置验证方法 VerifyFormedServerConfig
     public static List<VerifyResult> VerifyFormedServerConfig(FormedServerConfig config, bool skipCP = false)
     {
-        var result = new List<VerifyResult>();
-        result.Add(CheckComponents.ServerName(config.ServerName));
-        result.Add(CheckComponents.JavaPath(config.JavaPath));
+        var result = new List<VerifyResult>
+        {
+            CheckComponents.ServerName(config.ServerName),
+            CheckComponents.JavaPath(config.JavaPath)
+        };
         if(!skipCP) result.Add(CheckComponents.CorePath(config.CorePath));
         result.Add(CheckComponents.MaxMem(config.MaxMem, config.MinMem));
         result.Add(CheckComponents.MinMem(config.MinMem));
