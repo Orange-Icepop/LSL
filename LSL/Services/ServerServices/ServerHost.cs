@@ -68,9 +68,13 @@ public class ServerHost : IServerHost, IDisposable
             _logger.LogError("Server with id {id} is already running. Not running another instance.", serverId);
             return false;
         }
-        ServerConfig config = serverConfigManager.ServerConfigs[serverId];
+        if (!serverConfigManager.ServerConfigs.TryGetValue(serverId, out var config)) 
+        {
+            _logger.LogError("Server with id {id} not found in configuration. That's weird! It should have been checked!", serverId);
+            return false; 
+        }
         var SP = new ServerProcess(config);
-        SP.StatusEventHandler += (sender, args) => EventBus.Instance.PublishAsync<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
+        SP.StatusEventHandler += async (sender, args) => await EventBus.Instance.PublishAsync<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
         // 启动服务器
         try
         {

@@ -52,7 +52,7 @@ public class ConfigManager
             return ServiceResult.Fail(new UnauthorizedAccessException(error));
         }
         // 确保LSL文件夹存在  
-        Directory.CreateDirectory(Path.GetDirectoryName(ConfigPathProvider.ConfigFilePath));
+        Directory.CreateDirectory(ConfigPathProvider.LSLFolder);
         Directory.CreateDirectory(ConfigPathProvider.ServersFolder);
         if (!File.Exists(ConfigPathProvider.ConfigFilePath))
         {

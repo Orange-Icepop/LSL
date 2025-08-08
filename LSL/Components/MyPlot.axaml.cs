@@ -13,8 +13,8 @@ public class MyPlot : Control
 {
     // properties
     // source
-    public static readonly DirectProperty<MyPlot, RangedObservableLinkedList<double>> ItemsSourceProperty =
-        AvaloniaProperty.RegisterDirect<MyPlot, RangedObservableLinkedList<double>>(
+    public static readonly DirectProperty<MyPlot, RangedObservableLinkedList<double>?> ItemsSourceProperty =
+        AvaloniaProperty.RegisterDirect<MyPlot, RangedObservableLinkedList<double>?>(
             nameof(ItemsSource),
             obj => obj.ItemsSource,
             (obj, val) => obj.ItemsSource = val);
@@ -26,8 +26,8 @@ public class MyPlot : Control
         AvaloniaProperty.Register<MyPlot, IBrush>(nameof(LineColor), Brushes.Blue);
 
     private bool _isSubscribed;
-    private RangedObservableLinkedList<double> _itemsSource = new(30);
-    public RangedObservableLinkedList<double> ItemsSource
+    private RangedObservableLinkedList<double>? _itemsSource = new(30);
+    public RangedObservableLinkedList<double>? ItemsSource
     {
         get => _itemsSource;
         set
@@ -38,7 +38,7 @@ public class MyPlot : Control
                 _itemsSource.CollectionChanged -= OnCollectionChanged;
                 _isSubscribed = false;
             }
-            
+
             // 设置新集合并订阅
             SetAndRaise(ItemsSourceProperty, ref _itemsSource, value);
             
@@ -163,6 +163,7 @@ public class MyPlot : Control
 
     private Point CalculatePoint(int index, double value)
     {
+        if (ItemsSource is null || ItemsSource.Count == 0) return new Point(0, 0);
         double x = _controlSize.Width * index / Math.Max(1, ItemsSource.Count - 1);
         double y = _controlSize.Height * (100 - Correct(value)) / 100.0;
         return new Point(x, y);

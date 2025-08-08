@@ -131,7 +131,7 @@ namespace LSL.ViewModels
         public bool BetaUpdate
         {
             get => (bool)cachedConfig["beta_update"];
-            set => CacheConfig("auto_eula", value);
+            set => CacheConfig("beta_update", value);
         }
 
         #endregion
@@ -147,10 +147,7 @@ namespace LSL.ViewModels
         private void CacheConfig(string key, object? value) // 向缓存字典中写入新配置
         {
             if (value == null) return;
-            if (!cachedConfig.TryAdd(key, value))
-            {
-                cachedConfig[key] = value;
-            }
+            cachedConfig.AddOrUpdate(key, _=>value,(_,_)=>value);
         }
 
         public void ConfirmConfig()

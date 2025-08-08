@@ -44,6 +44,7 @@ public partial class App : Application
             {
                 // 在后台线程初始化，不阻塞UI
                 await Dispatcher.UIThread.InvokeAsync(() => shellVM = diServices.GetRequiredService<ShellViewModel>());
+                if (shellVM is null) throw new Exception("ShellViewModel 初始化失败");
                 await Task.WhenAll(
                     Task.Delay(3000),
                     startupVM.Initialize(shellVM)
@@ -89,7 +90,7 @@ public partial class App : Application
 
     private ServiceCollection serviceDescriptors { get; }
     private ServiceProvider diServices { get; }
-    private ShellViewModel shellVM { get; set; }
+    private ShellViewModel? shellVM { get; set; }
     private InitializationVM startupVM { get; }
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
     public App()

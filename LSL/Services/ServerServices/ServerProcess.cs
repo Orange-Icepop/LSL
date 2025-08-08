@@ -33,25 +33,25 @@ namespace LSL.Services.ServerServices;
                 CreateNoWindow = true,
                 StandardInputEncoding = null,
                 StandardOutputEncoding = null,
-                StandardErrorEncoding = null//神奇的是，把这三个设置为null就能解决乱码问题
+                StandardErrorEncoding = null// 神奇的是，把这三个设置为null就能解决乱码问题
             };
         }
         private Process? SProcess { get; set; }
         private readonly long allocatedMemoryBytes;
-        private ProcessStartInfo StartInfo { get; set; }
-        private StreamWriter InStream { get; set; }
+        private ProcessStartInfo StartInfo { get; }
+        private StreamWriter? InStream => SProcess is not null && !SProcess.HasExited ? SProcess.StandardInput : null;
         public event DataReceivedEventHandler? OutputReceived;
         public event DataReceivedEventHandler? ErrorReceived;
         public event EventHandler? Exited;
-        private DataReceivedEventHandler OutputReceivedHandler;
-        private DataReceivedEventHandler ErrorReceivedHandler;
-        private EventHandler ExitedHandler;
+        private DataReceivedEventHandler OutputReceivedHandler = null!;
+        private DataReceivedEventHandler ErrorReceivedHandler = null!;
+        private EventHandler ExitedHandler = null!;
         public bool HasExited => SProcess?.HasExited ?? false;
         
         #region 性能监控
         private ProcessMetricsMonitor? _monitor;
         public event EventHandler<ProcessMetricsEventArgs>? MetricsReceived;
-        private EventHandler<ProcessMetricsEventArgs> _metricsHandler;
+        private EventHandler<ProcessMetricsEventArgs> _metricsHandler = null!;
         // Monitor is used in AttachProcessHandlers method.
         #endregion
 
@@ -64,11 +64,8 @@ namespace LSL.Services.ServerServices;
             private set
             {
                 if (isOnline == value) return;
-                else
-                {
-                    isOnline = value;
-                    StatusEventHandler?.Invoke(this, (IsRunning, value));
-                }
+                isOnline = value;
+                StatusEventHandler?.Invoke(this, (IsRunning, value));
             }
         }
         private bool isRunning;
@@ -78,11 +75,8 @@ namespace LSL.Services.ServerServices;
             private set
             {
                 if (isRunning == value) return;
-                else
-                {
-                    isRunning = value;
-                    StatusEventHandler?.Invoke(this, (value, IsOnline));
-                }
+                isRunning = value;
+                StatusEventHandler?.Invoke(this, (value, IsOnline));
             }
         }
         #endregion
@@ -95,14 +89,10 @@ namespace LSL.Services.ServerServices;
             if (IsRunning) return;
             SProcess = Process.Start(StartInfo);
             if (SProcess is null || SProcess.HasExited) throw new InvalidOperationException("Failed to start server process.");
-            else
-            {
-                InStream = SProcess.StandardInput;
-                SProcess.EnableRaisingEvents = true;
-                InitProcessHandlers();
-                AttachProcessHandlers();
-                IsRunning = true;
-            }
+            SProcess.EnableRaisingEvents = true;
+            InitProcessHandlers();
+            AttachProcessHandlers();
+            IsRunning = true;
         }
         public void BeginRead()
         {
@@ -114,19 +104,14 @@ namespace LSL.Services.ServerServices;
         }
         public void Stop()
         {
-            if (SProcess is not null && !SProcess.HasExited)
-            {
-                SProcess.StandardInput.WriteLine("stop");
-                SProcess.StandardInput.Flush();
-            }
+
+            InStream?.WriteLine("stop");
+            InStream?.FlushAsync();
         }
         public void SendCommand(string command)
         {
-            if (IsRunning)
-            {
-                InStream.WriteLine(command);
-                InStream.FlushAsync();
-            }
+            InStream?.WriteLine(command);
+            InStream?.FlushAsync();
         }
         #endregion
 

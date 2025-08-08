@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using LSL.Services;
 using LSL.Views;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -13,7 +11,7 @@ public class InitializationVM : ViewModelBase
 {
     private ILogger<InitializationVM> _logger { get; }
     public AppStateLayer AppState { get; }
-    public ShellViewModel Shell { get; set; }
+    public ShellViewModel? Shell { get; set; }
 
     public InitializationVM(ILogger<InitializationVM> logger, AppStateLayer appState)
     {
