@@ -12,6 +12,17 @@ namespace LSL.Views
 {
     public partial class PopupWindow : ReactiveWindow<ShellViewModel>
     {
+        public PopupWindow()
+        {
+            InitializeComponent();
+            var _topic = this.Get<TextBlock>("Topic");
+            var _message = this.Get<TextBlock>("Message");
+            var _border = this.Get<Border>("PopupBorder");
+            var _buttons = this.Get<StackPanel>("Buttons");
+            _topic.Text = "空弹窗";
+            _message.Text = $"我是一个空的弹窗！{Environment.NewLine}Avalonia parameterless constructor popup window";
+            SetButton(PopupType.Info_Confirm, _border, _buttons);
+        }
         public PopupWindow(PopupType type, string title, string content)
         {
             InitializeComponent();
