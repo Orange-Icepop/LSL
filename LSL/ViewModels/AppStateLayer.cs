@@ -32,6 +32,14 @@ namespace LSL.ViewModels
             CurrentBarState = BarState.Common;
             CurrentGeneralPage = GeneralPageState.Home;
             CurrentRightPage = RightPageState.HomeRight;
+            // 自获取属性初始化
+            ServerIDs = [];
+            ServerNames = [];
+            SelectedServerId = -1;
+            TotalServerCount = 0;
+            RunningServerCount = 0;
+            NotTemplateServer = false;
+            // end
             MessageBus.Current.Listen<NavigateArgs>()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(Navigate);
@@ -49,7 +57,7 @@ namespace LSL.ViewModels
             ServerIndexChanged.Subscribe(_ => MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh)));
             ServerIndexChanged.Select(index =>// 更新服务器ID
                 {
-                    if (ServerIDs is not null && ServerIDs.Contains(index)) return ServerIDs.ElementAt(index);
+                    if (ServerIDs?.Count > index) return ServerIDs.ElementAt(index);
                     else return -1;
                 }) 
                 .ToPropertyEx(this, x => x.SelectedServerId, scheduler: RxApp.MainThreadScheduler);
@@ -60,7 +68,7 @@ namespace LSL.ViewModels
                 .ToPropertyEx(this, x => x.ServerNames, scheduler: RxApp.MainThreadScheduler);
             ServerConfigChanged.Subscribe(SC =>
             {
-                if (SC.Count <= 0) return;
+                if (SC.IsEmpty) return;
                 SelectedServerIndex = 0;
                 Logger.LogInformation("Selected server index reset to 0");
             });
@@ -148,8 +156,6 @@ namespace LSL.ViewModels
                     Navigate(BarState.Undefined, GeneralPageState.Undefined, last);*/
                     break;
                 }
-                default:
-                    break;
             }
         }
 
@@ -180,7 +186,7 @@ namespace LSL.ViewModels
         [Reactive] public ConcurrentDictionary<int, ObservableCollection<UUID_User>> UserDict { get; set; } = new();
         [Reactive] public ConcurrentDictionary<int, ObservableCollection<UserMessageLine>> MessageDict { get; set; } = new();
         public int TotalServerCount { [ObservableAsProperty] get; }
-        [Reactive] public int RunningServerCount { get; set; } = 0;
+        [Reactive] public int RunningServerCount { get; set; }
         public bool NotTemplateServer { [ObservableAsProperty] get; }
 
         #endregion

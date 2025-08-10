@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
 using ReactiveUI;
@@ -33,10 +34,10 @@ namespace LSL.ViewModels
 
         #region 左视图切换命令
 
-        public void NavigateLeftView(string viewName, bool dislink = false)
+        public async Task NavigateLeftView(string viewName, bool dislink = false)
         {
-            GeneralPageState gps = GeneralPageState.Undefined;
-            RightPageState rps = RightPageState.Undefined;
+            var gps = GeneralPageState.Undefined;
+            var rps = RightPageState.Undefined;
             switch (viewName)
             {
                 case "HomeLeft":
@@ -61,18 +62,18 @@ namespace LSL.ViewModels
                     break;
             }
 
-            NavigateToPage(gps, rps);
+            await NavigateToPage(gps, rps);
         }
 
         #endregion
 
         #region 右视图切换命令
 
-        public void NavigateRightView(string viewName, bool force = false)
+        public async Task NavigateRightView(string viewName, bool force = false)
         {
             if (Enum.TryParse<RightPageState>(viewName, out var RV))
             {
-                NavigateToPage(GeneralPageState.Undefined, RV, force);
+                await NavigateToPage(GeneralPageState.Undefined, RV, force);
             }
             else _logger.LogError("Unknown right page name {rps}", viewName);
         }
@@ -81,16 +82,16 @@ namespace LSL.ViewModels
 
         #region 视图切换命令
 
-        public void NavigateToPage(GeneralPageState gps, RightPageState rps, bool force = false)
+        public async Task NavigateToPage(GeneralPageState gps, RightPageState rps, bool force = false)
         {
             // 检查左视图重合
             if (gps == AppState.CurrentGeneralPage && !force) return;
             // 检查右视图重合
             if (rps == AppState.CurrentRightPage && !force) return;
             // 自动保存配置
-            if (AppState.CurrentGeneralPage == GeneralPageState.Settings) ConfigVM.ConfirmConfig();
+            if (AppState.CurrentGeneralPage == GeneralPageState.Settings) await ConfigVM.ConfirmConfigAsync();
             // 新视图预操作
-            if (gps == GeneralPageState.Settings) ConfigVM.GetConfig();
+            if (gps == GeneralPageState.Settings) await ConfigVM.GetConfigAsync();
             // 导航
             MessageBus.Current.SendMessage(new NavigateArgs
                 { BarTarget = BarState.Undefined, LeftTarget = gps, RightTarget = rps });
@@ -106,7 +107,7 @@ namespace LSL.ViewModels
             FullViewBackCmd = ReactiveCommand.Create(() =>
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FS2Common)));
             if (!Enum.TryParse<RightPageState>(viewName, out var RV)) return;
-            else if (RV == RightPageState.AddCore || RV == RightPageState.EditSC)
+            if (RV is RightPageState.AddCore or RightPageState.EditSC)
             {
                 MessageBus.Current.SendMessage(new NavigateArgs
                     { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RV });

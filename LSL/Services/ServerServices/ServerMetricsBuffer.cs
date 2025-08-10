@@ -112,7 +112,7 @@ public class ServerMetricsBuffer : IDisposable
                 SanitizeValue(kvp.Value.RamPercent)))
             .ToList();
 
-        EventBus.Instance.PublishAsync<IMetricsArgs>(new MetricsUpdateArgs(reports));
+        EventBus.Instance.Fire<IMetricsArgs>(new MetricsUpdateArgs(reports));
     }
 
     private void ReportPerMinuteMetrics()
@@ -139,7 +139,7 @@ public class ServerMetricsBuffer : IDisposable
         _ramBytesPeakHistory.Add(ramBytesPeak);
 
         // 发布历史报告
-        EventBus.Instance.PublishAsync<IMetricsArgs>(new GeneralMetricsArgs(
+        EventBus.Instance.Fire<IMetricsArgs>(new GeneralMetricsArgs(
             _cpuHistory,
             _ramPercentHistory,
             _ramBytesAvgHistory,

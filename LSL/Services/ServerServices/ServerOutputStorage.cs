@@ -49,55 +49,63 @@ public class ServerOutputStorage : IDisposable
         {
             await foreach (var args in StorageQueue.Reader.ReadAllAsync(ct))
             {
-                try { await StorageProcessor(args); }
-                catch { }
+                try
+                {
+                    await StorageProcessor(args);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "An error occured in output storage processing.");
+                }
             }
         }
         catch (OperationCanceledException) { }
     }
-    private async Task StorageProcessor(IStorageArgs args)
+    private Task StorageProcessor(IStorageArgs args)
     {
-        switch (args)
+        return Task.Run(() =>
         {
-            case ColorOutputArgs COA:
-                OutputDict.AddOrUpdate(COA.ServerId, [new ColorOutputLine(COA.Output, COA.ColorHex)], (key, value) =>
-                {
-                    value.Add(new ColorOutputLine(COA.Output, COA.ColorHex));
-                    return value;
-                });
-                break;
-            case ServerStatusArgs SSA:
-                StatusDict.AddOrUpdate(SSA.ServerId, (SSA.IsRunning, SSA.IsOnline), (key, value) =>
-                {
-                    value.IsRunning = SSA.IsRunning;
-                    value.IsOnline = SSA.IsOnline;
-                    return value;
-                });
-                break;
-            case PlayerUpdateArgs PUA:
-                PlayerDict.AddOrUpdate((PUA.ServerId, PUA.PlayerName), PUA.UUID, (key, value) =>
-                {
-                    if (PUA.Entering)
+            switch (args)
+            {
+                case ColorOutputArgs COA:
+                    OutputDict.AddOrUpdate(COA.ServerId, [new ColorOutputLine(COA.Output, COA.ColorHex)],
+                        (key, value) =>
+                        {
+                            value.Add(new ColorOutputLine(COA.Output, COA.ColorHex));
+                            return value;
+                        });
+                    break;
+                case ServerStatusArgs SSA:
+                    StatusDict.AddOrUpdate(SSA.ServerId, (SSA.IsRunning, SSA.IsOnline), (key, value) =>
                     {
-                        return PUA.UUID;
-                    }
-                    else
+                        value.IsRunning = SSA.IsRunning;
+                        value.IsOnline = SSA.IsOnline;
+                        return value;
+                    });
+                    break;
+                case PlayerUpdateArgs PUA:
+                    PlayerDict.AddOrUpdate((PUA.ServerId, PUA.PlayerName), PUA.UUID, (key, value) =>
                     {
-                        PlayerDict.TryRemove(key, out _);
-                        return string.Empty;
-                    }
-                });
-                break;
-            case PlayerMessageArgs PMA:
-                MessageDict.AddOrUpdate(PMA.ServerId, _ => [PMA.Message], (key, value) =>
-                {
-                    value.Add(PMA.Message);
-                    return value;
-                });
-                break;
-            default:
-                break;
-        }
+                        if (PUA.Entering)
+                        {
+                            return PUA.UUID;
+                        }
+                        else
+                        {
+                            PlayerDict.TryRemove(key, out _);
+                            return string.Empty;
+                        }
+                    });
+                    break;
+                case PlayerMessageArgs PMA:
+                    MessageDict.AddOrUpdate(PMA.ServerId, _ => [PMA.Message], (key, value) =>
+                    {
+                        value.Add(PMA.Message);
+                        return value;
+                    });
+                    break;
+            }
+        });
     }
     public void Dispose()
     {

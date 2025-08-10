@@ -16,6 +16,7 @@ public partial class ServerOutputHandler : IDisposable
     private ILogger<ServerOutputHandler> _logger { get; }
     public ServerOutputHandler(ILogger<ServerOutputHandler> logger)
     {
+        _disposed = false;
         _logger = logger;
         OutputChannel = Channel.CreateUnbounded<TerminalOutputArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
         Task.Run(() => ProcessOutput(OutputCTS.Token));
@@ -43,8 +44,14 @@ public partial class ServerOutputHandler : IDisposable
         {
             await foreach (var args in OutputChannel.Reader.ReadAllAsync(ct))
             {
-                try { await OutputProcessor(args.ServerId, args.Output); }
-                catch { }
+                try
+                {
+                    await OutputProcessor(args.ServerId, args.Output);
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError(ex, "An error occured while processing output.");
+                }
             }
         }
         catch (OperationCanceledException) { }
@@ -52,7 +59,8 @@ public partial class ServerOutputHandler : IDisposable
     #endregion
 
     #region 清理
-    private bool _disposed = false;
+
+    private bool _disposed;
     public void Dispose()
     {
         Dispose(true);
@@ -89,7 +97,7 @@ public partial class ServerOutputHandler : IDisposable
     private static readonly Regex PlayerLeft = PlayerLeftRegex();
 
     #region 处理操作
-    private async Task OutputProcessor(int ServerId, string Output)
+    private static async Task OutputProcessor(int ServerId, string Output)
     {
         string colorBrush = "#000000";
         string final = Output;
@@ -103,7 +111,7 @@ public partial class ServerOutputHandler : IDisposable
             var match = GetTimeStamp.Match(Output);
             if (GetPlayerMessage.IsMatch(match.Groups["context"].Value))
             {
-                EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerMessageArgs(ServerId, match.Groups["context"].Value));
+                await EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerMessageArgs(ServerId, match.Groups["context"].Value));
             }
             else
             {
@@ -123,7 +131,7 @@ public partial class ServerOutputHandler : IDisposable
         {
             colorBrush = "#ff0000";
         }
-        EventBus.Instance.PublishAsync<IStorageArgs>(new ColorOutputArgs(ServerId, final, colorBrush));
+        await EventBus.Instance.PublishAsync<IStorageArgs>(new ColorOutputArgs(ServerId, final, colorBrush));
     }
     // 额外处理服务端自身输出所需要更新的操作
     private static void ProcessSystem(int ServerId, string Output)
@@ -131,12 +139,12 @@ public partial class ServerOutputHandler : IDisposable
         if (GetUUID.IsMatch(Output))
         {
             var match = GetUUID.Match(Output);
-            EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerUpdateArgs(ServerId, match.Groups["uuid"].Value, match.Groups["player"].Value, true));
+            EventBus.Instance.Fire<IStorageArgs>(new PlayerUpdateArgs(ServerId, match.Groups["uuid"].Value, match.Groups["player"].Value, true));
         }
 
         if (PlayerLeft.IsMatch(Output))
         {
-            EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerUpdateArgs(ServerId, "Unknown", GetUUID.Match(Output).Groups["player"].Value, false));
+            EventBus.Instance.Fire<IStorageArgs>(new PlayerUpdateArgs(ServerId, "Unknown", GetUUID.Match(Output).Groups["player"].Value, false));
         }
     }
 

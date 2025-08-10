@@ -16,6 +16,15 @@ namespace LSL.ViewModels
     {
         public FormPageVM(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
         {
+            // Reset to not null
+            ServerName = string.Empty;
+            CorePath = string.Empty;
+            MinMem = string.Empty;
+            MaxMem = string.Empty;
+            ExtJvm = "-Dlog4j2.formatMsgNoLookups=true";
+            JavaList = [];
+            JavaPath = string.Empty;
+            // end
             this.WhenAnyValue(FPVM => FPVM.SelectedJavaIndex)
                 .Select(index =>
                 {

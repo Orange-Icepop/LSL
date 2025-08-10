@@ -12,6 +12,7 @@ namespace LSL.ViewModels
 
         public RightRegionVM(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
         {
+            CurrentView = null!;
             AppState.WhenAnyValue(AS => AS.CurrentRightPage)
                 .Where(CV => CV != RightPageState.Undefined)
                 .Select(NavigateRight)

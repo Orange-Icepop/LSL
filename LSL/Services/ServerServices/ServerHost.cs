@@ -74,7 +74,7 @@ public class ServerHost : IServerHost, IDisposable
             return false; 
         }
         var SP = new ServerProcess(config);
-        SP.StatusEventHandler += async (sender, args) => await EventBus.Instance.PublishAsync<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
+        SP.StatusEventHandler += (sender, args) => EventBus.Instance.Fire<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
         // 启动服务器
         try
         {

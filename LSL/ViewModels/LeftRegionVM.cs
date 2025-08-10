@@ -14,38 +14,39 @@ namespace LSL.ViewModels
 
         public LeftRegionVM(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
         {
+            CurrentView = null!;
             ResetHighlight();
             AppState.WhenAnyValue(AS => AS.CurrentGeneralPage)
                 .Where(CV => CV != GeneralPageState.Undefined)
-                .Select(CV => NavigateLeft(CV))
+                .Select(NavigateLeft)
                 .ToPropertyEx(this, t => t.CurrentView);
             AppState.WhenAnyValue(AS => AS.CurrentRightPage)
                 .Where(CV => CV != RightPageState.Undefined)
-                .Subscribe(CV => ChangeLeftHighlight(CV));
+                .Subscribe(ChangeLeftHighlight);
 
         }
 
         #region 左栏导航逻辑
         private UserControl NavigateLeft(GeneralPageState page)
         {
-            if (page == GeneralPageState.Undefined) return CurrentView;
-            else if (page == GeneralPageState.Empty)
+            switch (page)
             {
-                LeftWidth = 0;
-                return new UserControl();
-            }
-            else
-            {
-                double lw = page switch
+                case GeneralPageState.Undefined:
+                    return CurrentView;
+                case GeneralPageState.Empty:
+                    LeftWidth = 0;
+                    return new UserControl();
+                default:
                 {
-                    GeneralPageState.Home => 350,
-                    GeneralPageState.Server => 250,
-                    GeneralPageState.Downloads => 150,
-                    GeneralPageState.Settings => 150,
-                    _ => 150
-                };
-                LeftWidth = lw;
-                return ViewFactory.CreateView(page.ToString() + "Left");
+                    double lw = page switch
+                    {
+                        GeneralPageState.Home => 350,
+                        GeneralPageState.Server => 250,
+                        _ => 150
+                    };
+                    LeftWidth = lw;
+                    return ViewFactory.CreateView(page + "Left");
+                }
             }
         }
         #endregion
@@ -98,7 +99,6 @@ namespace LSL.ViewModels
                 case RightPageState.PanelSettings: HLPanelSettings = true; break;
                 case RightPageState.StyleSettings: HLStyleSettings = true; break;
                 case RightPageState.About: HLAbout = true; break;
-                default: break;
             }
         }
         #endregion

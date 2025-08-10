@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Windows.Input;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.ReactiveUI;
 using LSL.Components;
@@ -16,59 +15,65 @@ namespace LSL.Views
         public PopupWindow(PopupType type, string title, string content)
         {
             InitializeComponent();
-            this.Topic.Text = title;
-            this.Message.Text = content;
-            SetButton(type);
+
+            var _topic = this.Get<TextBlock>("Topic");
+            var _message = this.Get<TextBlock>("Message");
+            var _border = this.Get<Border>("PopupBorder");
+            var _buttons = this.Get<StackPanel>("Buttons");
+            
+            _topic.Text = title;
+            _message.Text = content;
+            SetButton(type, _border, _buttons);
         }
 
-        private void SetButton(PopupType type)
+        private void SetButton(PopupType type, Border border, StackPanel buttons)
         {
             switch (type)
             {
                 case PopupType.Info_Confirm:
                 {
                     this.Title = "提示";
-                    this.PopupBorder.BorderBrush = new SolidColorBrush(Color.Parse("#019eff"));
-                    AddButton("Highlight", "确定", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
+                    border.BorderBrush = new SolidColorBrush(Color.Parse("#019eff"));
+                    AddButton(buttons, "Highlight", "确定", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
                     break;
                 }
                 case PopupType.Info_YesNo:
                 {
                     this.Title = "提示";
-                    this.PopupBorder.BorderBrush = new SolidColorBrush(Color.Parse("#019eff"));
-                    AddButton("Highlight", "否", ReactiveCommand.Create(() => Close(PopupResult.No)));
-                    AddButton("Default", "是", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
+                    border.BorderBrush = new SolidColorBrush(Color.Parse("#019eff"));
+                    AddButton(buttons, "Highlight", "否", ReactiveCommand.Create(() => Close(PopupResult.No)));
+                    AddButton(buttons, "Default", "是", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
                     break;
                 }
                 case PopupType.Error_Confirm:
                 {
                     this.Title = "错误";
-                    this.PopupBorder.BorderBrush = new SolidColorBrush(Colors.Red);
-                    AddButton("Red", "确定", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
+                    border.BorderBrush = new SolidColorBrush(Colors.Red);
+                    AddButton(buttons, "Red", "确定", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
                     break;
                 }
                 case PopupType.Warning_YesNo:
                 {
                     this.Title = "警告";
-                    this.PopupBorder.BorderBrush = new SolidColorBrush(Colors.Yellow);
-                    AddButton("Default", "否", ReactiveCommand.Create(() => Close(PopupResult.No)));
-                    AddButton("Highlight", "是", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
+                    border.BorderBrush = new SolidColorBrush(Colors.Yellow);
+                    AddButton(buttons, "Default", "否", ReactiveCommand.Create(() => Close(PopupResult.No)));
+                    AddButton(buttons, "Highlight", "是", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
                     break;
                 }
                 case PopupType.Warning_YesNoCancel:
                 {
                     this.Title = "警告";
-                    this.PopupBorder.BorderBrush = new SolidColorBrush(Colors.Yellow);
-                    AddButton("Default", "取消", ReactiveCommand.Create(() => Close(PopupResult.Cancel)));
-                    AddButton("Default", "否", ReactiveCommand.Create(() => Close(PopupResult.No)));
-                    AddButton("Highlight", "是", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
+                    border.BorderBrush = new SolidColorBrush(Colors.Yellow);
+                    AddButton(buttons, "Default", "取消", ReactiveCommand.Create(() => Close(PopupResult.Cancel)));
+                    AddButton(buttons, "Default", "否", ReactiveCommand.Create(() => Close(PopupResult.No)));
+                    AddButton(buttons, "Highlight", "是", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
                     break;
                 }
                 case PopupType.Warning_Confirm:
                 {
                     this.Title = "警告";
-                    this.PopupBorder.BorderBrush = new SolidColorBrush(Colors.Yellow);
-                    AddButton("Default", "确定", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
+                    border.BorderBrush = new SolidColorBrush(Colors.Yellow);
+                    AddButton(buttons, "Default", "确定", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
                     break;
                 }
                 default:
@@ -76,9 +81,9 @@ namespace LSL.Views
             }
         }
 
-        private void AddButton(string color, string content, ICommand command)
+        private static void AddButton(StackPanel panel, string color, string content, ICommand command)
         {
-            this.Buttons.Children.Add(new MyButton(color, content, command)
+            panel.Children.Add(new MyButton(color, content, command)
                 { Width = 100, Height = 30, Margin = Thickness.Parse("10") });
         }
     }

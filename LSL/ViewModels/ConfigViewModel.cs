@@ -20,6 +20,10 @@ namespace LSL.ViewModels
     {
         public ConfigViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
+            JavaVersions = null!;
+            SelectedServerConfig = ServerConfig.None;
+            SelectedServerName = string.Empty;
+            SelectedServerPath = string.Empty;
             AppState.WhenAnyValue(AS => AS.CurrentJavaDict)
                 .Select(s => new FlatTreeDataGridSource<JavaInfo>(s.Values)
                 {
@@ -39,7 +43,7 @@ namespace LSL.ViewModels
 
         public async Task Init()
         {
-            await GetConfig(true); // cached config需要手动同步，不能依赖自动更新
+            await GetConfigAsync(true); // cached config需要手动同步，不能依赖自动更新
             await ReadServerConfig(true); // 服务器配置由于较为复杂，统一为手动控制
             await Connector.ReadJavaConfig(true);
         }
@@ -138,7 +142,7 @@ namespace LSL.ViewModels
 
         #region 主配置操作
 
-        public async Task GetConfig(bool rf = false)
+        public async Task GetConfigAsync(bool rf = false)
         {
             await Connector.GetConfig(rf);
             await Dispatcher.UIThread.InvokeAsync(() => cachedConfig = AppState.CurrentConfigs);
@@ -150,10 +154,10 @@ namespace LSL.ViewModels
             cachedConfig.AddOrUpdate(key, _=>value,(_,_)=>value);
         }
 
-        public void ConfirmConfig()
+        public async Task ConfirmConfigAsync()
         {
             AppState.CurrentConfigs = cachedConfig;
-            Connector.SaveConfig();
+            await Connector.SaveConfig();
         }
 
         #endregion

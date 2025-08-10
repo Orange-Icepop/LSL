@@ -15,6 +15,11 @@ namespace LSL.ViewModels
     {
         public ServerViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
+            // 避免编译器检查
+            CurrentStatus = null!;
+            TerminalText = [];
+            CurrentUsers = null!;
+            CurrentUserMessage = [];
             StartServerCmd = ReactiveCommand.Create(StartSelectedServer);
             StopServerCmd = ReactiveCommand.Create(async () => await Connector.StopServer(AppState.SelectedServerId));
             SaveServerCmd = ReactiveCommand.Create(() => Connector.SaveServer(AppState.SelectedServerId));
@@ -44,7 +49,7 @@ namespace LSL.ViewModels
             statusFlow.ToPropertyEx(this, x => x.CurrentStatus);
             // status连带更新
             var statusChanges = this.WhenAnyValue(x => x.CurrentStatus)
-                .Where(status => status is not null)
+                //.Where(status => status is not null)
                 .SelectMany(status => status.WhenAnyValue(
                     s => s.IsRunning,
                     s => s.IsOnline,
@@ -106,7 +111,7 @@ namespace LSL.ViewModels
         #endregion
 
         #region 服务器状态及其决定的操作
-        public bool LBCEnabled => CurrentStatus is not null && CurrentStatus is not { IsRunning: true, IsOnline: false } && AppState.NotTemplateServer;
+        public bool LBCEnabled => CurrentStatus is not { IsRunning: true, IsOnline: false } && AppState.NotTemplateServer;
         public ICommand LaunchButtonCmd => CurrentStatus?.IsRunning == true ? StopServerCmd : StartServerCmd;
         public string LaunchButtonContent => CurrentStatus?.IsRunning == true ? "停止服务器" : "启动服务器";
         public ServerStatus CurrentStatus { [ObservableAsProperty] get; }

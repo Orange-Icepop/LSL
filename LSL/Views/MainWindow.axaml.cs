@@ -37,7 +37,19 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
             action(this.ViewModel!.ITAUnits.PopupITA.RegisterHandler(HandlePopup));
             action(this.ViewModel!.ITAUnits.NotifyITA.RegisterHandler(ShowNotification));
             action(this.ViewModel!.ITAUnits.FilePickerITA.RegisterHandler(OpenFileOperation));
-            this.ViewModel!.InitializeMainWindow();
+            Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                try
+                {
+                    await this.ViewModel!.InitializeMainWindow();
+                }
+                catch (Exception ex)
+                {
+                    await this.ViewModel!.ITAUnits.NotifyITA.Handle(new NotifyArgs(3, "主窗口初始化失败", ex.Message));
+                    Environment.Exit(1);
+                }
+            });
+
         });
     }
 

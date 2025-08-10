@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using LSL.Views;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Serialization;
 using ReactiveUI;
 
 namespace LSL.ViewModels
@@ -55,40 +56,56 @@ namespace LSL.ViewModels
             _logger = appState.LoggerFactory.CreateLogger<ShellViewModel>();
 
             // 视图命令
-            LeftViewCmd = ReactiveCommand.Create<string>(param => NavigateLeftView(param, false));
-            RightViewCmd = ReactiveCommand.Create<string>(param => NavigateRightView(param, false));
+            LeftViewCmd = ReactiveCommand.CreateFromTask<string>(async param => await NavigateLeftView(param, false));
+            RightViewCmd = ReactiveCommand.CreateFromTask<string>(async param => await NavigateRightView(param, false));
             FullViewCmd = ReactiveCommand.Create<string>(NavigateFullScreenView);
             FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Undefined, RightTarget = RightPageState.Undefined }));
 
             #region 多参数导航
-            PanelConfigCmd = ReactiveCommand.Create(() =>
+            PanelConfigCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                NavigateToPage(GeneralPageState.Settings, RightPageState.PanelSettings);
+                await NavigateToPage(GeneralPageState.Settings, RightPageState.PanelSettings);
             });
-            DownloadConfigCmd = ReactiveCommand.Create(() =>
+            DownloadConfigCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                NavigateToPage(GeneralPageState.Settings, RightPageState.DownloadSettings);
+                await NavigateToPage(GeneralPageState.Settings, RightPageState.DownloadSettings);
             });
-            CommonConfigCmd = ReactiveCommand.Create(() =>
+            CommonConfigCmd = ReactiveCommand.CreateFromTask(async () =>
             {
-                NavigateToPage(GeneralPageState.Settings, RightPageState.CommonSettings);
+                await NavigateToPage(GeneralPageState.Settings, RightPageState.CommonSettings);
             });
             #endregion
 
             MessageBus.Current.Listen<WindowOperationArgs>()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Where(args => args.Body is WindowOperationArgType.Raise)
-                .Subscribe(async _ => await ExitHandler());
+                .Select(_ => Observable.FromAsync(PreExitOperations))
+                .Switch()
+                .Subscribe(
+                    onNext: result =>
+                    {
+                        switch (result)
+                        {
+                            case 1: MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.Hide)); break;
+                            case 0: MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.Confirm)); break;
+                        }
+                    },
+                    onError: ex =>
+                    {
+                        _logger.LogError(ex, "An error occured while processing window exit operation.");
+                        ITAUnits.NotifyITA.Handle(new NotifyArgs(3, "窗口退出处理错误", $"LSL在处理退出操作时出现了错误"));
+                    }
+                    );
         }
 
         #region 生命周期
         //主窗口初始化完毕后的操作
-        public void InitializeMainWindow()
+        public async Task InitializeMainWindow()
         {
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Home, RightTarget = RightPageState.HomeRight });
-            NavigateLeftView("HomeLeft");
-            NavigateRightView("HomeRight");
-            Task.Run(DoStartUp);
+            await NavigateLeftView("HomeLeft");
+            await NavigateRightView("HomeRight");
+            await DoStartUp();
         }
 
         private async Task DoStartUp()
@@ -99,20 +116,9 @@ namespace LSL.ViewModels
         }
         private async Task AutoCheckUpdates()
         {
-            if (AppState.CurrentConfigs.TryGetValue("auto_update", out var autoUpdate) && autoUpdate is bool update)
+            if (AppState.CurrentConfigs.TryGetValue("auto_update", out var autoUpdate) && autoUpdate is true)
             {
                 await ServeCon.CheckForUpdates();
-            }
-        }
-
-        private async Task ExitHandler()
-        {
-            var result = await PreExitOperations();
-            switch (result)
-            {
-                case 1: MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.Hide)); break;
-                case 0: MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.Confirm)); break;
-                default: return;
             }
         }
         private async Task<int> PreExitOperations()// 退出事件处理
@@ -120,33 +126,28 @@ namespace LSL.ViewModels
             await ServeCon.SaveConfig();
             bool daemon = (AppState.CurrentConfigs.TryGetValue("daemon", out var daemonObj) && bool.TryParse(daemonObj.ToString(), out var daemonConf)) && daemonConf;
             if (daemon) return 1;
-            else
+            if (AppState.CurrentConfigs.TryGetValue("end_server_when_close", out var ESWC) && ESWC is true)
             {
-                if (AppState.CurrentConfigs.TryGetValue("end_server_when_close", out var ESWCObj) &&
-                    bool.TryParse(ESWCObj.ToString(), out var ESWC) && ESWC)
-                {
-                    ServeCon.EndAllServers();
-                }
-                else if (AppState.RunningServerCount > 0)
-                {
-                    var res = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_YesNoCancel,
-                        "是否要关闭所有服务器？",
-                        $"你正在尝试关闭LSL，但是有服务器正在运行。{Environment.NewLine}点击是将立刻关闭所有服务器；{Environment.NewLine}点击否将让这些服务器进程在后台运行，并且LSL不再管理它们；{Environment.NewLine}点击取消以取消关闭LSL的操作。"));
-                    switch (res)
-                    {
-                        case PopupResult.Yes:
-                        {
-                            ServeCon.EndAllServers();
-                            return 0;
-                        }
-                        case PopupResult.No: return 0;
-                        case PopupResult.Cancel:
-                        default: return -1;
-                    }
-                }
-
-                return 0;
+                ServeCon.EndAllServers();
             }
+            else if (AppState.RunningServerCount > 0)
+            {
+                var res = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_YesNoCancel,
+                    "是否要关闭所有服务器？",
+                    $"你正在尝试关闭LSL，但是有服务器正在运行。{Environment.NewLine}点击是将立刻关闭所有服务器；{Environment.NewLine}点击否将让这些服务器进程在后台运行，并且LSL不再管理它们；{Environment.NewLine}点击取消以取消关闭LSL的操作。"));
+                switch (res)
+                {
+                    case PopupResult.Yes:
+                    {
+                        ServeCon.EndAllServers();
+                        return 0;
+                    }
+                    case PopupResult.No: return 0;
+                    case PopupResult.Cancel:
+                    default: return -1;
+                }
+            }
+            return 0;
         }
         #endregion
     }

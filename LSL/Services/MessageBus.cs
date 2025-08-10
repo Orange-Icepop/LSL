@@ -1,49 +1,47 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using LSL.ViewModels;
 
 namespace LSL.Services
 {
     // 用于服务层通信的事件总线
+
     #region 事件总线
+
     public sealed class EventBus
     {
         // 字典，用于存储事件类型和对应的委托列表  
         private readonly ConcurrentDictionary<Type, (object _lock, List<Delegate> _delegates)> _handlers = [];
 
-        // 私有构造函数，使用了单例模式
-        private EventBus()
-        {
-            Debug.WriteLine("EventBus initialized");
-        }
-
-        // 使用 Lazy<T> 实现线程安全的单例
+        // 单例
         private static readonly Lazy<EventBus> _instance = new(() => new EventBus());
-
         public static EventBus Instance => _instance.Value;
 
-        // 订阅事件（在构造函数中使用）
-        public bool Subscribe<TEvent>(Action<TEvent> handler)
+        // 订阅事件（支持同步和异步处理程序）
+        public bool Subscribe<TEvent>(Action<TEvent> handler) => SubscribeInternal<TEvent>(handler);
+        public bool Subscribe<TEvent>(Func<TEvent, Task> handler) => SubscribeInternal<TEvent>(handler);
+
+        private bool SubscribeInternal<TEvent>(Delegate handler)
         {
             try
             {
-                var (_lock, _delegates) = _handlers.GetOrAdd(typeof(TEvent), t => (new object(), new List<Delegate>()));
+                var (_lock, _delegates) = _handlers.GetOrAdd(typeof(TEvent), t => (new object(), []));
                 lock (_lock)
                 {
                     _delegates.Add(handler);
                 }
+
+                return true;
             }
-            catch { return false; }
-            return true;
+            catch
+            {
+                return false;
+            }
         }
 
-        // 取消订阅事件（谨慎使用）
-        public bool Unsubscribe<TEvent>(Action<TEvent> handler)
+        // 取消订阅事件
+        public bool Unsubscribe<TEvent>(Delegate handler)
         {
             try
             {
@@ -51,80 +49,158 @@ namespace LSL.Services
                 {
                     lock (entry._lock)
                     {
-                        entry._delegates.Remove(handler);
+                        return entry._delegates.Remove(handler);
                     }
-                    // 如果订阅者列表为空，则移除该事件类型  
-                    if (entry._delegates.Count == 0)
-                    {
-                        _handlers.TryRemove(typeof(TEvent), out _);
-                    }
-                    return true; // 成功取消订阅
                 }
-                else return false;
+
+                return false;
             }
-            catch { return false; }
+            catch
+            {
+                return false;
+            }
         }
 
-        // 发布事件
+        // 同步发布（确保所有处理程序执行完成）
         public bool Publish<TEvent>(TEvent e)
         {
-            try
+            if (!_handlers.TryGetValue(typeof(TEvent), out var entry))
+                return true;
+
+            List<Delegate> snapshot;
+            lock (entry._lock)
             {
-                if (_handlers.TryGetValue(typeof(TEvent), out var entry))
+                snapshot = new List<Delegate>(entry._delegates);
+            }
+
+            var exceptions = new List<Exception>();
+
+            foreach (var handler in snapshot)
+            {
+                try
                 {
-                    // 创建副本，避免同步操作耗费过长时间
-                    List<Delegate> snapshot;
-                    lock (entry._lock)
+                    switch (handler)
                     {
-                        snapshot = new(entry._delegates);
-                    }
-                    // 使用委托的DynamicInvoke方法来避免显式类型转换  
-                    foreach (var handler in snapshot.Cast<Action<TEvent>>())
-                    {
-                        // 使用PublishAsync可以异步处理事件，避免阻塞主线程
-                        // 比较适用于把东西一丢就不管的情况
-                        // 但请注意，这并不会改变事件处理的顺序，只是并行执行  
-                        handler(e); // 同步执行  
+                        case Action<TEvent> syncHandler:
+                            syncHandler(e);
+                            break;
+                        case Func<TEvent, Task> asyncHandler:
+                            // 同步等待异步处理
+                            asyncHandler(e).GetAwaiter().GetResult();
+                            break;
                     }
                 }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                    // 记录错误但继续执行其他处理程序
+                    Console.WriteLine($"Error in event handler: {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                // 处理异常
-                Console.WriteLine($"Error publishing event: {ex.Message}");
-                return false;
-            }
-            return true;
+
+            return exceptions.Count == 0;
         }
-        // 异步发布事件（其实比较常用）
+
+        // 异步发布（确保所有处理程序执行完成）
         public async Task<bool> PublishAsync<TEvent>(TEvent e)
         {
-            try
+            if (!_handlers.TryGetValue(typeof(TEvent), out var entry))
+                return true;
+
+            List<Delegate> snapshot;
+            lock (entry._lock)
             {
-                if (_handlers.TryGetValue(typeof(TEvent), out var entry))
+                snapshot = new List<Delegate>(entry._delegates);
+            }
+
+            var tasks = new List<Task>();
+            var exceptions = new List<Exception>();
+
+            foreach (var handler in snapshot)
+            {
+                try
                 {
-                    // 创建副本，避免同步操作耗费过长时间
-                    List<Delegate> snapshot;
-                    lock (entry._lock)
+                    switch (handler)
                     {
-                        snapshot = new(entry._delegates);
-                    }
-                    // 使用委托的DynamicInvoke方法来避免显式类型转换  
-                    foreach (var handler in snapshot.Cast<Action<TEvent>>())
-                    {
-                        await Task.Run(() => handler(e)); // 异步执行  
+                        case Action<TEvent> syncHandler:
+                            // 同步方法包装为异步任务
+                            tasks.Add(Task.Run(() => syncHandler(e)));
+                            break;
+                        case Func<TEvent, Task> asyncHandler:
+                            tasks.Add(asyncHandler(e));
+                            break;
                     }
                 }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                    Console.WriteLine($"Error starting event handler: {ex.Message}");
+                }
+            }
+
+            try
+            {
+                // 等待所有任务完成（即使有失败）
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+            }
+            catch (AggregateException ae)
+            {
+                exceptions.AddRange(ae.Flatten().InnerExceptions);
             }
             catch (Exception ex)
             {
-                // 处理异常
-                Console.WriteLine($"Error publishing event: {ex.Message}");
-                return false;
+                exceptions.Add(ex);
             }
-            return true;
+
+            // 记录所有异常
+            foreach (var ex in exceptions)
+            {
+                Console.WriteLine($"Error in event handler: {ex.Message}");
+            }
+
+            return exceptions.Count == 0;
+        }
+
+        // Fire-and-Forget发布（不等待完成）
+        public void Fire<TEvent>(TEvent e, Action<Exception>? errorHandler = null)
+        {
+            if (!_handlers.TryGetValue(typeof(TEvent), out var entry))
+                return;
+
+            List<Delegate> snapshot;
+            lock (entry._lock)
+            {
+                snapshot = new List<Delegate>(entry._delegates);
+            }
+
+            foreach (var handler in snapshot)
+            {
+                // 为每个处理程序启动独立任务
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        switch (handler)
+                        {
+                            case Action<TEvent> syncHandler:
+                                syncHandler(e);
+                                break;
+                            case Func<TEvent, Task> asyncHandler:
+                                await asyncHandler(e).ConfigureAwait(false);
+                                break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 自定义错误处理或默认日志
+                        errorHandler?.Invoke(ex);
+                        Console.WriteLine($"Fire-and-forget error: {ex.Message}");
+                    }
+                });
+            }
         }
     }
+
     #endregion
 
     /*
@@ -143,20 +219,25 @@ namespace LSL.Services
     */
 
     #region 带返回值的远程调用
+
     /* 这个类其实没设么用
      * 等到时候IPC搞出来直接JSON通信
      * 有用的估计也就是EventBus了
      */
     public sealed class InvokeBus
     {
-        private InvokeBus() { }
+        private InvokeBus()
+        {
+        }
+
         private static readonly Lazy<InvokeBus> _instance = new(() => new InvokeBus());
         public static InvokeBus Instance => _instance.Value;
+
         private readonly ConcurrentDictionary<Type, (Type RTType, Delegate Handler)> _handlers = new();
+
         // 注册事件处理器
         public bool TryRegister<TEvent, TResult>(Func<TEvent, TResult> handler, bool force = false)
         {
-            if (handler is null) return false;
             var key = typeof(TEvent);
             var value = (RTType: typeof(TResult), (Delegate)handler);
             if (force)
@@ -164,12 +245,13 @@ namespace LSL.Services
                 _handlers.AddOrUpdate(key, value, (k, old) => value);
                 return true;
             }
+
             return _handlers.TryAdd(key, value);
         }
+
         // 注册异步事件处理器
         public bool TryRegisterAsync<TEvent, TResult>(Func<TEvent, Task<TResult>> handler, bool force = false)
         {
-            if (handler is null) return false;
             var key = typeof(TEvent);
             var value = (typeof(Task<TResult>), (Delegate)handler);
             if (force)
@@ -177,11 +259,14 @@ namespace LSL.Services
                 _handlers.AddOrUpdate(key, value, (k, old) => value);
                 return true;
             }
+
             return _handlers.TryAdd(key, value);
         }
+
         // 移除事件处理器
         public bool TryRemove<TEvent>()
             => _handlers.TryRemove(typeof(TEvent), out _);
+
         // 调用事件处理器
         public TResult? Invoke<TEvent, TResult>(TEvent args)
         {
@@ -197,6 +282,7 @@ namespace LSL.Services
             }
             else return default;
         }
+
         // 异步调用事件处理器
         public async Task<TResult?> InvokeAsync<TEvent, TResult>(TEvent args)
         {
@@ -218,5 +304,6 @@ namespace LSL.Services
             else return default;
         }
     }
+
     #endregion
 }
