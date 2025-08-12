@@ -44,7 +44,7 @@ namespace LSL.ViewModels
         public async Task Init()
         {
             await GetConfigAsync(true); // cached config需要手动同步，不能依赖自动更新
-            await ReadServerConfig(true); // 服务器配置由于较为复杂，统一为手动控制
+            await Connector.ReadServerConfig(true); // 服务器配置由于较为复杂，统一为手动控制
             await Connector.ReadJavaConfig(true);
         }
 
@@ -164,10 +164,6 @@ namespace LSL.ViewModels
 
         #region 服务器配置操作
 
-        public async Task ReadServerConfig(bool rf = false)
-        {
-            await Connector.ReadServerConfig(rf);
-        }
         public ICommand DeleteServerCmd { get; }
         public async Task DeleteServer()
         {
@@ -178,33 +174,33 @@ namespace LSL.ViewModels
                 await AppState.ITAUnits.ThrowError("选定的服务器不存在", "你没有添加过服务器。该服务器是LSL提供的占位符，不支持删除。");
                 return;
             }
-            if (!AppState.ServerStatuses.TryGetValue(serverId, out var status))
+            if (!AppState.ServerStatuses.TryGetValue(serverId, out var status) || !AppState.CurrentServerConfigs.TryGetValue(serverId, out var config))
             {
                 await AppState.ITAUnits.ThrowError("无法删除服务器", "指定的服务器不存在。");
                 return;
             }
             else if (status.IsRunning)
             {
-                await AppState.ITAUnits.ThrowError("无法删除服务器", "指定的服务器正在运行，请先关闭服务器再删除。");
+                await AppState.ITAUnits.ThrowError("无法删除服务器", $"指定的服务器{config.name}正在运行，请先关闭服务器再删除。");
                 return;
             }
             
             var result1 = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_YesNo,
-                "确认删除该服务器吗？",
+                $"确认删除服务器{config.name}吗？",
                 "注意！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
             if (result1 == PopupResult.No) return;
             var result2 = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_YesNo,
-                "第二次确认，删除该服务器吗？",
+                $"第二次确认，删除服务器{config.name}吗？",
                 "注意！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
             if (result2 == PopupResult.No) return;
             var result3 = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_YesNo,
-                "最后一次确认，你确定要删除该服务器吗？",
+                $"最后一次确认，你确定要删除服务器{config.name}吗？",
                 "这是最后一次警告！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
             if (result3 == PopupResult.No) return;
             var deleteResult = await Connector.DeleteServer(serverId);
             if (deleteResult)
             {
-                AppState.ITAUnits.Notify(1, null, $"服务器{serverId}删除成功");
+                AppState.ITAUnits.Notify(1, null, $"服务器{config.name}删除成功");
             }
         }
 

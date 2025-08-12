@@ -57,8 +57,9 @@ namespace LSL.ViewModels
             ServerIndexChanged.Subscribe(_ => MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh)));
             ServerIndexChanged.Select(index =>// 更新服务器ID
                 {
+                    if (index < 0) return -1;
                     if (ServerIDs?.Count > index) return ServerIDs.ElementAt(index);
-                    else return -1;
+                    return -1;
                 }) 
                 .ToPropertyEx(this, x => x.SelectedServerId, scheduler: RxApp.MainThreadScheduler);
             // 配置文件更新的连带更新
@@ -76,7 +77,7 @@ namespace LSL.ViewModels
                 .ToPropertyEx(this, x => x.NotTemplateServer);
             ServerConfigChanged.Select(SC =>
                 {
-                    if (SC.Count <= 0) return 0;
+                    if (SC.IsEmpty) return 0;
                     return SC.TryGetValue(-1, out _) ? 0 : SC.Count;
                 })
                 .ToPropertyEx(this, x => x.TotalServerCount);
@@ -171,7 +172,25 @@ namespace LSL.ViewModels
 
         #region 选项相关
 
-        [Reactive] public int SelectedServerIndex { get; set; } = -1;// RNMD这玩意儿死活不在启动时触发更新通知，只能先手动设置默认值强制更新了
+        private int _selectedServerIndex = -1;
+        public int SelectedServerIndex
+        {
+            get => _selectedServerIndex;
+            set
+            {
+                int fin;
+                if (CurrentServerConfigs.IsEmpty)
+                {
+                    fin = -1;
+                }
+                else if (value >= CurrentServerConfigs.Count)
+                {
+                    fin = 0;
+                }
+                else fin = value;
+                this.RaiseAndSetIfChanged(ref _selectedServerIndex, fin);
+            }
+        }
 
         public int SelectedServerId { [ObservableAsProperty] get; }
         public ObservableCollection<int> ServerIDs { [ObservableAsProperty] get; }

@@ -4,7 +4,6 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
-using LSL.Common.Contracts;
 using LSL.Common.Models;
 using LSL.Common.Validation;
 using ReactiveUI;
@@ -28,6 +27,10 @@ namespace LSL.ViewModels
             this.WhenAnyValue(FPVM => FPVM.SelectedJavaIndex)
                 .Select(index =>
                 {
+                    if (AppState.CurrentJavaDict.IsEmpty)
+                    {
+                        return string.Empty;
+                    }
                     if (AppState.CurrentJavaDict.TryGetValue(index, out var info))
                     {
                         return info.Path;
@@ -62,12 +65,19 @@ namespace LSL.ViewModels
         [Reactive] [MaxMemValidator] public string MaxMem { get; set; }
         [Reactive] [JavaPathValidator] public string JavaPath { get; set; }
         [Reactive] [ExtJvmValidator] public string ExtJvm { get; set; }
-        private int _selectedJavaIndex = 0;
+        private int _selectedJavaIndex;
 
         public int SelectedJavaIndex
         {
             get => _selectedJavaIndex;
-            set => this.RaiseAndSetIfChanged(ref _selectedJavaIndex, value);
+            set
+            {
+                int idx;
+                if (AppState.CurrentJavaDict.IsEmpty) idx = -1;
+                else if (value >= AppState.CurrentJavaDict.Count) idx = 0;
+                else idx = value;
+                this.RaiseAndSetIfChanged(ref _selectedJavaIndex, idx);
+            }
         }
 
         #endregion
@@ -109,8 +119,7 @@ namespace LSL.ViewModels
             var coreType = Connector.GetCoreType(ServerInfo.CorePath);
             var confirmResult = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "确定添加此服务器吗？",
                 $"服务器信息：\r名称：{ServerInfo.ServerName}\rJava路径：{ServerInfo.JavaPath}\r核心文件路径：{ServerInfo.CorePath}\r服务器类型：{coreType}\r内存范围：{ServerInfo.MinMem} ~ {ServerInfo.MaxMem}\r附加JVM参数：{ServerInfo.ExtJvm}"));
-            if (confirmResult != PopupResult.Yes) return;
-            else
+            if (confirmResult == PopupResult.Yes)
             {
                 var success = await Connector.AddServer(ServerInfo);
                 if (success)
@@ -142,8 +151,7 @@ namespace LSL.ViewModels
             }
             var confirmResult = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "确定修改此服务器吗？",
                 $"服务器信息：\r服务器路径：{info.CorePath}\r名称：{info.ServerName}\rJava路径：{info.JavaPath}\r内存范围：{info.MinMem}MB ~ {info.MaxMem}MB\r附加JVM参数：{info.ExtJvm}"));
-            if (confirmResult != PopupResult.Yes) return;
-            else
+            if (confirmResult == PopupResult.Yes)
             {
                 var success = await Connector.EditServer(id, info);
                 if (success)

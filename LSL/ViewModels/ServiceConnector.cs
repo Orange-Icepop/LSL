@@ -107,7 +107,7 @@ namespace LSL.ViewModels
                 }
 
             }
-            AppState.CurrentJavaDict = configManager.JavaConfigs;
+            await Dispatcher.UIThread.InvokeAsync(() => AppState.CurrentJavaDict = configManager.JavaConfigs);
         }
 
         public async Task<ServiceResult> ReadServerConfig(bool readFile = false)
@@ -118,7 +118,7 @@ namespace LSL.ViewModels
                 var notCritical = await AppState.ITAUnits.SubmitServiceError(res);
                 if (!notCritical)
                 {
-                    var err = res.Error?.ToString() ?? string.Empty;
+                    if (res.Error is not null) _logger.LogCritical(res.Error, "A critical error occured while reading server config.");
                     Environment.Exit(1);
                     return res;
                 }
@@ -129,7 +129,8 @@ namespace LSL.ViewModels
             {
                 cache.AddOrUpdate(-1, k => ServerConfig.None, (k, v) => ServerConfig.None);
             }
-            AppState.CurrentServerConfigs = cache;
+
+            await Dispatcher.UIThread.InvokeAsync(() => AppState.CurrentServerConfigs = cache);
             return ServiceResult.Success();
         }
         public async Task<bool> SaveConfig()
@@ -145,7 +146,7 @@ namespace LSL.ViewModels
             var result = await configManager.DetectJava();
             await AppState.ITAUnits.SubmitServiceError(result);
             bool success = result.IsFullSuccess;
-            await Dispatcher.UIThread.InvokeAsync(() => ReadJavaConfig());
+            await ReadJavaConfig(true);
             return success;
         }
 
@@ -206,7 +207,6 @@ namespace LSL.ViewModels
         {
             if (!configManager.ServerConfigs.TryGetValue(serverId, out var config))
                 return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
-            else if (config is null) return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
             else if (!File.Exists(config.using_java)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
             else
             {
