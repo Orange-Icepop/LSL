@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Collections.Frozen;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
-using Avalonia.Threading;
 using LSL.Common.Collections;
-using LSL.Common.Contracts;
 using LSL.Common.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -20,7 +17,7 @@ namespace LSL.ViewModels
         public ILoggerFactory LoggerFactory { get; }
         private ILogger<AppStateLayer> Logger { get; }
         public InteractionUnits ITAUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
-        public IObservable<ConcurrentDictionary<int,ServerConfig>> ServerConfigChanged { get; private set; }
+        public IObservable<FrozenDictionary<int,ServerConfig>> ServerConfigChanged { get; private set; }
         public IObservable<int> ServerIndexChanged { get; private set; }
         public IObservable<int> ServerIdChanged { get; private set; }
 
@@ -69,7 +66,7 @@ namespace LSL.ViewModels
                 .ToPropertyEx(this, x => x.ServerNames, scheduler: RxApp.MainThreadScheduler);
             ServerConfigChanged.Subscribe(SC =>
             {
-                if (SC.IsEmpty) return;
+                if (SC.Count == 0) return;
                 SelectedServerIndex = 0;
                 Logger.LogInformation("Selected server index reset to 0");
             });
@@ -77,7 +74,7 @@ namespace LSL.ViewModels
                 .ToPropertyEx(this, x => x.NotTemplateServer);
             ServerConfigChanged.Select(SC =>
                 {
-                    if (SC.IsEmpty) return 0;
+                    if (SC.Count == 0) return 0;
                     return SC.TryGetValue(-1, out _) ? 0 : SC.Count;
                 })
                 .ToPropertyEx(this, x => x.TotalServerCount);
@@ -164,9 +161,9 @@ namespace LSL.ViewModels
 
         #region 配置相关
 
-        [Reactive] public ConcurrentDictionary<string, object> CurrentConfigs { get; set; } = [];
-        [Reactive] public ConcurrentDictionary<int, ServerConfig> CurrentServerConfigs { get; set; } = [];
-        [Reactive] public ConcurrentDictionary<int, JavaInfo> CurrentJavaDict { get; set; } = [];
+        [Reactive] public FrozenDictionary<string, object> CurrentConfigs { get; set; } = FrozenDictionary<string, object>.Empty;
+        [Reactive] public FrozenDictionary<int, ServerConfig> CurrentServerConfigs { get; set; } = FrozenDictionary<int, ServerConfig>.Empty;
+        [Reactive] public FrozenDictionary<int, JavaInfo> CurrentJavaDict { get; set; } = FrozenDictionary<int, JavaInfo>.Empty;
 
         #endregion
 
@@ -179,7 +176,7 @@ namespace LSL.ViewModels
             set
             {
                 int fin;
-                if (CurrentServerConfigs.IsEmpty)
+                if (CurrentServerConfigs.Count == 0)
                 {
                     fin = -1;
                 }

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Text;
 using LSL.Common.Models;
@@ -74,9 +75,9 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
     #region 集体修改配置方法 ConfirmConfig(Dictionary<string, object> confs)
 
-    public ServiceResult<ConcurrentDictionary<string, object>> ConfirmConfig(IDictionary<string, object> confs)
+    public ServiceResult<FrozenDictionary<string, object>> ConfirmConfig(IDictionary<string, object> confs)
     {
-        ConcurrentDictionary<string, object> fin = [];
+        Dictionary<string, object> fin = [];
         foreach (var conf in confs)
         {
             if (CheckService.VerifyConfig(conf.Key, conf.Value))
@@ -84,11 +85,11 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
                 fin.TryAdd(conf.Key, conf.Value);
             }
         }
-        CurrentConfigs = fin;
+        CurrentConfigs = fin.ToFrozenDictionary();
         File.WriteAllText(ConfigPathProvider.ConfigFilePath,
             JsonConvert.SerializeObject(fin, Formatting.Indented));
         _logger.LogInformation("New LSL main config is written.");
-        return ServiceResult.Success(fin);
+        return ServiceResult.Success(fin.ToFrozenDictionary());
     }
 
     #endregion
@@ -96,7 +97,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
     #region 读取配置键值
 
     // 当前配置字典
-    public ConcurrentDictionary<string, object> CurrentConfigs { get; private set; } = [];
+    public FrozenDictionary<string, object> CurrentConfigs { get; private set; } = FrozenDictionary<string, object>.Empty;
 
     public ServiceResult LoadConfig()
     {
@@ -122,7 +123,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
             return ServiceResult.Fail(ex);
         }
 
-        ConcurrentDictionary<string, object> cache = [];
+        Dictionary<string, object> cache = [];
         List<string> KNTR = [];
         foreach (var key in ConfigKeys)
         {
@@ -143,26 +144,26 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
                     return ServiceResult.Fail(new Exception(msg));
                 }
 
-                cache.AddOrUpdate(key, k => defaultConfig, (k, v) => defaultConfig);
+                cache.Add(key, defaultConfig);
                 KNTR.Add(key);
             }
             else
             {
-                cache.AddOrUpdate(key, k => keyValue, (k, v) => keyValue);
+                cache.Add(key, keyValue);
             }
         }
 
         if (KNTR.Count > 0) // 修复配置
         {
             File.WriteAllText(ConfigPathProvider.ConfigFilePath, JsonConvert.SerializeObject(cache, Formatting.Indented));
-            CurrentConfigs = cache;
+            CurrentConfigs = cache.ToFrozenDictionary();
             var list = new StringBuilder("The following main config keys are reset due to value type mismatch:");
             list.AppendJoin(", ", KNTR);
             _logger.LogWarning("{}", list.ToString());
             _logger.LogInformation("Config.json loaded and repaired.");
             return ServiceResult.FinishWithWarning(new Exception(list.ToString()));
         }
-        CurrentConfigs = cache;
+        CurrentConfigs = cache.ToFrozenDictionary();
         _logger.LogInformation("Config.json loaded.");
         return ServiceResult.Success();
     }

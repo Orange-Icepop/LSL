@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -19,8 +19,8 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 {
     private ILogger<ServerConfigManager> _logger { get; } = logger;
     private MainConfigManager _mainConfigManager { get; } = mcm;
-    public ConcurrentDictionary<int, string> MainServerConfig { get; private set; } = [];
-    public ConcurrentDictionary<int, ServerConfig> ServerConfigs { get; private set; } = [];
+    public FrozenDictionary<int, string> MainServerConfig { get; private set; } = FrozenDictionary<int, string>.Empty;
+    public FrozenDictionary<int, ServerConfig> ServerConfigs { get; private set; } = FrozenDictionary<int, ServerConfig>.Empty;
 
     private readonly ImmutableArray<string> ServerConfigKeys =
     [
@@ -51,57 +51,56 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     #endregion
         
     #region 刷新服务器主配置文件
-    private ServiceResult<ConcurrentDictionary<int, string>> GetIndexConfig(string path)
+    private ServiceResult<FrozenDictionary<int, string>> GetIndexConfig(string path)
     {
         if (!File.Exists(path))
         {
             var ex = new FileNotFoundException($"Server main config at {path} not found.");
             _logger.LogError(ex, "");
-            return ServiceResult.Fail<ConcurrentDictionary<int, string>>(ex);
+            return ServiceResult.Fail<FrozenDictionary<int, string>>(ex);
         }
         string mainFile = File.ReadAllText(path);
         if (string.IsNullOrWhiteSpace(mainFile) || mainFile == "{}")
         {
             _logger.LogInformation("No server is registered in the main server config file.");
-            return ServiceResult.Success(new ConcurrentDictionary<int, string>());
+            return ServiceResult.Success(FrozenDictionary<int, string>.Empty);
         }
         try
         {
-            var configs = JsonConvert.DeserializeObject<ConcurrentDictionary<int, string>>(mainFile);
+            var configs = JsonConvert.DeserializeObject<Dictionary<int, string>>(mainFile);
             return configs is null
                 ? throw new JsonException("The Main Server Config file cannot be converted.")
-                : ServiceResult.Success(configs);
+                : ServiceResult.Success(configs.ToFrozenDictionary());
         }
         catch (JsonException)
         {
             var err = new JsonReaderException($"The main server config file at {path} is not a valid LSL server config file.");
             _logger.LogError(err, "");
-            return ServiceResult.Fail<ConcurrentDictionary<int, string>>(err);
+            return ServiceResult.Fail<FrozenDictionary<int, string>>(err);
         }
     }
 
     #endregion
 
     #region 逐个获取服务器各自的配置文件
-    private static ServiceResult<ConcurrentDictionary<int, ServerConfig>> GetServerDetails(
+    private static ServiceResult<FrozenDictionary<int, ServerConfig>> GetServerDetails(
         IDictionary<int, string> mainConfigs)
     {
         List<string> NotfoundServers = [];
         List<string> ConfigErrorServers = [];
         // 读取各个服务器的LSL配置文件
-        ConcurrentDictionary<int, ServerConfig> scCache = [];
+        Dictionary<int, ServerConfig> scCache = [];
         foreach (var (key, targetDir) in mainConfigs)
         {
             // 读取步骤
             string targetConfig = Path.Combine(targetDir, "lslconfig.json");
-            string configFile = "";
             if (!File.Exists(targetConfig))
             {
                 NotfoundServers.Add(targetDir);
                 continue;
             }
 
-            configFile = File.ReadAllText(targetConfig);
+            var configFile = File.ReadAllText(targetConfig);
             if (string.IsNullOrWhiteSpace(configFile) || configFile == "{}")
             {
                 NotfoundServers.Add(targetDir);
@@ -114,12 +113,11 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 var serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile) ?? throw new FormatException("Error parsing server config to dictionary.");
                 var vResult = CheckService.VerifyServerConfig(key, targetDir, serverConfig);
                 if (!vResult.IsFullSuccess || vResult.Result is null) ConfigErrorServers.Add(targetConfig);
-                else scCache.AddOrUpdate(key, k => vResult.Result, (k, v) => vResult.Result);
+                else scCache.Add(key, vResult.Result);
             }
             catch (JsonException)
             {
                 ConfigErrorServers.Add(targetConfig);
-                continue;
             }
         }
 
@@ -141,10 +139,10 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                     .AppendJoin(Environment.NewLine, ConfigErrorServers);
             }
 
-            return ServiceResult.FinishWithWarning(scCache, new Exception(error.ToString()));
+            return ServiceResult.FinishWithWarning(scCache.ToFrozenDictionary(), new Exception(error.ToString()));
         }
 
-        return ServiceResult.Success(scCache);
+        return ServiceResult.Success(scCache.ToFrozenDictionary());
     }
 
     #endregion

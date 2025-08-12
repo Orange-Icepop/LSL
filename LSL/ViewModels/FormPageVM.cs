@@ -25,19 +25,8 @@ namespace LSL.ViewModels
             JavaPath = string.Empty;
             // end
             this.WhenAnyValue(FPVM => FPVM.SelectedJavaIndex)
-                .Select(index =>
-                {
-                    if (AppState.CurrentJavaDict.IsEmpty)
-                    {
-                        return string.Empty;
-                    }
-                    if (AppState.CurrentJavaDict.TryGetValue(index, out var info))
-                    {
-                        return info.Path;
-                    }
-                    else AppState.ITAUnits.Notify(3, null, "选定的索引没有对应的Java路径");
-                    return string.Empty;
-                })
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Select(GetJavaPath)
                 .Subscribe(val => JavaPath = val);
             AppState.WhenAnyValue(AS => AS.CurrentJavaDict)
                 .Select(Dict => Dict.Values)
@@ -52,9 +41,9 @@ namespace LSL.ViewModels
                     return fin;
                 })
                 .ToPropertyEx(this, FPVM => FPVM.JavaList);
-            SelectCoreCmd = ReactiveCommand.Create(async () => await SelectCore());
-            AddServerCmd = ReactiveCommand.Create(async () => await AddServer());
-            EditServerCmd = ReactiveCommand.Create(async () => await EditServer());
+            SelectCoreCmd = ReactiveCommand.CreateFromTask(async () => await SelectCore());
+            AddServerCmd = ReactiveCommand.CreateFromTask(async () => await AddServer());
+            EditServerCmd = ReactiveCommand.CreateFromTask(async () => await EditServer());
         }
 
         #region 表单绑定属性
@@ -70,14 +59,14 @@ namespace LSL.ViewModels
         public int SelectedJavaIndex
         {
             get => _selectedJavaIndex;
-            set
-            {
-                int idx;
-                if (AppState.CurrentJavaDict.IsEmpty) idx = -1;
-                else if (value >= AppState.CurrentJavaDict.Count) idx = 0;
-                else idx = value;
-                this.RaiseAndSetIfChanged(ref _selectedJavaIndex, idx);
-            }
+            set => this.RaiseAndSetIfChanged(ref _selectedJavaIndex,
+                AppState.CurrentJavaDict.Count == 0 ? -1 : Math.Clamp(value, 0, AppState.CurrentJavaDict.Count - 1));
+        }
+
+        private string GetJavaPath(int index)
+        {
+            if (AppState.CurrentJavaDict.Count == 0) return string.Empty;
+            return AppState.CurrentJavaDict.TryGetValue(index, out var info) ? info.Path : string.Empty;
         }
 
         #endregion
@@ -193,7 +182,10 @@ namespace LSL.ViewModels
                     CorePath = string.Empty;
                     MinMem = string.Empty;
                     MaxMem = string.Empty;
+                    SelectedJavaIndex = 0;
+                    JavaPath = GetJavaPath(0);
                     ExtJvm = "-Dlog4j2.formatMsgNoLookups=true";
+                    this.RaiseAndSetIfChanged(ref _selectedJavaIndex, 0, nameof(SelectedJavaIndex));
                     break;
                 }
             }

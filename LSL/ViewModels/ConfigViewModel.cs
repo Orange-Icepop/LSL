@@ -4,13 +4,12 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
-using LSL.Common.Contracts;
 using LSL.Common.Models;
 using LSL.Common.Validation;
 
@@ -38,7 +37,7 @@ namespace LSL.ViewModels
                 .ToPropertyEx(this, x => x.JavaVersions);
             AppState.ServerIdChanged.Subscribe(Id => RaiseServerConfigChanged(Id, null));
             AppState.ServerConfigChanged.Subscribe(SC => RaiseServerConfigChanged(null, SC));
-            DeleteServerCmd = ReactiveCommand.Create(async () => await DeleteServer());
+            DeleteServerCmd = ReactiveCommand.CreateFromTask(async () => await DeleteServer());
         }
 
         public async Task Init()
@@ -144,19 +143,19 @@ namespace LSL.ViewModels
 
         public async Task GetConfigAsync(bool rf = false)
         {
-            await Connector.GetConfig(rf);
-            await Dispatcher.UIThread.InvokeAsync(() => cachedConfig = AppState.CurrentConfigs);
+            await Connector.ReadMainConfig(rf);
+            await Dispatcher.UIThread.InvokeAsync(() => cachedConfig = new ConcurrentDictionary<string, object>(AppState.CurrentConfigs));
         }
 
         private void CacheConfig(string key, object? value) // 向缓存字典中写入新配置
         {
             if (value == null) return;
-            cachedConfig.AddOrUpdate(key, _=>value,(_,_)=>value);
+            cachedConfig.AddOrUpdate(key, _ => value, (_, _) => value);
         }
 
         public async Task ConfirmConfigAsync()
         {
-            AppState.CurrentConfigs = cachedConfig;
+            AppState.CurrentConfigs = cachedConfig.ToFrozenDictionary();
             await Connector.SaveConfig();
         }
 
@@ -218,7 +217,7 @@ namespace LSL.ViewModels
         [Reactive] public string SelectedServerName { get; private set; }
         [Reactive] public string SelectedServerPath { get; private set; }
 
-        private void RaiseServerConfigChanged(int? serverId, ConcurrentDictionary<int,ServerConfig>? serverConfig)
+        private void RaiseServerConfigChanged(int? serverId, IDictionary<int,ServerConfig>? serverConfig)
         {
             var SI = serverId ?? AppState.SelectedServerId;
             var SCS = serverConfig ?? AppState.CurrentServerConfigs;

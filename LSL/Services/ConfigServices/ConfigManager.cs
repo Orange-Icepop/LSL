@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using LSL.Common.Models;
-using LSL.Common.Utilities;
-using LSL.Common.Validation;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace LSL.Services.ConfigServices;
 
@@ -80,11 +74,11 @@ public class ConfigManager
         
     #region 配置文件代理操作
     // 主配置文件
-    public ConcurrentDictionary<string, object> MainConfigs => MCM.CurrentConfigs;
-    public ServiceResult<ConcurrentDictionary<string, object>> ConfirmMainConfig(IDictionary<string, object> confs) => MCM.ConfirmConfig(confs);
+    public FrozenDictionary<string, object> MainConfigs => MCM.CurrentConfigs;
+    public ServiceResult<FrozenDictionary<string, object>> ConfirmMainConfig(IDictionary<string, object> confs) => MCM.ConfirmConfig(confs);
     public ServiceResult ReadMainConfig() => MCM.LoadConfig();
     // 服务器配置
-    public ConcurrentDictionary<int, ServerConfig> ServerConfigs => SCM.ServerConfigs;
+    public FrozenDictionary<int, ServerConfig> ServerConfigs => SCM.ServerConfigs;
     public ServiceResult ReadServerConfig() => SCM.ReadServerConfig();
 
     public ServiceResult RegisterServer(FormedServerConfig config) => SCM.RegisterServer(config.ServerName,
@@ -94,7 +88,7 @@ public class ConfigManager
         uint.Parse(config.MaxMem), config.ExtJvm);
     public ServiceResult DeleteServer(int id) => SCM.DeleteServer(id);
     // Java配置
-    public ConcurrentDictionary<int, JavaInfo> JavaConfigs => JCM.JavaDict;
+    public FrozenDictionary<int, JavaInfo> JavaConfigs => JCM.JavaDict;
     public ServiceResult<JavaConfigReadResult> ReadJavaConfig() => JCM.ReadJavaConfig();
     public async Task<ServiceResult> DetectJava() => await JCM.DetectJava();
 

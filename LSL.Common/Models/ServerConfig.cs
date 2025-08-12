@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Frozen;
 
 namespace LSL.Common.Models;
 
@@ -43,10 +44,10 @@ public class ServerConfig(
 
 public static class ServerConfigExtensions
 {
-    public static ConcurrentDictionary<int, ServerConfig> Clone(
-        this ConcurrentDictionary<int, ServerConfig> serverConfigs)
+    public static Dictionary<int, ServerConfig> Clone2Dict(
+        this FrozenDictionary<int, ServerConfig> serverConfigs)
     {
-        var result = new ConcurrentDictionary<int, ServerConfig>();
+        var result = new Dictionary<int, ServerConfig>();
         foreach (var serverConfig in serverConfigs)
         {
             result.TryAdd(serverConfig.Key, new ServerConfig(serverConfig.Value));

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -19,7 +21,7 @@ namespace LSL.Services.ConfigServices;
 public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关服务
 {
     private ILogger<JavaConfigManager> _logger { get; } = logger;
-    public ConcurrentDictionary<int, JavaInfo> JavaDict { get; private set; } = []; // 目前读取的Java列表
+    public FrozenDictionary<int, JavaInfo> JavaDict { get; private set; } = FrozenDictionary<int, JavaInfo>.Empty; // 目前读取的Java列表
 
     #region 读取Java列表
     public ServiceResult<JavaConfigReadResult> ReadJavaConfig()
@@ -30,26 +32,24 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             // read
             var file = File.ReadAllText(ConfigPathProvider.JavaListPath);
             var jsonObj = JObject.Parse(file);
-            ConcurrentDictionary<int, JavaInfo> tmpDict = [];
+            Dictionary<int, JavaInfo> tmpDict = [];
             foreach (var item in jsonObj.Properties()) //遍历配置文件中的所有Java
             {
                 var versionObject = item.Value["Version"];
                 var pathObject = item.Value["Path"];
                 var vendorObject = item.Value["Vendor"];
                 var archObject = item.Value["Architecture"];
-                if (versionObject is not null &&
-                    pathObject is not null &&
-                    vendorObject is not null &&
-                    archObject is not null &&
-                    versionObject.Type == JTokenType.String &&
-                    pathObject.Type == JTokenType.String &&
-                    vendorObject.Type == JTokenType.String &&
-                    archObject.Type == JTokenType.String)
-                {
-                    var res = new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(),
-                        archObject.ToString());
-                    tmpDict.AddOrUpdate(int.Parse(item.Name), k => res, (k, v) => res);
-                }
+                if (versionObject is null ||
+                    pathObject is null ||
+                    vendorObject is null ||
+                    archObject is null ||
+                    versionObject.Type != JTokenType.String ||
+                    pathObject.Type != JTokenType.String ||
+                    vendorObject.Type != JTokenType.String ||
+                    archObject.Type != JTokenType.String) continue;
+                var res = new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(),
+                    archObject.ToString());
+                tmpDict.Add(int.Parse(item.Name), res);
             }
 
             // validate
@@ -73,7 +73,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             }
 
             // end
-            JavaDict = tmpDict;
+            JavaDict = tmpDict.ToFrozenDictionary();
             _logger.LogInformation("JavaConfig reading complete.");
             if (notFound.Count > 0 || notJava.Count > 0)
             {
@@ -116,7 +116,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
         }
 
         _logger.LogInformation("Start detecting Java...");
-        List<JavaInfo> javaList = [];
+        List<JavaInfo> javaList;
         try
         {
             javaList = await Task.Run(JavaFinder.GetInstalledJavaInfosAsync); //调用JavaFinder查找JAVA

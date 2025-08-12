@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -57,7 +58,7 @@ namespace LSL.ViewModels
 
         #region 配置部分
 
-        public async Task GetConfig(bool readFile = false)
+        public async Task ReadMainConfig(bool readFile = false)
         {
             if (readFile)
             {
@@ -65,7 +66,7 @@ namespace LSL.ViewModels
                 var notCritical = await AppState.ITAUnits.SubmitServiceError(res);
                 if (!notCritical)
                 {
-                    var err = res.Error?.ToString() ?? string.Empty;
+                    //var err = res.Error?.ToString() ?? string.Empty;
                     Environment.Exit(1);
                 }
             }
@@ -79,7 +80,7 @@ namespace LSL.ViewModels
                 var res = configManager.ReadJavaConfig();
                 if (res.ErrorCode is ServiceResultType.Error)
                 {
-                    var err = res.Error?.ToString() ?? string.Empty;
+                    // var err = res.Error?.ToString() ?? string.Empty;
                     Environment.Exit(1);
                 }
                 if (res.Result is not null)
@@ -124,14 +125,22 @@ namespace LSL.ViewModels
                 }
             }
 
-            var cache = configManager.ServerConfigs.Clone();
-            if (cache.IsEmpty)
+            var cache = configManager.ServerConfigs.Clone2Dict();
+            if (cache.Count == 0)
             {
-                cache.AddOrUpdate(-1, k => ServerConfig.None, (k, v) => ServerConfig.None);
+                cache.Add(-1, ServerConfig.None);
             }
 
-            await Dispatcher.UIThread.InvokeAsync(() => AppState.CurrentServerConfigs = cache);
+            await Dispatcher.UIThread.InvokeAsync(() => AppState.CurrentServerConfigs = cache.ToFrozenDictionary());
             return ServiceResult.Success();
+        }
+
+        public async Task<bool> UpdateConfig(IDictionary<int, object> currentConfigs)
+        {
+            var saveSuccess = await SaveConfig();
+            if (!saveSuccess) return false;
+            await ReadMainConfig(true);
+            return true;
         }
         public async Task<bool> SaveConfig()
         {
@@ -257,7 +266,7 @@ namespace LSL.ViewModels
             {
                 case ColorOutputArgs COA:
                     await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts.AddOrUpdate(COA.ServerId,
-                        [new ColoredLines(COA.Output, COA.ColorHex)], (key, value) =>
+                        [new ColoredLines(COA.Output, COA.ColorHex)], (_, value) =>
                         {
                             value.Add(new ColoredLines(COA.Output, COA.ColorHex));
                             return value;
@@ -271,7 +280,7 @@ namespace LSL.ViewModels
                     break;
                 case PlayerMessageArgs PMA:
                     await Dispatcher.UIThread.InvokeAsync(() => AppState.MessageDict.AddOrUpdate(PMA.ServerId,
-                        [new UserMessageLine(PMA.Message)], (key, value) =>
+                        [new UserMessageLine(PMA.Message)], (_, value) =>
                         {
                             value.Add(new UserMessageLine(PMA.Message));
                             return value;
@@ -285,7 +294,7 @@ namespace LSL.ViewModels
             if (args.Entering)
             {
                 AppState.UserDict.AddOrUpdate(args.ServerId, [new UUID_User(args.UUID, args.PlayerName)],
-                    (key, oldValue) =>
+                    (_, oldValue) =>
                     {
                         oldValue.Add(new UUID_User(args.UUID, args.PlayerName));
                         return oldValue;
@@ -311,7 +320,7 @@ namespace LSL.ViewModels
         {
             AppState.ServerStatuses.AddOrUpdate(args.ServerId,
                 new ServerStatus(args.IsRunning, args.IsOnline),
-                (key, value) => value.Update(args.IsRunning, args.IsOnline));
+                (_, value) => value.Update(args.IsRunning, args.IsOnline));
             UpdateRunningServer();
         }
 
@@ -339,8 +348,8 @@ namespace LSL.ViewModels
         {
             foreach (var item in args.Metrics)
             {
-                AppState.MetricsDict.AddOrUpdate(item.ServerId, id => new MetricsStorage(item),
-                    (id, storage) => storage.Add(item));
+                AppState.MetricsDict.AddOrUpdate(item.ServerId, _ => new MetricsStorage(item),
+                    (_, storage) => storage.Add(item));
             }
         }
 
@@ -398,7 +407,7 @@ namespace LSL.ViewModels
 
         public string GetCoreType(string? corePath)
         {
-            return CoreValidationService.Validate(corePath, out var Problem).ToString();
+            return CoreValidationService.Validate(corePath, out _).ToString();
         }
 
         public async Task<bool> AddServer(FormedServerConfig config)
@@ -438,7 +447,7 @@ namespace LSL.ViewModels
             {
                 // 暂停输出处理
                 _logger.LogInformation("Copy server output. Stopping output handler...");
-                OutputCts.Cancel();
+                await OutputCts.CancelAsync();
                 await _handleOutputTask;
                 // 拷贝输出字典
                 AppState.TerminalTexts = new ConcurrentDictionary<int, ObservableCollection<ColoredLines>>(

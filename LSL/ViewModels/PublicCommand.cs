@@ -20,7 +20,7 @@ namespace LSL.ViewModels
         {
             _logger = logger;
             OpenWebPageCmd = ReactiveCommand.Create<string>(OpenWebPage);// 打开网页命令-实现
-            SearchJava = ReactiveCommand.Create(async () =>
+            SearchJava = ReactiveCommand.CreateFromTask(async () =>
             {
                 await Dispatcher.UIThread.InvokeAsync(() => AppState.ITAUnits.Notify(0, "正在搜索Java", "请耐心等待......"));
                 var result = await Connector.FindJava();

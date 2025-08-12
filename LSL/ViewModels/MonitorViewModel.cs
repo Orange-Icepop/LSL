@@ -35,7 +35,7 @@ public class MonitorViewModel : RegionalVMBase
 
     public MonitorViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
-        AppState.ServerIdChanged.Select(id => AppState.MetricsDict.GetOrAdd(id, i => new MetricsStorage(true)))
+        AppState.ServerIdChanged.Select(id => AppState.MetricsDict.GetOrAdd(id, _ => new MetricsStorage(true)))
             .Subscribe(ms =>
             {
                 CurrentCpuMetrics.CollectionChanged -= OnCpuMetricsChanged;
@@ -48,12 +48,12 @@ public class MonitorViewModel : RegionalVMBase
                 CurrentRamMetrics.CollectionChanged += OnMemMetricsChanged;
                 CurrentRamValueMetrics.CollectionChanged += OnMemValueMetricsChanged;
             });
-        AppState.ServerIdChanged.Select(id => AppState.CurrentServerConfigs.GetOrAdd(id, k => ServerConfig.None))
+        AppState.ServerIdChanged.Select(id => AppState.CurrentServerConfigs.TryGetValue(id, out var value) ? value : ServerConfig.None)
             .Subscribe(sc =>
             {
                 CurrentRamMax = (long)sc.max_memory * 1024 * 1024;
             });
-        AppState.GeneralMetricsEventHandler += (sender, args) =>
+        AppState.GeneralMetricsEventHandler += (_, args) =>
         {
             CurrentGeneralCpuUsage = args.CpuUsage;
             CurrentGeneralRamUsage = args.RamUsage;
