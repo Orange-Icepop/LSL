@@ -9,8 +9,8 @@
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerStat">
     <UserControl.Resources>
-        <server:CurrentCpuMetricsConverter x:Key="CCMC"/>
-        <server:CurrentMemMetricsConverter x:Key="CMMC"/>
+        <server:CurrentCpuMetricsConverter x:Key="CCMC" />
+        <server:CurrentMemMetricsConverter x:Key="CMMC" />
     </UserControl.Resources>
     <DockPanel>
         <local:MyCard Text="资源占用" DockPanel.Dock="Top" Height="200">
@@ -18,21 +18,40 @@
                 <TextBlock Grid.Row="0" Grid.Column="0" FontSize="12">
                     <TextBlock.Text>
                         <MultiBinding Converter="{StaticResource CCMC}">
-                            <Binding Path="MonitorVM.CurrentCpuUsage"/>
+                            <Binding Path="MonitorVM.CurrentCpuUsage" />
                         </MultiBinding>
                     </TextBlock.Text>
                 </TextBlock>
-                <local:MyPlot Grid.Row="1" Grid.Column="0" LineColor="#019eff" FillColor="#80019eff" ItemsSource="{Binding MonitorVM.CurrentCpuMetrics}" Margin="5" />
-                <TextBlock Grid.Row="0" Grid.Column="1" FontSize="12">
-                    <TextBlock.Text>
-                        <MultiBinding Converter="{StaticResource CMMC}">
-                            <Binding Path="MonitorVM.CurrentRamUsage"/>
-                            <Binding Path="MonitorVM.CurrentRamValue"/>
-                            <Binding Path="MonitorVM.CurrentRamMax"/>
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
-                <local:MyPlot Grid.Row="1" Grid.Column="1" LineColor="#FFE39A6B" FillColor="#80E39A6B" ItemsSource="{Binding MonitorVM.CurrentRamMetrics}" Margin="5" />
+                <local:MyPlot Grid.Row="1" Grid.Column="0" LineColor="#019eff" FillColor="#80019eff"
+                              ItemsSource="{Binding MonitorVM.CurrentCpuMetrics}" Margin="5" />
+                <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="True">
+                    <TextBlock FontSize="12" HorizontalAlignment="Left" DockPanel.Dock="Left">
+                        <TextBlock.Text>
+                            <MultiBinding Converter="{StaticResource CMMC}">
+                                <Binding Path="MonitorVM.CurrentRamUsage" />
+                                <Binding Path="MonitorVM.CurrentRamValue" />
+                                <Binding Path="MonitorVM.CurrentRamMax" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                    <Border Background="Transparent" HorizontalAlignment="Right" DockPanel.Dock="Right">
+                        <Path Data="M14,7 A7,7 0 0,0 0,7 M0,7 A7,7 0 1,0 14,7 M7,3l0,2 M7,6l0,5"
+                              VerticalAlignment="Center"
+                              Margin="0,0,10,0"
+                              Stroke="#019eff"
+                              StrokeThickness="2">
+                        </Path>
+                        <ToolTip.Tip>
+                            <TextBlock>
+                                本性能图显示的最大值为JVM堆内存设置的最大值，但是监控的是整个Java进程的内存占用最大值（即包含非堆内存，一般大小约为1GB）。<LineBreak/>
+                                因此，可能存在占用内存值超过100%的情况，这是正常现象。<LineBreak/>
+                                在配置的JVM堆内存较小的情况下更容易出现这种情况。
+                            </TextBlock>
+                        </ToolTip.Tip>
+                    </Border>
+                </DockPanel>
+                <local:MyPlot Grid.Row="1" Grid.Column="1" LineColor="#FFE39A6B" FillColor="#80E39A6B"
+                              ItemsSource="{Binding MonitorVM.CurrentRamMetrics}" Margin="5" />
             </Grid>
         </local:MyCard>
         <local:MyCard Text="玩家列表" DockPanel.Dock="Left" Width="250">

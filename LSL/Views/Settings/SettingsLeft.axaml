@@ -9,9 +9,11 @@
 	<StackPanel Width="150">
 		<TextBlock DockPanel.Dock="Top" Text="设置" Margin="10,10,0,0" Foreground="Gray"/>
 		<Button Width="150" Content="常规" Name="Common" Classes="left" Classes.selLeft="{Binding LeftVM.HLCommonSettings}" Command="{Binding RightViewCmd}" CommandParameter="CommonSettings" />
+		<!--
 		<Button Width="150" Content="下载" Name="Download" Classes="left" Classes.selLeft="{Binding LeftVM.HLDownloadSettings}" Command="{Binding RightViewCmd}" CommandParameter="DownloadSettings"/>
 		<Button Width="150" Content="网页面板" Name="Panel" Classes="left" Classes.selLeft="{Binding LeftVM.HLPanelSettings}" Command="{Binding RightViewCmd}" CommandParameter="PanelSettings"/>
 		<Button Width="150" Content="个性化" Name="StyleButton" Classes="left" Classes.selLeft="{Binding LeftVM.HLStyleSettings}" Command="{Binding RightViewCmd}" CommandParameter="StyleSettings"/>
+		-->
 		<Button Width="150" Content="关于" Name="About" Classes="left" Classes.selLeft="{Binding LeftVM.HLAbout}" Command="{Binding RightViewCmd}" CommandParameter="About"/>
 	</StackPanel>
 </UserControl>

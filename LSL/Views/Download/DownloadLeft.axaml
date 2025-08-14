@@ -9,11 +9,15 @@
              x:Class="LSL.Views.Download.DownloadsLeft">
 	<DockPanel Width="150">
 		<TextBlock DockPanel.Dock="Top" Text="服务器核心" Margin="10,10,0,0" Foreground="Gray"/>
+		<!--
 		<Button Width="150" DockPanel.Dock="Top" Name="AutoDownButton" Content="自动下载" Classes="left" Classes.selLeft="{Binding LeftVM.HLAutoDown}" Command="{Binding RightViewCmd}" CommandParameter="AutoDown"/>
 		<Button Width="150" DockPanel.Dock="Top" Name="ManualDownButton" Content="手动下载" Classes="left" Classes.selLeft="{Binding LeftVM.HLManualDown}" Command="{Binding RightViewCmd}" CommandParameter="ManualDown"/>
+		-->
 		<Button Width="150" DockPanel.Dock="Top" Name="AddServerButton" Content="导入服务器" Classes="left" Classes.selLeft="{Binding LeftVM.HLAddServer}" Command="{Binding RightViewCmd}" CommandParameter="AddServer"/>
+		<!--
 		<TextBlock DockPanel.Dock="Top" Text="其他资源" Margin="10,10,0,0" Foreground="Gray"/>
 		<Button Width="150" DockPanel.Dock="Top" Name="ModDownButton" Content="Mod下载" Classes="left" Classes.selLeft="{Binding LeftVM.HLModDown}" Command="{Binding RightViewCmd}" CommandParameter="ModDown"/>
 		<local:MyButton DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" Width="130" Height="40" Command="{Binding DownloadConfigCmd}">下载源设置</local:MyButton>
+		-->
 	</DockPanel>
 </UserControl>

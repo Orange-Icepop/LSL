@@ -27,7 +27,7 @@ namespace LSL.ViewModels
                 if (!result) return;
                 await Dispatcher.UIThread.InvokeAsync(() => AppState.ITAUnits.Notify(1, "Java搜索完成！", $"搜索到了{AppState.CurrentJavaDict.Count}个Java"));
             });// 搜索Java命令-实现
-            CheckUpdateCmd = ReactiveCommand.Create(serveCon.CheckForUpdates);
+            CheckUpdateCmd = ReactiveCommand.CreateFromTask(serveCon.CheckForUpdates);
         }
 
         #region About页面的相关内容

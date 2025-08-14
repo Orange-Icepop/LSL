@@ -53,6 +53,11 @@ public class MonitorViewModel : RegionalVMBase
             {
                 CurrentRamMax = (long)sc.max_memory * 1024 * 1024;
             });
+        AppState.ServerConfigChanged.Select(dict => dict.TryGetValue(AppState.SelectedServerId, out var value) ? value : ServerConfig.None)
+            .Subscribe(sc =>
+            {
+                CurrentRamMax = (long)sc.max_memory * 1024 * 1024;
+            });
         AppState.GeneralMetricsEventHandler += (_, args) =>
         {
             CurrentGeneralCpuUsage = args.CpuUsage;
