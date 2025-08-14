@@ -53,7 +53,7 @@ namespace LSL.ViewModels
                 case "DownloadsLeft":
                     gps = GeneralPageState.Downloads;
                     if (!dislink)
-                        rps = RightPageState.AutoDown;
+                        rps = RightPageState.AddServer;//TODO
                     break;
                 case "SettingsLeft":
                     gps = GeneralPageState.Settings;
