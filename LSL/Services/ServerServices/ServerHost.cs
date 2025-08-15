@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using LSL.Common.Contracts;
-using LSL.Common.Models;
 using LSL.Services.ConfigServices;
 using Microsoft.Extensions.Logging;
 

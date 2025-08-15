@@ -5,11 +5,10 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
-using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.ReactiveUI;
 using Avalonia.Threading;
-using LSL.Services;
+using LSL.Common.Models;
 using LSL.ViewModels;
 using ReactiveUI;
 using Notification = Avalonia.Controls.Notifications.Notification;
@@ -187,12 +186,5 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
         else ITA.SetOutput(string.Empty);
     }
     #endregion
-
-}
-
-public enum FilePickerType
-{
-    CoreFile,
-    ZipFile,
 
 }

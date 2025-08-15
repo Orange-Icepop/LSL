@@ -1,8 +1,5 @@
 ﻿using System.Reactive;
 using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using LSL.ViewModels;
 using ReactiveUI;

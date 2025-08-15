@@ -375,7 +375,7 @@ namespace LSL.ViewModels
 
         #region 服务器添加、修改与删除
 
-        public (int, string?) ValidateNewServerConfig(FormedServerConfig config, bool skipCP = false)
+        public static (int, string?) ValidateNewServerConfig(FormedServerConfig config, bool skipCP = false)
         {
             var checkResult = CheckService.VerifyFormedServerConfig(config, skipCP);
             string ErrorInfo = "";
@@ -405,7 +405,7 @@ namespace LSL.ViewModels
             };
         }
 
-        public string GetCoreType(string? corePath)
+        public static string GetCoreType(string? corePath)
         {
             return CoreValidationService.Validate(corePath, out _).ToString();
         }

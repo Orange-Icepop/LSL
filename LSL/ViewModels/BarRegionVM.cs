@@ -30,10 +30,10 @@ namespace LSL.ViewModels
             FSTitle = string.Empty;
             AppState.WhenAnyValue(AS => AS.CurrentGeneralPage)
                 .Where(CV => CV != GeneralPageState.Undefined)
-                .Subscribe(CV => ChangeActiveButton(CV));
+                .Subscribe(ChangeActiveButton);
             AppState.WhenAnyValue(AS => AS.CurrentBarState)
                 .Where(CV => CV != BarState.Undefined)
-                .Subscribe(CV => ChangeBarCont(CV));
+                .Subscribe(ChangeBarCont);
         }
 
         private void ChangeActiveButton(GeneralPageState state)
@@ -63,28 +63,22 @@ namespace LSL.ViewModels
                         {
                             RightPageState.EditSC => "修改服务器配置",
                             RightPageState.AddCore => "从核心添加服务器",
+                            RightPageState.AddFolder => "导入服务器文件夹",
                             _ => ""
                         };
                     });
-                    break;
-                default:
                     break;
             }
         }
 
         private void ChangeBarCont(BarState state)
         {
-            switch (state)
+            CurrentView = state switch
             {
-                case BarState.Common:
-                    CurrentView = new Bar();
-                    break;
-                case BarState.FullScreen:
-                    CurrentView = new FSBar();
-                    break;
-                default:
-                    break;
-            }
+                BarState.Common => new Bar(),
+                BarState.FullScreen => new FSBar(),
+                _ => CurrentView
+            };
         }
     }
 }

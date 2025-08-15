@@ -83,7 +83,7 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
 
     public void Add(T item)
     {
-        NotifyCollectionChangedEventArgs? args = null;
+        NotifyCollectionChangedEventArgs? args;
         bool reset = _list.Count >= _maxLength;
         _lock.EnterWriteLock();
         try
@@ -103,7 +103,7 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
         {
             _lock.ExitWriteLock();
         }
-        if (args is not null) OnCollectionChanged(args);
+        OnCollectionChanged(args);
     }
 
     public void Clear()

@@ -1,17 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Data;
-using Avalonia.Markup.Xaml;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System;
 using Avalonia.Media;
-using Avalonia.Threading;
-using System.Diagnostics;
-using Avalonia.Interactivity;
 
 namespace LSL.Components
 {

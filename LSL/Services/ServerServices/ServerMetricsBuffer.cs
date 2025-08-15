@@ -7,7 +7,6 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using LSL.Common.Collections;
 using LSL.Common.Contracts;
-using LSL.Common.Models;
 using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
 

@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
-using LSL.Common.Contracts;
 using LSL.Common.Models;
 
 namespace LSL.Common.Utilities
@@ -140,7 +139,6 @@ namespace LSL.Common.Utilities
                     {
                         string version = "Unknown";
                         string vendor = "Unknown";
-                        string architecture = "Unknown";
 
                         // get vendor
                         string vendorLine = lines[1];
@@ -189,7 +187,7 @@ namespace LSL.Common.Utilities
                         }
                         // get architecture
                         string architectureLine = lines[2];
-                        architecture = architectureLine.Contains("64-Bit") ? "64-Bit" : "32-Bit";
+                        var architecture = architectureLine.Contains("64-Bit") ? "64-Bit" : "32-Bit";
                         return new JavaInfo(javaPath, version, vendor, architecture);
                     }
                     else return null;

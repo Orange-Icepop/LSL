@@ -11,7 +11,8 @@
 		<StackPanel>
 			<local:MyCard Text="导入服务器">
 				<StackPanel Margin="25,40,23,15">
-					<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/JavaIcon.png" Title="从核心添加服务器" Info="目前仅支持该项QWQ" Command="{Binding FullViewCmd}" CommandParameter="AddCore"/>
+					<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/JavaIcon.png" Title="从核心添加服务器" Info="构建一个新的服务器" Command="{Binding FullViewCmd}" CommandParameter="AddCore"/>
+					<local:MyListItem Logo="{SvgImage avares://LSL/Assets/Imported-Icons/Folder.svg}" Title="导入服务器文件夹" Info="无缝使用现有的服务器" Command="{Binding FullViewCmd}" CommandParameter="AddFolder"/>
 				</StackPanel>
 			</local:MyCard>
 		</StackPanel>

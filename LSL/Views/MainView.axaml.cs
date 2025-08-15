@@ -1,6 +1,4 @@
 ﻿using Avalonia.Controls;
-using LSL.Services;
-using LSL.ViewModels;
 
 namespace LSL.Views;
 

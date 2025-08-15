@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
@@ -15,10 +14,8 @@ namespace LSL.ViewModels
     // 主要成员为杂项ICommand
     public class PublicCommand : RegionalVMBase
     {
-        private ILogger<PublicCommand> _logger;
-        public PublicCommand(AppStateLayer appState, ServiceConnector serveCon, ILogger<PublicCommand> logger) : base(appState, serveCon)
+        public PublicCommand(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
-            _logger = logger;
             OpenWebPageCmd = ReactiveCommand.Create<string>(OpenWebPage);// 打开网页命令-实现
             SearchJava = ReactiveCommand.CreateFromTask(async () =>
             {

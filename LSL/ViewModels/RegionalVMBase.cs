@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Reflection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace LSL.ViewModels
 {
@@ -8,15 +6,15 @@ namespace LSL.ViewModels
     {
         protected readonly AppStateLayer AppState;
         protected readonly ServiceConnector Connector;
-        protected readonly ILogger Logger;
+        protected readonly ILogger _logger;
         protected RegionalVMBase(AppStateLayer appState, ServiceConnector connector)
         {
             AppState = appState;
             //SetupRxSubscripions();
             Connector = connector;
             var t = GetType();
-            Logger = appState.LoggerFactory.CreateLogger(t);
-            Logger.LogDebug("{TypeName}'s base initialized", t.Name);
+            _logger = appState.LoggerFactory.CreateLogger(t);
+            _logger.LogDebug("Logger of {TypeName} initialized", t.Name);
         }
         //protected virtual void SetupRxSubscripions() { }
     }

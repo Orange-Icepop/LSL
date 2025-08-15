@@ -1,7 +1,6 @@
 using System;
 using System.Reactive.Linq;
 using Avalonia.ReactiveUI;
-using LSL.Services;
 using LSL.ViewModels;
 using ReactiveUI;
 

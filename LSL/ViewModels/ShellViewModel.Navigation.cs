@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
@@ -107,11 +106,11 @@ namespace LSL.ViewModels
             FullViewBackCmd = ReactiveCommand.Create(() =>
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FS2Common)));
             if (!Enum.TryParse<RightPageState>(viewName, out var RV)) return;
-            if (RV is RightPageState.AddCore or RightPageState.EditSC)
+            if (RV is RightPageState.AddCore or RightPageState.EditSC or RightPageState.AddFolder)
             {
                 MessageBus.Current.SendMessage(new NavigateArgs
                     { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RV });
-                if (RV is RightPageState.AddCore or RightPageState.EditSC) FormVM.ClearForm(RV);
+                if (RV is RightPageState.AddCore or RightPageState.EditSC or RightPageState.AddFolder) FormVM.ClearForm(RV);
                 _logger.LogDebug("Successfully navigated to {FullScreen}.", viewName);
             }
             else _logger.LogError("This view is not a fullscreen view: {name}.", viewName);
@@ -177,6 +176,7 @@ namespace LSL.ViewModels
         //FullScreen
         EditSC,
         AddCore,
+        AddFolder,
 
         //Others
         Empty,
@@ -228,6 +228,7 @@ namespace LSL.ViewModels
                 "ModDown" => new ModDown(),
                 //ASViews
                 "AddCore" => new AddCore(),
+                "AddFolder" => new AddFolder(),
                 //Settings
                 "CommonSettings" => new CommonSettings(),
                 "DownloadSettings" => new DownloadSettings(),

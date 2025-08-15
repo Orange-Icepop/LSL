@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
-using LSL.Views;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Serialization;
 using ReactiveUI;
 
 namespace LSL.ViewModels
