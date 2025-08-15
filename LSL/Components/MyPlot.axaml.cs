@@ -121,7 +121,6 @@ public class MyPlot : Control
         using (var regionContent = regionGeometry.Open())
         {
             regionContent.BeginFigure(new Point(0, _controlSize.Height), true);
-            double count = ItemsSource.Count < 0 ? 0 : (double)ItemsSource.Count;
             int i = 0;
             foreach (var item in ItemsSource)
             {
@@ -146,13 +145,13 @@ public class MyPlot : Control
         }
 
         // 绘制填充、折线与边框
-        context.DrawGeometry(null, new Pen(LineColor, 1), lineGeometry);
+        context.DrawGeometry(null, new Pen(LineColor), lineGeometry);
         context.DrawGeometry(FillColor, null, regionGeometry);
         context.DrawRectangle(null, new Pen(Brushes.DarkGray), new Rect(0, 0, _controlSize.Width, _controlSize.Height), 0, 0, BoxShadows.Parse("0 0 10 -2 LightGray"));
     }
     
     // size control
-    protected override Size MeasureOverride(Size availableSize) => new Size(0, 0);
+    protected override Size MeasureOverride(Size availableSize) => new(0, 0);
     
     private Size _controlSize;
     protected override Size ArrangeOverride(Size finalSize)

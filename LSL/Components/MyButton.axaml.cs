@@ -14,7 +14,7 @@ namespace LSL.Components
     public class MyButton : Button
     {
         public static readonly StyledProperty<MyButtonColorType> ColorTypeProperty =
-            AvaloniaProperty.Register<MyButton, MyButtonColorType>(nameof(ColorType), MyButtonColorType.Default);
+            AvaloniaProperty.Register<MyButton, MyButtonColorType>(nameof(ColorType));
 
         public MyButtonColorType ColorType
         {
@@ -23,7 +23,7 @@ namespace LSL.Components
         }
         static MyButton()
         {
-            ColorTypeProperty.Changed.AddClassHandler<MyButton>((o, e) => o.UpdateStyles());
+            ColorTypeProperty.Changed.AddClassHandler<MyButton>((o, _) => o.UpdateStyles());
             AffectsRender<MyButton>(ColorTypeProperty);
         }
         public MyButton()

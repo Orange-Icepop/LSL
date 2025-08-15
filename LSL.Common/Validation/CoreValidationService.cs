@@ -80,25 +80,19 @@ public static class CoreValidationService
     {
         try
         {
-            using FileStream stream = new FileStream(jarFilePath, FileMode.Open);
-            using (ZipFile zipFile = new ZipFile(stream))
+            using var stream = new FileStream(jarFilePath, FileMode.Open);
+            using var zipFile = new ZipFile(stream);
+            foreach (ZipEntry entry in zipFile)
             {
-                foreach (ZipEntry entry in zipFile)
-                {
-                    if (entry.IsDirectory)
-                        continue;
-
-                    if (entry.Name == "META-INF/MANIFEST.MF")// 对于较新版本的MC，MANIFEST.MF中应当包含Main-Class字段
-                    {
-                        using (var fstream = zipFile.GetInputStream(entry))
-                        using (StreamReader reader = new StreamReader(fstream))
-                        {
-                            string manifestContent = reader.ReadToEnd();
-                            return FindMainClassLine(manifestContent);
-                        }
-                    }
-                }
+                if (entry.IsDirectory) continue;
+                if (entry.Name != "META-INF/MANIFEST.MF") continue; // 对于较新版本的MC，MANIFEST.MF中应当包含Main-Class字段
+                using var fstream = zipFile.GetInputStream(entry);
+                if (fstream is null) return null;
+                using var reader = new StreamReader(fstream);
+                string manifestContent = reader.ReadToEnd();
+                return FindMainClassLine(manifestContent);
             }
+
             return null;
         }
         catch (UnauthorizedAccessException ex)

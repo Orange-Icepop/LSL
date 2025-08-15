@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Text;
 using LSL.Common.Models;
@@ -21,16 +20,6 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     private MainConfigManager _mainConfigManager { get; } = mcm;
     public FrozenDictionary<int, string> MainServerConfig { get; private set; } = FrozenDictionary<int, string>.Empty;
     public FrozenDictionary<int, ServerConfig> ServerConfigs { get; private set; } = FrozenDictionary<int, ServerConfig>.Empty;
-
-    private readonly ImmutableArray<string> ServerConfigKeys =
-    [
-        "name",
-        "using_java",
-        "core_name",
-        "min_memory",
-        "max_memory",
-        "ext_jvm"
-    ];
 
     #region 读取各个服务器的LSL配置文件ReadServerConfig
 

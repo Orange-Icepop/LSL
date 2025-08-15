@@ -46,8 +46,8 @@ namespace LSL
                     PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),
                     UseCookies = false,
                 })
-                .AddPolicyHandler((provider, request) => GetRetryPolicy(provider))
-                .AddPolicyHandler((provider, request) => GetCircuitBreakerPolicy(provider));
+                .AddPolicyHandler((provider, _) => GetRetryPolicy(provider))
+                .AddPolicyHandler((provider, _) => GetCircuitBreakerPolicy(provider));
             collection.AddSingleton<NetService>();
         }
 
@@ -98,7 +98,7 @@ namespace LSL
                     {
                         // 记录重试信息
                         context.GetLogger(provider)?.LogWarning(
-                            "Request retry #{RetryAttempt} will execute after {Timespan} . Reason: {StatusCode}",
+                            "Request retry #{RetryAttempt} will execute after {Timespan} . Code: {StatusCode}",
                             retryAttempt, timespan, outcome.Result?.StatusCode);
                     });
         }
@@ -110,7 +110,7 @@ namespace LSL
                 .CircuitBreakerAsync(
                     5,
                     TimeSpan.FromSeconds(30),
-                    (outcome, timespan, context) =>
+                    (_, timespan, context) =>
                     {
                         context.GetLogger(provider)?.LogError("Web connection meltdown activated. Restore in {Timespan}.", timespan);
                     },

@@ -69,14 +69,14 @@ public class ServerOutputStorage : IDisposable
             {
                 case ColorOutputArgs COA:
                     OutputDict.AddOrUpdate(COA.ServerId, [new ColorOutputLine(COA.Output, COA.ColorHex)],
-                        (key, value) =>
+                        (_, value) =>
                         {
                             value.Add(new ColorOutputLine(COA.Output, COA.ColorHex));
                             return value;
                         });
                     break;
                 case ServerStatusArgs SSA:
-                    StatusDict.AddOrUpdate(SSA.ServerId, (SSA.IsRunning, SSA.IsOnline), (key, value) =>
+                    StatusDict.AddOrUpdate(SSA.ServerId, (SSA.IsRunning, SSA.IsOnline), (_, value) =>
                     {
                         value.IsRunning = SSA.IsRunning;
                         value.IsOnline = SSA.IsOnline;
@@ -98,7 +98,7 @@ public class ServerOutputStorage : IDisposable
                     });
                     break;
                 case PlayerMessageArgs PMA:
-                    MessageDict.AddOrUpdate(PMA.ServerId, _ => [PMA.Message], (key, value) =>
+                    MessageDict.AddOrUpdate(PMA.ServerId, _ => [PMA.Message], (_, value) =>
                     {
                         value.Add(PMA.Message);
                         return value;

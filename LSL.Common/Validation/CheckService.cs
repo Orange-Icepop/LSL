@@ -166,7 +166,8 @@ public static class CheckService
                         "what fucking key it is?");
                     break;
                 }
-            };
+            }
+
             if (!vResult.Passed) return ServiceResult.Fail<ServerConfig>(
                 new ValidationException($"Error validating server config with id {id} at key {vResult.Key}:{Environment.NewLine}{vResult.Reason}"));
         }

@@ -26,7 +26,7 @@ namespace LSL.Services
         {
             try
             {
-                var (_lock, _delegates) = _handlers.GetOrAdd(typeof(TEvent), t => (new object(), []));
+                var (_lock, _delegates) = _handlers.GetOrAdd(typeof(TEvent), _ => (new object(), []));
                 lock (_lock)
                 {
                     _delegates.Add(handler);
@@ -242,7 +242,7 @@ namespace LSL.Services
             var value = (RTType: typeof(TResult), (Delegate)handler);
             if (force)
             {
-                _handlers.AddOrUpdate(key, value, (k, old) => value);
+                _handlers.AddOrUpdate(key, value, (_, _) => value);
                 return true;
             }
 
@@ -256,7 +256,7 @@ namespace LSL.Services
             var value = (typeof(Task<TResult>), (Delegate)handler);
             if (force)
             {
-                _handlers.AddOrUpdate(key, value, (k, old) => value);
+                _handlers.AddOrUpdate(key, value, (_, _) => value);
                 return true;
             }
 

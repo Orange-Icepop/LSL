@@ -61,9 +61,7 @@ public static class ConfigPathProvider
                 if (File.Exists(testFilePath))
                     File.Delete(testFilePath);
             }
-            catch
-            {
-            }
+            catch{}
         }
     }
 }

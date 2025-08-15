@@ -53,8 +53,8 @@ namespace LSL.ViewModels
             _logger = appState.LoggerFactory.CreateLogger<ShellViewModel>();
 
             // 视图命令
-            LeftViewCmd = ReactiveCommand.CreateFromTask<string>(async param => await NavigateLeftView(param, false));
-            RightViewCmd = ReactiveCommand.CreateFromTask<string>(async param => await NavigateRightView(param, false));
+            LeftViewCmd = ReactiveCommand.CreateFromTask<string>(async param => await NavigateLeftView(param));
+            RightViewCmd = ReactiveCommand.CreateFromTask<string>(async param => await NavigateRightView(param));
             FullViewCmd = ReactiveCommand.Create<string>(NavigateFullScreenView);
             FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Undefined, RightTarget = RightPageState.Undefined }));
 

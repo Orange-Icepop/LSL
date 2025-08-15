@@ -39,7 +39,7 @@ public class ProcessMetricsMonitor : IDisposable
 
             double cpuUsage = 0;
             long processMemory = 0;
-            bool isExited = false;
+            bool isExited;
 
             try
             {

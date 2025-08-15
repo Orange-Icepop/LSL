@@ -17,7 +17,6 @@
 				   FontFamily="{StaticResource SmileySans}"
 				   Margin="15,0,0,0" 
 				   Foreground="White" 
-				   Classes="title" 
 				   Grid.Column="1"
 				   HorizontalAlignment="Left" 
 				   VerticalAlignment="Center"/>

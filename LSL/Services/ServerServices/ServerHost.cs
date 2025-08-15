@@ -32,7 +32,7 @@ public class ServerHost : IServerHost, IDisposable
     #region 存储服务器进程实例LoadServer(int serverId, Process process)
     private void LoadServer(int serverId, ServerProcess process)
     {
-        _runningServers.AddOrUpdate(serverId, process, (key, value) => process);
+        _runningServers.AddOrUpdate(serverId, process, (_, _) => process);
     }
     #endregion
 
@@ -73,7 +73,7 @@ public class ServerHost : IServerHost, IDisposable
             return false; 
         }
         var SP = new ServerProcess(config);
-        SP.StatusEventHandler += (sender, args) => EventBus.Instance.Fire<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
+        SP.StatusEventHandler += (_, args) => EventBus.Instance.Fire<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
         // 启动服务器
         try
         {
@@ -89,7 +89,7 @@ public class ServerHost : IServerHost, IDisposable
         LoadServer(serverId, SP);
         _logger.LogInformation("Server with id {id} is mounted.", serverId);
         OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器正在启动，请稍后......"));
-        SP.OutputReceived += (sender, e) =>
+        SP.OutputReceived += (_, e) =>
         {
             if (!string.IsNullOrEmpty(e.Data))
             {
@@ -97,7 +97,7 @@ public class ServerHost : IServerHost, IDisposable
             }
         };
 
-        SP.ErrorReceived += (sender, e) =>
+        SP.ErrorReceived += (_, e) =>
         {
             if (!string.IsNullOrEmpty(e.Data))
             {
@@ -105,7 +105,7 @@ public class ServerHost : IServerHost, IDisposable
             }
         };
         SP.BeginRead();
-        SP.Exited += (sender, e) =>
+        SP.Exited += (_, _) =>
         {
             // 移除进程的实例
             UnloadServer(serverId);
@@ -123,7 +123,7 @@ public class ServerHost : IServerHost, IDisposable
                 SP.Dispose();
             }
         };
-        SP.StatusEventHandler += (sender, e) =>
+        SP.StatusEventHandler += (_, e) =>
         {
             if (e.Item2)
             {
@@ -131,7 +131,7 @@ public class ServerHost : IServerHost, IDisposable
                 _logger.LogInformation("Server with id {id} is online now.", serverId);
             }
         };
-        SP.MetricsReceived += (sender, e) =>
+        SP.MetricsReceived += (_, e) =>
         {
             metricsHandler.TryWrite(e);
         };

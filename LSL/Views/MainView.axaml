@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:LSL.ViewModels"
-			 xmlns:views="clr-namespace:LSL.Views"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="600"
              x:Class="LSL.Views.MainView"
              x:DataType="vm:ShellViewModel">

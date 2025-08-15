@@ -67,7 +67,7 @@ public class ServerMetricsBuffer : IDisposable
             await foreach (var args in _metricsChannel.Reader.ReadAllAsync(ct))
             {
                 var metrics = GetValidatedMetrics(args);
-                _currentMetrics.AddOrUpdate(args.ServerId, k => metrics, (k, v) => metrics);
+                _currentMetrics.AddOrUpdate(args.ServerId, _ => metrics, (_, _) => metrics);
             }
         }
         catch (OperationCanceledException)

@@ -118,7 +118,7 @@ namespace LSL.Services.ServerServices;
         private void InitProcessHandlers()
         {
             OutputReceivedHandler = (sender, args) => OutputReceived?.Invoke(sender, args);
-            OutputReceivedHandler += (sender, args) => HandleOutput(args.Data);
+            OutputReceivedHandler += (_, args) => HandleOutput(args.Data);
             ErrorReceivedHandler = (sender, args) => ErrorReceived?.Invoke(sender, args);
             ExitedHandler = (sender, args) =>
             {
