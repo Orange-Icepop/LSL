@@ -87,6 +87,9 @@ public class ConfigManager
         uint.Parse(config.MinMem),
         uint.Parse(config.MaxMem), config.ExtJvm);
     public ServiceResult DeleteServer(int id) => SCM.DeleteServer(id);
+
+    public async Task<ServiceResult> AddExistedServer(FormedServerConfig config) => await SCM.AddExistedServer(
+        config.ServerName, config.JavaPath, config.CorePath, uint.Parse(config.MinMem), uint.Parse(config.MaxMem), config.ExtJvm);
     // Java配置
     public FrozenDictionary<int, JavaInfo> JavaConfigs => JCM.JavaDict;
     public ServiceResult<JavaConfigReadResult> ReadJavaConfig() => JCM.ReadJavaConfig();

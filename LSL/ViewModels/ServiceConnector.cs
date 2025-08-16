@@ -396,10 +396,10 @@ namespace LSL.ViewModels
             return coreResult switch
             {
                 CoreValidationService.CoreType.Error => (0, "验证核心文件时发生错误。\r" + Problem),
-                CoreValidationService.CoreType.ForgeInstaller => (0, "您选择的文件是一个Forge安装器，而不是一个Minecraft服务端核心文件。"),
-                CoreValidationService.CoreType.FabricInstaller => (0, "您选择的文件是一个Fabric安装器，而不是一个Minecraft服务端核心文件。"),
+                CoreValidationService.CoreType.ForgeInstaller => (0, "您选择的文件是一个Forge安装器，而不是一个Minecraft服务端核心文件。LSL暂不支持Forge服务器的添加与启动。"),
+                CoreValidationService.CoreType.FabricInstaller => (0, "您选择的文件是一个Fabric安装器，而不是一个Minecraft服务端核心文件。请下载Fabric官方服务器jar文件，而不是安装器。"),
                 CoreValidationService.CoreType.Unknown => (-1,
-                    "LSL无法确认您选择的文件是否为Minecraft服务端核心文件。\r这可能是由于LSL没有收集足够的关于服务器核心的辨识信息造成的。如果这是确实一个Minecraft服务端核心并且具有一定的知名度，请您前往LSL的仓库（https://github.com/Orange-Icepop/LSL）提交相关Issue。\r您可以直接点击确认绕过校验，但是LSL及其开发团队不为因此造成的后果负任何义务或责任。"),
+                    "LSL无法确认您选择的文件是否为Minecraft服务端核心文件。\r这可能是由于LSL没有收集足够的关于服务器核心的辨识信息造成的。如果这是确实一个Minecraft服务端核心并且具有一定的知名度，请您前往LSL的仓库（https://github.com/Orange-Icepop/LSL）提交相关Issue。\r您可以直接点击确认绕过校验，但是LSL及其开发团队不为因此造成的后果作担保。"),
                 CoreValidationService.CoreType.Client => (0, "您选择的文件是一个Minecraft客户端核心文件，而不是一个服务端核心文件。"),
                 _ => (1, null)
             };
@@ -429,6 +429,14 @@ namespace LSL.ViewModels
         public async Task<bool> DeleteServer(int serverId)
         {
             var result = configManager.DeleteServer(serverId); 
+            await AppState.ITAUnits.SubmitServiceError(result);
+            await ReadServerConfig(true);
+            return result.IsFullSuccess;
+        }
+
+        public async Task<bool> AddExistedServer(FormedServerConfig config)
+        {
+            var result = await configManager.AddExistedServer(config);
             await AppState.ITAUnits.SubmitServiceError(result);
             await ReadServerConfig(true);
             return result.IsFullSuccess;

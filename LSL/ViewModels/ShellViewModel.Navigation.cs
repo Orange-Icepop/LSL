@@ -110,7 +110,7 @@ namespace LSL.ViewModels
             {
                 MessageBus.Current.SendMessage(new NavigateArgs
                     { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RV });
-                if (RV is RightPageState.AddCore or RightPageState.EditSC or RightPageState.AddFolder) FormVM.ClearForm(RV);
+                FormVM.ClearForm(RV);
                 _logger.LogDebug("Successfully navigated to {FullScreen}.", viewName);
             }
             else _logger.LogError("This view is not a fullscreen view: {name}.", viewName);

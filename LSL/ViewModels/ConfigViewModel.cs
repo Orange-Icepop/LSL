@@ -162,7 +162,6 @@ namespace LSL.ViewModels
         #endregion
 
         #region 服务器配置操作
-
         public ICommand DeleteServerCmd { get; }
         public async Task DeleteServer()
         {

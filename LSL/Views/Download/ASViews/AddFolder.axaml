@@ -83,7 +83,7 @@
                     </StackPanel>
                     <local:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
                                     Height="30" Margin="30,10,0,5" ColorType="Highlight"
-                                    Command="{Binding FormVM.AddCoreCmd}">
+                                    Command="{Binding FormVM.AddExistedServerCmd}">
                         确认添加
                     </local:MyButton>
                 </StackPanel>
