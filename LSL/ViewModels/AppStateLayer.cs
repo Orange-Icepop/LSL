@@ -51,7 +51,11 @@ namespace LSL.ViewModels
             
             #region 监听
             // 在索引更新时刷新右视图
-            ServerIndexChanged.Subscribe(_ => MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh)));
+            ServerIndexChanged.Subscribe(_ =>
+            {
+                if (!NavigationCollection.ServerRightPages.Contains(CurrentRightPage)) return;
+                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh));
+            });
             ServerIndexChanged.Select(index =>// 更新服务器ID
                 {
                     if (index < 0) return -1;

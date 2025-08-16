@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
@@ -240,5 +242,12 @@ namespace LSL.ViewModels
         }
     }
     #endregion
+
+    public static class NavigationCollection
+    {
+        public static readonly ImmutableArray<RightPageState> FullScreenViews = [RightPageState.AddCore, RightPageState.EditSC, RightPageState.AddFolder];
+
+        public static readonly ImmutableArray<RightPageState> ServerRightPages = [RightPageState.ServerStat, RightPageState.ServerTerminal, RightPageState.ServerConf];
+    }
 
 }
