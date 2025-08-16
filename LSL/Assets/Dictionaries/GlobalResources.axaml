@@ -7,4 +7,5 @@
 	<FontFamily x:Key="SmileySans">avares://LSL/Assets/Fonts/SmileySans.ttf#Smiley Sans</FontFamily>
 	<FontFamily x:Key="SourceHanSans">avares://LSL/Assets/Fonts/SourceHanSansHWSC-Regular.otf#Source Han Sans HW SC</FontFamily>
 	<FontFamily x:Key="JetBrainsMono">avares://LSL/Assets/Fonts/JetBrainsMonoNerdFont-Medium.ttf#JetBrainsMono NF Medium</FontFamily>
+	<FontFamily x:Key="MapleMono">avares://LSL/Assets/Fonts/MapleMonoNormalNL-NF-CN-Medium.ttf#Maple Mono Normal</FontFamily>
 </ResourceDictionary>
