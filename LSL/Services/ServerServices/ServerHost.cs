@@ -63,7 +63,7 @@ public class ServerHost : IServerHost, IDisposable
         _logger.LogInformation("Starting server with id {id}...", serverId);
         if (GetServer(serverId) is not null)
         {
-            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器已经在运行中。"));
+            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器已经在运行中。", OutputChannelType.LSLError));
             _logger.LogError("Server with id {id} is already running. Not running another instance.", serverId);
             return false;
         }
@@ -82,18 +82,18 @@ public class ServerHost : IServerHost, IDisposable
         catch (InvalidOperationException)
         {
             SP.Dispose();
-            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动失败，请检查配置文件。"));
+            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动失败，请检查配置文件。", OutputChannelType.LSLError));
             _logger.LogError("Server with id {id} failed to run.", serverId);
             return false;
         }
         LoadServer(serverId, SP);
         _logger.LogInformation("Server with id {id} is mounted.", serverId);
-        OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器正在启动，请稍后......"));
+        OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器正在启动，请稍后......", OutputChannelType.LSLInfo));
         SP.OutputReceived += (_, e) =>
         {
             if (!string.IsNullOrEmpty(e.Data))
             {
-                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data));
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data, OutputChannelType.StdOut));
             }
         };
 
@@ -101,7 +101,7 @@ public class ServerHost : IServerHost, IDisposable
         {
             if (!string.IsNullOrEmpty(e.Data))
             {
-                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data));
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data, OutputChannelType.StdErr));
             }
         };
         SP.BeginRead();
@@ -118,7 +118,7 @@ public class ServerHost : IServerHost, IDisposable
             finally
             {
                 string status = $"已关闭，进程退出码为{exitCode}";
-                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 当前服务器" + status));
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 当前服务器" + status, OutputChannelType.StdOut));
                 _logger.LogInformation("Server with id {id} is stopped.", serverId);
                 SP.Dispose();
             }
@@ -127,7 +127,7 @@ public class ServerHost : IServerHost, IDisposable
         {
             if (e.Item2)
             {
-                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动成功!"));
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动成功!", OutputChannelType.LSLInfo));
                 _logger.LogInformation("Server with id {id} is online now.", serverId);
             }
         };
@@ -148,11 +148,11 @@ public class ServerHost : IServerHost, IDisposable
         {
             _logger.LogInformation("Stopping server with id {id}...", serverId);
             server.Stop();
-            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
+            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......", OutputChannelType.LSLInfo));
         }
         else
         {
-            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送"));
+            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送", OutputChannelType.LSLError));
         }
     }
     #endregion
@@ -165,14 +165,14 @@ public class ServerHost : IServerHost, IDisposable
         {
             if (command == "stop")
             {
-                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......"));
+                OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......", OutputChannelType.LSLInfo));
             }
             server.SendCommand(command);
             return true;
         }
         else
         {
-            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送"));
+            OutputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送", OutputChannelType.LSLError));
             return false;
         }
     }

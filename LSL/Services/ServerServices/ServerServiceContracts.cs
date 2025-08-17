@@ -9,6 +9,14 @@ public interface IServerHost
     void EndAllServers();
 }
 
-public record TerminalOutputArgs(int ServerId, string Output);// 终端输出事件
+public enum OutputChannelType
+{
+    StdOut,
+    StdErr,
+    LSLInfo,
+    LSLError
+}
+
+public record TerminalOutputArgs(int ServerId, string Output, OutputChannelType ChannelType);// 终端输出事件
 public record ColorOutputLine(string Line, string ColorHex);// 着色输出行
     

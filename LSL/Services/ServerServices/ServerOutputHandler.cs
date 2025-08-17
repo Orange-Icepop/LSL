@@ -46,7 +46,7 @@ public partial class ServerOutputHandler : IDisposable
             {
                 try
                 {
-                    await OutputProcessor(args.ServerId, args.Output);
+                    await OutputProcessor(args.ServerId, args.Output, args.ChannelType);
                 }
                 catch(Exception ex)
                 {
@@ -97,41 +97,50 @@ public partial class ServerOutputHandler : IDisposable
     private static readonly Regex PlayerLeft = PlayerLeftRegex();
 
     #region 处理操作
-    private static async Task OutputProcessor(int ServerId, string Output)
+    private static async Task OutputProcessor(int ServerId, string Output, OutputChannelType channel)
     {
         string colorBrush = "#000000";
-        string final = Output;
-        // 检测消息是否带有时间戳
-        if (Output.StartsWith("[LSL"))
+        switch (channel)
         {
-            colorBrush = "#019eff";
-        }
-        else if (GetTimeStamp.IsMatch(Output))
-        {
-            var match = GetTimeStamp.Match(Output);
-            if (GetPlayerMessage.IsMatch(match.Groups["context"].Value))
+            // 检测消息是否带有时间戳
+            case OutputChannelType.LSLInfo:
+                colorBrush = "#019eff";
+                break;
+            case OutputChannelType.LSLError:
+            case OutputChannelType.StdErr:
+                colorBrush = "#ff0000";
+                break;
+            default:
             {
-                await EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerMessageArgs(ServerId, match.Groups["context"].Value));
-            }
-            else
-            {
-                string type = match.Groups["type"].Value;
-                colorBrush = type switch
+                if (GetTimeStamp.IsMatch(Output))
                 {
-                    "INFO" => "#019eff",// 还是这个颜色顺眼 (>v<)
-                    "WARN" => "#ffc125",
-                    "RROR" => "#ff0000",
-                    "FATA" => "#ff0000",
-                    _ => "#000000"
-                };
-                ProcessSystem(ServerId, match.Groups["context"].Value);
+                    var match = GetTimeStamp.Match(Output);
+                    if (GetPlayerMessage.IsMatch(match.Groups["context"].Value))
+                    {
+                        await EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerMessageArgs(ServerId, match.Groups["context"].Value));
+                    }
+                    else
+                    {
+                        string type = match.Groups["type"].Value;
+                        colorBrush = type switch
+                        {
+                            "INFO" => "#019eff",// 还是这个颜色顺眼 (>v<)
+                            "WARN" => "#ffc125",
+                            "RROR" => "#ff0000",
+                            "FATA" => "#ff0000",
+                            _ => "#000000"
+                        };
+                        ProcessSystem(ServerId, match.Groups["context"].Value);
+                    }
+                }
+                else
+                {
+                    colorBrush = "#019eff";
+                }
+                break;
             }
         }
-        else
-        {
-            colorBrush = "#ff0000";
-        }
-        await EventBus.Instance.PublishAsync<IStorageArgs>(new ColorOutputArgs(ServerId, final, colorBrush));
+        await EventBus.Instance.PublishAsync<IStorageArgs>(new ColorOutputArgs(ServerId, Output, colorBrush));
     }
     // 额外处理服务端自身输出所需要更新的操作
     private static void ProcessSystem(int ServerId, string Output)
