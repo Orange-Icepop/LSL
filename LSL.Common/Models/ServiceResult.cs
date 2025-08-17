@@ -8,18 +8,8 @@ public interface IServiceResult
 
 public class ServiceResult<T> : IServiceResult
 {
-    public T? Result { 
-        get 
-        {
-            if (!HasResult) 
-            {
-                if (Error is not null) throw Error; 
-                else throw new InvalidOperationException("Cannot access Result on failed operation");
-            }
-            return _result;
-        }
-    }
-    
+    public T? Result { get; }
+
     public ServiceResultType ErrorCode { get; }
     public Exception? Error { get; }
     public bool IsFullSuccess => ErrorCode == ServiceResultType.Success;
@@ -27,13 +17,11 @@ public class ServiceResult<T> : IServiceResult
     public bool IsFullError => ErrorCode == ServiceResultType.Error;
     public bool HasError => ErrorCode != ServiceResultType.Success;
 
-    private readonly T? _result;
-
     // 内部构造器防止不规范创建
     internal ServiceResult(ServiceResultType errorCode, T? result, Exception? error)
     {
         ErrorCode = errorCode;
-        _result = result;
+        Result = result;
         Error = error;
     }
 }

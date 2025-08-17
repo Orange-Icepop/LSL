@@ -1,13 +1,10 @@
 ﻿namespace LSL.Common.Models;
 
-public class ApiResult
+public record ApiResult(int StatusCode, string Message = "")
 {
-    public int StatusCode { get; }
-    public string Message { get; }
-
-    public ApiResult(int statusCode, string? msg = null)
+    public void Deconstruct(out int statusCode, out string message)
     {
-        StatusCode = statusCode;
-        Message = msg ?? string.Empty;
+        statusCode = StatusCode;
+        message = Message;
     }
 }

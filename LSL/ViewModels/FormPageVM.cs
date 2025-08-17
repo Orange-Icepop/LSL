@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Avalonia.Threading;
 using LSL.Common.Models;
 using LSL.Common.Validation;
+using LSL.Services.ConfigServices;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -100,16 +101,32 @@ namespace LSL.ViewModels
                 await AppState.ITAUnits.ThrowError("解析服务器根目录时发生错误", $"无法获取到指定服务器核心的根目录:{result}");
                 return;
             }
+
             var parentPath = "服务器文件夹：" + parent.FullName;
-            var parentName = parent.Name;
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            if (File.Exists(Path.Combine(parent.FullName, "lslconfig.json")))
             {
-                ExistedServerPath = parentPath;
-                CorePath = result;
-                ServerName = parentName;
-            });
+                var res = ServerConfigManager.GetSingleServerConfig(0, parent.FullName);
+                if (res.Status is ServerConfigParseResultType.Success)
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        DeployConfig(res.Config);
+                        ExistedServerPath = parentPath;
+                    });
+                }
+            }
+            else
+            {
+                var parentName = parent.Name;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    ExistedServerPath = parentPath;
+                    CorePath = result;
+                    ServerName = parentName;
+                });
+            }
         }
-        
+
         #region 新增服务器逻辑
         private async Task AddServerCore()
         {
@@ -230,13 +247,7 @@ namespace LSL.ViewModels
                     if (!AppState.CurrentServerConfigs.TryGetValue(AppState.SelectedServerId, out var tmp))
                         throw new ArgumentNullException("选中的服务器不存在已经被读取的配置。" + Environment.NewLine +
                                                         "作者认为LSL理论上不应该抛出该异常，因为您不可能在不存在该服务器时编辑其配置。");
-                    ServerName = tmp.name;
-                    CorePath = tmp.server_path;
-                    MinMem = tmp.min_memory.ToString();
-                    MaxMem = tmp.max_memory.ToString();
-                    ExistedServerPath = string.Empty;
-                    JavaPath = tmp.using_java;
-                    ExtJvm = tmp.ext_jvm;
+                    DeployConfig(tmp);
                     break;
                 }
                 case RightPageState.AddCore:
@@ -253,6 +264,17 @@ namespace LSL.ViewModels
                     break;
                 }
             }
+        }
+
+        private void DeployConfig(ServerConfig config)
+        {
+            ServerName = config.name;
+            CorePath = config.server_path;
+            MinMem = config.min_memory.ToString();
+            MaxMem = config.max_memory.ToString();
+            ExistedServerPath = string.Empty;
+            JavaPath = config.using_java;
+            ExtJvm = config.ext_jvm;
         }
         #endregion
     }

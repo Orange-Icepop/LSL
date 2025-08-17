@@ -95,33 +95,27 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         Dictionary<int, ServerConfig> scCache = [];
         foreach (var (key, targetDir) in mainConfigs)
         {
-            // 读取步骤
-            string targetConfig = Path.Combine(targetDir, "lslconfig.json");
-            if (!File.Exists(targetConfig))
+            var result = GetSingleServerConfig(key, targetDir);
+            switch (result.Status)
             {
-                NotfoundServers.Add(targetDir);
-                continue;
-            }
-
-            var configFile = File.ReadAllText(targetConfig);
-            if (string.IsNullOrWhiteSpace(configFile) || configFile == "{}")
-            {
-                NotfoundServers.Add(targetDir);
-                continue;
-            }
-
-            // 解析步骤
-            try
-            {
-                var serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile) ??
-                                   throw new FormatException("Error parsing server config to dictionary.");
-                var vResult = CheckService.VerifyServerConfig(key, targetDir, serverConfig);
-                if (!vResult.IsFullSuccess || vResult.Result is null) ConfigErrorServers.Add(targetConfig);
-                else scCache.Add(key, vResult.Result);
-            }
-            catch (JsonException)
-            {
-                ConfigErrorServers.Add(targetConfig);
+                case ServerConfigParseResultType.ServerNotFound:
+                {
+                    NotfoundServers.Add(targetDir);
+                    break;
+                }
+                case ServerConfigParseResultType.ConfigFileNotFound:
+                case ServerConfigParseResultType.EmptyConfig:
+                case ServerConfigParseResultType.Unparsable:
+                case ServerConfigParseResultType.MissingKey:
+                {
+                    ConfigErrorServers.Add(targetDir);
+                    break;
+                }
+                case ServerConfigParseResultType.Success:
+                {
+                    scCache.Add(key, result.Config);
+                    break;
+                }
             }
         }
 
@@ -139,7 +133,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             if (ConfigErrorServers.Count > 0)
             {
                 error.AppendLine()
-                    .AppendLine($"有{ConfigErrorServers.Count}个服务器的配置文件格式不正确：")
+                    .AppendLine($"有{ConfigErrorServers.Count}个服务器的配置文件不存在或格式不正确：")
                     .AppendJoin(Environment.NewLine, ConfigErrorServers);
             }
 
@@ -147,6 +141,31 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         }
 
         return ServiceResult.Success(scCache.ToFrozenDictionary());
+    }
+
+    public static ServerConfigParseResult GetSingleServerConfig(int key, string targetDir)
+    {
+        if (!Directory.Exists(targetDir))
+            return new ServerConfigParseResult(ServerConfigParseResultType.ServerNotFound);
+        string targetConfig = Path.Combine(targetDir, "lslconfig.json");
+        if (!File.Exists(targetConfig))
+            return new ServerConfigParseResult(ServerConfigParseResultType.ConfigFileNotFound);
+        var configFile = File.ReadAllText(targetConfig);
+        if (string.IsNullOrWhiteSpace(configFile) || configFile == "{}")
+            return new ServerConfigParseResult(ServerConfigParseResultType.EmptyConfig);
+        try
+        {
+            var serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile);
+            if (serverConfig is null) return new ServerConfigParseResult(ServerConfigParseResultType.Unparsable);
+            var vResult = CheckService.VerifyServerConfig(key, targetDir, serverConfig);
+            if (!vResult.IsFullSuccess || vResult.Result is null)
+                return new ServerConfigParseResult(ServerConfigParseResultType.MissingKey);
+            return new ServerConfigParseResult(ServerConfigParseResultType.Success, vResult.Result);
+        }
+        catch (JsonException)
+        {
+            return new ServerConfigParseResult(ServerConfigParseResultType.Unparsable);
+        }
     }
 
     #endregion
@@ -305,14 +324,15 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         string serializedConfig = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
         await File.WriteAllTextAsync(addedConfigPath, serializedConfig); // 写入服务器文件夹内的配置文件
         // 创建Eula文件
-        if(!File.Exists(Path.Combine(addedServerPath, "eula.txt")))
+        if (!File.Exists(Path.Combine(addedServerPath, "eula.txt")))
         {
             if (!_mainConfigManager.CurrentConfigs.TryGetValue("auto_eula", out var rawEula) ||
                 !bool.TryParse(rawEula.ToString(), out var eula)) eula = false;
             string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             await File.WriteAllTextAsync(Path.Combine(addedServerPath, "eula.txt"),
                 $"# Generated by LSL at {time}\r# For details of Mojang EULA, go to https://aka.ms/MinecraftEULA\reula={eula}");
-        }        
+        }
+
         //找到空闲id
         int targetId = 0;
         while (MainServerConfig.ContainsKey(targetId))

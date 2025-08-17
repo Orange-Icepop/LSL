@@ -9,7 +9,7 @@
              x:Class="LSL.Views.Download.ASViews.AddFolder">
     <ScrollViewer>
         <StackPanel>
-            <local:MyCard Text="从核心添加服务器">
+            <local:MyCard Text="从文件夹添加现有服务器">
                 <StackPanel Margin="25,10,25,15">
                     <StackPanel Margin="30,50,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器核心路径</TextBlock>
