@@ -10,7 +10,7 @@
 	<DockPanel Width="350">
 		<TextBlock DockPanel.Dock="Top" Text="欢迎回来" FontSize="30" HorizontalAlignment="Center" Margin="50"/>
 		<Grid DockPanel.Dock="Bottom" ColumnDefinitions="*" Width="270" Margin="0,0,0,20" HorizontalAlignment="Center">
-			<local:MyButton Grid.Row="0" Grid.Column="0" Margin="10,0" FontSize="20" Content="服务器设置" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="50" Command="{Binding LeftViewCmd}" CommandParameter="ServerLeft"/>
+			<local:MyButton Grid.Row="0" Grid.Column="0" Margin="10,0" FontSize="20" Content="服务器设置" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="50" Command="{Binding ServerConfigCmd}"/>
 			<!--
 			<local:MyButton Grid.Row="0" Grid.Column="1" Margin="10,0" FontSize="20" Content="面板设置" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="50" Command="{Binding PanelConfigCmd}"/>
 			-->

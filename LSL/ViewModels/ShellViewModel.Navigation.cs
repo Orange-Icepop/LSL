@@ -27,6 +27,7 @@ namespace LSL.ViewModels
 
         //这一部分是多参数导航按钮的部分，由于设置别的VM会导致堆栈溢出且暂时没找到替代方案，所以先摆了
         //还有就是本来希望可以创建一个方法来传递两个参数的，但是太麻烦了，还是先搁置了
+        public ICommand ServerConfigCmd { get; }
         public ICommand PanelConfigCmd { get; }
         public ICommand DownloadConfigCmd { get; }
         public ICommand CommonConfigCmd { get; }

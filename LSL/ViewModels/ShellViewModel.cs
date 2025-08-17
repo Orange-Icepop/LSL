@@ -59,18 +59,11 @@ namespace LSL.ViewModels
             FullViewBackCmd = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Undefined, RightTarget = RightPageState.Undefined }));
 
             #region 多参数导航
-            PanelConfigCmd = ReactiveCommand.CreateFromTask(async () =>
-            {
-                await NavigateToPage(GeneralPageState.Settings, RightPageState.PanelSettings);
-            });
-            DownloadConfigCmd = ReactiveCommand.CreateFromTask(async () =>
-            {
-                await NavigateToPage(GeneralPageState.Settings, RightPageState.DownloadSettings);
-            });
-            CommonConfigCmd = ReactiveCommand.CreateFromTask(async () =>
-            {
-                await NavigateToPage(GeneralPageState.Settings, RightPageState.CommonSettings);
-            });
+
+            ServerConfigCmd = ReactiveCommand.CreateFromTask(async () => await NavigateToPage(GeneralPageState.Server, RightPageState.ServerConf));
+            PanelConfigCmd = ReactiveCommand.CreateFromTask(async () => await NavigateToPage(GeneralPageState.Settings, RightPageState.PanelSettings));
+            DownloadConfigCmd = ReactiveCommand.CreateFromTask(async () => await NavigateToPage(GeneralPageState.Settings, RightPageState.DownloadSettings));
+            CommonConfigCmd = ReactiveCommand.CreateFromTask(async () => await NavigateToPage(GeneralPageState.Settings, RightPageState.CommonSettings));
             #endregion
 
             MessageBus.Current.Listen<WindowOperationArgs>()
