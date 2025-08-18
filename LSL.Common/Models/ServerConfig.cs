@@ -47,9 +47,9 @@ public static class ServerConfigExtensions
         this FrozenDictionary<int, ServerConfig> serverConfigs)
     {
         var result = new Dictionary<int, ServerConfig>();
-        foreach (var serverConfig in serverConfigs)
+        foreach (var (k,v) in serverConfigs)
         {
-            result.TryAdd(serverConfig.Key, new ServerConfig(serverConfig.Value));
+            result.TryAdd(k, new ServerConfig(v));
         }
         return result;
     }

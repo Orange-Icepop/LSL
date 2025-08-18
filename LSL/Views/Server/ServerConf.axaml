@@ -22,7 +22,21 @@
                     </DockPanel>
                 </Grid>
             </local:MyCard>
-            <local:MyCard Text="配置">
+            <local:MyCard Text="详细信息">
+                <Grid Margin="25,50,25,25" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="LSL注册ID："/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="最小内存（MB）："/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="最大内存（MB）："/>
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="使用的Java路径："/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="附加JVM参数："/>
+                    <SelectableTextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.server_id}"/>
+                    <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.min_memory}"/>
+                    <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.max_memory}"/>
+                    <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.using_java}"/>
+                    <SelectableTextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.ext_jvm}"/>
+                </Grid>
+            </local:MyCard>
+            <local:MyCard Text="配置操作">
                 <DockPanel Margin="25,50,25,25">
                     <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight"
                                     Height="30" Width="100" Margin="10" Command="{Binding FullViewCmd}"
