@@ -111,17 +111,37 @@ namespace LSL.ViewModels
             await Dispatcher.UIThread.InvokeAsync(() => AppState.CurrentJavaDict = configManager.JavaConfigs);
         }
 
-        public async Task<ServiceResult> ReadServerConfig(bool readFile = false)
+        public async Task ReadServerConfig(bool readFile = false)
         {
             if (readFile)
             {
                 var res = configManager.ReadServerConfig();
-                var notCritical = await AppState.ITAUnits.SubmitServiceError(res);
-                if (!notCritical)
+                if (res.ErrorCode is ServiceResultType.Error)
                 {
-                    if (res.Error is not null) _logger.LogCritical(res.Error, "A critical error occured while reading server config.");
+                    // 如果是致命错误，直接退出
+                    if (res.Error is not null) await AppState.ITAUnits.SubmitServiceError(res);
+                    _logger.LogCritical(res.Error, "A critical error occured while reading server config. Exiting......");
                     Environment.Exit(1);
-                    return res;
+                    return;
+                }
+                else if (res.ErrorCode is ServiceResultType.FinishWithWarning)
+                {
+                    var error = new StringBuilder("在读取服务器配置时出现了一些非致命错误:");
+                    if (res.NotFoundServers.Count > 0)
+                    {
+                        error.AppendLine()
+                            .AppendLine($"有{res.NotFoundServers.Count}个已注册的服务器不存在：")
+                            .AppendJoin(Environment.NewLine, res.NotFoundServers);
+                    }
+
+                    if (res.ConfigErrorServers.Count > 0)
+                    {
+                        error.AppendLine()
+                            .AppendLine($"有{res.ConfigErrorServers.Count}个服务器的配置文件不存在或格式不正确：")
+                            .AppendJoin(Environment.NewLine, res.ConfigErrorServers);
+                    }
+                    error.AppendLine("这些服务器将不会被读取。你可以通过重新添加服务器来解决这个问题。");
+                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_Confirm, "读取服务器配置时发生错误", res.ToString()));
                 }
             }
 
@@ -132,7 +152,6 @@ namespace LSL.ViewModels
             }
 
             await Dispatcher.UIThread.InvokeAsync(() => AppState.CurrentServerConfigs = cache.ToFrozenDictionary());
-            return ServiceResult.Success();
         }
 
         public async Task<bool> UpdateConfig(IDictionary<int, object> currentConfigs)

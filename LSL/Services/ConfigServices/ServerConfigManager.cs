@@ -28,22 +28,29 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 读取各个服务器的LSL配置文件ReadServerConfig
 
-    public ServiceResult ReadServerConfig()
+    public ServerConfigReadResult ReadServerConfig()
     {
         _logger.LogInformation("Start reading server config...");
         string mainPath = ConfigPathProvider.ServerConfigPath;
         // 读取服务器主配置文件
         var indexRes = GetIndexConfig(mainPath);
         if (indexRes.HasError || indexRes.Result is null)
-            return ServiceResult.Fail(indexRes.Error ?? new Exception($"Error reading main server config {mainPath}."));
+            return ServerConfigReadResult.Fail(indexRes.Error ?? new Exception($"Error reading main server config {mainPath}."));
         MainServerConfig = indexRes.Result;
         var detailRes = GetServerDetails(MainServerConfig);
-        if (detailRes.HasError || detailRes.Result is null)
-            return ServiceResult.Fail(detailRes.Error ??
-                                      new Exception($"Error reading main server config {mainPath}."));
-        ServerConfigs = detailRes.Result;
+        if (detailRes.ErrorCode is ServiceResultType.Error)
+            return ServerConfigReadResult.Fail(detailRes.Error ??
+                                      new Exception($"Error reading server config {mainPath}."));
+        ServerConfigs = detailRes.Configs;
+        if (detailRes.ErrorCode is ServiceResultType.FinishWithWarning)
+        {
+            _logger.LogWarning("Some servers failed to load. Not found: {notfound}, Config errors: {configerror}",
+                string.Join(", ", detailRes.NotFoundServers),
+                string.Join(", ", detailRes.ConfigErrorServers));
+            return detailRes;
+        }
         _logger.LogInformation("Finished reading server config.");
-        return ServiceResult.Success();
+        return ServerConfigReadResult.Success(detailRes.Configs);
     }
 
     #endregion
@@ -86,7 +93,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 逐个获取服务器各自的配置文件
 
-    private static ServiceResult<FrozenDictionary<int, ServerConfig>> GetServerDetails(
+    private static ServerConfigReadResult GetServerDetails(
         IDictionary<int, string> mainConfigs)
     {
         List<string> NotfoundServers = [];
@@ -122,25 +129,10 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         // 检查错误
         if (NotfoundServers.Count > 0 || ConfigErrorServers.Count > 0)
         {
-            StringBuilder error = new("LSL在读取服务器配置文件时发现了以下错误：");
-            if (NotfoundServers.Count > 0)
-            {
-                error.AppendLine()
-                    .AppendLine($"有{NotfoundServers.Count}个已注册的服务器不存在：")
-                    .AppendJoin(Environment.NewLine, NotfoundServers);
-            }
-
-            if (ConfigErrorServers.Count > 0)
-            {
-                error.AppendLine()
-                    .AppendLine($"有{ConfigErrorServers.Count}个服务器的配置文件不存在或格式不正确：")
-                    .AppendJoin(Environment.NewLine, ConfigErrorServers);
-            }
-
-            return ServiceResult.FinishWithWarning(scCache.ToFrozenDictionary(), new Exception(error.ToString()));
+            return ServerConfigReadResult.PartConfigError(scCache.ToFrozenDictionary(), NotfoundServers, ConfigErrorServers);
         }
 
-        return ServiceResult.Success(scCache.ToFrozenDictionary());
+        return ServerConfigReadResult.Success(scCache.ToFrozenDictionary());
     }
 
     public static ServerConfigParseResult GetSingleServerConfig(int key, string targetDir)

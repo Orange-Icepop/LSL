@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reactive.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
 using Avalonia.Threading;
@@ -27,7 +28,7 @@ namespace LSL.ViewModels
             CheckUpdateCmd = ReactiveCommand.CreateFromTask(serveCon.CheckForUpdates);
         }
 
-        #region About页面的相关内容
+        #region 泛公共操作
         public ICommand OpenWebPageCmd { get; }
         public ICommand CheckUpdateCmd { get; }
         private async void OpenWebPage(string url)
@@ -36,7 +37,12 @@ namespace LSL.ViewModels
             {
                 ArgumentNullException.ThrowIfNull(url);
                 if (!Regex.IsMatch(url, "^https?://")) throw new ArgumentException("URL格式错误");
-                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+                if (OperatingSystem.IsWindows())
+                    Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+                else if (OperatingSystem.IsLinux())
+                    Process.Start("xdg-open", url); // xdg-utils dependency required
+                else if (OperatingSystem.IsMacOS())
+                    Process.Start("open", url);
                 AppState.ITAUnits.Notify(1, "成功打开了网页！", url);
                 _logger.LogInformation("Successfully opened web page {url}.", url);
             }
@@ -46,13 +52,25 @@ namespace LSL.ViewModels
                 {
                     await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "打开网页失败",
                         $"LSL未能成功打开网页{url}，请检查您的系统是否设置了默认浏览器。\r错误内容：{noBrowser.Message}"));
-                    _logger.LogError(noBrowser, "Error opening webpage {url} because no default web browser is set.", url);
+                    _logger.LogError(noBrowser, "Error opening webpage {url} because no default web browser is set.",
+                        url);
                 }
+            }
+            catch (ArgumentException ae)
+            {
+                _logger.LogError(ae, "Error opening webpage {url} because of invalid URL format.", url);
+                await AppState.ITAUnits.ThrowError("打开网页失败", $"URL格式不正确：{url}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error opening webpage {url}.", url);
-                await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "打开网页失败", $"LSL未能成功打开网页{url}，这是由于非浏览器配置错误造成的。\r如果这是在自定义主页中发生的，请检查您的自定义主页是否正确配置了网址；否则，这可能是一个Bug，请您提交一个issue反馈。\r错误内容：{ex}"));
+                var logMsg = OperatingSystem.IsLinux()
+                    ? "Please install xdg-utils to open webpage."
+                    : "Please check MacOS's default web browser configuration.";
+                _logger.LogError(ex, "Error opening webpage {url}.\r{logMsg}", url, logMsg);
+                var uiMsg = OperatingSystem.IsLinux()
+                    ? "请安装 xdg-utils: sudo apt install xdg-utils"
+                    : "macOS系统异常，请检查默认浏览器设置";
+                await AppState.ITAUnits.ThrowError("打开网页失败", uiMsg + ex.Message);
             }
         }
         #endregion

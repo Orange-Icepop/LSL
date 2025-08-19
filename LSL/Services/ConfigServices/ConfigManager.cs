@@ -79,7 +79,7 @@ public class ConfigManager
     public ServiceResult ReadMainConfig() => MCM.LoadConfig();
     // 服务器配置
     public FrozenDictionary<int, ServerConfig> ServerConfigs => SCM.ServerConfigs;
-    public ServiceResult ReadServerConfig() => SCM.ReadServerConfig();
+    public ServerConfigReadResult ReadServerConfig() => SCM.ReadServerConfig();
 
     public ServiceResult RegisterServer(FormedServerConfig config) => SCM.RegisterServer(config.ServerName,
         config.JavaPath, config.CorePath, uint.Parse(config.MinMem), uint.Parse(config.MaxMem), config.ExtJvm);
