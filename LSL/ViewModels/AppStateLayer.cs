@@ -20,7 +20,6 @@ namespace LSL.ViewModels
         public IObservable<FrozenDictionary<int, ServerConfig>> ServerConfigChanged { get; private set; }
         public IObservable<int> ServerIndexChanged { get; private set; }
         public IObservable<int> ServerIdChanged { get; private set; }
-        public IObservable<(FrozenDictionary<int, ServerConfig>, int)> CombinedServerConfigChanged { get; private set; }
 
         public AppStateLayer(InteractionUnits interUnit, ILoggerFactory loggerFactory)
         {
@@ -49,9 +48,9 @@ namespace LSL.ViewModels
             ServerConfigChanged = this.WhenAnyValue(AS => AS.CurrentServerConfigs).ObserveOn(RxApp.MainThreadScheduler);
             ServerIndexChanged = this.WhenAnyValue(AS => AS.SelectedServerIndex).ObserveOn(RxApp.MainThreadScheduler);
             ServerIdChanged = this.WhenAnyValue(AS => AS.SelectedServerId).ObserveOn(RxApp.MainThreadScheduler);
-            CombinedServerConfigChanged = this.WhenAnyValue(x => x.CurrentServerConfigs, x => x.SelectedServerIndex);
 
             #region 监听
+
             // 配置文件更新的连带更新
             ServerConfigChanged.Select(s => new ObservableCollection<int>(s.Keys))
                 .ToPropertyEx(this, x => x.ServerIDs, scheduler: RxApp.MainThreadScheduler);
@@ -77,13 +76,16 @@ namespace LSL.ViewModels
                 if (!NavigationCollection.ServerRightPages.Contains(CurrentRightPage)) return;
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh));
             });
-            ServerIndexChanged.Select(index => // 更新服务器ID
+            // 更新服务器ID
+            this.WhenAnyValue(x => x.SelectedServerIndex, x => x.ServerIDs)
+                .Select(tup =>
                 {
-                    if (index < 0) return -1;
-                    if (ServerIDs?.Count > index) return ServerIDs.ElementAt(index);
+                    if (tup.Item1 < 0) return -1;
+                    if (tup.Item2.Count > tup.Item1) return tup.Item2[tup.Item1];
                     return -1;
                 })
                 .ToPropertyEx(this, x => x.SelectedServerId, scheduler: RxApp.MainThreadScheduler);
+
             #endregion
         }
 

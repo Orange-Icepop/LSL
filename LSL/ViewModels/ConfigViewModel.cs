@@ -35,8 +35,8 @@ namespace LSL.ViewModels
                     },
                 })
                 .ToPropertyEx(this, x => x.JavaVersions);
-            AppState.ServerIdChanged.Subscribe(Id => RaiseServerConfigChanged(Id, null));
-            AppState.ServerConfigChanged.Subscribe(SC => RaiseServerConfigChanged(null, SC));
+            AppState.WhenAnyValue(x => x.CurrentServerConfigs, x => x.SelectedServerId)
+                .Subscribe(scc => RaiseServerConfigChanged(scc.Item2, scc.Item1));
             DeleteServerCmd = ReactiveCommand.CreateFromTask(async () => await DeleteServer());
         }
 
@@ -216,11 +216,9 @@ namespace LSL.ViewModels
         [Reactive] public string SelectedServerName { get; private set; }
         [Reactive] public string SelectedServerPath { get; private set; }
 
-        private void RaiseServerConfigChanged(int? serverId, IDictionary<int,ServerConfig>? serverConfig)
+        private void RaiseServerConfigChanged(int serverId, FrozenDictionary<int,ServerConfig> serverConfig)
         {
-            var SI = serverId ?? AppState.SelectedServerId;
-            var SCS = serverConfig ?? AppState.CurrentServerConfigs;
-            if (SCS.TryGetValue(SI, out var SC))
+            if (serverConfig.TryGetValue(serverId, out var SC))
             {
                 SelectedServerConfig = SC;
                 SelectedServerName = SC.name;
