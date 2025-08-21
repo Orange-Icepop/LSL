@@ -17,9 +17,10 @@ namespace LSL.ViewModels
         public ILoggerFactory LoggerFactory { get; }
         private ILogger<AppStateLayer> Logger { get; }
         public InteractionUnits ITAUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
-        public IObservable<FrozenDictionary<int,ServerConfig>> ServerConfigChanged { get; private set; }
+        public IObservable<FrozenDictionary<int, ServerConfig>> ServerConfigChanged { get; private set; }
         public IObservable<int> ServerIndexChanged { get; private set; }
         public IObservable<int> ServerIdChanged { get; private set; }
+        public IObservable<(FrozenDictionary<int, ServerConfig>, int)> CombinedServerConfigChanged { get; private set; }
 
         public AppStateLayer(InteractionUnits interUnit, ILoggerFactory loggerFactory)
         {
@@ -48,21 +49,9 @@ namespace LSL.ViewModels
             ServerConfigChanged = this.WhenAnyValue(AS => AS.CurrentServerConfigs).ObserveOn(RxApp.MainThreadScheduler);
             ServerIndexChanged = this.WhenAnyValue(AS => AS.SelectedServerIndex).ObserveOn(RxApp.MainThreadScheduler);
             ServerIdChanged = this.WhenAnyValue(AS => AS.SelectedServerId).ObserveOn(RxApp.MainThreadScheduler);
-            
+            CombinedServerConfigChanged = this.WhenAnyValue(x => x.CurrentServerConfigs, x => x.SelectedServerIndex);
+
             #region 监听
-            // 在索引更新时刷新右视图
-            ServerIndexChanged.Subscribe(_ =>
-            {
-                if (!NavigationCollection.ServerRightPages.Contains(CurrentRightPage)) return;
-                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh));
-            });
-            ServerIndexChanged.Select(index =>// 更新服务器ID
-                {
-                    if (index < 0) return -1;
-                    if (ServerIDs?.Count > index) return ServerIDs.ElementAt(index);
-                    return -1;
-                }) 
-                .ToPropertyEx(this, x => x.SelectedServerId, scheduler: RxApp.MainThreadScheduler);
             // 配置文件更新的连带更新
             ServerConfigChanged.Select(s => new ObservableCollection<int>(s.Keys))
                 .ToPropertyEx(this, x => x.ServerIDs, scheduler: RxApp.MainThreadScheduler);
@@ -82,8 +71,20 @@ namespace LSL.ViewModels
                     return SC.TryGetValue(-1, out _) ? 0 : SC.Count;
                 })
                 .ToPropertyEx(this, x => x.TotalServerCount);
+            // 在索引更新时刷新右视图
+            ServerIndexChanged.Subscribe(_ =>
+            {
+                if (!NavigationCollection.ServerRightPages.Contains(CurrentRightPage)) return;
+                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh));
+            });
+            ServerIndexChanged.Select(index => // 更新服务器ID
+                {
+                    if (index < 0) return -1;
+                    if (ServerIDs?.Count > index) return ServerIDs.ElementAt(index);
+                    return -1;
+                })
+                .ToPropertyEx(this, x => x.SelectedServerId, scheduler: RxApp.MainThreadScheduler);
             #endregion
-            
         }
 
         #region 导航相关
@@ -165,15 +166,22 @@ namespace LSL.ViewModels
 
         #region 配置相关
 
-        [Reactive] public FrozenDictionary<string, object> CurrentConfigs { get; set; } = FrozenDictionary<string, object>.Empty;
-        [Reactive] public FrozenDictionary<int, ServerConfig> CurrentServerConfigs { get; set; } = FrozenDictionary<int, ServerConfig>.Empty;
-        [Reactive] public FrozenDictionary<int, JavaInfo> CurrentJavaDict { get; set; } = FrozenDictionary<int, JavaInfo>.Empty;
+        [Reactive]
+        public FrozenDictionary<string, object> CurrentConfigs { get; set; } = FrozenDictionary<string, object>.Empty;
+
+        [Reactive]
+        public FrozenDictionary<int, ServerConfig> CurrentServerConfigs { get; set; } =
+            FrozenDictionary<int, ServerConfig>.Empty;
+
+        [Reactive]
+        public FrozenDictionary<int, JavaInfo> CurrentJavaDict { get; set; } = FrozenDictionary<int, JavaInfo>.Empty;
 
         #endregion
 
         #region 选项相关
 
         private int _selectedServerIndex = -1;
+
         public int SelectedServerIndex
         {
             get => _selectedServerIndex;
@@ -189,6 +197,7 @@ namespace LSL.ViewModels
                     fin = 0;
                 }
                 else fin = value;
+
                 this.RaiseAndSetIfChanged(ref _selectedServerIndex, fin);
             }
         }
@@ -201,17 +210,23 @@ namespace LSL.ViewModels
 
         #region 服务器相关
 
-        [Reactive] public ConcurrentDictionary<int, ObservableCollection<ColoredLines>> TerminalTexts { get; set; } = new();
+        [Reactive]
+        public ConcurrentDictionary<int, ObservableCollection<ColoredLines>> TerminalTexts { get; set; } = new();
+
         [Reactive] public ConcurrentDictionary<int, ServerStatus> ServerStatuses { get; set; } = new();
         [Reactive] public ConcurrentDictionary<int, ObservableCollection<UUID_User>> UserDict { get; set; } = new();
-        [Reactive] public ConcurrentDictionary<int, ObservableCollection<UserMessageLine>> MessageDict { get; set; } = new();
+
+        [Reactive]
+        public ConcurrentDictionary<int, ObservableCollection<UserMessageLine>> MessageDict { get; set; } = new();
+
         public int TotalServerCount { [ObservableAsProperty] get; }
         [Reactive] public int RunningServerCount { get; set; }
         public bool NotTemplateServer { [ObservableAsProperty] get; }
 
         #endregion
-        
+
         #region 性能监控相关
+
         [Reactive] public ConcurrentDictionary<int, MetricsStorage> MetricsDict { get; set; } = new();
         [Reactive] public RangedObservableLinkedList<double> GeneralCpuMetrics { get; set; } = new(30, 0);
         [Reactive] public RangedObservableLinkedList<double> GeneralRamMetrics { get; set; } = new(30, 0);
@@ -221,6 +236,7 @@ namespace LSL.ViewModels
         {
             GeneralMetricsEventHandler?.Invoke(this, new GeneralMetricsEventArgs(cpu, ram, memVal));
         }
+
         #endregion
     }
 }
