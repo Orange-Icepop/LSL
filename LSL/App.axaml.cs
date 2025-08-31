@@ -8,6 +8,7 @@ using LSL.ViewModels;
 using LSL.Views;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
@@ -21,6 +22,7 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
+    #region 初始化窗口
     public override async void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -63,7 +65,7 @@ public partial class App : Application
             catch (Exception ex)
             {
                 // 处理初始化异常
-                Debug.WriteLine(ex);
+                Log.Error(ex);
             }
             finally
             {
@@ -86,7 +88,8 @@ public partial class App : Application
             base.OnFrameworkInitializationCompleted();
         });
     }
-
+    #endregion
+    
     private ServiceCollection serviceDescriptors { get; }
     private ServiceProvider diServices { get; }
     private ShellViewModel? shellVM { get; set; }
@@ -111,8 +114,9 @@ public partial class App : Application
 
 #region 全局常量
 
-public class Constant
+public static class DesktopConstant
 {
+    public const string AppName = "Orllow_LSL_Desktop";
     public const string Version = "0.09";
 }
 #endregion

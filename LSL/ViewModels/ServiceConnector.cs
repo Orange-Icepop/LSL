@@ -567,8 +567,8 @@ namespace LSL.ViewModels
                                       throw new NullReferenceException(
                                           "API Response doesn't contain required key tag_name.");
                 var remoteVer = remoteVerString.TrimStart('v');
-                var needUpdate = AlgoServices.IsGreaterVersion(Constant.Version, remoteVer);
-                _logger.LogInformation("Got remote version update. Local:{LC}, remote:{RM}.", Constant.Version, remoteVer);
+                var needUpdate = AlgoServices.IsGreaterVersion(DesktopConstant.Version, remoteVer);
+                _logger.LogInformation("Got remote version update. Local:{LC}, remote:{RM}.", DesktopConstant.Version, remoteVer);
                 if (needUpdate)
                 {
                     var updateMessage = jobj["body"].ToString() ??
@@ -585,7 +585,7 @@ namespace LSL.ViewModels
                 }
                 else
                     Dispatcher.UIThread.Post(() =>
-                        AppState.ITAUnits.Notify(1, "更新检查完毕", $"当前LSL版本已为最新：{Constant.Version}"));
+                        AppState.ITAUnits.Notify(1, "更新检查完毕", $"当前LSL版本已为最新：{DesktopConstant.Version}"));
                 _logger.LogInformation("Check for updates completed.");
             }
             catch (Exception ex)
