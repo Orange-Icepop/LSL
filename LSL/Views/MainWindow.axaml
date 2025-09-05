@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:LSL.Views"
         xmlns:vm="using:LSL.ViewModels"
-        x:DataType="vm:ShellViewModel"
+        x:DataType="vm:InitializationVM"
 		Width="1200" Height="650"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
         x:Class="LSL.Views.MainWindow"
@@ -15,7 +15,13 @@
 		MinWidth="1000">
 
 	<Grid>
-		<views:MainView/>
+		<TransitioningContentControl Name="MainViewControl" Content="{Binding MainWindowView}">
+			<TransitioningContentControl.PageTransition>
+				<CompositePageTransition>
+					<CrossFade Duration="0:00:00.5"/>
+				</CompositePageTransition>
+			</TransitioningContentControl.PageTransition>
+		</TransitioningContentControl>
 	</Grid>
 </Window>
 

@@ -15,7 +15,7 @@ using Notification = Avalonia.Controls.Notifications.Notification;
 
 namespace LSL.Views;
 
-public partial class MainWindow : ReactiveWindow<ShellViewModel>
+public partial class MainWindow : ReactiveWindow<InitializationVM>
 {
     public WindowNotificationManager? NotifyManager;
 
@@ -33,22 +33,9 @@ public partial class MainWindow : ReactiveWindow<ShellViewModel>
             .Subscribe(args => CloseHandler(args.Body));
         this.WhenActivated(action =>
         {
-            action(this.ViewModel!.ITAUnits.PopupITA.RegisterHandler(HandlePopup));
-            action(this.ViewModel!.ITAUnits.NotifyITA.RegisterHandler(ShowNotification));
-            action(this.ViewModel!.ITAUnits.FilePickerITA.RegisterHandler(OpenFileOperation));
-            Dispatcher.UIThread.InvokeAsync(async () =>
-            {
-                try
-                {
-                    await this.ViewModel!.InitializeMainWindow();
-                }
-                catch (Exception ex)
-                {
-                    await this.ViewModel!.ITAUnits.NotifyITA.Handle(new NotifyArgs(3, "主窗口初始化失败", ex.Message));
-                    Environment.Exit(1);
-                }
-            });
-
+            action(this.ViewModel!.AppState.ITAUnits.PopupITA.RegisterHandler(HandlePopup));
+            action(this.ViewModel!.AppState.ITAUnits.NotifyITA.RegisterHandler(ShowNotification));
+            action(this.ViewModel!.AppState.ITAUnits.FilePickerITA.RegisterHandler(OpenFileOperation));
         });
     }
 

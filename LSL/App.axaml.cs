@@ -29,57 +29,44 @@ public partial class App : Application
         {
             var logger = diServices.GetRequiredService<ILogger<App>>();
             logger.LogInformation("===== Starting App =====");
-            var startupWindow = new StartupWindow
+            desktop.MainWindow = new MainWindow
             {
                 DataContext = startupVM,
-                ShowInTaskbar = false,
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
+                ViewModel = startupVM,
             };
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await startupVM.Initialize(diServices);
+            logger.LogInformation("===== App started =====");
+        }
+        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
+        {
+            ShellViewModel? shellVM = null;
+            await Dispatcher.UIThread.InvokeAsync(() => 
+            singleViewPlatform.MainView = new SplashView()
             {
-                startupWindow.Show();
+                DataContext = startupVM,
             });
-            logger.LogInformation("Splash window loaded, loading main window");
             try
             {
                 // 在后台线程初始化，不阻塞UI
                 await Dispatcher.UIThread.InvokeAsync(() => shellVM = diServices.GetRequiredService<ShellViewModel>());
-                if (shellVM is null) throw new Exception("ShellViewModel 初始化失败");
+                if (shellVM is null) throw new Exception("ShellViewModel failed to initialize");
                 await Task.WhenAll(
                     Task.Delay(3000),
-                    startupVM.Initialize(shellVM)
-                    );
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {                
-                    // 创建并显示主窗口
-                    desktop.MainWindow = new MainWindow
-                    {
-                        DataContext = shellVM,
-                        ViewModel = shellVM
-                    };
-                    desktop.MainWindow.Show();
+                    shellVM.InitializeMainWindow(),
+                    shellVM.ConfigVM.Init()
+                );
+                await Dispatcher.UIThread.InvokeAsync(() => 
+                singleViewPlatform.MainView = new MainView
+                {
+                    DataContext = shellVM,
                 });
-                logger.LogInformation("===== App started =====");
             }
             catch (Exception ex)
             {
                 // 处理初始化异常
                 Log.Error(ex);
+                Environment.Exit(1);
             }
-            finally
-            {
-                // 确保启动窗口关闭
-                startupWindow.Close();
-            }
-        }
-        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
-        {
-            await Dispatcher.UIThread.InvokeAsync(() => 
-            singleViewPlatform.MainView = new MainView
-            {
-                DataContext = shellVM
-            });
         }
 
         await Dispatcher.UIThread.InvokeAsync(() =>
@@ -92,7 +79,6 @@ public partial class App : Application
     
     private ServiceCollection serviceDescriptors { get; }
     private ServiceProvider diServices { get; }
-    private ShellViewModel? shellVM { get; set; }
     private InitializationVM startupVM { get; }
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
     public App()

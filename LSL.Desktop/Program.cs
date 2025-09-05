@@ -18,7 +18,7 @@ class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        if (desktopMutex.WaitOne(TimeSpan.Zero, true))
+        if (!desktopMutex.WaitOne(TimeSpan.Zero, true))
         {
             return;//TODO:使用IPC唤起窗口
         }

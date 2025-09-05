@@ -2,14 +2,21 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia.Controls;
+using Avalonia.Threading;
 using LSL.Views;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels;
 
 public class InitializationVM : ViewModelBase
 {
+
+    [Reactive] public UserControl MainWindowView { get; private set; }
+
     private ILogger<InitializationVM> _logger { get; }
     public AppStateLayer AppState { get; }
     public ShellViewModel? Shell { get; set; }
@@ -20,13 +27,22 @@ public class InitializationVM : ViewModelBase
         AppState = appState;
         ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
         QuitCmd = ReactiveCommand.Create(Quit);
+        MainWindowView = new SplashView();
         _logger.LogInformation("Initialization VM ctor complete.");
     }
 
-    public async Task Initialize(ShellViewModel shell)
+    public async Task Initialize(IServiceProvider provider)
     {
-        Shell = shell;
-        await shell.ConfigVM.Init();
+        Shell = provider.GetRequiredService<ShellViewModel>();
+        if (Shell is null) throw new Exception("ShellViewModel failed to initialize");
+        await Task.WhenAll(
+            Shell.InitializeMainWindow(),
+            Shell.ConfigVM.Init(),
+            Task.Delay(3000));
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            MainWindowView = new MainView() { DataContext = Shell };
+        });
     }
     
     public ICommand ShowMainWindowCmd { get; }// 显示主窗口命令

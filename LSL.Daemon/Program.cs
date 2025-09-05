@@ -9,7 +9,7 @@ class Program
         Console.WriteLine($"Lime Server Launcher Daemon Program, version {DaemonConstant.AppVersion}");
         try
         {
-            if (daemonMutex.WaitOne(TimeSpan.Zero, true))
+            if (!daemonMutex.WaitOne(TimeSpan.Zero, true))
             {
                 Console.WriteLine("An active daemon is running. Exiting...");
                 Console.ReadKey();
