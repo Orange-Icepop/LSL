@@ -117,7 +117,7 @@ namespace LSL.ViewModels
         public ServerStatus CurrentStatus { [ObservableAsProperty] get; }
         #endregion
 
-        public ObservableCollection<ColoredLines> TerminalText { [ObservableAsProperty] get; }
+        public ObservableCollection<ColoredLine> TerminalText { [ObservableAsProperty] get; }
         public FlatTreeDataGridSource<UUID_User> CurrentUsers { [ObservableAsProperty] get; }
         public ObservableCollection<UserMessageLine> CurrentUserMessage { [ObservableAsProperty] get; }
     }
@@ -125,16 +125,16 @@ namespace LSL.ViewModels
     {
         public string Message { get; set; } = msg;
     }
-    public class ColoredLines : ReactiveObject
+    public class ColoredLine : ReactiveObject
     {
         [Reactive] public string Line { get; init; }
         [Reactive] public ISolidColorBrush LineColor { get; init; }
-        public ColoredLines(string line, ISolidColorBrush lineColor)
+        public ColoredLine(string line, ISolidColorBrush lineColor)
         {
             Line = line;
             LineColor = lineColor;
         }
-        public ColoredLines(string line, string ColorHex)
+        public ColoredLine(string line, string ColorHex)
         {
             Line = line;
             LineColor = new SolidColorBrush(Color.Parse(ColorHex));

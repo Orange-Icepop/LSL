@@ -93,8 +93,6 @@ namespace LSL.ViewModels
         public async Task InitializeMainWindow()
         {
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Home, RightTarget = RightPageState.HomeRight });
-            await NavigateLeftView("HomeLeft");
-            await NavigateRightView("HomeRight");
             await DoStartUp();
         }
 

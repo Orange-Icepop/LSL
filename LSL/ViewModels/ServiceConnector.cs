@@ -141,7 +141,7 @@ namespace LSL.ViewModels
                             .AppendJoin(Environment.NewLine, res.ConfigErrorServers);
                     }
                     error.AppendLine("这些服务器将不会被读取。你可以通过重新添加服务器来解决这个问题。");
-                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_Confirm, "读取服务器配置时发生错误", res.ToString()));
+                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_Confirm, "读取服务器配置时发生错误", error.ToString()));
                 }
             }
 
@@ -285,9 +285,9 @@ namespace LSL.ViewModels
             {
                 case ColorOutputArgs COA:
                     await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts.AddOrUpdate(COA.ServerId,
-                        [new ColoredLines(COA.Output, COA.ColorHex)], (_, value) =>
+                        [new ColoredLine(COA.Output, COA.ColorHex)], (_, value) =>
                         {
-                            value.Add(new ColoredLines(COA.Output, COA.ColorHex));
+                            value.Add(new ColoredLine(COA.Output, COA.ColorHex));
                             return value;
                         }));
                     break;
@@ -477,11 +477,11 @@ namespace LSL.ViewModels
                 await OutputCts.CancelAsync();
                 await _handleOutputTask;
                 // 拷贝输出字典
-                AppState.TerminalTexts = new ConcurrentDictionary<int, ObservableCollection<ColoredLines>>(
+                AppState.TerminalTexts = new ConcurrentDictionary<int, ObservableCollection<ColoredLine>>(
                     outputStorage.OutputDict.ToDictionary(
                         kvp => kvp.Key,
-                        kvp => new ObservableCollection<ColoredLines>(
-                            kvp.Value.Select(line => new ColoredLines(line.Line, line.ColorHex))
+                        kvp => new ObservableCollection<ColoredLine>(
+                            kvp.Value.Select(line => new ColoredLine(line.Line, line.ColorHex))
                         )
                     )
                 );

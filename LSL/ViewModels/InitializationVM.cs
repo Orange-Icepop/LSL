@@ -33,16 +33,19 @@ public class InitializationVM : ViewModelBase
 
     public async Task Initialize(IServiceProvider provider)
     {
+        _logger.LogInformation("===== Starting App =====");
         Shell = provider.GetRequiredService<ShellViewModel>();
         if (Shell is null) throw new Exception("ShellViewModel failed to initialize");
-        await Task.WhenAll(
-            Shell.InitializeMainWindow(),
-            Shell.ConfigVM.Init(),
-            Task.Delay(3000));
+        await Task.Run(async () =>
+        {
+            await Shell.InitializeMainWindow();
+            await Shell.ConfigVM.Init();
+        });
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            MainWindowView = new MainView() { DataContext = Shell };
+            MainWindowView = new MainView() { DataContext = Shell, ViewModel = Shell };
         });
+        _logger.LogInformation("===== App started =====");
     }
     
     public ICommand ShowMainWindowCmd { get; }// 显示主窗口命令

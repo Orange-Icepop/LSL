@@ -23,57 +23,72 @@ public partial class App : Application
     }
 
     #region 初始化窗口
-    public override async void OnFrameworkInitializationCompleted()
+    public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var logger = diServices.GetRequiredService<ILogger<App>>();
-            logger.LogInformation("===== Starting App =====");
             desktop.MainWindow = new MainWindow
             {
                 DataContext = startupVM,
                 ViewModel = startupVM,
             };
-            await startupVM.Initialize(diServices);
-            logger.LogInformation("===== App started =====");
+            desktop.MainWindow.Show();
+            _ = startupVM.Initialize(diServices).ContinueWith(t=>
+            {
+                if (!t.IsFaulted) return;
+                logger.LogError(t.Exception, "An error occured while initializing the application.");
+                Environment.Exit(1);
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
             ShellViewModel? shellVM = null;
-            await Dispatcher.UIThread.InvokeAsync(() => 
-            singleViewPlatform.MainView = new SplashView()
+            Dispatcher.UIThread.Invoke(() =>
+                singleViewPlatform.MainView = new SplashView());
+            _ = Dispatcher.UIThread.InvokeAsync(() =>
             {
-                DataContext = startupVM,
-            });
-            try
+                shellVM = diServices.GetRequiredService<ShellViewModel>();
+                return shellVM;
+            }).GetTask().ContinueWith(prevTask =>
             {
-                // 在后台线程初始化，不阻塞UI
-                await Dispatcher.UIThread.InvokeAsync(() => shellVM = diServices.GetRequiredService<ShellViewModel>());
-                if (shellVM is null) throw new Exception("ShellViewModel failed to initialize");
-                await Task.WhenAll(
+                if (prevTask.IsFaulted || prevTask.Result == null)
+                {
+                    throw new Exception("ShellViewModel failed to initialize");
+                }
+
+                shellVM = prevTask.Result;
+                return Task.WhenAll(
                     Task.Delay(3000),
                     shellVM.InitializeMainWindow(),
                     shellVM.ConfigVM.Init()
                 );
-                await Dispatcher.UIThread.InvokeAsync(() => 
-                singleViewPlatform.MainView = new MainView
-                {
-                    DataContext = shellVM,
-                });
-            }
-            catch (Exception ex)
+            }).Unwrap().ContinueWith(prevTask =>
             {
-                // 处理初始化异常
-                Log.Error(ex);
-                Environment.Exit(1);
-            }
-        }
+                if (prevTask.IsFaulted)
+                {
+                    throw prevTask.Exception;
+                }
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            ServicePointManager.DefaultConnectionLimit = 512;
-            base.OnFrameworkInitializationCompleted();
-        });
+                Dispatcher.UIThread.Invoke(() =>
+                {
+                    singleViewPlatform.MainView = new MainView
+                    {
+                        DataContext = shellVM,
+                    };
+                });
+            }, TaskScheduler.FromCurrentSynchronizationContext()).ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    // 处理初始化异常
+                    Log.Error(task.Exception);
+                    Environment.Exit(1);
+                }
+            });
+        }
+        ServicePointManager.DefaultConnectionLimit = 512;
+        base.OnFrameworkInitializationCompleted();
     }
     #endregion
     

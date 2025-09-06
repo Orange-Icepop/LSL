@@ -213,7 +213,7 @@ namespace LSL.ViewModels
         #region 服务器相关
 
         [Reactive]
-        public ConcurrentDictionary<int, ObservableCollection<ColoredLines>> TerminalTexts { get; set; } = new();
+        public ConcurrentDictionary<int, ObservableCollection<ColoredLine>> TerminalTexts { get; set; } = new();
 
         [Reactive] public ConcurrentDictionary<int, ServerStatus> ServerStatuses { get; set; } = new();
         [Reactive] public ConcurrentDictionary<int, ObservableCollection<UUID_User>> UserDict { get; set; } = new();

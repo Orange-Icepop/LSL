@@ -1,8 +1,9 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia.ReactiveUI;
+using LSL.ViewModels;
 
 namespace LSL.Views;
 
-public partial class MainView : UserControl
+public partial class MainView : ReactiveUserControl<ShellViewModel>
 {
     public MainView()
     {
