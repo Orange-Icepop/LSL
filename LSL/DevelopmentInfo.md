@@ -37,4 +37,7 @@
  - [ ] 消除polly策略的空值警告
  - [ ] 将弹窗重新设计为单窗口内操作
  - [x] 将SplashWindow重新设计为单窗口
- - [ ] 将主配置文件设计为class而非Dictionary
+ - [ ] 为Bar按钮添加图标
+
+### 重写
+ - [ ] 将主配置文件设计为class而非Dictionary，并相应修改UI层处理方式
