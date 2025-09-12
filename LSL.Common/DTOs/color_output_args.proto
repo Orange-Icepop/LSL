@@ -1,0 +1,9 @@
+﻿syntax = "proto3";
+option csharp_namespace = "LSL.Common.DTOs";
+
+message ColorOutputArgs
+{
+    int32 server_id = 1;
+    string output = 2;
+    string color_hex = 3;
+}

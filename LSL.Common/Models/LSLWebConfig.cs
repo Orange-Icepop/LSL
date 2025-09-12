@@ -5,12 +5,13 @@ public struct LSLWebConfig
     // Site
     public uint PanelPort;
     public bool UseSSL;
-    public string SiteURL;
+    public string SiteUrl;
     // Performance
     public bool PanelMonitoring;
     // Styles
-    public string SitePrefix;
-    public string SiteSuffix;
-    public string SiteNameSeparator;
+    public string SiteTitlePrefix;
+    public string SiteTitleSuffix;
+    public string SiteTitleSeparator;
     public string SiteThemeColor;
+    public string SiteBackgroundColor;
 }

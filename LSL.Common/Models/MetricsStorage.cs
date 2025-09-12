@@ -1,5 +1,5 @@
 ﻿using LSL.Common.Collections;
-using LSL.Common.Contracts;
+using LSL.Common.DTOs;
 
 namespace LSL.Common.Models;
 

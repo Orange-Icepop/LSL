@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using LSL.Common.Contracts;
+using LSL.Common.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services.ServerServices;

@@ -1,6 +1,6 @@
 ﻿using LSL.Common.Collections;
 
-namespace LSL.Common.Contracts;
+namespace LSL.Common.DTOs;
 
 /// <summary>Contracts for methods handling server metrics information in LSL.</summary>
 public interface IMetricsArgs;

@@ -1,4 +1,4 @@
-﻿namespace LSL.Common.Core;
+﻿namespace LSL.Common.Extensions;
 
 public enum DirectoryCopyMode
 {

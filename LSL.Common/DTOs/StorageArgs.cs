@@ -1,4 +1,4 @@
-﻿namespace LSL.Common.Contracts;
+﻿namespace LSL.Common.DTOs;
 
 /// <summary>Contracts for methods handling server outputs in LSL.</summary>
 public interface IStorageArgs;

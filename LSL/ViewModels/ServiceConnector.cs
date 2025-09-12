@@ -13,7 +13,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using LSL.Common.Collections;
-using LSL.Common.Contracts;
+using LSL.Common.DTOs;
 using LSL.Common.Models;
 using LSL.Common.Utilities;
 using LSL.Common.Validation;
