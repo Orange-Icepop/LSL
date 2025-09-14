@@ -35,12 +35,13 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         // 读取服务器主配置文件
         var indexRes = GetIndexConfig(mainPath);
         if (indexRes.HasError || indexRes.Result is null)
-            return ServerConfigReadResult.Fail(indexRes.Error ?? new Exception($"Error reading main server config {mainPath}."));
+            return ServerConfigReadResult.Fail(indexRes.Error ??
+                                               new Exception($"Error reading main server config {mainPath}."));
         MainServerConfig = indexRes.Result;
         var detailRes = GetServerDetails(MainServerConfig);
         if (detailRes.ErrorCode is ServiceResultType.Error)
             return ServerConfigReadResult.Fail(detailRes.Error ??
-                                      new Exception($"Error reading server config {mainPath}."));
+                                               new Exception($"Error reading server config {mainPath}."));
         ServerConfigs = detailRes.Configs;
         if (detailRes.ErrorCode is ServiceResultType.FinishWithWarning)
         {
@@ -49,6 +50,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 string.Join(", ", detailRes.ConfigErrorServers));
             return detailRes;
         }
+
         _logger.LogInformation("Finished reading server config.");
         return ServerConfigReadResult.Success(detailRes.Configs);
     }
@@ -129,7 +131,8 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         // 检查错误
         if (NotfoundServers.Count > 0 || ConfigErrorServers.Count > 0)
         {
-            return ServerConfigReadResult.PartConfigError(scCache.ToFrozenDictionary(), NotfoundServers, ConfigErrorServers);
+            return ServerConfigReadResult.PartConfigError(scCache.ToFrozenDictionary(), NotfoundServers,
+                ConfigErrorServers);
         }
 
         return ServerConfigReadResult.Success(scCache.ToFrozenDictionary());
@@ -300,9 +303,12 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         string addedConfigPath = Path.Combine(addedServerPath, "lslconfig.json");
         string coreName = Path.GetFileName(corePath);
         Directory.CreateDirectory(addedServerPath);
-        await DirectoryExtensions.CopyDirectoryAsync(originalServerDir, addedServerPath,
-            DirectoryCopyMode.CopyContentsOnly, FileOverwriteMode.Overwrite,
-            fileNameProgress: progress); // 复制核心文件到服务器文件夹内
+        if (Directory.GetParent(originalServerDir)?.FullName != Path.GetFullPath(ConfigPathProvider.ServerConfigPath))
+        {
+            await DirectoryExtensions.CopyDirectoryAsync(originalServerDir, addedServerPath,
+                DirectoryCopyMode.CopyContentsOnly, FileOverwriteMode.Overwrite,
+                fileNameProgress: progress); // 复制核心文件到服务器文件夹内
+        }
         // 初始化服务器配置文件
         var initialConfig = new
         {
