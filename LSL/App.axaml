@@ -5,7 +5,7 @@
              x:DataType="vm:InitializationVM"
              RequestedThemeVariant="Light">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
-	<!--全局颜色资源定义-->
+	<!--全局资源定义-->
 	<Application.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>

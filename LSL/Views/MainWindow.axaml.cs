@@ -50,10 +50,10 @@ public partial class MainWindow : ReactiveWindow<InitializationVM>
             FontSize = 12,
         };
     }
-    private bool confirmClose = false;
+    private bool _confirmClose = false;
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
-        if (confirmClose) e.Cancel = false;
+        if (_confirmClose) e.Cancel = false;
         else
         {
             e.Cancel = true;
@@ -69,7 +69,7 @@ public partial class MainWindow : ReactiveWindow<InitializationVM>
             case WindowOperationArgType.Raise: return;
             case WindowOperationArgType.Confirm: 
             case WindowOperationArgType.ForceClose:
-                confirmClose = true;
+                _confirmClose = true;
                 this.Close();
                 break;
             case WindowOperationArgType.Hide:
