@@ -11,7 +11,11 @@
     <None Include="wwwroot\main.js" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Browser" Version="11.1.4" />
+    <PackageReference Include="Avalonia.Browser" Version="11.3.7" />
+    <PackageReference Include="Avalonia.BuildServices" Version="11.3.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>

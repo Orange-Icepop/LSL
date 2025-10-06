@@ -9,7 +9,7 @@
 	<FluentTheme />
 	<!--全局样式定义-->
 	<Style Selector="Window">
-		<Setter Property="FontFamily" Value="Microsoft YaHei UI,Simsun,苹方-简,宋体-简"/>
+		<Setter Property="FontFamily" Value="{StaticResource MapleMono}"/>
 	</Style>
 	<!--按钮基本样式重新定义-->
 	<Style Selector="Button">

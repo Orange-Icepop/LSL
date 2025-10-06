@@ -2,13 +2,13 @@
 using System.Diagnostics;
 using System.Threading;
 using Avalonia;
+using Avalonia.Media;
 using Avalonia.ReactiveUI;
 
 namespace LSL.Desktop;
 
 class Program
 {
-        
     // 查重防多开
     private static Mutex desktopMutex { get; } = new(true, $"{DesktopConstant.AppName}_Mutex");
 
@@ -20,8 +20,9 @@ class Program
     {
         if (!desktopMutex.WaitOne(TimeSpan.Zero, true))
         {
-            return;//TODO:使用IPC唤起窗口
+            return; //TODO:使用IPC唤起窗口
         }
+
         try
         {
             BuildAvaloniaApp()
@@ -40,5 +41,15 @@ class Program
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace()
-            .UseReactiveUI();
+            .UseReactiveUI()
+            .With(new FontManagerOptions()
+            {
+                DefaultFamilyName = "Ubuntu",
+                FontFallbacks =
+                [
+                    new FontFallback() { FontFamily = "Microsoft YaHei" },
+                    new FontFallback() { FontFamily = "PingFang SC" },
+                    new FontFallback() { FontFamily = "Ubuntu" }
+                ]
+            });
 }
