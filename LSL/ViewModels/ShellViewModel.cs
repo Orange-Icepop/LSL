@@ -11,44 +11,44 @@ namespace LSL.ViewModels
         public static string Version => DesktopConstant.Version;
         public AppStateLayer AppState { get; }
         public ServiceConnector ServeCon { get; }
-        public BarRegionVM BarVM { get; }
-        public LeftRegionVM LeftVM { get; }
-        public RightRegionVM RightVM { get; }
+        public BarRegionViewModel BarViewModel { get; }
+        public LeftRegionViewModel LeftViewModel { get; }
+        public RightRegionViewModel RightViewModel { get; }
         public ConfigViewModel ConfigVM { get; }
         public MonitorViewModel MonitorVM { get; }
         public ServerViewModel ServerVM { get; }
-        public FormPageVM FormVM { get; }
+        public FormPageViewModel FormViewModel { get; }
         public PublicCommand PublicCmd { get; }
         //Logger
-        private ILogger<ShellViewModel> _logger { get; }
+        private readonly ILogger<ShellViewModel> _logger;
         // 弹窗交互，这玩意儿和上面的东西没关系
-        public InteractionUnits ITAUnits { get; }
+        public InteractionUnits InteractionSocket { get; }
 
         public ShellViewModel(
             AppStateLayer appState,
             ServiceConnector connector,
-            BarRegionVM barVM,
-            LeftRegionVM leftVM,
-            RightRegionVM rightVM,
+            BarRegionViewModel barViewModel,
+            LeftRegionViewModel leftViewModel,
+            RightRegionViewModel rightViewModel,
             ConfigViewModel configVM,
             MonitorViewModel monitorVM,
             ServerViewModel serverVM,
-            FormPageVM formVM,
+            FormPageViewModel formViewModel,
             PublicCommand publicCommand,
-            InteractionUnits ITA
+            InteractionUnits ita
             )
         {
             AppState = appState;
             ServeCon = connector;
-            BarVM = barVM;
-            LeftVM = leftVM;
-            RightVM = rightVM;
+            BarViewModel = barViewModel;
+            LeftViewModel = leftViewModel;
+            RightViewModel = rightViewModel;
             ConfigVM = configVM;
             MonitorVM = monitorVM;
             ServerVM = serverVM;
-            FormVM = formVM;
+            FormViewModel = formViewModel;
             PublicCmd = publicCommand;
-            ITAUnits = ITA;
+            InteractionSocket = ita;
             
             _logger = appState.LoggerFactory.CreateLogger<ShellViewModel>();
 
@@ -83,7 +83,7 @@ namespace LSL.ViewModels
                     onError: ex =>
                     {
                         _logger.LogError(ex, "An error occured while processing window exit operation.");
-                        ITAUnits.NotifyITA.Handle(new NotifyArgs(3, "窗口退出处理错误", $"LSL在处理退出操作时出现了错误"));
+                        InteractionSocket.NotifyInteraction.Handle(new NotifyArgs(3, "窗口退出处理错误", $"LSL在处理退出操作时出现了错误"));
                     }
                     );
         }
@@ -114,13 +114,13 @@ namespace LSL.ViewModels
             await ServeCon.SaveConfig();
             bool daemon = (AppState.CurrentConfigs.TryGetValue("daemon", out var daemonObj) && bool.TryParse(daemonObj.ToString(), out var daemonConf)) && daemonConf;
             if (daemon) return 1;
-            if (AppState.CurrentConfigs.TryGetValue("end_server_when_close", out var ESWC) && ESWC is true)
+            if (AppState.CurrentConfigs.TryGetValue("end_server_when_close", out var eswc) && eswc is true)
             {
                 ServeCon.EndAllServers();
             }
             else if (AppState.RunningServerCount > 0)
             {
-                var res = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_YesNoCancel,
+                var res = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNoCancel,
                     "是否要关闭所有服务器？",
                     $"你正在尝试关闭LSL，但是有服务器正在运行。{Environment.NewLine}点击是将立刻关闭所有服务器；{Environment.NewLine}点击否将让这些服务器进程在后台运行，并且LSL不再管理它们；{Environment.NewLine}点击取消以取消关闭LSL的操作。"));
                 switch (res)

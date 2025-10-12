@@ -14,9 +14,9 @@ using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels
 {
-    public class FormPageVM : RegionalVMBase
+    public class FormPageViewModel : RegionalViewModelBase
     {
-        public FormPageVM(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
+        public FormPageViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
         {
             // Reset to not null
             ServerName = string.Empty;
@@ -28,12 +28,12 @@ namespace LSL.ViewModels
             JavaList = [];
             JavaPath = string.Empty;
             // end
-            this.WhenAnyValue(FPVM => FPVM.SelectedJavaIndex)
+            this.WhenAnyValue(formPageVM => formPageVM.SelectedJavaIndex)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Select(GetJavaPath)
                 .Subscribe(val => JavaPath = val);
-            AppState.WhenAnyValue(AS => AS.CurrentJavaDict)
-                .Select(Dict => Dict.Values)
+            AppState.WhenAnyValue(stateLayer => stateLayer.CurrentJavaDict)
+                .Select(javaInfos => javaInfos.Values)
                 .Select(vals =>
                 {
                     ObservableCollection<string> fin = [];
@@ -44,7 +44,7 @@ namespace LSL.ViewModels
 
                     return fin;
                 })
-                .ToPropertyEx(this, FPVM => FPVM.JavaList);
+                .ToPropertyEx(this, formPageVM => formPageVM.JavaList);
             SelectCoreCmd = ReactiveCommand.CreateFromTask(SelectCore);
             SelectFolderCoreCmd = ReactiveCommand.CreateFromTask(SelectExistedServerCore);
             AddCoreCmd = ReactiveCommand.CreateFromTask(AddServerCore);
@@ -87,18 +87,18 @@ namespace LSL.ViewModels
 
         private async Task SelectCore()
         {
-            string result = await AppState.ITAUnits.FilePickerITA.Handle(FilePickerType.CoreFile);
+            string result = await AppState.InteractionUnits.FilePickerInteraction.Handle(FilePickerType.CoreFile);
             await Dispatcher.UIThread.InvokeAsync(() => { CorePath = result; });
         }
 
         private async Task SelectExistedServerCore()
         {
-            string result = await AppState.ITAUnits.FilePickerITA.Handle(FilePickerType.CoreFile);
+            string result = await AppState.InteractionUnits.FilePickerInteraction.Handle(FilePickerType.CoreFile);
             var parent = Directory.GetParent(result);
             if (parent is null)
             {
-                _logger.LogError("Error getting the parent folder info of an existing server's core:{r}", result);
-                await AppState.ITAUnits.ThrowError("解析服务器根目录时发生错误", $"无法获取到指定服务器核心的根目录:{result}");
+                Logger.LogError("Error getting the parent folder info of an existing server's core:{r}", result);
+                await AppState.InteractionUnits.ThrowError("解析服务器根目录时发生错误", $"无法获取到指定服务器核心的根目录:{result}");
                 return;
             }
 
@@ -130,36 +130,36 @@ namespace LSL.ViewModels
         #region 新增服务器逻辑
         private async Task AddServerCore()
         {
-            FormedServerConfig ServerInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
-            var vResult = ServiceConnector.ValidateNewServerConfig(ServerInfo);
+            FormedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
+            var vResult = ServiceConnector.ValidateNewServerConfig(serverInfo);
             if (vResult.Item1 == 0)
             {
-                if (vResult.Item2 is not null) await AppState.ITAUnits.ThrowError("表单错误", vResult.Item2);
+                if (vResult.Item2 is not null) await AppState.InteractionUnits.ThrowError("表单错误", vResult.Item2);
                 return;
             }
             if (vResult is { Item1: -1, Item2: not null })
             {
                 var confirm =
-                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "未知的Minecraft核心文件", vResult.Item2));
+                    await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Item2));
                 if (confirm == PopupResult.No) return;
             }
 
-            if (int.Parse(ServerInfo.MaxMem) < 512)
+            if (int.Parse(serverInfo.MaxMem) < 512)
             {
                 var confirm =
-                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。" + Environment.NewLine + "建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
+                    await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。" + Environment.NewLine + "建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
                 if (confirm == PopupResult.No) return;
             }
-            var coreType = ServiceConnector.GetCoreType(ServerInfo.CorePath);
-            var confirmResult = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "确定添加此服务器吗？",
-                $"服务器信息：\r名称：{ServerInfo.ServerName}\rJava路径：{ServerInfo.JavaPath}\r核心文件路径：{ServerInfo.CorePath}\r服务器类型：{coreType}\r内存范围：{ServerInfo.MinMem} ~ {ServerInfo.MaxMem}\r附加JVM参数：{ServerInfo.ExtJvm}"));
+            var coreType = ServiceConnector.GetCoreType(serverInfo.CorePath);
+            var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定添加此服务器吗？",
+                $"服务器信息：\r名称：{serverInfo.ServerName}\rJava路径：{serverInfo.JavaPath}\r核心文件路径：{serverInfo.CorePath}\r服务器类型：{coreType}\r内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\r附加JVM参数：{serverInfo.ExtJvm}"));
             if (confirmResult == PopupResult.Yes)
             {
-                var success = await Connector.AddServer(ServerInfo);
+                var success = await Connector.AddServer(serverInfo);
                 if (success)
                 {
-                    AppState.ITAUnits.Notify(1, null, "服务器配置成功！");
-                    MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FS2Common));
+                    AppState.InteractionUnits.Notify(1, null, "服务器配置成功！");
+                    MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreen2Common));
                 }
             }
         }
@@ -174,24 +174,24 @@ namespace LSL.ViewModels
             var vResult = ServiceConnector.ValidateNewServerConfig(info, true);
             if (vResult.Item1 == 0)
             {
-                if (vResult.Item2 is not null) await AppState.ITAUnits.ThrowError("表单错误", vResult.Item2);
+                if (vResult.Item2 is not null) await AppState.InteractionUnits.ThrowError("表单错误", vResult.Item2);
                 return;
             }
             if (int.Parse(info.MaxMem) < 512)
             {
                 var confirm =
-                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。" + Environment.NewLine + "建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
+                    await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。" + Environment.NewLine + "建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
                 if (confirm == PopupResult.No) return;
             }
-            var confirmResult = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "确定修改此服务器吗？",
+            var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定修改此服务器吗？",
                 $"服务器信息：\r服务器路径：{info.CorePath}\r名称：{info.ServerName}\rJava路径：{info.JavaPath}\r内存范围：{info.MinMem}MB ~ {info.MaxMem}MB\r附加JVM参数：{info.ExtJvm}"));
             if (confirmResult == PopupResult.Yes)
             {
                 var success = await Connector.EditServer(id, info);
                 if (success)
                 {
-                    AppState.ITAUnits.Notify(1, null, "服务器配置修改成功！");
-                    MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FS2Common));
+                    AppState.InteractionUnits.Notify(1, null, "服务器配置修改成功！");
+                    MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreen2Common));
                 }
             }
 
@@ -201,36 +201,36 @@ namespace LSL.ViewModels
         #region 添加服务器文件夹逻辑
         private async Task AddServerFolder()
         {
-            FormedServerConfig ServerInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
-            var vResult = ServiceConnector.ValidateNewServerConfig(ServerInfo);
+            FormedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
+            var vResult = ServiceConnector.ValidateNewServerConfig(serverInfo);
             if (vResult.Item1 == 0)
             {
-                if (vResult.Item2 is not null) await AppState.ITAUnits.ThrowError("表单错误", vResult.Item2);
+                if (vResult.Item2 is not null) await AppState.InteractionUnits.ThrowError("表单错误", vResult.Item2);
                 return;
             }
             if (vResult is { Item1: -1, Item2: not null })
             {
                 var confirm =
-                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "未知的Minecraft核心文件", vResult.Item2));
+                    await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Item2));
                 if (confirm == PopupResult.No) return;
             }
 
-            if (int.Parse(ServerInfo.MaxMem) < 512)
+            if (int.Parse(serverInfo.MaxMem) < 512)
             {
                 var confirm =
-                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。" + Environment.NewLine + "建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
+                    await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。" + Environment.NewLine + "建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
                 if (confirm == PopupResult.No) return;
             }
-            var coreType = ServiceConnector.GetCoreType(ServerInfo.CorePath);
-            var confirmResult = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Info_YesNo, "确定添加此服务器吗？",
-                $"服务器信息：\r名称：{ServerInfo.ServerName}\rJava路径：{ServerInfo.JavaPath}\r核心文件路径：{ServerInfo.CorePath}\r服务器类型：{coreType}\r内存范围：{ServerInfo.MinMem} ~ {ServerInfo.MaxMem}\r附加JVM参数：{ServerInfo.ExtJvm}"));
+            var coreType = ServiceConnector.GetCoreType(serverInfo.CorePath);
+            var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定添加此服务器吗？",
+                $"服务器信息：\r名称：{serverInfo.ServerName}\rJava路径：{serverInfo.JavaPath}\r核心文件路径：{serverInfo.CorePath}\r服务器类型：{coreType}\r内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\r附加JVM参数：{serverInfo.ExtJvm}"));
             if (confirmResult == PopupResult.Yes)
             {
-                var success = await Connector.AddExistedServer(ServerInfo);
+                var success = await Connector.AddExistedServer(serverInfo);
                 if (success)
                 {
-                    AppState.ITAUnits.Notify(1, null, "服务器配置成功！");
-                    MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FS2Common));
+                    AppState.InteractionUnits.Notify(1, null, "服务器配置成功！");
+                    MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreen2Common));
                 }
             }
         }
@@ -242,7 +242,7 @@ namespace LSL.ViewModels
         {
             switch (rps)
             {
-                case RightPageState.EditSC:
+                case RightPageState.ServerConfEdit:
                 {
                     if (!AppState.CurrentServerConfigs.TryGetValue(AppState.SelectedServerId, out var tmp))
                         throw new ArgumentNullException("选中的服务器不存在已经被读取的配置。" + Environment.NewLine +
@@ -268,13 +268,13 @@ namespace LSL.ViewModels
 
         private void DeployConfig(ServerConfig config)
         {
-            ServerName = config.name;
-            CorePath = config.server_path;
-            MinMem = config.min_memory.ToString();
-            MaxMem = config.max_memory.ToString();
+            ServerName = config.Name;
+            CorePath = config.ServerPath;
+            MinMem = config.MinMemory.ToString();
+            MaxMem = config.MaxMemory.ToString();
             ExistedServerPath = string.Empty;
-            JavaPath = config.using_java;
-            ExtJvm = config.ext_jvm;
+            JavaPath = config.UsingJava;
+            ExtJvm = config.ExtJvm;
         }
         #endregion
     }

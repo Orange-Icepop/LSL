@@ -1,20 +1,20 @@
-﻿using Avalonia.Controls;
+﻿using System;
+using System.Reactive.Linq;
+using Avalonia.Controls;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using System;
-using System.Reactive.Linq;
 
 namespace LSL.ViewModels
 {
-    public class RightRegionVM : RegionalVMBase
+    public class RightRegionViewModel : RegionalViewModelBase
     {
         [Reactive] public UserControl CurrentView { get; set; }
 
-        public RightRegionVM(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
+        public RightRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
         {
             CurrentView = null!;
-            AppState.WhenAnyValue(AS => AS.CurrentRightPage)
-                .Where(CV => CV != RightPageState.Undefined)
+            AppState.WhenAnyValue(stateLayer => stateLayer.CurrentRightPage)
+                .Where(rightPageState => rightPageState != RightPageState.Undefined)
                 .Select(NavigateRight)
                 .Subscribe(t => CurrentView = t);
             MessageBus.Current.Listen<NavigateCommand>()

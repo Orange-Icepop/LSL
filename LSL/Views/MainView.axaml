@@ -18,7 +18,7 @@
 	<DockPanel Background="#c7ffee">
 		<Border Height="50" DockPanel.Dock="Top" Background="{StaticResource OBlueBar}">
 			<TransitioningContentControl Name="BarContent"
-							Content="{Binding BarVM.CurrentView}">
+							Content="{Binding BarViewModel.CurrentView}">
 				<TransitioningContentControl.PageTransition>
 					<CompositePageTransition>
 						<CrossFade Duration="0:00:00.3"/>
@@ -34,9 +34,9 @@
 
 		<!--左侧的内容-->
 		<!--为了防止背景被纳入过渡，加入一个Border包住内容-->
-		<Border Background="White" Width="{Binding LeftVM.LeftWidth}" BoxShadow="5 0 10 -5 Gray">
+		<Border Background="White" Width="{Binding LeftViewModel.LeftWidth}" BoxShadow="5 0 10 -5 Gray">
 			<TransitioningContentControl Name="LeftContent"
-							Content="{Binding LeftVM.CurrentView}"
+							Content="{Binding LeftViewModel.CurrentView}"
 							HorizontalAlignment="Left">
 				<TransitioningContentControl.PageTransition>
 					<CompositePageTransition>
@@ -52,7 +52,7 @@
 		</Border>
 		<!--右侧的内容-->
 		<TransitioningContentControl Name="RightContent"
-									 Content="{Binding RightVM.CurrentView}">
+									 Content="{Binding RightViewModel.CurrentView}">
 			<TransitioningContentControl.PageTransition>
 				<CompositePageTransition>
 					<CrossFade Duration="0:00:00.4"/>

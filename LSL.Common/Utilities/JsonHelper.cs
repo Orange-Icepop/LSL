@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using LSL.Common.Exceptions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -140,7 +139,7 @@ public static class JsonHelper
         // 检查文件路径是否有效  
         if (string.IsNullOrWhiteSpace(filePath))
         {
-            throw new FatalException($"文件路径不能为空：{filePath}");
+            throw new FileNotFoundException($"文件路径不能为空：{filePath}");
         }
         else
         {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
@@ -12,16 +11,16 @@ using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels;
 
-public class InitializationVM : ViewModelBase
+public class InitializationViewModel : ViewModelBase
 {
 
     [Reactive] public UserControl MainWindowView { get; private set; }
 
-    private ILogger<InitializationVM> _logger { get; }
+    private readonly ILogger<InitializationViewModel> _logger;
     public AppStateLayer AppState { get; }
     public ShellViewModel? Shell { get; set; }
 
-    public InitializationVM(ILogger<InitializationVM> logger, AppStateLayer appState)
+    public InitializationViewModel(ILogger<InitializationViewModel> logger, AppStateLayer appState)
     {
         _logger = logger;
         AppState = appState;

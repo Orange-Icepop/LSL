@@ -11,7 +11,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels
 {
-    public class ServerViewModel : RegionalVMBase
+    public class ServerViewModel : RegionalViewModelBase
     {
         public ServerViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
@@ -33,12 +33,12 @@ namespace LSL.ViewModels
             // SelectedServerId的变化触发的属性通知
             AppState.ServerIdChanged.Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
                 .ToPropertyEx(this, x => x.TerminalText);
-            AppState.ServerIdChanged.Select(id => new FlatTreeDataGridSource<UUID_User>(AppState.UserDict.GetOrAdd(id, []))
+            AppState.ServerIdChanged.Select(id => new FlatTreeDataGridSource<PlayerInfo>(AppState.UserDict.GetOrAdd(id, []))
             {
                 Columns =
                 {
-                    new TextColumn<UUID_User, string>("用户名", x => x.User),
-                    new TextColumn<UUID_User, string>("UUID", x => x.UUID),
+                    new TextColumn<PlayerInfo, string>("用户名", x => x.PlayerName),
+                    new TextColumn<PlayerInfo, string>("UUID", x => x.UUID),
                 }
             })
                 .ToProperty(this, x => x.CurrentUsers);
@@ -60,7 +60,7 @@ namespace LSL.ViewModels
             // 处理按钮状态
             statusChanges.Subscribe(_ =>
             {
-                this.RaisePropertyChanged(nameof(LBCEnabled));
+                this.RaisePropertyChanged(nameof(LaunchButtonEnabled));
                 this.RaisePropertyChanged(nameof(LaunchButtonCmd));
                 this.RaisePropertyChanged(nameof(LaunchButtonContent));
             });
@@ -95,14 +95,14 @@ namespace LSL.ViewModels
         {
             MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
             var success = Connector.StartServer(AppState.SelectedServerId);
-            if (success) AppState.ITAUnits.Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
-            else AppState.ITAUnits.Notify(0, "服务器启动失败", "配置检查不通过，请检查配置是否存在错误");
+            if (success) AppState.InteractionUnits.Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
+            else AppState.InteractionUnits.Notify(0, "服务器启动失败", "配置检查不通过，请检查配置是否存在错误");
         }
         public void SendCommandToServer()//发送命令方法
         {
             if (string.IsNullOrEmpty(InputText))
             {
-                AppState.ITAUnits.Notify(0, "输入为空", "请输入要发送的命令");
+                AppState.InteractionUnits.Notify(0, "输入为空", "请输入要发送的命令");
                 return;
             }
             Connector.SendCommandToServer(AppState.SelectedServerId, InputText);
@@ -111,14 +111,14 @@ namespace LSL.ViewModels
         #endregion
 
         #region 服务器状态及其决定的操作
-        public bool LBCEnabled => CurrentStatus is not { IsRunning: true, IsOnline: false } && AppState.NotTemplateServer;
+        public bool LaunchButtonEnabled => CurrentStatus is not { IsRunning: true, IsOnline: false } && AppState.NotTemplateServer;
         public ICommand LaunchButtonCmd => CurrentStatus?.IsRunning == true ? StopServerCmd : StartServerCmd;
         public string LaunchButtonContent => CurrentStatus?.IsRunning == true ? "停止服务器" : "启动服务器";
         public ServerStatus CurrentStatus { [ObservableAsProperty] get; }
         #endregion
 
         public ObservableCollection<ColoredLine> TerminalText { [ObservableAsProperty] get; }
-        public FlatTreeDataGridSource<UUID_User> CurrentUsers { [ObservableAsProperty] get; }
+        public FlatTreeDataGridSource<PlayerInfo> CurrentUsers { [ObservableAsProperty] get; }
         public ObservableCollection<UserMessageLine> CurrentUserMessage { [ObservableAsProperty] get; }
     }
     public class UserMessageLine(string msg)
@@ -134,10 +134,10 @@ namespace LSL.ViewModels
             Line = line;
             LineColor = lineColor;
         }
-        public ColoredLine(string line, string ColorHex)
+        public ColoredLine(string line, string colorHex)
         {
             Line = line;
-            LineColor = new SolidColorBrush(Color.Parse(ColorHex));
+            LineColor = new SolidColorBrush(Color.Parse(colorHex));
         }
     }
 }

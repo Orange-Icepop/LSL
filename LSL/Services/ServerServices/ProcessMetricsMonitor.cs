@@ -9,7 +9,7 @@ namespace LSL.Services.ServerServices;
 /// </summary>
 public class ProcessMetricsMonitor : IDisposable
 {
-    private readonly int ID;
+    private readonly int _id;
     public event EventHandler<ProcessMetricsEventArgs>? MetricsUpdated;
     private readonly Timer _timer;
     private readonly Process _process;
@@ -22,7 +22,7 @@ public class ProcessMetricsMonitor : IDisposable
     public ProcessMetricsMonitor(Process process, int id, long allocatedMemoryBytes, int interval = 1000)
     {
         _process = process;
-        ID = id;
+        _id = id;
         _allocatedMemoryBytes = allocatedMemoryBytes;
         _prevCpuTime = process.TotalProcessorTime;
         _prevTime = DateTime.UtcNow;
@@ -77,13 +77,13 @@ public class ProcessMetricsMonitor : IDisposable
             catch (Exception ex)
             {
                 // 触发包含错误信息的事件
-                MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(ID, 0, 0, 0, true, ex.Message));
+                MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(_id, 0, 0, 0, true, ex.Message));
                 return;
             }
 
             // 触发事件（即使进程已退出也通知）
             MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(
-                ID,
+                _id,
                 cpuUsage, 
                 processMemory, 
                 _allocatedMemoryBytes,
@@ -98,7 +98,7 @@ public class ProcessMetricsMonitor : IDisposable
             if (_disposed) return;
             
             MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(
-                ID,
+                _id,
                 0, 
                 0, 
                 _allocatedMemoryBytes,

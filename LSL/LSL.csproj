@@ -96,7 +96,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Update="Views\FSBar.axaml.cs">
+		<Compile Update="Views\FullScreenBar.axaml.cs">
 		  <SubType>Code</SubType>
 		  <DependentUpon>FSBar.axaml</DependentUpon>
 		</Compile>
@@ -109,7 +109,7 @@
 		<Compile Update="Views\Home\HomeRight.axaml.cs">
 			<DependentUpon>HomeRight.axaml</DependentUpon>
 		</Compile>
-		<Compile Update="Views\Server\EditSC.axaml.cs">
+		<Compile Update="Views\Server\ServerConfEdit.axaml.cs">
 		  <SubType>Code</SubType>
 		  <DependentUpon>EditSC.axaml</DependentUpon>
 		</Compile>
@@ -151,10 +151,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <AvaloniaXaml Update="Views\FSBar.axaml">
+	  <AvaloniaXaml Update="Views\FullScreenBar.axaml">
 	    <SubType>Designer</SubType>
 	  </AvaloniaXaml>
-	  <AvaloniaXaml Update="Views\Server\EditSC.axaml">
+	  <AvaloniaXaml Update="Views\Server\ServerConfEdit.axaml">
 	    <SubType>Designer</SubType>
 	  </AvaloniaXaml>
 	</ItemGroup>

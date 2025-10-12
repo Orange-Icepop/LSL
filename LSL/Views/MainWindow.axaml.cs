@@ -7,7 +7,6 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Platform.Storage;
 using Avalonia.ReactiveUI;
-using Avalonia.Threading;
 using LSL.Common.Models;
 using LSL.ViewModels;
 using ReactiveUI;
@@ -15,7 +14,7 @@ using Notification = Avalonia.Controls.Notifications.Notification;
 
 namespace LSL.Views;
 
-public partial class MainWindow : ReactiveWindow<InitializationVM>
+public partial class MainWindow : ReactiveWindow<InitializationViewModel>
 {
     public WindowNotificationManager? NotifyManager;
 
@@ -33,9 +32,9 @@ public partial class MainWindow : ReactiveWindow<InitializationVM>
             .Subscribe(args => CloseHandler(args.Body));
         this.WhenActivated(action =>
         {
-            action(this.ViewModel!.AppState.ITAUnits.PopupITA.RegisterHandler(HandlePopup));
-            action(this.ViewModel!.AppState.ITAUnits.NotifyITA.RegisterHandler(ShowNotification));
-            action(this.ViewModel!.AppState.ITAUnits.FilePickerITA.RegisterHandler(OpenFileOperation));
+            action(this.ViewModel!.AppState.InteractionUnits.PopupInteraction.RegisterHandler(HandlePopup));
+            action(this.ViewModel!.AppState.InteractionUnits.NotifyInteraction.RegisterHandler(ShowNotification));
+            action(this.ViewModel!.AppState.InteractionUnits.FilePickerInteraction.RegisterHandler(OpenFileOperation));
         });
     }
 
@@ -98,9 +97,9 @@ public partial class MainWindow : ReactiveWindow<InitializationVM>
         }
     }
     #region 显示通知
-    private void ShowNotification(IInteractionContext<NotifyArgs, Unit> ITA)
+    private void ShowNotification(IInteractionContext<NotifyArgs, Unit> context)
     {
-        var args = ITA.Input;
+        var args = context.Input;
         var title = args.Title;
         var message = args.Message;
         message ??= "未知消息";
@@ -135,7 +134,7 @@ public partial class MainWindow : ReactiveWindow<InitializationVM>
                 return;
         }
         NotifyManager?.Show(new Notification(title, message, type));
-        ITA.SetOutput(Unit.Default);
+        context.SetOutput(Unit.Default);
     }
     #endregion
 
@@ -155,7 +154,7 @@ public partial class MainWindow : ReactiveWindow<InitializationVM>
         Patterns = ["*.jar"],
         MimeTypes = ["application/java-archive"]
     };
-    private async Task OpenFileOperation(IInteractionContext<FilePickerType, string> ITA)
+    private async Task OpenFileOperation(IInteractionContext<FilePickerType, string> context)
     {
         // 启动异步操作以打开对话框。
         var files = await this.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
@@ -167,10 +166,10 @@ public partial class MainWindow : ReactiveWindow<InitializationVM>
 
         if (files.Count >= 1)
         {
-            var URI = files[0].Path;
-            ITA.SetOutput(URI.LocalPath);
+            var uri = files[0].Path;
+            context.SetOutput(uri.LocalPath);
         }
-        else ITA.SetOutput(string.Empty);
+        else context.SetOutput(string.Empty);
     }
     #endregion
 

@@ -15,37 +15,37 @@
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器核心路径</TextBlock>
                         <StackPanel Orientation="Horizontal">
                             <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300"
-                                     Text="{Binding FormVM.CorePath}" />
+                                     Text="{Binding FormViewModel.CorePath}" />
                             <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left"
-                                            Command="{Binding FormVM.SelectFolderCoreCmd}" Width="100" Height="30"
+                                            Command="{Binding FormViewModel.SelectFolderCoreCmd}" Width="100" Height="30"
                                             Margin="10,0,10,0">
                                 选择核心
                             </local:MyButton>
                         </StackPanel>
                         <TextBlock Margin="0,0,10,0" FontSize="10" Foreground="Gray">核心文件所在的目录将被视作该服务器的根目录，并且整个服务器将被拷贝到LSL服务器文件夹中。</TextBlock>
-                        <TextBlock Margin="0,0,10,0" FontSize="13" Foreground="DarkGray" Text="{Binding FormVM.ExistedServerPath}"/>
+                        <TextBlock Margin="0,0,10,0" FontSize="13" Foreground="DarkGray" Text="{Binding FormViewModel.ExistedServerPath}"/>
                     </StackPanel>
                     <StackPanel Margin="30,10,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器名称</TextBlock>
                         <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300"
-                                 Text="{Binding FormVM.ServerName}">
+                                 Text="{Binding FormViewModel.ServerName}">
                         </TextBox>
                     </StackPanel>
                     <StackPanel Margin="30,10,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">内存大小</TextBlock>
                         <StackPanel Orientation="Horizontal">
                             <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
-                                     Text="{Binding FormVM.MinMem}" />
+                                     Text="{Binding FormViewModel.MinMem}" />
                             <TextBlock VerticalAlignment="Center" Margin="10,0,10,0">MB ~</TextBlock>
                             <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
-                                     Text="{Binding FormVM.MaxMem}" />
+                                     Text="{Binding FormViewModel.MaxMem}" />
                             <TextBlock VerticalAlignment="Center" Margin="10,0,10,0">MB</TextBlock>
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Margin="30,10,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">Java路径</TextBlock>
                         <StackPanel Orientation="Horizontal">
-                            <TextBox HorizontalAlignment="Left" Width="450" Text="{Binding FormVM.JavaPath}" />
+                            <TextBox HorizontalAlignment="Left" Width="450" Text="{Binding FormViewModel.JavaPath}" />
                             <Border Background="Transparent">
                                 <Path Data="M14,7 A7,7 0 0,0 0,7 M0,7 A7,7 0 1,0 14,7 M7,3l0,2 M7,6l0,5"
                                       VerticalAlignment="Center"
@@ -66,8 +66,8 @@
                                       VerticalAlignment="Center"
                                       HorizontalAlignment="Left"
                                       Width="300"
-                                      ItemsSource="{Binding FormVM.JavaList}"
-                                      SelectedIndex="{Binding FormVM.SelectedJavaIndex}">
+                                      ItemsSource="{Binding FormViewModel.JavaList}"
+                                      SelectedIndex="{Binding FormViewModel.SelectedJavaIndex}">
                             </ComboBox>
                             <local:MyButton Name="GetJavaBtn" VerticalAlignment="Center" HorizontalAlignment="Left"
                                             Width="100"
@@ -79,11 +79,11 @@
                     <StackPanel Margin="30,10,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">附加JVM参数</TextBlock>
                         <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" TextWrapping="Wrap"
-                                 Text="{Binding FormVM.ExtJvm}" />
+                                 Text="{Binding FormViewModel.ExtJvm}" />
                     </StackPanel>
                     <local:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
                                     Height="30" Margin="30,10,0,5" ColorType="Highlight"
-                                    Command="{Binding FormVM.AddExistedServerCmd}">
+                                    Command="{Binding FormViewModel.AddExistedServerCmd}">
                         确认添加
                     </local:MyButton>
                 </StackPanel>

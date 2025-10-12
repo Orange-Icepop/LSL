@@ -1,38 +1,38 @@
-﻿using Avalonia.Controls;
+﻿using System;
+using System.Reactive.Linq;
+using Avalonia.Controls;
 using Avalonia.Threading;
 using LSL.Views;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using System;
-using System.Reactive.Linq;
 
 namespace LSL.ViewModels
 {
-    public class BarRegionVM : RegionalVMBase
+    public class BarRegionViewModel : RegionalViewModelBase
     {
         [Reactive] public UserControl CurrentView { get; private set; }
 
         #region 全屏顶栏板块
-        [Reactive] public string FSTitle { get; set; }
+        [Reactive] public string FullScreenTitle { get; set; }
         [Reactive] public bool HomeButtonClass { get; set; }
         [Reactive] public bool ServerButtonClass { get; set; }
         [Reactive] public bool DownloadButtonClass { get; set; }
         [Reactive] public bool SettingsButtonClass { get; set; }
         #endregion
 
-        public BarRegionVM(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
+        public BarRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
         {
             CurrentView = new Bar();
             HomeButtonClass = true;
             ServerButtonClass = false;
             DownloadButtonClass = false;
             SettingsButtonClass = false;
-            FSTitle = string.Empty;
-            AppState.WhenAnyValue(AS => AS.CurrentGeneralPage)
-                .Where(CV => CV != GeneralPageState.Undefined)
+            FullScreenTitle = string.Empty;
+            AppState.WhenAnyValue(stateLayer => stateLayer.CurrentGeneralPage)
+                .Where(pageState => pageState != GeneralPageState.Undefined)
                 .Subscribe(ChangeActiveButton);
-            AppState.WhenAnyValue(AS => AS.CurrentBarState)
-                .Where(CV => CV != BarState.Undefined)
+            AppState.WhenAnyValue(stateLayer => stateLayer.CurrentBarState)
+                .Where(barState => barState != BarState.Undefined)
                 .Subscribe(ChangeBarCont);
         }
 
@@ -59,9 +59,9 @@ namespace LSL.ViewModels
                 case GeneralPageState.Empty:
                     Dispatcher.UIThread.Post(() =>// 使用Post延迟操作以避免CRP未更新
                     {
-                        FSTitle = AppState.CurrentRightPage switch
+                        FullScreenTitle = AppState.CurrentRightPage switch
                         {
-                            RightPageState.EditSC => "修改服务器配置",
+                            RightPageState.ServerConfEdit => "修改服务器配置",
                             RightPageState.AddCore => "从核心添加服务器",
                             RightPageState.AddFolder => "导入服务器文件夹",
                             _ => ""
@@ -76,7 +76,7 @@ namespace LSL.ViewModels
             CurrentView = state switch
             {
                 BarState.Common => new Bar(),
-                BarState.FullScreen => new FSBar(),
+                BarState.FullScreen => new FullScreenBar(),
                 _ => CurrentView
             };
         }

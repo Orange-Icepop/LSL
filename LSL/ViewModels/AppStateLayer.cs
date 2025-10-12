@@ -16,14 +16,14 @@ namespace LSL.ViewModels
     {
         public ILoggerFactory LoggerFactory { get; }
         private ILogger<AppStateLayer> Logger { get; }
-        public InteractionUnits ITAUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
+        public InteractionUnits InteractionUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
         public IObservable<FrozenDictionary<int, ServerConfig>> ServerConfigChanged { get; private set; }
         public IObservable<int> ServerIndexChanged { get; private set; }
         public IObservable<int> ServerIdChanged { get; private set; }
 
         public AppStateLayer(InteractionUnits interUnit, ILoggerFactory loggerFactory)
         {
-            ITAUnits = interUnit;
+            InteractionUnits = interUnit;
             LoggerFactory = loggerFactory;
             Logger = LoggerFactory.CreateLogger<AppStateLayer>();
             CurrentBarState = BarState.Common;
@@ -45,29 +45,29 @@ namespace LSL.ViewModels
                 .Select(arg => arg.CommandType)
                 .Subscribe(NavigateCommandHandler);
             // 配置公共监听属性
-            ServerConfigChanged = this.WhenAnyValue(AS => AS.CurrentServerConfigs).ObserveOn(RxApp.MainThreadScheduler);
-            ServerIndexChanged = this.WhenAnyValue(AS => AS.SelectedServerIndex).ObserveOn(RxApp.MainThreadScheduler);
-            ServerIdChanged = this.WhenAnyValue(AS => AS.SelectedServerId).ObserveOn(RxApp.MainThreadScheduler);
+            ServerConfigChanged = this.WhenAnyValue(stateLayer => stateLayer.CurrentServerConfigs).ObserveOn(RxApp.MainThreadScheduler);
+            ServerIndexChanged = this.WhenAnyValue(stateLayer => stateLayer.SelectedServerIndex).ObserveOn(RxApp.MainThreadScheduler);
+            ServerIdChanged = this.WhenAnyValue(stateLayer => stateLayer.SelectedServerId).ObserveOn(RxApp.MainThreadScheduler);
 
             #region 监听
 
             // 配置文件更新的连带更新
             ServerConfigChanged.Select(s => new ObservableCollection<int>(s.Keys))
                 .ToPropertyEx(this, x => x.ServerIDs, scheduler: RxApp.MainThreadScheduler);
-            ServerConfigChanged.Select(s => new ObservableCollection<string>(s.Values.Select(v => v.name)))
+            ServerConfigChanged.Select(s => new ObservableCollection<string>(s.Values.Select(v => v.Name)))
                 .ToPropertyEx(this, x => x.ServerNames, scheduler: RxApp.MainThreadScheduler);
-            ServerConfigChanged.Subscribe(SC =>
+            ServerConfigChanged.Subscribe(configs =>
             {
-                if (SC.Count == 0) return;
+                if (configs.Count == 0) return;
                 SelectedServerIndex = 0;
                 Logger.LogInformation("Selected server index reset to 0");
             });
-            ServerConfigChanged.Select(SC => !SC.TryGetValue(-1, out _))
+            ServerConfigChanged.Select(configs => !configs.TryGetValue(-1, out _))
                 .ToPropertyEx(this, x => x.NotTemplateServer);
-            ServerConfigChanged.Select(SC =>
+            ServerConfigChanged.Select(configs =>
                 {
-                    if (SC.Count == 0) return 0;
-                    return SC.TryGetValue(-1, out _) ? 0 : SC.Count;
+                    if (configs.Count == 0) return 0;
+                    return configs.TryGetValue(-1, out _) ? 0 : configs.Count;
                 })
                 .ToPropertyEx(this, x => x.TotalServerCount);
             // 在索引更新时刷新右视图
@@ -95,7 +95,7 @@ namespace LSL.ViewModels
         [Reactive] public GeneralPageState CurrentGeneralPage { get; private set; }
         [Reactive] public RightPageState CurrentRightPage { get; private set; }
 
-        private (BarState, GeneralPageState, RightPageState) LastPage = (BarState.Common, GeneralPageState.Undefined,
+        private (BarState, GeneralPageState, RightPageState) _lastPage = (BarState.Common, GeneralPageState.Undefined,
             RightPageState.Undefined);
 
         private void Navigate(BarState bar, GeneralPageState gen, RightPageState right)
@@ -105,7 +105,7 @@ namespace LSL.ViewModels
 
         private void Navigate(NavigateArgs args) // ASL不负责查重操作
         {
-            (BarState, GeneralPageState, RightPageState) _lastPage = (BarState.Common, CurrentGeneralPage,
+            (BarState, GeneralPageState, RightPageState) lastPage = (BarState.Common, CurrentGeneralPage,
                 CurrentRightPage);
             if (args.LeftTarget != GeneralPageState.Undefined)
             {
@@ -126,11 +126,11 @@ namespace LSL.ViewModels
                 else if (args.BarTarget == BarState.Common && CurrentBarState == BarState.FullScreen)
                 {
                     CurrentBarState = BarState.Common;
-                    if (LastPage != (BarState.Common, GeneralPageState.Undefined, RightPageState.Undefined))
+                    if (_lastPage != (BarState.Common, GeneralPageState.Undefined, RightPageState.Undefined))
                     {
-                        CurrentBarState = LastPage.Item1;
-                        CurrentGeneralPage = LastPage.Item2;
-                        CurrentRightPage = LastPage.Item3;
+                        CurrentBarState = _lastPage.Item1;
+                        CurrentGeneralPage = _lastPage.Item2;
+                        CurrentRightPage = _lastPage.Item3;
                     }
                     else
                     {
@@ -138,20 +138,20 @@ namespace LSL.ViewModels
                         CurrentRightPage = RightPageState.HomeRight;
                     }
 
-                    _lastPage = (BarState.Common, GeneralPageState.Undefined, RightPageState.Undefined);
+                    lastPage = (BarState.Common, GeneralPageState.Undefined, RightPageState.Undefined);
                 }
                 else CurrentBarState = args.BarTarget;
             }
 
-            LastPage = _lastPage;
+            _lastPage = lastPage;
         }
 
         private void NavigateCommandHandler(NavigateCommandType command)
         {
             switch (command)
             {
-                case NavigateCommandType.FS2Common:
-                    Navigate(LastPage.Item1, LastPage.Item2, LastPage.Item3);
+                case NavigateCommandType.FullScreen2Common:
+                    Navigate(_lastPage.Item1, _lastPage.Item2, _lastPage.Item3);
                     break;
                 case NavigateCommandType.Refresh:
                 {
@@ -216,7 +216,7 @@ namespace LSL.ViewModels
         public ConcurrentDictionary<int, ObservableCollection<ColoredLine>> TerminalTexts { get; set; } = new();
 
         [Reactive] public ConcurrentDictionary<int, ServerStatus> ServerStatuses { get; set; } = new();
-        [Reactive] public ConcurrentDictionary<int, ObservableCollection<UUID_User>> UserDict { get; set; } = new();
+        [Reactive] public ConcurrentDictionary<int, ObservableCollection<PlayerInfo>> UserDict { get; set; } = new();
 
         [Reactive]
         public ConcurrentDictionary<int, ObservableCollection<UserMessageLine>> MessageDict { get; set; } = new();

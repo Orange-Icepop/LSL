@@ -15,8 +15,8 @@ namespace LSL.Services
         private readonly ConcurrentDictionary<Type, (object _lock, List<Delegate> _delegates)> _handlers = [];
 
         // 单例
-        private static readonly Lazy<EventBus> _instance = new(() => new EventBus());
-        public static EventBus Instance => _instance.Value;
+        private static readonly Lazy<EventBus> s_instance = new(() => new EventBus());
+        public static EventBus Instance => s_instance.Value;
 
         // 订阅事件（支持同步和异步处理程序）
         public bool Subscribe<TEvent>(Action<TEvent> handler) => SubscribeInternal<TEvent>(handler);
@@ -26,10 +26,10 @@ namespace LSL.Services
         {
             try
             {
-                var (_lock, _delegates) = _handlers.GetOrAdd(typeof(TEvent), _ => (new object(), []));
-                lock (_lock)
+                var (locker, delegates) = _handlers.GetOrAdd(typeof(TEvent), _ => (new object(), []));
+                lock (locker)
                 {
-                    _delegates.Add(handler);
+                    delegates.Add(handler);
                 }
 
                 return true;
@@ -230,8 +230,8 @@ namespace LSL.Services
         {
         }
 
-        private static readonly Lazy<InvokeBus> _instance = new(() => new InvokeBus());
-        public static InvokeBus Instance => _instance.Value;
+        private static readonly Lazy<InvokeBus> s_instance = new(() => new InvokeBus());
+        public static InvokeBus Instance => s_instance.Value;
 
         private readonly ConcurrentDictionary<Type, (Type RTType, Delegate Handler)> _handlers = new();
 

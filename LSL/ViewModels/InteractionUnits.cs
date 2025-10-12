@@ -10,13 +10,13 @@ namespace LSL.ViewModels
 {
     public class InteractionUnits : ViewModelBase
     {
-        public Interaction<InvokePopupArgs, PopupResult> PopupITA { get; } = new();
-        public Interaction<NotifyArgs, Unit> NotifyITA { get; } = new();// 0消息，1成功，2警告，3错误
-        public Interaction<FilePickerType, string> FilePickerITA { get; } = new();
+        public Interaction<InvokePopupArgs, PopupResult> PopupInteraction { get; } = new();
+        public Interaction<NotifyArgs, Unit> NotifyInteraction { get; } = new();// 0消息，1成功，2警告，3错误
+        public Interaction<FilePickerType, string> FilePickerInteraction { get; } = new();
 
         public Task<PopupResult> ThrowError(string title, string message)
         {
-            return PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, title, message)).ToTask();
+            return PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, title, message)).ToTask();
         }
         
         public async Task<bool> SubmitServiceError(IServiceResult result)
@@ -34,19 +34,19 @@ namespace LSL.ViewModels
 
             var level = result.ErrorCode switch
             {
-                ServiceResultType.Error => PopupType.Error_Confirm,
-                ServiceResultType.FinishWithWarning => PopupType.Warning_Confirm,
-                _ => PopupType.Error_Confirm
+                ServiceResultType.Error => PopupType.ErrorConfirm,
+                ServiceResultType.FinishWithWarning => PopupType.WarningConfirm,
+                _ => PopupType.ErrorConfirm
             };
-            await PopupITA.Handle(new InvokePopupArgs(level, "服务错误", fin));
+            await PopupInteraction.Handle(new InvokePopupArgs(level, "服务错误", fin));
         }
 
         public void Notify(int type, string? title, string? message)
         {
-            NotifyITA.Handle(new NotifyArgs(type, title, message)).Subscribe();
+            NotifyInteraction.Handle(new NotifyArgs(type, title, message)).Subscribe();
         }
 
         public async Task WaitNotify(int type, string? title, string? message) =>
-            await NotifyITA.Handle(new NotifyArgs(type, title, message));
+            await NotifyInteraction.Handle(new NotifyArgs(type, title, message));
     }
 }

@@ -14,16 +14,16 @@ namespace LSL.Services.ConfigServices;
 public class ConfigManager
 {
 
-    private MainConfigManager MCM { get; }
-    private ServerConfigManager SCM { get; }
-    private JavaConfigManager JCM { get; }
-    private ILogger<ConfigManager> _logger { get; }
+    private readonly MainConfigManager _mcm;
+    private readonly ServerConfigManager _scm;
+    private readonly JavaConfigManager _jcm;
+    private readonly ILogger<ConfigManager> _logger;
 
     public ConfigManager(MainConfigManager mcm, ServerConfigManager scm, JavaConfigManager jcm, ILogger<ConfigManager> logger)
     {
-        MCM = mcm;
-        SCM = scm;
-        JCM = jcm;
+        _mcm = mcm;
+        _scm = scm;
+        _jcm = jcm;
         _logger = logger;
         //初始化配置文件
         Initialize();
@@ -51,7 +51,7 @@ public class ConfigManager
         if (!File.Exists(ConfigPathProvider.ConfigFilePath))
         {
             File.WriteAllText(ConfigPathProvider.ConfigFilePath, "{}");
-            var mainRes = MCM.Init();
+            var mainRes = _mcm.Init();
             if (mainRes.ErrorCode == ServiceResultType.Error) return mainRes;
             _logger.LogInformation("Config.json initialized.");
         }
@@ -74,26 +74,26 @@ public class ConfigManager
         
     #region 配置文件代理操作
     // 主配置文件
-    public FrozenDictionary<string, object> MainConfigs => MCM.CurrentConfigs;
-    public ServiceResult<FrozenDictionary<string, object>> ConfirmMainConfig(IDictionary<string, object> confs) => MCM.ConfirmConfig(confs);
-    public ServiceResult ReadMainConfig() => MCM.LoadConfig();
+    public FrozenDictionary<string, object> MainConfigs => _mcm.CurrentConfigs;
+    public ServiceResult<FrozenDictionary<string, object>> ConfirmMainConfig(IDictionary<string, object> confs) => _mcm.ConfirmConfig(confs);
+    public ServiceResult ReadMainConfig() => _mcm.LoadConfig();
     // 服务器配置
-    public FrozenDictionary<int, ServerConfig> ServerConfigs => SCM.ServerConfigs;
-    public ServerConfigReadResult ReadServerConfig() => SCM.ReadServerConfig();
+    public FrozenDictionary<int, ServerConfig> ServerConfigs => _scm.ServerConfigs;
+    public ServerConfigReadResult ReadServerConfig() => _scm.ReadServerConfig();
 
-    public ServiceResult RegisterServer(FormedServerConfig config) => SCM.RegisterServer(config.ServerName,
+    public ServiceResult RegisterServer(FormedServerConfig config) => _scm.RegisterServer(config.ServerName,
         config.JavaPath, config.CorePath, uint.Parse(config.MinMem), uint.Parse(config.MaxMem), config.ExtJvm);
-    public ServiceResult EditServer(int id, FormedServerConfig config) => SCM.EditServer(id, config.ServerName, config.JavaPath, 
+    public ServiceResult EditServer(int id, FormedServerConfig config) => _scm.EditServer(id, config.ServerName, config.JavaPath, 
         uint.Parse(config.MinMem),
         uint.Parse(config.MaxMem), config.ExtJvm);
-    public ServiceResult DeleteServer(int id) => SCM.DeleteServer(id);
+    public ServiceResult DeleteServer(int id) => _scm.DeleteServer(id);
 
-    public async Task<ServiceResult> AddExistedServer(FormedServerConfig config) => await SCM.AddExistedServer(
+    public async Task<ServiceResult> AddExistedServer(FormedServerConfig config) => await _scm.AddExistedServer(
         config.ServerName, config.JavaPath, config.CorePath, uint.Parse(config.MinMem), uint.Parse(config.MaxMem), config.ExtJvm);
     // Java配置
-    public FrozenDictionary<int, JavaInfo> JavaConfigs => JCM.JavaDict;
-    public ServiceResult<JavaConfigReadResult> ReadJavaConfig() => JCM.ReadJavaConfig();
-    public async Task<ServiceResult> DetectJava() => await JCM.DetectJava();
+    public FrozenDictionary<int, JavaInfo> JavaConfigs => _jcm.JavaDict;
+    public ServiceResult<JavaConfigReadResult> ReadJavaConfig() => _jcm.ReadJavaConfig();
+    public async Task<ServiceResult> DetectJava() => await _jcm.DetectJava();
 
     #endregion
 }

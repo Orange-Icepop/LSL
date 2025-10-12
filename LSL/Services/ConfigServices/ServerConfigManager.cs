@@ -2,7 +2,6 @@
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
@@ -19,8 +18,8 @@ namespace LSL.Services.ConfigServices;
 /// <param name="logger">An ILogger that logs logs. （拜托，想个更好的双关语吧（彼得帕克音））</param> 
 public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigManager> logger)
 {
-    private ILogger<ServerConfigManager> _logger { get; } = logger;
-    private MainConfigManager _mainConfigManager { get; } = mcm;
+    private readonly ILogger<ServerConfigManager> _logger = logger;
+    private readonly MainConfigManager _mainConfigManager = mcm;
     public FrozenDictionary<int, string> MainServerConfig { get; private set; } = FrozenDictionary<int, string>.Empty;
 
     public FrozenDictionary<int, ServerConfig> ServerConfigs { get; private set; } =
@@ -98,8 +97,8 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     private static ServerConfigReadResult GetServerDetails(
         IDictionary<int, string> mainConfigs)
     {
-        List<string> NotfoundServers = [];
-        List<string> ConfigErrorServers = [];
+        List<string> notfoundServers = [];
+        List<string> configErrorServers = [];
         // 读取各个服务器的LSL配置文件
         Dictionary<int, ServerConfig> scCache = [];
         foreach (var (key, targetDir) in mainConfigs)
@@ -109,7 +108,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             {
                 case ServerConfigParseResultType.ServerNotFound:
                 {
-                    NotfoundServers.Add(targetDir);
+                    notfoundServers.Add(targetDir);
                     break;
                 }
                 case ServerConfigParseResultType.ConfigFileNotFound:
@@ -117,7 +116,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 case ServerConfigParseResultType.Unparsable:
                 case ServerConfigParseResultType.MissingKey:
                 {
-                    ConfigErrorServers.Add(targetDir);
+                    configErrorServers.Add(targetDir);
                     break;
                 }
                 case ServerConfigParseResultType.Success:
@@ -129,10 +128,10 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         }
 
         // 检查错误
-        if (NotfoundServers.Count > 0 || ConfigErrorServers.Count > 0)
+        if (notfoundServers.Count > 0 || configErrorServers.Count > 0)
         {
-            return ServerConfigReadResult.PartConfigError(scCache.ToFrozenDictionary(), NotfoundServers,
-                ConfigErrorServers);
+            return ServerConfigReadResult.PartConfigError(scCache.ToFrozenDictionary(), notfoundServers,
+                configErrorServers);
         }
 
         return ServerConfigReadResult.Success(scCache.ToFrozenDictionary());
@@ -170,7 +169,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     #region 注册服务器方法RegisterServer
 
     public ServiceResult RegisterServer(string serverName, string usingJava, string corePath, uint minMem, uint maxMem,
-        string extJVM)
+        string extJvm)
     {
         if (!File.Exists(ConfigPathProvider.ServerConfigPath))
         {
@@ -192,7 +191,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             core_name = coreName,
             min_memory = minMem,
             max_memory = maxMem,
-            ext_jvm = extJVM
+            ext_jvm = extJvm
         };
         string serializedConfig = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
         File.WriteAllText(addedConfigPath, serializedConfig); // 写入服务器文件夹内的配置文件
@@ -221,7 +220,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     #region 修改服务器方法EditServer
 
     public ServiceResult EditServer(int serverId, string serverName, string usingJava, uint minMem, uint maxMem,
-        string extJVM)
+        string extJvm)
     {
         try
         {
@@ -229,7 +228,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 ServerConfigs.TryGetValue(serverId, out var config))
             {
                 string editedConfigPath = Path.Combine(serverPath, "lslconfig.json");
-                string coreName = config.core_name;
+                string coreName = config.CoreName;
                 var newConfig = new
                 {
                     name = serverName,
@@ -237,7 +236,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                     core_name = coreName,
                     min_memory = minMem,
                     max_memory = maxMem,
-                    ext_jvm = extJVM
+                    ext_jvm = extJvm
                 };
                 string serializedConfig = JsonConvert.SerializeObject(newConfig, Formatting.Indented);
                 File.WriteAllText(editedConfigPath, serializedConfig); // 写入服务器文件夹内的配置文件
@@ -269,7 +268,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             return ServiceResult.Fail(new KeyNotFoundException($"在LSL配置文件中未找到id为{serverId}的服务器。"));
         }
 
-        var serverPath = config.server_path;
+        var serverPath = config.ServerPath;
         if (string.IsNullOrEmpty(serverPath) || !Directory.Exists(serverPath))
         {
             _logger.LogError("Server Directory Not Found:{id}", serverId);
@@ -287,7 +286,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     #region 添加已有服务器方法AddExistedServer
 
     public async Task<ServiceResult> AddExistedServer(string serverName, string usingJava, string corePath, uint minMem,
-        uint maxMem, string extJVM, IProgress<string>? progress = null)
+        uint maxMem, string extJvm, IProgress<string>? progress = null)
     {
         if (!File.Exists(ConfigPathProvider.ServerConfigPath))
         {
@@ -317,7 +316,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             core_name = coreName,
             min_memory = minMem,
             max_memory = maxMem,
-            ext_jvm = extJVM
+            ext_jvm = extJvm
         };
         string serializedConfig = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
         await File.WriteAllTextAsync(addedConfigPath, serializedConfig); // 写入服务器文件夹内的配置文件

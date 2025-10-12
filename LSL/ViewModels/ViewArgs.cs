@@ -10,12 +10,12 @@ public record NotifyArgs(int Type, string? Title, string? Message); // 通知条
 public record InvokePopupArgs(PopupType PType, string PTitle, string PContent);
 public enum PopupType
 {
-    Info_Confirm,
-    Info_YesNo,
-    Warning_YesNoCancel,
-    Warning_YesNo,
-    Warning_Confirm,
-    Error_Confirm,
+    InfoConfirm,
+    InfoYesNo,
+    WarningYesNoCancel,
+    WarningYesNo,
+    WarningConfirm,
+    ErrorConfirm,
 }
 
 public enum PopupResult

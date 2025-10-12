@@ -9,8 +9,8 @@
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerGeneral">
 	<UserControl.Resources>
-		<server:GeneralCpuMetricsConverter x:Key="GCMC"/>
-		<server:GeneralMemMetricsConverter x:Key="GMMC"/>
+		<server:GeneralCpuMetricsConverter x:Key="CpuConverter"/>
+		<server:GeneralMemMetricsConverter x:Key="MemConverter"/>
 	</UserControl.Resources>
 	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 		<StackPanel>
@@ -30,7 +30,7 @@
 				<StackPanel Margin="25,40,23,15">
 					<TextBlock FontSize="12">
 						<TextBlock.Text>
-							<MultiBinding Converter="{StaticResource GCMC}">
+							<MultiBinding Converter="{StaticResource CpuConverter}">
 								<Binding Path="MonitorVM.CurrentGeneralCpuUsage"/>
 							</MultiBinding>
 						</TextBlock.Text>
@@ -38,7 +38,7 @@
 					<local:MyPlot LineColor="#019eff" FillColor="#80019eff" ItemsSource="{Binding AppState.GeneralCpuMetrics}" Margin="5" Height="100" />
 					<TextBlock FontSize="12">
 						<TextBlock.Text>
-							<MultiBinding Converter="{StaticResource GMMC}">
+							<MultiBinding Converter="{StaticResource MemConverter}">
 								<Binding Path="MonitorVM.CurrentGeneralRamUsage"/>
 								<Binding Path="MonitorVM.CurrentGeneralRamValue"/>
 								<Binding Path="MonitorVM.SystemRamMax" Mode="OneWay"/>

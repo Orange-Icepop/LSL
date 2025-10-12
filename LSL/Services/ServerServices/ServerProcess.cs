@@ -9,17 +9,17 @@ namespace LSL.Services.ServerServices;
     // 服务器进程类ServerProcess
     public partial class ServerProcess : IDisposable
     {
-        public int ID { get; }
+        public int Id { get; }
         public ServerProcess(ServerConfig config)
         {
-            ID = config.server_id;
-            string serverPath = config.server_path;
-            string corePath = Path.Combine(serverPath, config.core_name);
-            string javaPath = config.using_java;
-            string MinMem = config.min_memory.ToString();
-            string MaxMem = config.max_memory.ToString();
-            string arguments = $"-server -Xms{MinMem}M -Xmx{MaxMem}M -jar {corePath} nogui";
-            allocatedMemoryBytes = ((long)config.max_memory) * 1024 * 1024;
+            Id = config.ServerID;
+            var serverPath = config.ServerPath;
+            var corePath = Path.Combine(serverPath, config.CoreName);
+            var javaPath = config.UsingJava;
+            var minMem = config.MinMemory.ToString();
+            var maxMem = config.MaxMemory.ToString();
+            var arguments = $"-server -Xms{minMem}M -Xmx{maxMem}M -jar {corePath} nogui";
+            _allocatedMemoryBytes = ((long)config.MaxMemory) * 1024 * 1024;
             StartInfo = new ProcessStartInfo()// 提供服务器信息
             {
                 FileName = javaPath,
@@ -36,15 +36,15 @@ namespace LSL.Services.ServerServices;
             };
         }
         private Process? SProcess { get; set; }
-        private readonly long allocatedMemoryBytes;
+        private readonly long _allocatedMemoryBytes;
         private ProcessStartInfo StartInfo { get; }
         private StreamWriter? InStream => SProcess is not null && !SProcess.HasExited ? SProcess.StandardInput : null;
         public event DataReceivedEventHandler? OutputReceived;
         public event DataReceivedEventHandler? ErrorReceived;
         public event EventHandler? Exited;
-        private DataReceivedEventHandler OutputReceivedHandler = null!;
-        private DataReceivedEventHandler ErrorReceivedHandler = null!;
-        private EventHandler ExitedHandler = null!;
+        private DataReceivedEventHandler _outputReceivedHandler = null!;
+        private DataReceivedEventHandler _errorReceivedHandler = null!;
+        private EventHandler _exitedHandler = null!;
         public bool HasExited => SProcess?.HasExited ?? false;
         
         #region 性能监控
@@ -56,25 +56,25 @@ namespace LSL.Services.ServerServices;
 
         # region 状态获取
         public event EventHandler<(bool, bool)>? StatusEventHandler;// IsRunning, IsOnline
-        private bool isOnline;
+        private bool _isOnline;
         public bool IsOnline
         {
-            get => isOnline;
+            get => _isOnline;
             private set
             {
-                if (isOnline == value) return;
-                isOnline = value;
+                if (_isOnline == value) return;
+                _isOnline = value;
                 StatusEventHandler?.Invoke(this, (IsRunning, value));
             }
         }
-        private bool isRunning;
+        private bool _isRunning;
         public bool IsRunning
         {
-            get => isRunning;
+            get => _isRunning;
             private set
             {
-                if (isRunning == value) return;
-                isRunning = value;
+                if (_isRunning == value) return;
+                _isRunning = value;
                 StatusEventHandler?.Invoke(this, (value, IsOnline));
             }
         }
@@ -117,10 +117,10 @@ namespace LSL.Services.ServerServices;
         #region 句柄与生命周期
         private void InitProcessHandlers()
         {
-            OutputReceivedHandler = (sender, args) => OutputReceived?.Invoke(sender, args);
-            OutputReceivedHandler += (_, args) => HandleOutput(args.Data);
-            ErrorReceivedHandler = (sender, args) => ErrorReceived?.Invoke(sender, args);
-            ExitedHandler = (sender, args) =>
+            _outputReceivedHandler = (sender, args) => OutputReceived?.Invoke(sender, args);
+            _outputReceivedHandler += (_, args) => HandleOutput(args.Data);
+            _errorReceivedHandler = (sender, args) => ErrorReceived?.Invoke(sender, args);
+            _exitedHandler = (sender, args) =>
             {
                 IsOnline = false;
                 IsRunning = false;
@@ -134,10 +134,10 @@ namespace LSL.Services.ServerServices;
         private void AttachProcessHandlers()
         {
             if (SProcess is null) return;
-            SProcess.OutputDataReceived += OutputReceivedHandler;
-            SProcess.ErrorDataReceived += ErrorReceivedHandler;
-            SProcess.Exited += ExitedHandler;
-            _monitor = new ProcessMetricsMonitor(SProcess, ID, allocatedMemoryBytes);
+            SProcess.OutputDataReceived += _outputReceivedHandler;
+            SProcess.ErrorDataReceived += _errorReceivedHandler;
+            SProcess.Exited += _exitedHandler;
+            _monitor = new ProcessMetricsMonitor(SProcess, Id, _allocatedMemoryBytes);
             _monitor.MetricsUpdated += _metricsHandler;
         }
         private void CleanupProcessHandlers()
@@ -145,9 +145,9 @@ namespace LSL.Services.ServerServices;
             if (SProcess is not null)
             {
                 // 停止异步读取
-                SProcess.OutputDataReceived -= OutputReceivedHandler;
-                SProcess.ErrorDataReceived -= ErrorReceivedHandler;
-                SProcess.Exited -= ExitedHandler;
+                SProcess.OutputDataReceived -= _outputReceivedHandler;
+                SProcess.ErrorDataReceived -= _errorReceivedHandler;
+                SProcess.Exited -= _exitedHandler;
                 SProcess.CancelOutputRead();
                 SProcess.CancelErrorRead();
             }
@@ -189,14 +189,14 @@ namespace LSL.Services.ServerServices;
         [GeneratedRegex(@"^\[.*\]:\s*\<(?<player>.*)\>\s*(?<message>.*)")]
         
         private static partial Regex GetMessageRegex();
-        private static readonly Regex GetDone = GetDoneRegex();
-        private static readonly Regex GetExit = GetExitRegex();
-        private static readonly Regex GetPlayerMessage = GetMessageRegex();
-        private void HandleOutput(string? Output)
+        private static readonly Regex s_getDone = GetDoneRegex();
+        private static readonly Regex s_getExit = GetExitRegex();
+        private static readonly Regex s_getPlayerMessage = GetMessageRegex();
+        private void HandleOutput(string? output)
         {
-            if (string.IsNullOrEmpty(Output) || GetPlayerMessage.IsMatch(Output)) return;
-            if (GetDone.IsMatch(Output)) IsOnline = true;
-            else if (GetExit.IsMatch(Output)) IsOnline = false;
+            if (string.IsNullOrEmpty(output) || s_getPlayerMessage.IsMatch(output)) return;
+            if (s_getDone.IsMatch(output)) IsOnline = true;
+            else if (s_getExit.IsMatch(output)) IsOnline = false;
         }
         #endregion
 

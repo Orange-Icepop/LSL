@@ -23,7 +23,7 @@
 						VerticalAlignment="Bottom" 
 						HorizontalAlignment="Center" 
 						Height="60" Width="250" 
-						IsEnabled="{Binding ServerVM.LBCEnabled}"
+						IsEnabled="{Binding ServerVM.LaunchButtonEnabled}"
 						Command="{Binding ServerVM.LaunchButtonCmd}"/>
 		<ComboBox Name="ServerList" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="30" Width="250" Margin="0,0,0,20" ItemsSource="{Binding AppState.ServerNames}" SelectedIndex="{Binding AppState.SelectedServerIndex, Mode=TwoWay}"></ComboBox>
 	</DockPanel>

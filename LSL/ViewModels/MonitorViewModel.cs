@@ -8,7 +8,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels;
 
-public class MonitorViewModel : RegionalVMBase
+public class MonitorViewModel : RegionalViewModelBase
 {
     #region 当前性能占用绑定器
     [Reactive] public RangedObservableLinkedList<double> CurrentCpuMetrics { get; set; } = new(30, 0);
@@ -24,7 +24,7 @@ public class MonitorViewModel : RegionalVMBase
     [Reactive] public double CurrentGeneralCpuUsage { get; private set; }
     [Reactive] public double CurrentGeneralRamUsage { get; private set; }
     [Reactive] public long CurrentGeneralRamValue { get; private set; }
-    public static long SystemRamMax { get; } = MemoryInfo.GetTotalSystemMemory();
+    public static long SystemRamMax => MemoryInfo.CurrentSystemMemory;
     #endregion
 
     public MonitorViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
@@ -45,12 +45,12 @@ public class MonitorViewModel : RegionalVMBase
         AppState.ServerIdChanged.Select(id => AppState.CurrentServerConfigs.TryGetValue(id, out var value) ? value : ServerConfig.None)
             .Subscribe(sc =>
             {
-                CurrentRamMax = (long)sc.max_memory * 1024 * 1024;
+                CurrentRamMax = (long)sc.MaxMemory * 1024 * 1024;
             });
         AppState.ServerConfigChanged.Select(dict => dict.TryGetValue(AppState.SelectedServerId, out var value) ? value : ServerConfig.None)
             .Subscribe(sc =>
             {
-                CurrentRamMax = (long)sc.max_memory * 1024 * 1024;
+                CurrentRamMax = (long)sc.MaxMemory * 1024 * 1024;
             });
         AppState.GeneralMetricsEventHandler += (_, args) =>
         {

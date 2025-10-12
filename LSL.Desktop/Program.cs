@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using Avalonia;
-using Avalonia.Media;
 using Avalonia.ReactiveUI;
 
 namespace LSL.Desktop;
@@ -10,7 +8,7 @@ namespace LSL.Desktop;
 class Program
 {
     // 查重防多开
-    private static Mutex desktopMutex { get; } = new(true, $"{DesktopConstant.AppName}_Mutex");
+    private static readonly Mutex s_desktopMutex = new(true, $"{DesktopConstant.AppName}_Mutex");
 
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -18,7 +16,7 @@ class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        if (!desktopMutex.WaitOne(TimeSpan.Zero, true))
+        if (!s_desktopMutex.WaitOne(TimeSpan.Zero, true))
         {
             return; //TODO:使用IPC唤起窗口
         }
@@ -30,8 +28,8 @@ class Program
         }
         finally
         {
-            desktopMutex.ReleaseMutex();
-            desktopMutex.Dispose();
+            s_desktopMutex.ReleaseMutex();
+            s_desktopMutex.Dispose();
         }
     }
 
@@ -41,15 +39,5 @@ class Program
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace()
-            .UseReactiveUI()
-            .With(new FontManagerOptions()
-            {
-                DefaultFamilyName = "Ubuntu",
-                FontFallbacks =
-                [
-                    new FontFallback() { FontFamily = "Microsoft YaHei" },
-                    new FontFallback() { FontFamily = "PingFang SC" },
-                    new FontFallback() { FontFamily = "Ubuntu" }
-                ]
-            });
+            .UseReactiveUI();
 }

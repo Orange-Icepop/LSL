@@ -9,15 +9,15 @@
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerStat">
     <UserControl.Resources>
-        <server:CurrentCpuMetricsConverter x:Key="CCMC" />
-        <server:CurrentMemMetricsConverter x:Key="CMMC" />
+        <server:CurrentCpuMetricsConverter x:Key="CurrentCpuConverter" />
+        <server:CurrentMemMetricsConverter x:Key="CurrentMemConverter" />
     </UserControl.Resources>
     <DockPanel>
         <local:MyCard Text="资源占用" DockPanel.Dock="Top" Height="200">
             <Grid Margin="30,50,10,10" ColumnDefinitions="*,*" RowDefinitions="15,*">
                 <TextBlock Grid.Row="0" Grid.Column="0" FontSize="12">
                     <TextBlock.Text>
-                        <MultiBinding Converter="{StaticResource CCMC}">
+                        <MultiBinding Converter="{StaticResource CurrentCpuConverter}">
                             <Binding Path="MonitorVM.CurrentCpuUsage" />
                         </MultiBinding>
                     </TextBlock.Text>
@@ -27,7 +27,7 @@
                 <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="True">
                     <TextBlock FontSize="12" HorizontalAlignment="Left" DockPanel.Dock="Left">
                         <TextBlock.Text>
-                            <MultiBinding Converter="{StaticResource CMMC}">
+                            <MultiBinding Converter="{StaticResource CurrentMemConverter}">
                                 <Binding Path="MonitorVM.CurrentRamUsage" />
                                 <Binding Path="MonitorVM.CurrentRamValue" />
                                 <Binding Path="MonitorVM.CurrentRamMax" />

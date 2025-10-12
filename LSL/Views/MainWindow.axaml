@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:LSL.Views"
         xmlns:vm="using:LSL.ViewModels"
-        x:DataType="vm:InitializationVM"
+        x:DataType="vm:InitializationViewModel"
 		Width="1200" Height="650"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
         x:Class="LSL.Views.MainWindow"

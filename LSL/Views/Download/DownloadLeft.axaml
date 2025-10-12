@@ -13,7 +13,7 @@
 		<Button Width="150" DockPanel.Dock="Top" Name="AutoDownButton" Content="自动下载" Classes="left" Classes.selLeft="{Binding LeftVM.HLAutoDown}" Command="{Binding RightViewCmd}" CommandParameter="AutoDown"/>
 		<Button Width="150" DockPanel.Dock="Top" Name="ManualDownButton" Content="手动下载" Classes="left" Classes.selLeft="{Binding LeftVM.HLManualDown}" Command="{Binding RightViewCmd}" CommandParameter="ManualDown"/>
 		-->
-		<Button Width="150" DockPanel.Dock="Top" Name="AddServerButton" Content="导入服务器" Classes="left" Classes.selLeft="{Binding LeftVM.HLAddServer}" Command="{Binding RightViewCmd}" CommandParameter="AddServer"/>
+		<Button Width="150" DockPanel.Dock="Top" Name="AddServerButton" Content="导入服务器" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightAddServer}" Command="{Binding RightViewCmd}" CommandParameter="AddServer"/>
 		<!--
 		<TextBlock DockPanel.Dock="Top" Text="其他资源" Margin="10,10,0,0" Foreground="Gray"/>
 		<Button Width="150" DockPanel.Dock="Top" Name="ModDownButton" Content="Mod下载" Classes="left" Classes.selLeft="{Binding LeftVM.HLModDown}" Command="{Binding RightViewCmd}" CommandParameter="ModDown"/>

@@ -9,7 +9,7 @@
              x:Class="LSL.Views.Server.ServerLeft">
 	<DockPanel Width="250">
 		<TextBlock DockPanel.Dock="Top" Text="服务器管理" Margin="10,10,0,0" Foreground="Gray"/>
-		<Button Width="250" DockPanel.Dock="Top" Name="GeneralButton" Content="概览" Classes="left" Classes.selLeft="{Binding LeftVM.HLServerGeneral}" Margin="0,10,0,0" Command="{Binding RightViewCmd}" CommandParameter="ServerGeneral"/>
+		<Button Width="250" DockPanel.Dock="Top" Name="GeneralButton" Content="概览" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightServerGeneral}" Margin="0,10,0,0" Command="{Binding RightViewCmd}" CommandParameter="ServerGeneral"/>
 		<TextBlock DockPanel.Dock="Top" Text="选择服务器" Margin="10,10,0,0" Foreground="Gray"/>
 		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10" ItemsSource="{Binding AppState.ServerNames}" SelectedIndex="{Binding AppState.SelectedServerIndex, Mode=TwoWay}">
 		</ComboBox>
@@ -21,11 +21,11 @@
 						HorizontalAlignment="Center"
 						Width="150"
 						Height="40"
-						IsEnabled="{Binding ServerVM.LBCEnabled}"
+						IsEnabled="{Binding ServerVM.LaunchButtonEnabled}"
 						Content="{Binding ServerVM.LaunchButtonContent}"/>
-		<Button Width="250" DockPanel.Dock="Top" Name="StatusButton" Content="状态" Classes="left" Classes.selLeft="{Binding LeftVM.HLServerStat}" Command="{Binding RightViewCmd}" CommandParameter="ServerStat"/>
-		<Button Width="250" DockPanel.Dock="Top" Name="TerminalButton" Content="终端" Classes="left" Classes.selLeft="{Binding LeftVM.HLServerTerminal}" Command="{Binding RightViewCmd}" CommandParameter="ServerTerminal"/>
-		<Button Width="250" DockPanel.Dock="Top" Name="ConfButton" Content="设置" Classes="left" Classes.selLeft="{Binding LeftVM.HLServerConf}" Command="{Binding RightViewCmd}" CommandParameter="ServerConf"/>
+		<Button Width="250" DockPanel.Dock="Top" Name="StatusButton" Content="状态" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightServerStat}" Command="{Binding RightViewCmd}" CommandParameter="ServerStat"/>
+		<Button Width="250" DockPanel.Dock="Top" Name="TerminalButton" Content="终端" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightServerTerminal}" Command="{Binding RightViewCmd}" CommandParameter="ServerTerminal"/>
+		<Button Width="250" DockPanel.Dock="Top" Name="ConfButton" Content="设置" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightServerConf}" Command="{Binding RightViewCmd}" CommandParameter="ServerConf"/>
 		<local:MyButton Classes="right"
 				Name="AddServerButton"
 				Command="{Binding LeftViewCmd}"

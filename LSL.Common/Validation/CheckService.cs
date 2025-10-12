@@ -9,7 +9,7 @@ namespace LSL.Common.Validation;
 /// </summary>
 public static class CheckService
 {
-    private static readonly ImmutableArray<string> ServerConfigKeys =
+    private static readonly ImmutableArray<string> s_serverConfigKeys =
     [
         "name",
         "using_java",
@@ -78,14 +78,14 @@ public static class CheckService
     #endregion
 
     #region 准服务器配置验证方法 VerifyFormedServerConfig
-    public static List<VerifyResult> VerifyFormedServerConfig(FormedServerConfig config, bool skipCP = false)
+    public static List<VerifyResult> VerifyFormedServerConfig(FormedServerConfig config, bool skipCorePathCheck = false)
     {
         var result = new List<VerifyResult>
         {
             CheckComponents.ServerName(config.ServerName),
             CheckComponents.JavaPath(config.JavaPath)
         };
-        if(!skipCP) result.Add(CheckComponents.CorePath(config.CorePath));
+        if(!skipCorePathCheck) result.Add(CheckComponents.CorePath(config.CorePath));
         result.Add(CheckComponents.MaxMem(config.MaxMem, config.MinMem));
         result.Add(CheckComponents.MinMem(config.MinMem));
         result.Add(CheckComponents.ExtJvm(config.ExtJvm));
@@ -102,9 +102,9 @@ public static class CheckService
         var cache = ServerConfig.None;
         var pResult = CheckComponents.ServerPath(path);
         if (!pResult.Passed) return ServiceResult.Fail<ServerConfig>(new ValidationException($"Error validating server config with id {id} because of nonexistent server path."));
-        cache.server_id = id;
-        cache.server_path = path;
-        foreach (var item in ServerConfigKeys)
+        cache.ServerID = id;
+        cache.ServerPath = path;
+        foreach (var item in s_serverConfigKeys)
         {
             if (!config.TryGetValue(item, out var value))
                 return ServiceResult.Fail<ServerConfig>(
@@ -115,19 +115,19 @@ public static class CheckService
                 case "name":
                 {
                     vResult = CheckComponents.ServerName(value);
-                    cache.name = value;
+                    cache.Name = value;
                     break;
                 }
                 case "using_java":
                 {
                     vResult = CheckComponents.JavaPath(value);
-                    cache.using_java = value;
+                    cache.UsingJava = value;
                     break;
                 }
                 case "core_name":
                 {
                     vResult = VerifyResult.Success("core_name");
-                    cache.core_name = value;
+                    cache.CoreName = value;
                     break;
                 }
                 case "min_memory":
@@ -137,7 +137,7 @@ public static class CheckService
                     else if (!uint.TryParse(value, out var minmem)) vResult = VerifyResult.Fail(item, "min_memory's value is not an unsigned integer.");
                     else
                     {
-                        cache.min_memory = minmem;
+                        cache.MinMemory = minmem;
                         vResult = VerifyResult.Success("min_memory");
                     }
                     break;
@@ -149,7 +149,7 @@ public static class CheckService
                     else if (!uint.TryParse(value, out var maxmem)) vResult = VerifyResult.Fail(item, "max_memory's value is not an unsigned integer.");
                     else
                     {
-                        cache.max_memory = maxmem;
+                        cache.MaxMemory = maxmem;
                         vResult = VerifyResult.Success("max_memory");
                     }
                     break;
@@ -157,7 +157,7 @@ public static class CheckService
                 case "ext_jvm":
                 {
                     vResult = CheckComponents.ExtJvm(value);
-                    cache.ext_jvm = value;
+                    cache.ExtJvm = value;
                     break;
                 }
                 default:

@@ -27,30 +27,30 @@ public static class CoreValidationService
         Vanilla,
         Velocity,
     }
-    public static CoreType Validate(string? filePath, out string ErrorMessage)// 校验核心类型
+    public static CoreType Validate(string? filePath, out string errorMessage)// 校验核心类型
     {
-        ErrorMessage = "";
+        errorMessage = "";
         if (string.IsNullOrEmpty(filePath))
         {
-            ErrorMessage = "选定的路径为空";
+            errorMessage = "选定的路径为空";
             return CoreType.Error;
 
         }
         if (!File.Exists(filePath))
         {
-            ErrorMessage = "选定的文件/路径不存在";
+            errorMessage = "选定的文件/路径不存在";
             return CoreType.Error;
         }
-        string? JarMainClass = GetMainClass(filePath);
-        if (JarMainClass == null) return CoreType.Unknown;
-        else if (JarMainClass.StartsWith("Access denied") || JarMainClass.StartsWith("Error"))
+        var jarMainClass = GetMainClass(filePath);
+        if (jarMainClass == null) return CoreType.Unknown;
+        else if (jarMainClass.StartsWith("Access denied") || jarMainClass.StartsWith("Error"))
         {
-            ErrorMessage = JarMainClass;
+            errorMessage = jarMainClass;
             return CoreType.Error;
         }
         else
         {
-            return JarMainClass switch
+            return jarMainClass switch
             {
                 "net.minecraft.server.MinecraftServer" => CoreType.Vanilla,
                 "net.minecraft.bundler.Main" => CoreType.Vanilla,
@@ -86,10 +86,10 @@ public static class CoreValidationService
             {
                 if (entry.IsDirectory) continue;
                 if (entry.Name != "META-INF/MANIFEST.MF") continue; // 对于较新版本的MC，MANIFEST.MF中应当包含Main-Class字段
-                using var fstream = zipFile.GetInputStream(entry);
-                if (fstream is null) return null;
-                using var reader = new StreamReader(fstream);
-                string manifestContent = reader.ReadToEnd();
+                using var fStream = zipFile.GetInputStream(entry);
+                if (fStream is null) return null;
+                using var reader = new StreamReader(fStream);
+                var manifestContent = reader.ReadToEnd();
                 return FindMainClassLine(manifestContent);
             }
 
@@ -114,14 +114,7 @@ public static class CoreValidationService
 
     public static string? FindMainClassLine(string manifestContent)
     {
-        string[] lines = manifestContent.Split(["\r\n", "\r", "\n"], StringSplitOptions.None);
-        foreach (string line in lines)
-        {
-            if (line.StartsWith("Main-Class:"))
-            {
-                return line.Substring("Main-Class:".Length).Trim();
-            }
-        }
-        return null;
+        var lines = manifestContent.Split(["\r\n", "\r", "\n"], StringSplitOptions.None);
+        return (from line in lines where line.StartsWith("Main-Class:") select line["Main-Class:".Length..].Trim()).FirstOrDefault();
     }
 }

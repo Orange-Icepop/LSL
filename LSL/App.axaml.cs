@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Net;
+using System.Threading.Tasks;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using LSL.ViewModels;
 using LSL.Views;
 using Microsoft.Extensions.DependencyInjection;
-using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using NLog;
 
@@ -27,14 +24,14 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var logger = diServices.GetRequiredService<ILogger<App>>();
+            var logger = _diServices.GetRequiredService<ILogger<App>>();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = startupVM,
-                ViewModel = startupVM,
+                DataContext = _startupViewModel,
+                ViewModel = _startupViewModel,
             };
             desktop.MainWindow.Show();
-            _ = startupVM.Initialize(diServices).ContinueWith(t=>
+            _ = _startupViewModel.Initialize(_diServices).ContinueWith(t=>
             {
                 if (!t.IsFaulted) return;
                 logger.LogError(t.Exception, "An error occured while initializing the application.");
@@ -48,7 +45,7 @@ public partial class App : Application
                 singleViewPlatform.MainView = new SplashView());
             _ = Dispatcher.UIThread.InvokeAsync(() =>
             {
-                shellVM = diServices.GetRequiredService<ShellViewModel>();
+                shellVM = _diServices.GetRequiredService<ShellViewModel>();
                 return shellVM;
             }).GetTask().ContinueWith(prevTask =>
             {
@@ -82,7 +79,7 @@ public partial class App : Application
                 if (task.IsFaulted)
                 {
                     // 处理初始化异常
-                    Log.Error(task.Exception);
+                    s_logger.Error(task.Exception);
                     Environment.Exit(1);
                 }
             });
@@ -91,25 +88,24 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
     #endregion
-    
-    private ServiceCollection serviceDescriptors { get; }
-    private ServiceProvider diServices { get; }
-    private InitializationVM startupVM { get; }
-    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+    private readonly ServiceProvider _diServices;
+    private readonly InitializationViewModel _startupViewModel;
+    private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
     public App()
     {
-        Log.Info("Building LSL DI Container");
-        serviceDescriptors = new ServiceCollection();
+        s_logger.Info("Building LSL DI Container");
+        var serviceDescriptors = new ServiceCollection();
         serviceDescriptors.AddLogging();
         serviceDescriptors.AddNetworking();
         serviceDescriptors.AddConfigManager();
         serviceDescriptors.AddServerHost();
         serviceDescriptors.AddStartUp();
         serviceDescriptors.AddViewModels();
-        diServices = serviceDescriptors.BuildServiceProvider();
-        Log.Info("DI Completed");
-        startupVM = diServices.GetRequiredService<InitializationVM>();
-        this.DataContext = startupVM;
+        _diServices = serviceDescriptors.BuildServiceProvider();
+        s_logger.Info("DI Completed");
+        _startupViewModel = _diServices.GetRequiredService<InitializationViewModel>();
+        this.DataContext = _startupViewModel;
     }
 }
 

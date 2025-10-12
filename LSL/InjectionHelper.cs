@@ -22,7 +22,7 @@ using ServerOutputHandler = LSL.Services.ServerServices.ServerOutputHandler;
 
 namespace LSL
 {
-    public static class DI
+    public static class InjectionHelper
     {
         #region 添加单例
         public static void AddLogging(this IServiceCollection collection)
@@ -69,19 +69,19 @@ namespace LSL
         {
             collection.AddSingleton<InteractionUnits>();
             collection.AddSingleton<AppStateLayer>();
-            collection.AddSingleton<InitializationVM>();
+            collection.AddSingleton<InitializationViewModel>();
         }
         public static void AddViewModels(this IServiceCollection collection)
         {
             collection.AddSingleton<ServiceConnector>();
             collection.AddSingleton<PublicCommand>();
-            collection.AddSingleton<BarRegionVM>();
-            collection.AddSingleton<LeftRegionVM>();
-            collection.AddSingleton<RightRegionVM>();
+            collection.AddSingleton<BarRegionViewModel>();
+            collection.AddSingleton<LeftRegionViewModel>();
+            collection.AddSingleton<RightRegionViewModel>();
             collection.AddSingleton<ConfigViewModel>();
             collection.AddSingleton<MonitorViewModel>();
             collection.AddSingleton<ServerViewModel>();
-            collection.AddSingleton<FormPageVM>();
+            collection.AddSingleton<FormPageViewModel>();
             collection.AddSingleton<ShellViewModel>();
         }
         #endregion

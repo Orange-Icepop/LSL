@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace LSL.Views.Server
 {
-    public partial class EditSC : UserControl
+    public partial class ServerConfEdit : UserControl
     {
-        public EditSC()
+        public ServerConfEdit()
         {
             InitializeComponent();
         }

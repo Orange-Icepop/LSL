@@ -35,25 +35,25 @@ namespace LSL.ViewModels
      */
     public class ServiceConnector
     {
-        private AppStateLayer AppState { get; }
-        private ConfigManager configManager { get; }
-        private ServerHost daemonHost { get; }
-        private ServerOutputStorage outputStorage { get; }
-        private NetService WebHost { get; }
-        private ILogger<ServiceConnector> _logger { get; }
+        private readonly AppStateLayer _appState;
+        private readonly ConfigManager _configManager;
+        private readonly ServerHost _daemonHost;
+        private readonly ServerOutputStorage _outputStorage;
+        private readonly NetService _webHost;
+        private readonly ILogger<ServiceConnector> _logger;
         public ServiceConnector(AppStateLayer appState, ConfigManager cfm, ServerHost daemon, ServerOutputStorage optStorage, NetService netService)
         {
-            AppState = appState;
-            configManager = cfm;
-            daemonHost = daemon;
-            outputStorage = optStorage;
-            WebHost = netService;
-            _logger = AppState.LoggerFactory.CreateLogger<ServiceConnector>();
-            EventBus.Instance.Subscribe<IStorageArgs>(args => ServerOutputChannel.Writer.TryWrite(args));
+            _appState = appState;
+            _configManager = cfm;
+            _daemonHost = daemon;
+            _outputStorage = optStorage;
+            _webHost = netService;
+            _logger = _appState.LoggerFactory.CreateLogger<ServiceConnector>();
+            EventBus.Instance.Subscribe<IStorageArgs>(args => _serverOutputChannel.Writer.TryWrite(args));
             EventBus.Instance.Subscribe<IMetricsArgs>(ReceiveMetrics);
-            _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
+            _handleOutputTask = Task.Run(() => HandleOutput(_outputCts.Token));
             _initializationTask = CopyServerOutput();
-            _logger.LogInformation("Total RAM:{ram}", MemoryInfo.GetTotalSystemMemory());
+            _logger.LogInformation("Got total RAM:{ram}", MemoryInfo.CurrentSystemMemory);
         }
 
         #region 配置部分
@@ -62,22 +62,22 @@ namespace LSL.ViewModels
         {
             if (readFile)
             {
-                var res = configManager.ReadMainConfig();
-                var notCritical = await AppState.ITAUnits.SubmitServiceError(res);
+                var res = _configManager.ReadMainConfig();
+                var notCritical = await _appState.InteractionUnits.SubmitServiceError(res);
                 if (!notCritical)
                 {
                     //var err = res.Error?.ToString() ?? string.Empty;
                     Environment.Exit(1);
                 }
             }
-            AppState.CurrentConfigs = configManager.MainConfigs;
+            _appState.CurrentConfigs = _configManager.MainConfigs;
         }
 
         public async Task ReadJavaConfig(bool readFile = false)
         {
             if (readFile)
             {
-                var res = configManager.ReadJavaConfig();
+                var res = _configManager.ReadJavaConfig();
                 if (res.ErrorCode is ServiceResultType.Error)
                 {
                     // var err = res.Error?.ToString() ?? string.Empty;
@@ -103,23 +103,23 @@ namespace LSL.ViewModels
 
                         error.AppendLine("这些配置没有被读取。你可以通过重新搜索Java来解决这个问题。");
                         _logger.LogWarning("{}", error.ToString());
-                        await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_Confirm, "读取Java配置时出错", error.ToString()));
+                        await _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningConfirm, "读取Java配置时出错", error.ToString()));
                     }
                 }
 
             }
-            await Dispatcher.UIThread.InvokeAsync(() => AppState.CurrentJavaDict = configManager.JavaConfigs);
+            await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentJavaDict = _configManager.JavaConfigs);
         }
 
         public async Task ReadServerConfig(bool readFile = false)
         {
             if (readFile)
             {
-                var res = configManager.ReadServerConfig();
+                var res = _configManager.ReadServerConfig();
                 if (res.ErrorCode is ServiceResultType.Error)
                 {
                     // 如果是致命错误，直接退出
-                    if (res.Error is not null) await AppState.ITAUnits.SubmitServiceError(res);
+                    if (res.Error is not null) await _appState.InteractionUnits.SubmitServiceError(res);
                     _logger.LogCritical(res.Error, "A critical error occured while reading server config. Exiting......");
                     Environment.Exit(1);
                     return;
@@ -141,17 +141,17 @@ namespace LSL.ViewModels
                             .AppendJoin(Environment.NewLine, res.ConfigErrorServers);
                     }
                     error.AppendLine("这些服务器将不会被读取。你可以通过重新添加服务器来解决这个问题。");
-                    await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_Confirm, "读取服务器配置时发生错误", error.ToString()));
+                    await _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningConfirm, "读取服务器配置时发生错误", error.ToString()));
                 }
             }
 
-            var cache = configManager.ServerConfigs.Clone2Dict();
+            var cache = _configManager.ServerConfigs.Clone2Dict();
             if (cache.Count == 0)
             {
                 cache.Add(-1, ServerConfig.None);
             }
 
-            await Dispatcher.UIThread.InvokeAsync(() => AppState.CurrentServerConfigs = cache.ToFrozenDictionary());
+            await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = cache.ToFrozenDictionary());
         }
 
         public async Task<bool> UpdateConfig(IDictionary<int, object> currentConfigs)
@@ -163,16 +163,16 @@ namespace LSL.ViewModels
         }
         public async Task<bool> SaveConfig()
         {
-            var result = configManager.ConfirmMainConfig(AppState.CurrentConfigs);
-            await AppState.ITAUnits.SubmitServiceError(result);
+            var result = _configManager.ConfirmMainConfig(_appState.CurrentConfigs);
+            await _appState.InteractionUnits.SubmitServiceError(result);
             bool success = result.IsFullSuccess;
             return success;
         }
 
         public async Task<bool> FindJava()
         {
-            var result = await configManager.DetectJava();
-            await AppState.ITAUnits.SubmitServiceError(result);
+            var result = await _configManager.DetectJava();
+            await _appState.InteractionUnits.SubmitServiceError(result);
             bool success = result.IsFullSuccess;
             await ReadJavaConfig(true);
             return success;
@@ -187,44 +187,44 @@ namespace LSL.ViewModels
             var result = VerifyServerConfigBeforeStart(serverId);
             if (result != null)
             {
-                AppState.ITAUnits.ThrowError("服务器配置校验发生错误", result);
+                _appState.InteractionUnits.ThrowError("服务器配置校验发生错误", result);
                 return false;
             }
 
-            AppState.TerminalTexts.TryAdd(serverId, []);
-            daemonHost.RunServer(serverId);
+            _appState.TerminalTexts.TryAdd(serverId, []);
+            _daemonHost.RunServer(serverId);
             return true;
         }
 
         public async Task StopServer(int serverId)
         {
-            var confirm = await AppState.ITAUnits.PopupITA
-                .Handle(new InvokePopupArgs(PopupType.Warning_YesNo, "确定要关闭该服务器吗？", "将会立刻踢出服务器内所有玩家，服务器上的最新更改会被保存。"));
+            var confirm = await _appState.InteractionUnits.PopupInteraction
+                .Handle(new InvokePopupArgs(PopupType.WarningYesNo, "确定要关闭该服务器吗？", "将会立刻踢出服务器内所有玩家，服务器上的最新更改会被保存。"));
             if (confirm == PopupResult.Yes)
             {
-                daemonHost.StopServer(serverId);
-                AppState.ITAUnits.Notify(0, "正在关闭服务器", "请稍作等待");
+                _daemonHost.StopServer(serverId);
+                _appState.InteractionUnits.Notify(0, "正在关闭服务器", "请稍作等待");
             }
         }
 
         public void SaveServer(int serverId)
         {
-            daemonHost.SendCommand(serverId, "save-all");
+            _daemonHost.SendCommand(serverId, "save-all");
         }
 
         public async Task EndServer(int serverId)
         {
-            var confirm = await AppState.ITAUnits.PopupITA.Handle(new(PopupType.Warning_YesNo, "确定要终止该服务端进程吗？",
+            var confirm = await _appState.InteractionUnits.PopupInteraction.Handle(new(PopupType.WarningYesNo, "确定要终止该服务端进程吗？",
                 "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！"));
-            if (confirm == PopupResult.Yes) daemonHost.EndServer(serverId);
+            if (confirm == PopupResult.Yes) _daemonHost.EndServer(serverId);
         }
 
-        public void EndAllServers() => daemonHost.EndAllServers();
+        public void EndAllServers() => _daemonHost.EndAllServers();
 
         public void SendCommandToServer(int serverId, string command)
         {
             if (string.IsNullOrEmpty(command)) return;
-            daemonHost.SendCommand(serverId, command);
+            _daemonHost.SendCommand(serverId, command);
         }
 
         #endregion
@@ -233,12 +233,12 @@ namespace LSL.ViewModels
 
         public string? VerifyServerConfigBeforeStart(int serverId)
         {
-            if (!configManager.ServerConfigs.TryGetValue(serverId, out var config))
+            if (!_configManager.ServerConfigs.TryGetValue(serverId, out var config))
                 return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
-            else if (!File.Exists(config.using_java)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
+            else if (!File.Exists(config.UsingJava)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
             else
             {
-                string configPath = Path.Combine(config.server_path, config.core_name);
+                string configPath = Path.Combine(config.ServerPath, config.CoreName);
                 if (!File.Exists(configPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的核心文件不存在。";
             }
 
@@ -249,15 +249,15 @@ namespace LSL.ViewModels
 
         #region 读取服务器输出
 
-        private readonly Channel<IStorageArgs> ServerOutputChannel = Channel.CreateUnbounded<IStorageArgs>();
-        private CancellationTokenSource OutputCts = new();
+        private readonly Channel<IStorageArgs> _serverOutputChannel = Channel.CreateUnbounded<IStorageArgs>();
+        private CancellationTokenSource _outputCts = new();
         private Task _handleOutputTask;
 
         private async Task HandleOutput(CancellationToken token)
         {
             try
             {
-                await foreach (var args in ServerOutputChannel.Reader.ReadAllAsync(token))
+                await foreach (var args in _serverOutputChannel.Reader.ReadAllAsync(token))
                 {
                     try
                     {
@@ -283,25 +283,25 @@ namespace LSL.ViewModels
         {
             switch (args)
             {
-                case ColorOutputArgs COA:
-                    await Dispatcher.UIThread.InvokeAsync(() => AppState.TerminalTexts.AddOrUpdate(COA.ServerId,
-                        [new ColoredLine(COA.Output, COA.ColorHex)], (_, value) =>
+                case ColorOutputArgs coa:
+                    await Dispatcher.UIThread.InvokeAsync(() => _appState.TerminalTexts.AddOrUpdate(coa.ServerID,
+                        [new ColoredLine(coa.Output, coa.ColorHex)], (_, value) =>
                         {
-                            value.Add(new ColoredLine(COA.Output, COA.ColorHex));
+                            value.Add(new ColoredLine(coa.Output, coa.ColorHex));
                             return value;
                         }));
                     break;
-                case ServerStatusArgs SSA:
-                    await Dispatcher.UIThread.InvokeAsync(() => UpdateStatus(SSA));
+                case ServerStatusArgs ssa:
+                    await Dispatcher.UIThread.InvokeAsync(() => UpdateStatus(ssa));
                     break;
-                case PlayerUpdateArgs PUA:
-                    await Dispatcher.UIThread.InvokeAsync(() => UpdateUser(PUA));
+                case PlayerUpdateArgs pua:
+                    await Dispatcher.UIThread.InvokeAsync(() => UpdateUser(pua));
                     break;
-                case PlayerMessageArgs PMA:
-                    await Dispatcher.UIThread.InvokeAsync(() => AppState.MessageDict.AddOrUpdate(PMA.ServerId,
-                        [new UserMessageLine(PMA.Message)], (_, value) =>
+                case PlayerMessageArgs pma:
+                    await Dispatcher.UIThread.InvokeAsync(() => _appState.MessageDict.AddOrUpdate(pma.ServerID,
+                        [new UserMessageLine(pma.Message)], (_, value) =>
                         {
-                            value.Add(new UserMessageLine(PMA.Message));
+                            value.Add(new UserMessageLine(pma.Message));
                             return value;
                         }));
                     break;
@@ -312,20 +312,20 @@ namespace LSL.ViewModels
         {
             if (args.Entering)
             {
-                AppState.UserDict.AddOrUpdate(args.ServerId, [new UUID_User(args.UUID, args.PlayerName)],
+                _appState.UserDict.AddOrUpdate(args.ServerID, [new PlayerInfo(args.UUID, args.PlayerName)],
                     (_, oldValue) =>
                     {
-                        oldValue.Add(new UUID_User(args.UUID, args.PlayerName));
+                        oldValue.Add(new PlayerInfo(args.UUID, args.PlayerName));
                         return oldValue;
                     });
             }
             else
             {
-                if (AppState.UserDict.TryGetValue(args.ServerId, out var uc))
+                if (_appState.UserDict.TryGetValue(args.ServerID, out var uc))
                 {
                     for (int i = uc.Count - 1; i >= 0; i--)
                     {
-                        if (uc[i].User == args.PlayerName)
+                        if (uc[i].PlayerName == args.PlayerName)
                         {
                             uc.RemoveAt(i);
                             break;
@@ -337,7 +337,7 @@ namespace LSL.ViewModels
 
         private void UpdateStatus(ServerStatusArgs args)
         {
-            AppState.ServerStatuses.AddOrUpdate(args.ServerId,
+            _appState.ServerStatuses.AddOrUpdate(args.ServerID,
                 new ServerStatus(args.IsRunning, args.IsOnline),
                 (_, value) => value.Update(args.IsRunning, args.IsOnline));
             UpdateRunningServer();
@@ -345,10 +345,10 @@ namespace LSL.ViewModels
 
         private void UpdateRunningServer()
         {
-            AppState.RunningServerCount = 0;
-            foreach (var item in AppState.ServerStatuses)
+            _appState.RunningServerCount = 0;
+            foreach (var item in _appState.ServerStatuses)
             {
-                if (item.Value.IsRunning) AppState.RunningServerCount++;
+                if (item.Value.IsRunning) _appState.RunningServerCount++;
             }
         }
         #endregion
@@ -358,8 +358,8 @@ namespace LSL.ViewModels
         {
             switch (args)
             {
-                case MetricsUpdateArgs MUA: ProcessSecondlyMetrics(MUA); break;
-                case GeneralMetricsArgs GMA: ProcessMinutelyMetrics(GMA); break;
+                case MetricsUpdateArgs mua: ProcessSecondlyMetrics(mua); break;
+                case GeneralMetricsArgs gma: ProcessMinutelyMetrics(gma); break;
             }
         }
 
@@ -367,7 +367,7 @@ namespace LSL.ViewModels
         {
             foreach (var item in args.Metrics)
             {
-                AppState.MetricsDict.AddOrUpdate(item.ServerId, _ => new MetricsStorage(item),
+                _appState.MetricsDict.AddOrUpdate(item.ServerID, _ => new MetricsStorage(item),
                     (_, storage) => storage.Add(item));
             }
         }
@@ -386,35 +386,35 @@ namespace LSL.ViewModels
                 ram.Add(r);
             }
 
-            AppState.GeneralCpuMetrics = cpu;
-            AppState.GeneralRamMetrics = ram;
-            AppState.OnGeneralMetricsUpdated(args.CpuHistory.LastItem, args.RamPctHistory.LastItem, args.RamBytesAvgHistory.LastItem);
+            _appState.GeneralCpuMetrics = cpu;
+            _appState.GeneralRamMetrics = ram;
+            _appState.OnGeneralMetricsUpdated(args.CpuHistory.LastItem, args.RamPctHistory.LastItem, args.RamBytesAvgHistory.LastItem);
         }
         #endregion
 
         #region 服务器添加、修改与删除
 
-        public static (int, string?) ValidateNewServerConfig(FormedServerConfig config, bool skipCP = false)
+        public static (int, string?) ValidateNewServerConfig(FormedServerConfig config, bool skipCorePathCheck = false)
         {
-            var checkResult = CheckService.VerifyFormedServerConfig(config, skipCP);
-            string ErrorInfo = "";
+            var checkResult = CheckService.VerifyFormedServerConfig(config, skipCorePathCheck);
+            string errorInfo = "";
             foreach (var item in checkResult)
             {
-                if (item.Passed == false)
+                if (!item.Passed)
                 {
-                    ErrorInfo += $"{item.Reason}\r";
+                    errorInfo += $"{item.Reason}\r";
                 }
             }
 
-            if (!string.IsNullOrEmpty(ErrorInfo))
+            if (!string.IsNullOrEmpty(errorInfo))
             {
-                return (0, ErrorInfo);
+                return (0, errorInfo);
             }
-            if (skipCP) return (1, null);// 不检查核心，直接返回
-            var coreResult = CoreValidationService.Validate(config.CorePath, out var Problem);
+            if (skipCorePathCheck) return (1, null);// 不检查核心，直接返回
+            var coreResult = CoreValidationService.Validate(config.CorePath, out var problem);
             return coreResult switch
             {
-                CoreValidationService.CoreType.Error => (0, "验证核心文件时发生错误。\r" + Problem),
+                CoreValidationService.CoreType.Error => (0, "验证核心文件时发生错误。\r" + problem),
                 CoreValidationService.CoreType.ForgeInstaller => (0, "您选择的文件是一个Forge安装器，而不是一个Minecraft服务端核心文件。LSL暂不支持Forge服务器的添加与启动。"),
                 CoreValidationService.CoreType.FabricInstaller => (0, "您选择的文件是一个Fabric安装器，而不是一个Minecraft服务端核心文件。请下载Fabric官方服务器jar文件，而不是安装器。"),
                 CoreValidationService.CoreType.Unknown => (-1,
@@ -431,32 +431,32 @@ namespace LSL.ViewModels
 
         public async Task<bool> AddServer(FormedServerConfig config)
         { 
-            var result = configManager.RegisterServer(config);
-            await AppState.ITAUnits.SubmitServiceError(result);
+            var result = _configManager.RegisterServer(config);
+            await _appState.InteractionUnits.SubmitServiceError(result);
             await ReadServerConfig(true);
             return result.IsFullSuccess;
         }
 
         public async Task<bool> EditServer(int id, FormedServerConfig config)
         {
-            var result = configManager.EditServer(id, config);
-            await AppState.ITAUnits.SubmitServiceError(result);
+            var result = _configManager.EditServer(id, config);
+            await _appState.InteractionUnits.SubmitServiceError(result);
             await ReadServerConfig(true);
             return result.IsFullSuccess;
         }
 
         public async Task<bool> DeleteServer(int serverId)
         {
-            var result = configManager.DeleteServer(serverId); 
-            await AppState.ITAUnits.SubmitServiceError(result);
+            var result = _configManager.DeleteServer(serverId); 
+            await _appState.InteractionUnits.SubmitServiceError(result);
             await ReadServerConfig(true);
             return result.IsFullSuccess;
         }
 
         public async Task<bool> AddExistedServer(FormedServerConfig config)
         {
-            var result = await configManager.AddExistedServer(config);
-            await AppState.ITAUnits.SubmitServiceError(result);
+            var result = await _configManager.AddExistedServer(config);
+            await _appState.InteractionUnits.SubmitServiceError(result);
             await ReadServerConfig(true);
             return result.IsFullSuccess;
         }
@@ -474,11 +474,11 @@ namespace LSL.ViewModels
             {
                 // 暂停输出处理
                 _logger.LogInformation("Copy server output. Stopping output handler...");
-                await OutputCts.CancelAsync();
+                await _outputCts.CancelAsync();
                 await _handleOutputTask;
                 // 拷贝输出字典
-                AppState.TerminalTexts = new ConcurrentDictionary<int, ObservableCollection<ColoredLine>>(
-                    outputStorage.OutputDict.ToDictionary(
+                _appState.TerminalTexts = new ConcurrentDictionary<int, ObservableCollection<ColoredLine>>(
+                    _outputStorage.OutputDict.ToDictionary(
                         kvp => kvp.Key,
                         kvp => new ObservableCollection<ColoredLine>(
                             kvp.Value.Select(line => new ColoredLine(line.Line, line.ColorHex))
@@ -486,27 +486,27 @@ namespace LSL.ViewModels
                     )
                 );
 
-                AppState.ServerStatuses = new ConcurrentDictionary<int, ServerStatus>(
-                    outputStorage.StatusDict.ToDictionary(
+                _appState.ServerStatuses = new ConcurrentDictionary<int, ServerStatus>(
+                    _outputStorage.StatusDict.ToDictionary(
                         kvp => kvp.Key,
                         kvp => new ServerStatus(kvp.Value)
                     )
                 );
                 await Dispatcher.UIThread.InvokeAsync(UpdateRunningServer);
 
-                AppState.UserDict = new ConcurrentDictionary<int, ObservableCollection<UUID_User>>(
-                    outputStorage.PlayerDict
+                _appState.UserDict = new ConcurrentDictionary<int, ObservableCollection<PlayerInfo>>(
+                    _outputStorage.PlayerDict
                         .GroupBy(kvp => kvp.Key.ServerId)
                         .ToDictionary(
                             g => g.Key,
-                            g => new ObservableCollection<UUID_User>(
-                                g.Select(kvp => new UUID_User(kvp.Value, kvp.Key.PlayerName))
+                            g => new ObservableCollection<PlayerInfo>(
+                                g.Select(kvp => new PlayerInfo(kvp.Value, kvp.Key.PlayerName))
                             )
                         )
                 );
 
-                AppState.MessageDict = new ConcurrentDictionary<int, ObservableCollection<UserMessageLine>>(
-                    outputStorage.MessageDict.ToDictionary(
+                _appState.MessageDict = new ConcurrentDictionary<int, ObservableCollection<UserMessageLine>>(
+                    _outputStorage.MessageDict.ToDictionary(
                         kvp => kvp.Key,
                         kvp => new ObservableCollection<UserMessageLine>(
                             kvp.Value.Select(line => new UserMessageLine(line))
@@ -517,8 +517,8 @@ namespace LSL.ViewModels
             finally
             {
                 // 恢复输出处理
-                OutputCts = new CancellationTokenSource();
-                _handleOutputTask = Task.Run(() => HandleOutput(OutputCts.Token));
+                _outputCts = new CancellationTokenSource();
+                _handleOutputTask = Task.Run(() => HandleOutput(_outputCts.Token));
                 _logger.LogInformation("Output handler restarted.");
                 // 释放锁
                 _copyLock.Release();
@@ -530,8 +530,8 @@ namespace LSL.ViewModels
 
         public async Task<bool> Download(string url, string dir, IProgress<double>? progress, CancellationToken? token)
         {
-            var result = token is not null ? await WebHost.GetFileAsync(url, dir, progress, (CancellationToken)token) : await WebHost.GetFileAsync(url, dir, progress);
-            var success = !await AppState.ITAUnits.SubmitServiceError(result);
+            var result = token is not null ? await _webHost.GetFileAsync(url, dir, progress, (CancellationToken)token) : await _webHost.GetFileAsync(url, dir, progress);
+            var success = !await _appState.InteractionUnits.SubmitServiceError(result);
             return success;
         }
         #endregion
@@ -541,7 +541,7 @@ namespace LSL.ViewModels
         {
             try
             {
-                if (!AppState.CurrentConfigs.TryGetValue("beta_update", out var betaUpdateObj))
+                if (!_appState.CurrentConfigs.TryGetValue("beta_update", out var betaUpdateObj))
                 {
                     throw new KeyNotFoundException("Config key beta_update not found.");
                 }
@@ -551,9 +551,9 @@ namespace LSL.ViewModels
                     throw new FormatException("Config beta_update are not valid boolean.");
                 }
 
-                Dispatcher.UIThread.Post(() => AppState.ITAUnits.Notify(0, "更新检查", "开始检查LSL更新......"));
+                Dispatcher.UIThread.Post(() => _appState.InteractionUnits.Notify(0, "更新检查", "开始检查LSL更新......"));
                 string url = betaUpdate ? "https://api.orllow.cn/lsl/latest/prerelease" : "https://api.orllow.cn/lsl/latest/stable";
-                var result = await WebHost.ApiGet(url);
+                var result = await _webHost.ApiGet(url);
                 switch (result.StatusCode)
                 {
                     case 0:
@@ -578,21 +578,21 @@ namespace LSL.ViewModels
                         $"LSL已经推出了新版本：{remoteVerString}。可前往https://github.com/Orange-Icepop/LSL/releases下载。{Environment.NewLine}{updateMessage}";
                     await Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        AppState.ITAUnits.PopupITA
-                            .Handle(new InvokePopupArgs(PopupType.Info_Confirm, "LSL更新提示", message))
+                        _appState.InteractionUnits.PopupInteraction
+                            .Handle(new InvokePopupArgs(PopupType.InfoConfirm, "LSL更新提示", message))
                             .Subscribe();
                     });
                 }
                 else
                     Dispatcher.UIThread.Post(() =>
-                        AppState.ITAUnits.Notify(1, "更新检查完毕", $"当前LSL版本已为最新：{DesktopConstant.Version}"));
+                        _appState.InteractionUnits.Notify(1, "更新检查完毕", $"当前LSL版本已为最新：{DesktopConstant.Version}"));
                 _logger.LogInformation("Check for updates completed.");
             }
             catch (Exception ex)
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Error_Confirm, "更新检查出错",
+                    _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, "更新检查出错",
                             "LSL在检查更新时出现了问题。" + Environment.NewLine + ex.Message))
                         .Subscribe();
                 });
@@ -646,16 +646,16 @@ namespace LSL.ViewModels
 
     #region 用户记录类
 
-    public class UUID_User
+    public class PlayerInfo
     {
-        public UUID_User(string uuid, string user)
+        public PlayerInfo(string uuid, string playerName)
         {
             this.UUID = uuid;
-            this.User = user;
+            this.PlayerName = playerName;
         }
 
         public string UUID { get; set; }
-        public string User { get; set; }
+        public string PlayerName { get; set; }
     }
 
     #endregion

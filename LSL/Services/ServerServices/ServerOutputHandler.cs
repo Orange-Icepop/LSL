@@ -13,20 +13,20 @@ namespace LSL.Services.ServerServices;
 /// </summary>
 public partial class ServerOutputHandler : IDisposable
 {
-    private ILogger<ServerOutputHandler> _logger { get; }
+    private readonly ILogger<ServerOutputHandler> _logger;
     public ServerOutputHandler(ILogger<ServerOutputHandler> logger)
     {
         _disposed = false;
         _logger = logger;
-        OutputChannel = Channel.CreateUnbounded<TerminalOutputArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
-        Task.Run(() => ProcessOutput(OutputCTS.Token));
+        _outputChannel = Channel.CreateUnbounded<TerminalOutputArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
+        Task.Run(() => ProcessOutput(_outputCts.Token));
         _logger.LogInformation("OutputHandler Launched");
     }
 
     #region 待处理队列
     public bool TrySendLine(TerminalOutputArgs args)
     {
-        if (OutputChannel.Writer.TryWrite(args))
+        if (_outputChannel.Writer.TryWrite(args))
         {
             return true;
         }
@@ -36,13 +36,13 @@ public partial class ServerOutputHandler : IDisposable
             return false;
         }
     }
-    private readonly Channel<TerminalOutputArgs> OutputChannel;
-    private readonly CancellationTokenSource OutputCTS = new();
+    private readonly Channel<TerminalOutputArgs> _outputChannel;
+    private readonly CancellationTokenSource _outputCts = new();
     private async Task ProcessOutput(CancellationToken ct)
     {
         try
         {
-            await foreach (var args in OutputChannel.Reader.ReadAllAsync(ct))
+            await foreach (var args in _outputChannel.Reader.ReadAllAsync(ct))
             {
                 try
                 {
@@ -72,9 +72,9 @@ public partial class ServerOutputHandler : IDisposable
         {
             if (disposing)
             {
-                OutputCTS.Cancel();
-                OutputChannel.Writer.TryComplete();
-                OutputCTS.Dispose();
+                _outputCts.Cancel();
+                _outputChannel.Writer.TryComplete();
+                _outputCts.Dispose();
             }
             _disposed = true;
         }
@@ -91,13 +91,13 @@ public partial class ServerOutputHandler : IDisposable
     private static partial Regex PlayerLeftRegex();
 
         
-    private static readonly Regex GetTimeStamp = TimeStampRegex();
-    private static readonly Regex GetPlayerMessage = MessageRegex();
-    private static readonly Regex GetUUID = UUIDRegex();
-    private static readonly Regex PlayerLeft = PlayerLeftRegex();
+    private static readonly Regex s_getTimeStamp = TimeStampRegex();
+    private static readonly Regex s_getPlayerMessage = MessageRegex();
+    private static readonly Regex s_getUUID = UUIDRegex();
+    private static readonly Regex s_playerLeft = PlayerLeftRegex();
 
     #region 处理操作
-    private static async Task OutputProcessor(int ServerId, string Output, OutputChannelType channel)
+    private static async Task OutputProcessor(int serverId, string output, OutputChannelType channel)
     {
         string colorBrush = "#000000";
         switch (channel)
@@ -112,12 +112,12 @@ public partial class ServerOutputHandler : IDisposable
                 break;
             default:
             {
-                if (GetTimeStamp.IsMatch(Output))
+                if (s_getTimeStamp.IsMatch(output))
                 {
-                    var match = GetTimeStamp.Match(Output);
-                    if (GetPlayerMessage.IsMatch(match.Groups["context"].Value))
+                    var match = s_getTimeStamp.Match(output);
+                    if (s_getPlayerMessage.IsMatch(match.Groups["context"].Value))
                     {
-                        await EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerMessageArgs(ServerId, match.Groups["context"].Value));
+                        await EventBus.Instance.PublishAsync<IStorageArgs>(new PlayerMessageArgs(serverId, match.Groups["context"].Value));
                     }
                     else
                     {
@@ -130,7 +130,7 @@ public partial class ServerOutputHandler : IDisposable
                             "FATA" => "#ff0000",
                             _ => "#000000"
                         };
-                        ProcessSystem(ServerId, match.Groups["context"].Value);
+                        ProcessSystem(serverId, match.Groups["context"].Value);
                     }
                 }
                 else
@@ -140,20 +140,20 @@ public partial class ServerOutputHandler : IDisposable
                 break;
             }
         }
-        await EventBus.Instance.PublishAsync<IStorageArgs>(new ColorOutputArgs(ServerId, Output, colorBrush));
+        await EventBus.Instance.PublishAsync<IStorageArgs>(new ColorOutputArgs(serverId, output, colorBrush));
     }
     // 额外处理服务端自身输出所需要更新的操作
-    private static void ProcessSystem(int ServerId, string Output)
+    private static void ProcessSystem(int serverId, string output)
     {
-        if (GetUUID.IsMatch(Output))
+        if (s_getUUID.IsMatch(output))
         {
-            var match = GetUUID.Match(Output);
-            EventBus.Instance.Fire<IStorageArgs>(new PlayerUpdateArgs(ServerId, match.Groups["uuid"].Value, match.Groups["player"].Value, true));
+            var match = s_getUUID.Match(output);
+            EventBus.Instance.Fire<IStorageArgs>(new PlayerUpdateArgs(serverId, match.Groups["uuid"].Value, match.Groups["player"].Value, true));
         }
 
-        if (PlayerLeft.IsMatch(Output))
+        if (s_playerLeft.IsMatch(output))
         {
-            EventBus.Instance.Fire<IStorageArgs>(new PlayerUpdateArgs(ServerId, "Unknown", GetUUID.Match(Output).Groups["player"].Value, false));
+            EventBus.Instance.Fire<IStorageArgs>(new PlayerUpdateArgs(serverId, "Unknown", s_getUUID.Match(output).Groups["player"].Value, false));
         }
     }
 

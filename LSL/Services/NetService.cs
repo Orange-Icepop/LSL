@@ -12,9 +12,9 @@ namespace LSL.Services;
 
 public class NetService
 {
-    private IHttpClientFactory _factory { get; }
-    private ILogger<NetService> _logger { get; }
-    private const int bufferSize = 8192;
+    private readonly IHttpClientFactory _factory;
+    private readonly ILogger<NetService> _logger;
+    private const int BufferSize = 8192;
     public NetService(IHttpClientFactory factory, ILogger<NetService> logger)
     {
         _factory = factory;
@@ -40,10 +40,10 @@ public class NetService
             // 开始使用网络文件流与文件写入流
             await using var wstream = await response.Content.ReadAsStreamAsync(token);
             await using var fstream =
-                new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, true);
+                new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize, true);
             fileExists = true;
 
-            var buffer = ArrayPool<byte>.Shared.Rent(bufferSize); // 通过ArrayPool减少GC压力
+            var buffer = ArrayPool<byte>.Shared.Rent(BufferSize); // 通过ArrayPool减少GC压力
             try
             {
                 var readbytes = 0L;
@@ -139,18 +139,18 @@ public class NetService
 
     private static string GetFileNameFromResponse(HttpResponseMessage response)
     {
-        if (response.Content.Headers.ContentDisposition != null)
+        if (response.Content.Headers.ContentDisposition is not null)
         {
-            var fname = response.Content.Headers.ContentDisposition.FileNameStar ?? 
+            var filename = response.Content.Headers.ContentDisposition.FileNameStar ?? 
                         response.Content.Headers.ContentDisposition.FileName;
-            if (!string.IsNullOrEmpty(fname))
+            if (!string.IsNullOrEmpty(filename))
             {
-                return fname.Trim('"', '\'');// 返回头有文件名再好不过了
+                return filename.Trim('"', '\'');// 返回头有文件名再好不过了
             }
         }
         var uri = response.RequestMessage?.RequestUri;
-        var urifilename = Path.GetFileName(uri?.LocalPath);// 不行再找请求头中的文件名称
-        return !string.IsNullOrEmpty(urifilename) ? urifilename : $"{Guid.NewGuid()}.bin";// 再没有只能用GUID了
+        var uriFilename = Path.GetFileName(uri?.LocalPath);// 不行再找请求头中的文件名称
+        return !string.IsNullOrEmpty(uriFilename) ? uriFilename : $"{Guid.NewGuid()}.bin";// 再没有只能用GUID了
     }
 
     private static bool TryDeleteFile(bool hasFile, string? path)

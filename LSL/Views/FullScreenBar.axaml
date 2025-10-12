@@ -5,14 +5,14 @@
              xmlns:vm="using:LSL.ViewModels"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="50"
-             x:Class="LSL.Views.FSBar">
+             x:Class="LSL.Views.FullScreenBar">
 
 	<Grid RowDefinitions="*" ColumnDefinitions="Auto,Auto" Background="{DynamicResource OBlue}" Name="Bkg">
 		<Button Classes="bar" Grid.Column="0" Width="30" Height="30" Margin="15,0,0,0" Command="{Binding FullViewBackCmd}">
 			<Image Source="avares://LSL/Assets/Built-In-Icons/LArrow.png" Margin="5,5,5,5"/>
 		</Button>
 		<TextBlock Name="Title" 
-				   Text="{Binding BarVM.FSTitle}" 
+				   Text="{Binding BarViewModel.FullScreenTitle}" 
 				   FontSize="25" 
 				   FontFamily="{StaticResource SmileySans}"
 				   Margin="15,0,0,0" 

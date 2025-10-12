@@ -15,40 +15,40 @@ namespace LSL.Views
         public PopupWindow()
         {
             InitializeComponent();
-            var _topic = this.Get<TextBlock>("Topic");
-            var _message = this.Get<TextBlock>("Message");
-            var _border = this.Get<Border>("PopupBorder");
-            var _buttons = this.Get<StackPanel>("Buttons");
-            _topic.Text = "空弹窗";
-            _message.Text = $"我是一个空的弹窗！{Environment.NewLine}Avalonia parameterless constructor popup window";
-            SetButton(PopupType.Info_Confirm, _border, _buttons);
+            var topic = this.Get<TextBlock>("Topic");
+            var message = this.Get<TextBlock>("Message");
+            var border = this.Get<Border>("PopupBorder");
+            var buttons = this.Get<StackPanel>("Buttons");
+            topic.Text = "空弹窗";
+            message.Text = $"我是一个空的弹窗！{Environment.NewLine}Avalonia parameterless constructor popup window";
+            SetButton(PopupType.InfoConfirm, border, buttons);
         }
         public PopupWindow(PopupType type, string title, string content)
         {
             InitializeComponent();
 
-            var _topic = this.Get<TextBlock>("Topic");
-            var _message = this.Get<TextBlock>("Message");
-            var _border = this.Get<Border>("PopupBorder");
-            var _buttons = this.Get<StackPanel>("Buttons");
+            var topic = this.Get<TextBlock>("Topic");
+            var message = this.Get<TextBlock>("Message");
+            var border = this.Get<Border>("PopupBorder");
+            var buttons = this.Get<StackPanel>("Buttons");
             
-            _topic.Text = title;
-            _message.Text = content;
-            SetButton(type, _border, _buttons);
+            topic.Text = title;
+            message.Text = content;
+            SetButton(type, border, buttons);
         }
 
         private void SetButton(PopupType type, Border border, StackPanel buttons)
         {
             switch (type)
             {
-                case PopupType.Info_Confirm:
+                case PopupType.InfoConfirm:
                 {
                     this.Title = "提示";
                     border.BorderBrush = new SolidColorBrush(Color.Parse("#019eff"));
                     AddButton(buttons, "Highlight", "确定", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
                     break;
                 }
-                case PopupType.Info_YesNo:
+                case PopupType.InfoYesNo:
                 {
                     this.Title = "提示";
                     border.BorderBrush = new SolidColorBrush(Color.Parse("#019eff"));
@@ -56,14 +56,14 @@ namespace LSL.Views
                     AddButton(buttons, "Default", "是", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
                     break;
                 }
-                case PopupType.Error_Confirm:
+                case PopupType.ErrorConfirm:
                 {
                     this.Title = "错误";
                     border.BorderBrush = new SolidColorBrush(Colors.Red);
                     AddButton(buttons, "Red", "确定", ReactiveCommand.Create(() => Close(PopupResult.Confirm)));
                     break;
                 }
-                case PopupType.Warning_YesNo:
+                case PopupType.WarningYesNo:
                 {
                     this.Title = "警告";
                     border.BorderBrush = new SolidColorBrush(Colors.Yellow);
@@ -71,7 +71,7 @@ namespace LSL.Views
                     AddButton(buttons, "Highlight", "是", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
                     break;
                 }
-                case PopupType.Warning_YesNoCancel:
+                case PopupType.WarningYesNoCancel:
                 {
                     this.Title = "警告";
                     border.BorderBrush = new SolidColorBrush(Colors.Yellow);
@@ -80,7 +80,7 @@ namespace LSL.Views
                     AddButton(buttons, "Highlight", "是", ReactiveCommand.Create(() => Close(PopupResult.Yes)));
                     break;
                 }
-                case PopupType.Warning_Confirm:
+                case PopupType.WarningConfirm:
                 {
                     this.Title = "警告";
                     border.BorderBrush = new SolidColorBrush(Colors.Yellow);

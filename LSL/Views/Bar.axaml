@@ -33,10 +33,10 @@
 	<Grid RowDefinitions="*" Background="{DynamicResource OBlue}" Name="Bkg">
 		<TextBlock Name="Title" Text="Lime Server Launcher" FontFamily="{StaticResource SmileySans}" FontSize="27" Margin="15,0,0,0" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 		<DockPanel Name="Navigation" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-			<Button Name="Home" Content="主页" Classes.selected="{Binding BarVM.HomeButtonClass}"  Command="{Binding LeftViewCmd}" CommandParameter="HomeLeft"/>
-			<Button Name="Server" Content="服务器" Classes.selected="{Binding BarVM.ServerButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="ServerLeft"/>
-			<Button Name="Download" Content="下载" Classes.selected="{Binding BarVM.DownloadButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="DownloadsLeft"/>
-			<Button Name="Settings" Content="设置" Classes.selected="{Binding BarVM.SettingsButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="SettingsLeft"/>
+			<Button Name="Home" Content="主页" Classes.selected="{Binding BarViewModel.HomeButtonClass}"  Command="{Binding LeftViewCmd}" CommandParameter="HomeLeft"/>
+			<Button Name="Server" Content="服务器" Classes.selected="{Binding BarViewModel.ServerButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="ServerLeft"/>
+			<Button Name="Download" Content="下载" Classes.selected="{Binding BarViewModel.DownloadButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="DownloadsLeft"/>
+			<Button Name="Settings" Content="设置" Classes.selected="{Binding BarViewModel.SettingsButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="SettingsLeft"/>
 		</DockPanel>
 	</Grid>
 </UserControl>

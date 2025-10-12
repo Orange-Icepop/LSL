@@ -16,11 +16,11 @@ namespace LSL.Services.ConfigServices;
 /// <param name="logger">An ILogger that logs logs. （拜托，想个更好的双关语吧（彼得帕克音））</param> 
 public class MainConfigManager(ILogger<MainConfigManager> logger)
 {
-    private ILogger<MainConfigManager> _logger { get; } = logger;
+    private readonly ILogger<MainConfigManager> _logger = logger;
     
     #region 默认配置字典
 
-    private static readonly FrozenDictionary<string, object> DefaultConfigs = new Dictionary<string, object>()
+    private static readonly FrozenDictionary<string, object> s_defaultConfigs = new Dictionary<string, object>()
     {
         //Common
         { "auto_eula", true },
@@ -47,7 +47,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
     #region 使用的键的列表
 
-    private static readonly IReadOnlyList<string> ConfigKeys = new List<string>()
+    private static readonly IReadOnlyList<string> s_configKeys = new List<string>()
     {
         //Common
         "auto_eula",
@@ -122,8 +122,8 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
         }
 
         Dictionary<string, object> cache = [];
-        List<string> KNTR = [];
-        foreach (var key in ConfigKeys)
+        List<string> keysNeedToRepair = [];
+        foreach (var key in s_configKeys)
         {
             var config = configs.TryGetValue(key, out var value) ? value : null;
             object? keyValue = config?.Type switch // 根据值类型读取
@@ -135,7 +135,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
             };
             if (keyValue == null || !CheckService.VerifyConfig(key, keyValue))
             {
-                if (!DefaultConfigs.TryGetValue(key, out var defaultConfig))
+                if (!s_defaultConfigs.TryGetValue(key, out var defaultConfig))
                 {
                     string msg = $"No such key found in default config:{key}";
                     _logger.LogError("{msg}", msg);
@@ -143,7 +143,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
                 }
 
                 cache.Add(key, defaultConfig);
-                KNTR.Add(key);
+                keysNeedToRepair.Add(key);
             }
             else
             {
@@ -151,12 +151,12 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
             }
         }
 
-        if (KNTR.Count > 0) // 修复配置
+        if (keysNeedToRepair.Count > 0) // 修复配置
         {
             File.WriteAllText(ConfigPathProvider.ConfigFilePath, JsonConvert.SerializeObject(cache, Formatting.Indented));
             CurrentConfigs = cache.ToFrozenDictionary();
             var list = new StringBuilder("The following main config keys are reset due to value type mismatch:");
-            list.AppendJoin(", ", KNTR);
+            list.AppendJoin(", ", keysNeedToRepair);
             _logger.LogWarning("{}", list.ToString());
             _logger.LogInformation("Config.json loaded and repaired.");
             return ServiceResult.FinishWithWarning(new Exception(list.ToString()));
@@ -172,7 +172,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
     public ServiceResult Init()
     {
         // 将初始配置字典序列化成JSON字符串并写入文件  
-        string configString = JsonConvert.SerializeObject(DefaultConfigs, Formatting.Indented);
+        string configString = JsonConvert.SerializeObject(s_defaultConfigs, Formatting.Indented);
         File.WriteAllText(ConfigPathProvider.ConfigFilePath, configString);
         return ServiceResult.Success();
     }

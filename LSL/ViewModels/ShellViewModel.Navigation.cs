@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
-using ReactiveUI;
 using LSL.Views;
 using LSL.Views.Download;
 using LSL.Views.Download.ASViews;
@@ -12,6 +10,7 @@ using LSL.Views.Home;
 using LSL.Views.Server;
 using LSL.Views.Settings;
 using Microsoft.Extensions.Logging;
+using ReactiveUI;
 
 namespace LSL.ViewModels
 {
@@ -73,9 +72,9 @@ namespace LSL.ViewModels
 
         public async Task NavigateRightView(string viewName, bool force = false)
         {
-            if (Enum.TryParse<RightPageState>(viewName, out var RV))
+            if (Enum.TryParse<RightPageState>(viewName, out var rightPageState))
             {
-                await NavigateToPage(GeneralPageState.Undefined, RV, force);
+                await NavigateToPage(GeneralPageState.Undefined, rightPageState, force);
             }
             else _logger.LogError("Unknown right page name {rps}", viewName);
         }
@@ -107,13 +106,13 @@ namespace LSL.ViewModels
         public void NavigateFullScreenView(string viewName)
         {
             FullViewBackCmd = ReactiveCommand.Create(() =>
-                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FS2Common)));
-            if (!Enum.TryParse<RightPageState>(viewName, out var RV)) return;
-            if (RV is RightPageState.AddCore or RightPageState.EditSC or RightPageState.AddFolder)
+                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreen2Common)));
+            if (!Enum.TryParse<RightPageState>(viewName, out var rightPageState)) return;
+            if (rightPageState is RightPageState.AddCore or RightPageState.ServerConfEdit or RightPageState.AddFolder)
             {
                 MessageBus.Current.SendMessage(new NavigateArgs
-                    { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = RV });
-                FormVM.ClearForm(RV);
+                    { BarTarget = BarState.FullScreen, LeftTarget = GeneralPageState.Empty, RightTarget = rightPageState });
+                FormViewModel.ClearForm(rightPageState);
                 _logger.LogDebug("Successfully navigated to {FullScreen}.", viewName);
             }
             else _logger.LogError("This view is not a fullscreen view: {name}.", viewName);
@@ -177,7 +176,7 @@ namespace LSL.ViewModels
         About,
 
         //FullScreen
-        EditSC,
+        ServerConfEdit,
         AddCore,
         AddFolder,
 
@@ -191,7 +190,7 @@ namespace LSL.ViewModels
     {
         None,
         Refresh,
-        FS2Common
+        FullScreen2Common
     }
 
     #endregion
@@ -199,23 +198,23 @@ namespace LSL.ViewModels
     #region ViewFactory穷举并创建所有视图
     public static class ViewFactory
     {
-        private static readonly HomeLeft HomeLeftView = new();
-        private static readonly ServerLeft ServerLeftView = new();
-        private static readonly DownloadsLeft DownloadsLeftView = new();
-        private static readonly SettingsLeft SettingsLeftView = new();
+        private static readonly HomeLeft s_homeLeftView = new();
+        private static readonly ServerLeft s_serverLeftView = new();
+        private static readonly DownloadsLeft s_downloadsLeftView = new();
+        private static readonly SettingsLeft s_settingsLeftView = new();
         public static UserControl CreateView(string viewName)
         {
             return viewName switch
             {
                 //Bar
                 "Bar" => new Bar(),
-                "FSBar" => new FSBar(),
+                "FullScreenBar" => new FullScreenBar(),
 
                 //Top
-                "HomeLeft" => HomeLeftView,
-                "ServerLeft" => ServerLeftView,
-                "DownloadsLeft" => DownloadsLeftView,
-                "SettingsLeft" => SettingsLeftView,
+                "HomeLeft" => s_homeLeftView,
+                "ServerLeft" => s_serverLeftView,
+                "DownloadsLeft" => s_downloadsLeftView,
+                "SettingsLeft" => s_settingsLeftView,
                 //Home
                 "HomeRight" => new HomeRight(),
                 //Server
@@ -223,7 +222,7 @@ namespace LSL.ViewModels
                 "ServerStat" => new ServerStat(),
                 "ServerTerminal" => new ServerTerminal(),
                 "ServerConf" => new ServerConf(),
-                "EditSC" => new EditSC(),
+                "ServerConfEdit" => new ServerConfEdit(),
                 //Download
                 "AutoDown" => new AutoDown(),
                 "ManualDown" => new ManualDown(),
@@ -246,7 +245,7 @@ namespace LSL.ViewModels
 
     public static class NavigationCollection
     {
-        public static readonly ImmutableArray<RightPageState> FullScreenViews = [RightPageState.AddCore, RightPageState.EditSC, RightPageState.AddFolder];
+        public static readonly ImmutableArray<RightPageState> FullScreenViews = [RightPageState.AddCore, RightPageState.ServerConfEdit, RightPageState.AddFolder];
 
         public static readonly ImmutableArray<RightPageState> ServerRightPages = [RightPageState.ServerStat, RightPageState.ServerTerminal, RightPageState.ServerConf];
     }

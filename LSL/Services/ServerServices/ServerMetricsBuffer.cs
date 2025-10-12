@@ -18,20 +18,20 @@ namespace LSL.Services.ServerServices;
 /// </summary>
 public class ServerMetricsBuffer : IDisposable
 {
-    private const int HISTORY_MINUTES = 30;
-    private const int REPORT_INTERVAL_MS = 1000;
-    private const int MINUTE_INTERVAL_MS = 60000;
-    private static readonly long _systemMem = MemoryInfo.GetTotalSystemMemory();
+    private const int HistoryMinutes = 30;
+    private const int ReportIntervalMs = 1000;
+    private const int MinuteIntervalMs = 60000;
+    private static readonly long s_systemMem = MemoryInfo.CurrentSystemMemory;
     
     private readonly CancellationTokenSource _cts;
     private readonly ILogger<ServerMetricsBuffer> _logger;
     private readonly Channel<ProcessMetricsEventArgs> _metricsChannel;
     
     // 历史记录队列
-    private readonly RangedObservableLinkedList<double> _cpuHistory = new(HISTORY_MINUTES, 0, false);
-    private readonly RangedObservableLinkedList<double> _ramPercentHistory = new(HISTORY_MINUTES, 0, false);
-    private readonly RangedObservableLinkedList<long> _ramBytesAvgHistory = new(HISTORY_MINUTES, 0, false);
-    private readonly RangedObservableLinkedList<long> _ramBytesPeakHistory = new(HISTORY_MINUTES, 0, false);
+    private readonly RangedObservableLinkedList<double> _cpuHistory = new(HistoryMinutes, 0, false);
+    private readonly RangedObservableLinkedList<double> _ramPercentHistory = new(HistoryMinutes, 0, false);
+    private readonly RangedObservableLinkedList<long> _ramBytesAvgHistory = new(HistoryMinutes, 0, false);
+    private readonly RangedObservableLinkedList<long> _ramBytesPeakHistory = new(HistoryMinutes, 0, false);
     
     // 当前分钟数据
     private readonly List<double> _minuteCpuSamples = [];
@@ -78,7 +78,7 @@ public class ServerMetricsBuffer : IDisposable
 
     private async Task ReportMetricsAsync(CancellationToken ct)
     {
-        var secondTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(REPORT_INTERVAL_MS));
+        var secondTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(ReportIntervalMs));
         try
         {
             while (!ct.IsCancellationRequested)
@@ -88,7 +88,7 @@ public class ServerMetricsBuffer : IDisposable
                 ReportPerSecondMetrics();
                 
                 // 每分钟报告
-                if (DateTime.Now.Subtract(_lastMinuteReportTime).TotalMilliseconds > MINUTE_INTERVAL_MS)
+                if (DateTime.Now.Subtract(_lastMinuteReportTime).TotalMilliseconds > MinuteIntervalMs)
                 {
                     ReportPerMinuteMetrics();
                     _lastMinuteReportTime = DateTime.Now;
@@ -125,7 +125,7 @@ public class ServerMetricsBuffer : IDisposable
             ? (long)_minuteRamBytesSamples.Average()
             : 0;
 
-        double ramPercentAvg = (double)ramBytesAvg / _systemMem * 100;
+        double ramPercentAvg = (double)ramBytesAvg / s_systemMem * 100;
         
         long ramBytesPeak = _minuteRamBytesSamples.Count > 0 
             ? _minuteRamBytesSamples.Max()

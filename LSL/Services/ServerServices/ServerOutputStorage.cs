@@ -18,14 +18,14 @@ public class ServerOutputStorage : IDisposable
     public readonly ConcurrentDictionary<int, (bool IsRunning, bool IsOnline)> StatusDict = new();
     public readonly ConcurrentDictionary<(int ServerId, string PlayerName), string> PlayerDict = new();
     public readonly ConcurrentDictionary<int, ObservableCollection<string>> MessageDict = new();
-    private readonly Channel<IStorageArgs> StorageQueue;
-    private readonly CancellationTokenSource StorageCTS = new();
-    private ILogger<ServerOutputStorage> _logger { get; }
+    private readonly Channel<IStorageArgs> _storageQueue;
+    private readonly CancellationTokenSource _storageCts = new();
+    private readonly ILogger<ServerOutputStorage> _logger;
     public ServerOutputStorage(ILogger<ServerOutputStorage> logger)
     {
         _logger = logger;
-        StorageQueue = Channel.CreateUnbounded<IStorageArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
-        Task.Run(() => ProcessStorage(StorageCTS.Token));
+        _storageQueue = Channel.CreateUnbounded<IStorageArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
+        Task.Run(() => ProcessStorage(_storageCts.Token));
         EventBus.Instance.Subscribe<IStorageArgs>(arg => TrySendLine(arg));
         _logger.LogInformation("ServerOutputStorage Launched");
     }
@@ -33,7 +33,7 @@ public class ServerOutputStorage : IDisposable
     #region 排队处理
     private bool TrySendLine(IStorageArgs args)
     {
-        if (StorageQueue.Writer.TryWrite(args))
+        if (_storageQueue.Writer.TryWrite(args))
         {
             return true;
         }
@@ -47,7 +47,7 @@ public class ServerOutputStorage : IDisposable
     {
         try
         {
-            await foreach (var args in StorageQueue.Reader.ReadAllAsync(ct))
+            await foreach (var args in _storageQueue.Reader.ReadAllAsync(ct))
             {
                 try
                 {
@@ -67,28 +67,28 @@ public class ServerOutputStorage : IDisposable
         {
             switch (args)
             {
-                case ColorOutputArgs COA:
-                    OutputDict.AddOrUpdate(COA.ServerId, [new ColorOutputLine(COA.Output, COA.ColorHex)],
+                case ColorOutputArgs coa:
+                    OutputDict.AddOrUpdate(coa.ServerID, [new ColorOutputLine(coa.Output, coa.ColorHex)],
                         (_, value) =>
                         {
-                            value.Add(new ColorOutputLine(COA.Output, COA.ColorHex));
+                            value.Add(new ColorOutputLine(coa.Output, coa.ColorHex));
                             return value;
                         });
                     break;
-                case ServerStatusArgs SSA:
-                    StatusDict.AddOrUpdate(SSA.ServerId, (SSA.IsRunning, SSA.IsOnline), (_, value) =>
+                case ServerStatusArgs ssa:
+                    StatusDict.AddOrUpdate(ssa.ServerID, (ssa.IsRunning, ssa.IsOnline), (_, value) =>
                     {
-                        value.IsRunning = SSA.IsRunning;
-                        value.IsOnline = SSA.IsOnline;
+                        value.IsRunning = ssa.IsRunning;
+                        value.IsOnline = ssa.IsOnline;
                         return value;
                     });
                     break;
-                case PlayerUpdateArgs PUA:
-                    PlayerDict.AddOrUpdate((PUA.ServerId, PUA.PlayerName), PUA.UUID, (key, value) =>
+                case PlayerUpdateArgs pua:
+                    PlayerDict.AddOrUpdate((pua.ServerID, pua.PlayerName), pua.UUID, (key, value) =>
                     {
-                        if (PUA.Entering)
+                        if (pua.Entering)
                         {
-                            return PUA.UUID;
+                            return pua.UUID;
                         }
                         else
                         {
@@ -97,10 +97,10 @@ public class ServerOutputStorage : IDisposable
                         }
                     });
                     break;
-                case PlayerMessageArgs PMA:
-                    MessageDict.AddOrUpdate(PMA.ServerId, _ => [PMA.Message], (_, value) =>
+                case PlayerMessageArgs pma:
+                    MessageDict.AddOrUpdate(pma.ServerID, _ => [pma.Message], (_, value) =>
                     {
-                        value.Add(PMA.Message);
+                        value.Add(pma.Message);
                         return value;
                     });
                     break;
@@ -109,9 +109,9 @@ public class ServerOutputStorage : IDisposable
     }
     public void Dispose()
     {
-        StorageCTS.Cancel();
-        StorageQueue.Writer.TryComplete();
-        StorageCTS.Dispose();
+        _storageCts.Cancel();
+        _storageQueue.Writer.TryComplete();
+        _storageCts.Dispose();
         GC.SuppressFinalize(this);
     }
     #endregion

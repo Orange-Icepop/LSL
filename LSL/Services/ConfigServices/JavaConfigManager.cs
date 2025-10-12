@@ -17,7 +17,7 @@ namespace LSL.Services.ConfigServices;
 /// <param name="logger">An ILogger that logs logs. （拜托，想个更好的双关语吧（彼得帕克音））</param> 
 public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关服务
 {
-    private ILogger<JavaConfigManager> _logger { get; } = logger;
+    private readonly ILogger<JavaConfigManager> _logger = logger;
     public FrozenDictionary<int, JavaInfo> JavaDict { get; private set; } = FrozenDictionary<int, JavaInfo>.Empty; // 目前读取的Java列表
 
     #region 读取Java列表

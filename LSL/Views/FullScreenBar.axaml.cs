@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace LSL.Views
 {
-    public partial class FSBar : UserControl
+    public partial class FullScreenBar : UserControl
     {
-        public FSBar()
+        public FullScreenBar()
         {
             InitializeComponent();
         }

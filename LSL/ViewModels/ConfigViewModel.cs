@@ -1,21 +1,20 @@
-﻿using Avalonia.Controls;
-using Avalonia.Controls.Models.TreeDataGrid;
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
-using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia.Controls;
+using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Threading;
 using LSL.Common.Models;
 using LSL.Common.Validation;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels
 {
-    public class ConfigViewModel : RegionalVMBase
+    public class ConfigViewModel : RegionalViewModelBase
     {
         public ConfigViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {
@@ -23,7 +22,7 @@ namespace LSL.ViewModels
             SelectedServerConfig = ServerConfig.None;
             SelectedServerName = string.Empty;
             SelectedServerPath = string.Empty;
-            AppState.WhenAnyValue(AS => AS.CurrentJavaDict)
+            AppState.WhenAnyValue(stateLayer => stateLayer.CurrentJavaDict)
                 .Select(s => new FlatTreeDataGridSource<JavaInfo>(s.Values)
                 {
                     Columns =
@@ -47,93 +46,93 @@ namespace LSL.ViewModels
             await Connector.ReadJavaConfig(true);
         }
 
-        private ConcurrentDictionary<string, object> cachedConfig = [];
+        private ConcurrentDictionary<string, object> _cachedConfig = [];
 
         #region 核心配置数据
 
         public bool AutoEula
         {
-            get => (bool)cachedConfig["auto_eula"];
+            get => (bool)_cachedConfig["auto_eula"];
             set => CacheConfig("auto_eula", value);
         }
 
         public int AppPriority
         {
-            get => (int)cachedConfig["app_priority"];
+            get => (int)_cachedConfig["app_priority"];
             set => CacheConfig("app_priority", value);
         }
 
         public bool EndServerWhenClose
         {
-            get => (bool)cachedConfig["end_server_when_close"];
+            get => (bool)_cachedConfig["end_server_when_close"];
             set => CacheConfig("end_server_when_close", value);
         }
 
         public bool Daemon
         {
-            get => (bool)cachedConfig["daemon"];
+            get => (bool)_cachedConfig["daemon"];
             set => CacheConfig("daemon", value);
         }
 
         public bool ColoringTerminal
         {
-            get => (bool)cachedConfig["coloring_terminal"];
+            get => (bool)_cachedConfig["coloring_terminal"];
             set => CacheConfig("coloring_terminal", value);
         }
 
         public int DownloadSource
         {
-            get => (int)cachedConfig["download_source"];
+            get => (int)_cachedConfig["download_source"];
             set => CacheConfig("download_source", value);
         }
 
         public int DownloadThreads
         {
-            get => (int)cachedConfig["download_threads"];
+            get => (int)_cachedConfig["download_threads"];
             set => CacheConfig("download_threads", value);
         }
 
         [DownloadLimitValidator]
         public string? DownloadLimit
         {
-            get => cachedConfig["download_limit"].ToString();
+            get => _cachedConfig["download_limit"].ToString();
             set => CacheConfig("download_limit", value);
         }
 
         public bool PanelEnable
         {
-            get => (bool)cachedConfig["panel_enable"];
+            get => (bool)_cachedConfig["panel_enable"];
             set => CacheConfig("panel_enable", value);
         }
 
         [PanelPortValidator]
         public string? PanelPort
         {
-            get => cachedConfig["panel_port"].ToString();
+            get => _cachedConfig["panel_port"].ToString();
             set => CacheConfig("panel_port", value);
         }
 
         public bool PanelMonitor
         {
-            get => (bool)cachedConfig["panel_monitor"];
+            get => (bool)_cachedConfig["panel_monitor"];
             set => CacheConfig("panel_monitor", value);
         }
 
         public bool PanelTerminal
         {
-            get => (bool)cachedConfig["panel_terminal"];
+            get => (bool)_cachedConfig["panel_terminal"];
             set => CacheConfig("panel_terminal", value);
         }
 
         public bool AutoUpdate
         {
-            get => (bool)cachedConfig["auto_update"];
+            get => (bool)_cachedConfig["auto_update"];
             set => CacheConfig("auto_update", value);
         }
 
         public bool BetaUpdate
         {
-            get => (bool)cachedConfig["beta_update"];
+            get => (bool)_cachedConfig["beta_update"];
             set => CacheConfig("beta_update", value);
         }
 
@@ -144,18 +143,18 @@ namespace LSL.ViewModels
         public async Task GetConfigAsync(bool rf = false)
         {
             await Connector.ReadMainConfig(rf);
-            await Dispatcher.UIThread.InvokeAsync(() => cachedConfig = new ConcurrentDictionary<string, object>(AppState.CurrentConfigs));
+            await Dispatcher.UIThread.InvokeAsync(() => _cachedConfig = new ConcurrentDictionary<string, object>(AppState.CurrentConfigs));
         }
 
         private void CacheConfig(string key, object? value) // 向缓存字典中写入新配置
         {
             if (value == null) return;
-            cachedConfig.AddOrUpdate(key, _ => value, (_, _) => value);
+            _cachedConfig.AddOrUpdate(key, _ => value, (_, _) => value);
         }
 
         public async Task ConfirmConfigAsync()
         {
-            AppState.CurrentConfigs = cachedConfig.ToFrozenDictionary();
+            AppState.CurrentConfigs = _cachedConfig.ToFrozenDictionary();
             await Connector.SaveConfig();
         }
 
@@ -169,36 +168,36 @@ namespace LSL.ViewModels
             int serverId = AppState.SelectedServerId;
             if (serverId < 0)
             {
-                await AppState.ITAUnits.ThrowError("选定的服务器不存在", "你没有添加过服务器。该服务器是LSL提供的占位符，不支持删除。");
+                await AppState.InteractionUnits.ThrowError("选定的服务器不存在", "你没有添加过服务器。该服务器是LSL提供的占位符，不支持删除。");
                 return;
             }
             if (!AppState.ServerStatuses.TryGetValue(serverId, out var status) || !AppState.CurrentServerConfigs.TryGetValue(serverId, out var config))
             {
-                await AppState.ITAUnits.ThrowError("无法删除服务器", "指定的服务器不存在。");
+                await AppState.InteractionUnits.ThrowError("无法删除服务器", "指定的服务器不存在。");
                 return;
             }
             else if (status.IsRunning)
             {
-                await AppState.ITAUnits.ThrowError("无法删除服务器", $"指定的服务器{config.name}正在运行，请先关闭服务器再删除。");
+                await AppState.InteractionUnits.ThrowError("无法删除服务器", $"指定的服务器{config.Name}正在运行，请先关闭服务器再删除。");
                 return;
             }
             
-            var result1 = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_YesNo,
-                $"确认删除服务器{config.name}吗？",
+            var result1 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo,
+                $"确认删除服务器{config.Name}吗？",
                 "注意！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
             if (result1 == PopupResult.No) return;
-            var result2 = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_YesNo,
-                $"第二次确认，删除服务器{config.name}吗？",
+            var result2 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo,
+                $"第二次确认，删除服务器{config.Name}吗？",
                 "注意！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
             if (result2 == PopupResult.No) return;
-            var result3 = await AppState.ITAUnits.PopupITA.Handle(new InvokePopupArgs(PopupType.Warning_YesNo,
-                $"最后一次确认，你确定要删除服务器{config.name}吗？",
+            var result3 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo,
+                $"最后一次确认，你确定要删除服务器{config.Name}吗？",
                 "这是最后一次警告！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
             if (result3 == PopupResult.No) return;
             var deleteResult = await Connector.DeleteServer(serverId);
             if (deleteResult)
             {
-                AppState.ITAUnits.Notify(1, null, $"服务器{config.name}删除成功");
+                AppState.InteractionUnits.Notify(1, null, $"服务器{config.Name}删除成功");
             }
         }
 
@@ -218,18 +217,18 @@ namespace LSL.ViewModels
 
         private void RaiseServerConfigChanged(int serverId, FrozenDictionary<int,ServerConfig> serverConfig)
         {
-            if (serverConfig.TryGetValue(serverId, out var SC))
+            if (serverConfig.TryGetValue(serverId, out var config))
             {
-                SelectedServerConfig = SC;
-                SelectedServerName = SC.name;
-                SelectedServerPath = SC.server_path;
+                SelectedServerConfig = config;
+                SelectedServerName = config.Name;
+                SelectedServerPath = config.ServerPath;
             }
             else
             {
                 var cache = ServerConfig.None;
                 SelectedServerConfig = cache;
-                SelectedServerName = cache.name;
-                SelectedServerPath = cache.server_path;
+                SelectedServerName = cache.Name;
+                SelectedServerPath = cache.ServerPath;
             }
         }
         #endregion
