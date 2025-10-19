@@ -6,7 +6,7 @@ namespace LSL.Common.Models;
 /// <summary>
 /// 
 /// </summary>
-/// <param name="serverID">The server's register ID in LSL.</param>
+/// <param name="serverId">The server's register ID in LSL.</param>
 /// <param name="serverPath">The server folder's path.</param>
 /// <param name="name">The server's name.</param>
 /// <param name="usingJava">The executable java file path.</param>
@@ -15,7 +15,7 @@ namespace LSL.Common.Models;
 /// <param name="maxMemory">The maximum JVM allocated RAM.</param>
 /// <param name="extJvm">The extent JVM parameters.</param>
 public class ServerConfig(
-    int serverID,
+    int serverId,
     string serverPath,
     string name,
     string usingJava,
@@ -25,7 +25,7 @@ public class ServerConfig(
     string extJvm)
 {
     [JsonProperty("server_id")]
-    public int ServerID { get; set; } = serverID;
+    public int ServerId { get; set; } = serverId;
     [JsonProperty("server_path")]
     public string ServerPath { get; set; } = serverPath;
     [JsonProperty("name")]
@@ -42,7 +42,7 @@ public class ServerConfig(
     public string ExtJvm { get; set; } = extJvm;
 
     public ServerConfig(ServerConfig config) // 深拷贝构造函数
-        : this(config.ServerID, config.ServerPath, config.Name, config.UsingJava, config.CoreName, config.MinMemory, config.MaxMemory, config.ExtJvm){}
+        : this(config.ServerId, config.ServerPath, config.Name, config.UsingJava, config.CoreName, config.MinMemory, config.MaxMemory, config.ExtJvm){}
 
     /// <summary>
     /// Returns a server info which will be recognized as not added.

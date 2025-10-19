@@ -284,7 +284,7 @@ namespace LSL.ViewModels
             switch (args)
             {
                 case ColorOutputArgs coa:
-                    await Dispatcher.UIThread.InvokeAsync(() => _appState.TerminalTexts.AddOrUpdate(coa.ServerID,
+                    await Dispatcher.UIThread.InvokeAsync(() => _appState.TerminalTexts.AddOrUpdate(coa.ServerId,
                         [new ColoredLine(coa.Output, coa.ColorHex)], (_, value) =>
                         {
                             value.Add(new ColoredLine(coa.Output, coa.ColorHex));
@@ -298,7 +298,7 @@ namespace LSL.ViewModels
                     await Dispatcher.UIThread.InvokeAsync(() => UpdateUser(pua));
                     break;
                 case PlayerMessageArgs pma:
-                    await Dispatcher.UIThread.InvokeAsync(() => _appState.MessageDict.AddOrUpdate(pma.ServerID,
+                    await Dispatcher.UIThread.InvokeAsync(() => _appState.MessageDict.AddOrUpdate(pma.ServerId,
                         [new UserMessageLine(pma.Message)], (_, value) =>
                         {
                             value.Add(new UserMessageLine(pma.Message));
@@ -312,7 +312,7 @@ namespace LSL.ViewModels
         {
             if (args.Entering)
             {
-                _appState.UserDict.AddOrUpdate(args.ServerID, [new PlayerInfo(args.UUID, args.PlayerName)],
+                _appState.UserDict.AddOrUpdate(args.ServerId, [new PlayerInfo(args.UUID, args.PlayerName)],
                     (_, oldValue) =>
                     {
                         oldValue.Add(new PlayerInfo(args.UUID, args.PlayerName));
@@ -321,7 +321,7 @@ namespace LSL.ViewModels
             }
             else
             {
-                if (_appState.UserDict.TryGetValue(args.ServerID, out var uc))
+                if (_appState.UserDict.TryGetValue(args.ServerId, out var uc))
                 {
                     for (int i = uc.Count - 1; i >= 0; i--)
                     {
@@ -337,7 +337,7 @@ namespace LSL.ViewModels
 
         private void UpdateStatus(ServerStatusArgs args)
         {
-            _appState.ServerStatuses.AddOrUpdate(args.ServerID,
+            _appState.ServerStatuses.AddOrUpdate(args.ServerId,
                 new ServerStatus(args.IsRunning, args.IsOnline),
                 (_, value) => value.Update(args.IsRunning, args.IsOnline));
             UpdateRunningServer();
@@ -367,7 +367,7 @@ namespace LSL.ViewModels
         {
             foreach (var item in args.Metrics)
             {
-                _appState.MetricsDict.AddOrUpdate(item.ServerID, _ => new MetricsStorage(item),
+                _appState.MetricsDict.AddOrUpdate(item.ServerId, _ => new MetricsStorage(item),
                     (_, storage) => storage.Add(item));
             }
         }

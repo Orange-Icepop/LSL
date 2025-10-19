@@ -12,7 +12,7 @@ namespace LSL.Services.ServerServices;
         public int Id { get; }
         public ServerProcess(ServerConfig config)
         {
-            Id = config.ServerID;
+            Id = config.ServerId;
             var serverPath = config.ServerPath;
             var corePath = Path.Combine(serverPath, config.CoreName);
             var javaPath = config.UsingJava;

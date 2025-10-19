@@ -29,7 +29,7 @@
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="最大内存（MB）："/>
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="使用的Java路径："/>
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="附加JVM参数："/>
-                    <SelectableTextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.ServerID}"/>
+                    <SelectableTextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.ServerId}"/>
                     <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.MinMemory}"/>
                     <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.MaxMemory}"/>
                     <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.UsingJava}"/>

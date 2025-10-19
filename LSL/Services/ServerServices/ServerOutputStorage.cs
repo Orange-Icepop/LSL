@@ -68,7 +68,7 @@ public class ServerOutputStorage : IDisposable
             switch (args)
             {
                 case ColorOutputArgs coa:
-                    OutputDict.AddOrUpdate(coa.ServerID, [new ColorOutputLine(coa.Output, coa.ColorHex)],
+                    OutputDict.AddOrUpdate(coa.ServerId, [new ColorOutputLine(coa.Output, coa.ColorHex)],
                         (_, value) =>
                         {
                             value.Add(new ColorOutputLine(coa.Output, coa.ColorHex));
@@ -76,7 +76,7 @@ public class ServerOutputStorage : IDisposable
                         });
                     break;
                 case ServerStatusArgs ssa:
-                    StatusDict.AddOrUpdate(ssa.ServerID, (ssa.IsRunning, ssa.IsOnline), (_, value) =>
+                    StatusDict.AddOrUpdate(ssa.ServerId, (ssa.IsRunning, ssa.IsOnline), (_, value) =>
                     {
                         value.IsRunning = ssa.IsRunning;
                         value.IsOnline = ssa.IsOnline;
@@ -84,7 +84,7 @@ public class ServerOutputStorage : IDisposable
                     });
                     break;
                 case PlayerUpdateArgs pua:
-                    PlayerDict.AddOrUpdate((pua.ServerID, pua.PlayerName), pua.UUID, (key, value) =>
+                    PlayerDict.AddOrUpdate((pua.ServerId, pua.PlayerName), pua.UUID, (key, value) =>
                     {
                         if (pua.Entering)
                         {
@@ -98,7 +98,7 @@ public class ServerOutputStorage : IDisposable
                     });
                     break;
                 case PlayerMessageArgs pma:
-                    MessageDict.AddOrUpdate(pma.ServerID, _ => [pma.Message], (_, value) =>
+                    MessageDict.AddOrUpdate(pma.ServerId, _ => [pma.Message], (_, value) =>
                     {
                         value.Add(pma.Message);
                         return value;
