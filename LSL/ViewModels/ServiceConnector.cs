@@ -82,6 +82,7 @@ namespace LSL.ViewModels
                 {
                     // var err = res.Error?.ToString() ?? string.Empty;
                     Environment.Exit(1);
+                    //TODO:别这么搞，把退出任务交给上游
                 }
                 if (res.Result is not null)
                 {
@@ -100,9 +101,9 @@ namespace LSL.ViewModels
                             error.AppendLine("以下文件不是Java:");
                             error.AppendJoin(Environment.NewLine, res.Result.NotJava);
                         }
-
+                        error.AppendLine();
                         error.AppendLine("这些配置没有被读取。你可以通过重新搜索Java来解决这个问题。");
-                        _logger.LogWarning("{}", error.ToString());
+                        _logger.LogWarning("Some nonfatal error occured when reading java, please refer to the service logfile for more details.");
                         await _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningConfirm, "读取Java配置时出错", error.ToString()));
                     }
                 }
@@ -165,8 +166,7 @@ namespace LSL.ViewModels
         {
             var result = _configManager.ConfirmMainConfig(_appState.CurrentConfigs);
             await _appState.InteractionUnits.SubmitServiceError(result);
-            bool success = result.IsFullSuccess;
-            return success;
+            return result.IsFullSuccess;
         }
 
         public async Task<bool> FindJava()
@@ -214,7 +214,7 @@ namespace LSL.ViewModels
 
         public async Task EndServer(int serverId)
         {
-            var confirm = await _appState.InteractionUnits.PopupInteraction.Handle(new(PopupType.WarningYesNo, "确定要终止该服务端进程吗？",
+            var confirm = await _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo, "确定要终止该服务端进程吗？",
                 "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！"));
             if (confirm == PopupResult.Yes) _daemonHost.EndServer(serverId);
         }
@@ -265,17 +265,17 @@ namespace LSL.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "An error occured while processing server output in ServiceConnector.");
+                        _logger.LogError(ex, "An error occured while processing server output.");
                     }
                 }
             }
             catch(OperationCanceledException)
             {
-                _logger.LogInformation("Output handling task cancelled.");
+                _logger.LogInformation("Server output handling queue cancelled.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occured in output handling task.");
+                _logger.LogError(ex, "An error occured in server output handling task.");
             }
         }
 

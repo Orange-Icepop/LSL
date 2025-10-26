@@ -14,14 +14,24 @@
 		MinHeight="400"
 		MinWidth="1000">
 
+	<Window.Styles>
+		<Style Selector="views|MessageDialog#PopupDialog">
+			<Setter Property="Transitions">
+				<Transitions>
+					<DoubleTransition Property="Opacity" Duration="0:0:0.5"/>
+				</Transitions>
+			</Setter>
+		</Style>
+	</Window.Styles>
 	<Grid>
-		<TransitioningContentControl Name="MainViewControl" Content="{Binding MainWindowView}">
+		<TransitioningContentControl x:Name="MainViewControl" Content="{Binding MainWindowView}">
 			<TransitioningContentControl.PageTransition>
 				<CompositePageTransition>
-					<CrossFade Duration="0:00:01"/>
+					<CrossFade Duration="0:0:1"/>
 				</CompositePageTransition>
 			</TransitioningContentControl.PageTransition>
 		</TransitioningContentControl>
+		<views:MessageDialog x:Name="PopupDialog" Opacity="0"/>
 	</Grid>
 </Window>
 

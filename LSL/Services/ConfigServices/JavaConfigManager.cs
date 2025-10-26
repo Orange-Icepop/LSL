@@ -71,7 +71,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
 
             // end
             JavaDict = tmpDict.ToFrozenDictionary();
-            _logger.LogInformation("JavaConfig reading complete.");
+            _logger.LogDebug("Read JavaConfig complete, Parsing...");
             if (notFound.Count > 0 || notJava.Count > 0)
             {
                 var error = new StringBuilder("Some nonfatal error occured when reading java config:");
@@ -87,8 +87,8 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                     error.AppendLine("The following items are not an executable java file:");
                     error.AppendJoin(Environment.NewLine, notJava);
                 }
-
-                error.AppendLine("You may need to re-detect java config to solve this problem.");
+                error.AppendLine();
+                error.AppendLine("You may need to re-detect java to solve this problem.");
                 _logger.LogWarning("{}", error.ToString());
                 return ServiceResult.FinishWithWarning(new JavaConfigReadResult(notFound, notJava), new Exception(error.ToString()));
             }

@@ -100,7 +100,7 @@
 		  <SubType>Code</SubType>
 		  <DependentUpon>FSBar.axaml</DependentUpon>
 		</Compile>
-		<Compile Update="Views\PopupWindow.axaml.cs">
+		<Compile Update="Views\MessageDialog.axaml.cs">
 			<DependentUpon>PopupWindow.axaml</DependentUpon>
 		</Compile>
 		<Compile Update="Views\Home\HomeLeft.axaml.cs">

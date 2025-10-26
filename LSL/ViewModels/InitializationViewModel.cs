@@ -25,7 +25,7 @@ public class InitializationViewModel : ViewModelBase
         _logger = logger;
         AppState = appState;
         ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
-        QuitCmd = ReactiveCommand.Create(Quit);
+        //QuitCmd = ReactiveCommand.Create(Quit);
         MainWindowView = new SplashView();
         _logger.LogInformation("Initialization VM ctor complete.");
     }
@@ -48,7 +48,7 @@ public class InitializationViewModel : ViewModelBase
     }
     
     public ICommand ShowMainWindowCmd { get; }// 显示主窗口命令
-    public ICommand QuitCmd { get; }// 退出命令
+    public ICommand QuitCmd { get; } = ReactiveCommand.Create(Quit);// 退出命令
 
     public static void ShowMainWindow()
     {

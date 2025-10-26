@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using NLog;
 
 namespace LSL;
+
 public partial class App : Application
 {
     public override void Initialize()
@@ -20,6 +21,7 @@ public partial class App : Application
     }
 
     #region 初始化窗口
+
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -29,9 +31,10 @@ public partial class App : Application
             {
                 DataContext = _startupViewModel,
                 ViewModel = _startupViewModel,
+                Logger = _diServices.GetRequiredService<ILogger<MainWindow>>(),
             };
             desktop.MainWindow.Show();
-            _ = _startupViewModel.Initialize(_diServices).ContinueWith(t=>
+            _ = _startupViewModel.Initialize(_diServices).ContinueWith(t =>
             {
                 if (!t.IsFaulted) return;
                 logger.LogError(t.Exception, "An error occured while initializing the application.");
@@ -84,14 +87,17 @@ public partial class App : Application
                 }
             });
         }
+
         ServicePointManager.DefaultConnectionLimit = 512;
         base.OnFrameworkInitializationCompleted();
     }
+
     #endregion
 
     private readonly ServiceProvider _diServices;
     private readonly InitializationViewModel _startupViewModel;
     private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
+
     public App()
     {
         s_logger.Info("Building LSL DI Container");
@@ -116,4 +122,5 @@ public static class DesktopConstant
     public const string AppName = "Orllow_LSL_Desktop";
     public const string Version = "0.09";
 }
+
 #endregion
