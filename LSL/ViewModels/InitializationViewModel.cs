@@ -16,23 +16,21 @@ public class InitializationViewModel : ViewModelBase
 
     [Reactive] public UserControl MainWindowView { get; private set; }
 
-    private readonly ILogger<InitializationViewModel> _logger;
     public AppStateLayer AppState { get; }
     public ShellViewModel? Shell { get; set; }
 
-    public InitializationViewModel(ILogger<InitializationViewModel> logger, AppStateLayer appState)
+    public InitializationViewModel(ILogger<InitializationViewModel> logger, AppStateLayer appState) : base(logger)
     {
-        _logger = logger;
         AppState = appState;
         ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
-        //QuitCmd = ReactiveCommand.Create(Quit);
+        QuitCmd = ReactiveCommand.Create(Quit);
         MainWindowView = new SplashView();
-        _logger.LogInformation("Initialization VM ctor complete.");
+        Logger.LogInformation("Initialization VM ctor complete.");
     }
 
     public async Task Initialize(IServiceProvider provider)
     {
-        _logger.LogInformation("===== Starting App =====");
+        Logger.LogInformation("===== Starting App =====");
         Shell = provider.GetRequiredService<ShellViewModel>();
         if (Shell is null) throw new Exception("ShellViewModel failed to initialize");
         await Task.Run(async () =>
@@ -44,11 +42,11 @@ public class InitializationViewModel : ViewModelBase
         {
             MainWindowView = new MainView() { DataContext = Shell, ViewModel = Shell };
         });
-        _logger.LogInformation("===== App started =====");
+        Logger.LogInformation("===== App started =====");
     }
     
     public ICommand ShowMainWindowCmd { get; }// 显示主窗口命令
-    public ICommand QuitCmd { get; } = ReactiveCommand.Create(Quit);// 退出命令
+    public ICommand QuitCmd { get; }// 退出命令
 
     public static void ShowMainWindow()
     {

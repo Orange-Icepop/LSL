@@ -52,7 +52,7 @@ public class ConfigManager
         {
             File.WriteAllText(ConfigPathProvider.ConfigFilePath, "{}");
             var mainRes = _mcm.Init();
-            if (mainRes.ErrorCode == ServiceResultType.Error) return mainRes;
+            if (mainRes.ResultType == ServiceResultType.Error) return mainRes;
             _logger.LogInformation("Config.json initialized.");
         }
 

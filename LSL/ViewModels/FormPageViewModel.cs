@@ -14,7 +14,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels
 {
-    public class FormPageViewModel : RegionalViewModelBase
+    public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     {
         public FormPageViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
         {

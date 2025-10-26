@@ -2,20 +2,19 @@
 
 namespace LSL.ViewModels
 {
-    public abstract class RegionalViewModelBase : ViewModelBase
+    /// <summary>
+    /// Base class of view models for specific parts of the view.
+    /// </summary>
+    /// <typeparam name="T">Type of the child class, used for creating ILogger.</typeparam>
+    public abstract class RegionalViewModelBase<T> : ViewModelBase where T : RegionalViewModelBase<T>
     {
         protected readonly AppStateLayer AppState;
         protected readonly ServiceConnector Connector;
-        protected readonly ILogger Logger;
-        protected RegionalViewModelBase(AppStateLayer appState, ServiceConnector connector)
+        protected RegionalViewModelBase(AppStateLayer appState, ServiceConnector connector) : base(appState.LoggerFactory.CreateLogger<T>())
         {
             AppState = appState;
-            //SetupRxSubscripions();
             Connector = connector;
-            var t = GetType();
-            Logger = appState.LoggerFactory.CreateLogger(t);
-            Logger.LogDebug("Logger of {TypeName} initialized", t.Name);
+            Logger.LogDebug("Logger of {TypeName} initialized", typeof(T).Name);
         }
-        //protected virtual void SetupRxSubscripions() { }
     }
 }

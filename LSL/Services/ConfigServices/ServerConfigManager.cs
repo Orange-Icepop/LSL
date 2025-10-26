@@ -38,11 +38,11 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                                                new Exception($"Error reading main server config {mainPath}."));
         MainServerConfig = indexRes.Result;
         var detailRes = GetServerDetails(MainServerConfig);
-        if (detailRes.ErrorCode is ServiceResultType.Error)
+        if (detailRes.ResultType is ServiceResultType.Error)
             return ServerConfigReadResult.Fail(detailRes.Error ??
                                                new Exception($"Error reading server config {mainPath}."));
         ServerConfigs = detailRes.Configs;
-        if (detailRes.ErrorCode is ServiceResultType.FinishWithWarning)
+        if (detailRes.ResultType is ServiceResultType.FinishWithWarning)
         {
             _logger.LogWarning("Some servers failed to load. Not found: {notfound}, Config errors: {configerror}",
                 string.Join(", ", detailRes.NotFoundServers),

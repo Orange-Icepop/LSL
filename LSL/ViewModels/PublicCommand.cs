@@ -13,7 +13,7 @@ namespace LSL.ViewModels
 {
     // 用于放置公共命令（仍然属于视图模型）
     // 主要成员为杂项ICommand
-    public class PublicCommand : RegionalViewModelBase
+    public class PublicCommand : RegionalViewModelBase<PublicCommand>
     {
         public PublicCommand(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {

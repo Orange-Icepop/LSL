@@ -78,7 +78,7 @@ namespace LSL.ViewModels
             if (readFile)
             {
                 var res = _configManager.ReadJavaConfig();
-                if (res.ErrorCode is ServiceResultType.Error)
+                if (res.ResultType is ServiceResultType.Error)
                 {
                     // var err = res.Error?.ToString() ?? string.Empty;
                     Environment.Exit(1);
@@ -117,7 +117,7 @@ namespace LSL.ViewModels
             if (readFile)
             {
                 var res = _configManager.ReadServerConfig();
-                if (res.ErrorCode is ServiceResultType.Error)
+                if (res.ResultType is ServiceResultType.Error)
                 {
                     // 如果是致命错误，直接退出
                     if (res.Error is not null) await _appState.InteractionUnits.SubmitServiceError(res);
@@ -125,7 +125,7 @@ namespace LSL.ViewModels
                     Environment.Exit(1);
                     return;
                 }
-                else if (res.ErrorCode is ServiceResultType.FinishWithWarning)
+                else if (res.ResultType is ServiceResultType.FinishWithWarning)
                 {
                     var error = new StringBuilder("在读取服务器配置时出现了一些非致命错误:");
                     if (res.NotFoundServers.Count > 0)

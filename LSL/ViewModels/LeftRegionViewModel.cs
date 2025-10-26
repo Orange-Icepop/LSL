@@ -6,7 +6,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels
 {
-    public class LeftRegionViewModel : RegionalViewModelBase
+    public class LeftRegionViewModel : RegionalViewModelBase<LeftRegionViewModel>
     {
         public UserControl CurrentView { [ObservableAsProperty] get; }
 

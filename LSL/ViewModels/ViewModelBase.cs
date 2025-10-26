@@ -1,8 +1,9 @@
-﻿using ReactiveUI;
+﻿using Microsoft.Extensions.Logging;
+using ReactiveUI;
 
 namespace LSL.ViewModels;
 
-public class ViewModelBase : ReactiveObject
+public abstract class ViewModelBase(ILogger logger) : ReactiveObject
 {
-    
+    protected readonly ILogger Logger = logger;
 }

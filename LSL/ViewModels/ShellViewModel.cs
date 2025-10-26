@@ -19,8 +19,7 @@ namespace LSL.ViewModels
         public ServerViewModel ServerVM { get; }
         public FormPageViewModel FormViewModel { get; }
         public PublicCommand PublicCmd { get; }
-        //Logger
-        private readonly ILogger<ShellViewModel> _logger;
+        
         // 弹窗交互，这玩意儿和上面的东西没关系
         public InteractionUnits InteractionSocket { get; }
 
@@ -36,7 +35,7 @@ namespace LSL.ViewModels
             FormPageViewModel formViewModel,
             PublicCommand publicCommand,
             InteractionUnits ita
-            )
+            ) : base(appState.LoggerFactory.CreateLogger<ShellViewModel>())
         {
             AppState = appState;
             ServeCon = connector;
@@ -49,8 +48,6 @@ namespace LSL.ViewModels
             FormViewModel = formViewModel;
             PublicCmd = publicCommand;
             InteractionSocket = ita;
-            
-            _logger = appState.LoggerFactory.CreateLogger<ShellViewModel>();
 
             // 视图命令
             LeftViewCmd = ReactiveCommand.CreateFromTask<string>(async param => await NavigateLeftView(param));
@@ -82,7 +79,7 @@ namespace LSL.ViewModels
                     },
                     onError: ex =>
                     {
-                        _logger.LogError(ex, "An error occured while processing window exit operation.");
+                        Logger.LogError(ex, "An error occured while processing window exit operation.");
                         InteractionSocket.NotifyInteraction.Handle(new NotifyArgs(3, "窗口退出处理错误", $"LSL在处理退出操作时出现了错误"));
                     }
                     );

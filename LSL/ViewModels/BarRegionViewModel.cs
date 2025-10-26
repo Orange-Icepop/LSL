@@ -8,7 +8,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels
 {
-    public class BarRegionViewModel : RegionalViewModelBase
+    public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
     {
         [Reactive] public UserControl CurrentView { get; private set; }
 

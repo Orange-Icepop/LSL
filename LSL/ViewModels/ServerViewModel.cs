@@ -11,7 +11,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels
 {
-    public class ServerViewModel : RegionalViewModelBase
+    public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
     {
         public ServerViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {

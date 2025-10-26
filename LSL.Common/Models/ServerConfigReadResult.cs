@@ -7,14 +7,14 @@ namespace LSL.Common.Models
         private ServerConfigReadResult(FrozenDictionary<int, ServerConfig> configs, ServiceResultType errorCode = ServiceResultType.Success, Exception? error = null, IList<string>? notFoundServers = null, IList<string>? configErrorServers = null)
         {
             Configs = configs;
-            ErrorCode = errorCode;
+            ResultType = errorCode;
             Error = error;
             NotFoundServers = notFoundServers ?? [];
             ConfigErrorServers = configErrorServers ?? [];
         }
 
         public FrozenDictionary<int, ServerConfig> Configs { get; }
-        public ServiceResultType ErrorCode { get; }
+        public ServiceResultType ResultType { get; }
         public Exception? Error { get; }
         public IList<string> NotFoundServers { get; }
         public IList<string> ConfigErrorServers { get; }

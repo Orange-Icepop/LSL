@@ -2,7 +2,7 @@
 
 public interface IServiceResult
 {
-    ServiceResultType ErrorCode { get; }
+    ServiceResultType ResultType { get; }
     Exception? Error { get; }
 }
 
@@ -10,17 +10,17 @@ public class ServiceResult<T> : IServiceResult
 {
     public T? Result { get; }
 
-    public ServiceResultType ErrorCode { get; }
+    public ServiceResultType ResultType { get; }
     public Exception? Error { get; }
-    public bool IsFullSuccess => ErrorCode == ServiceResultType.Success;
-    public bool HasResult => ErrorCode != ServiceResultType.Error;
-    public bool IsFullError => ErrorCode == ServiceResultType.Error;
-    public bool HasError => ErrorCode != ServiceResultType.Success;
+    public bool IsFullSuccess => ResultType == ServiceResultType.Success;
+    public bool HasResult => ResultType != ServiceResultType.Error;
+    public bool IsFullError => ResultType == ServiceResultType.Error;
+    public bool HasError => ResultType != ServiceResultType.Success;
 
     // 内部构造器防止不规范创建
     internal ServiceResult(ServiceResultType errorCode, T? result, Exception? error)
     {
-        ErrorCode = errorCode;
+        ResultType = errorCode;
         Result = result;
         Error = error;
     }
@@ -28,11 +28,11 @@ public class ServiceResult<T> : IServiceResult
 
 public class ServiceResult(ServiceResultType code, Exception? error) : IServiceResult
 {
-    public ServiceResultType ErrorCode { get; } = code;
+    public ServiceResultType ResultType { get; } = code;
     public Exception? Error { get; } = error;
-    public bool IsFullSuccess => ErrorCode == ServiceResultType.Success;
-    public bool IsFullError => ErrorCode == ServiceResultType.Error;
-    public bool HasError => ErrorCode != ServiceResultType.Success;
+    public bool IsFullSuccess => ResultType == ServiceResultType.Success;
+    public bool IsFullError => ResultType == ServiceResultType.Error;
+    public bool HasError => ResultType != ServiceResultType.Success;
     
     public static ServiceResult Success() => new (ServiceResultType.Success, null);
     public static ServiceResult Fail(Exception error) => new(ServiceResultType.Error, error);

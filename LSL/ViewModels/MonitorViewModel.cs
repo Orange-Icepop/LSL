@@ -8,7 +8,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels;
 
-public class MonitorViewModel : RegionalViewModelBase
+public class MonitorViewModel : RegionalViewModelBase<MonitorViewModel>
 {
     #region 当前性能占用绑定器
     [Reactive] public RangedObservableLinkedList<double> CurrentCpuMetrics { get; set; } = new(30, 0);

@@ -14,7 +14,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace LSL.ViewModels
 {
-    public class ConfigViewModel : RegionalViewModelBase
+    public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     {
         public ConfigViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
         {

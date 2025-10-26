@@ -4,11 +4,12 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using LSL.Common.Models;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
 namespace LSL.ViewModels
 {
-    public class InteractionUnits : ViewModelBase
+    public class InteractionUnits(ILogger<InteractionUnits> logger) : ViewModelBase(logger)
     {
         public Interaction<InvokePopupArgs, PopupResult> PopupInteraction { get; } = new();
         public Interaction<NotifyArgs, Unit> NotifyInteraction { get; } = new();// 0消息，1成功，2警告，3错误
@@ -21,9 +22,9 @@ namespace LSL.ViewModels
         
         public async Task<bool> SubmitServiceError(IServiceResult result)
         {
-            if (result.ErrorCode == ServiceResultType.Success) return true;
+            if (result.ResultType == ServiceResultType.Success) return true;
             await ShowServiceError(result);
-            return result.ErrorCode != ServiceResultType.Error;
+            return result.ResultType != ServiceResultType.Error;
         }
 
         private async Task ShowServiceError(IServiceResult result)
@@ -32,7 +33,7 @@ namespace LSL.ViewModels
             if (result.Error is not null) fin = result.Error.Message;
             else return;
 
-            var level = result.ErrorCode switch
+            var level = result.ResultType switch
             {
                 ServiceResultType.Error => PopupType.ErrorConfirm,
                 ServiceResultType.FinishWithWarning => PopupType.WarningConfirm,
