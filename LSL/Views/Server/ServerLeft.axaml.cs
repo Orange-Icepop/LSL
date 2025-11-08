@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace LSL.Views.Server
+namespace LSL.Views.Server;
+
+public partial class ServerLeft : UserControl
 {
-    public partial class ServerLeft : UserControl
+    public ServerLeft()
     {
-        public ServerLeft()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

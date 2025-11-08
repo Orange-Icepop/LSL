@@ -17,11 +17,13 @@ public class InitializationViewModel : ViewModelBase
     [Reactive] public UserControl MainWindowView { get; private set; }
 
     public AppStateLayer AppState { get; }
-    public ShellViewModel? Shell { get; set; }
+    public ShellViewModel? Shell { get; private set; }
+    public DialogViewModel DialogModel { get; }
 
-    public InitializationViewModel(ILogger<InitializationViewModel> logger, AppStateLayer appState) : base(logger)
+    public InitializationViewModel(ILogger<InitializationViewModel> logger, AppStateLayer appState, DialogViewModel dialogModel) : base(logger)
     {
         AppState = appState;
+        DialogModel = dialogModel;
         ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
         QuitCmd = ReactiveCommand.Create(Quit);
         MainWindowView = new SplashView();

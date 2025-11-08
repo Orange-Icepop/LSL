@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace LSL.Views
+namespace LSL.Views;
+
+public partial class Bar : UserControl
 {
-    public partial class Bar : UserControl
+    public Bar()
     {
-        public Bar()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

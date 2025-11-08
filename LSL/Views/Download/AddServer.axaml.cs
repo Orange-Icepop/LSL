@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace LSL.Views.Download
+namespace LSL.Views.Download;
+
+public partial class AddServer : UserControl
 {
-    public partial class AddServer : UserControl
+    public AddServer()
     {
-        public AddServer()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

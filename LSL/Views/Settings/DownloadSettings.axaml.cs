@@ -1,13 +1,12 @@
 using Avalonia.Controls;
 
-namespace LSL.Views.Settings
+namespace LSL.Views.Settings;
+
+public partial class DownloadSettings : UserControl
 {
-    public partial class DownloadSettings : UserControl
+    public DownloadSettings()
     {
-        public DownloadSettings()
-        {
-            InitializeComponent();
+        InitializeComponent();
             
-        }
     }
 }

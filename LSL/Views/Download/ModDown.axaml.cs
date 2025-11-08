@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace LSL.Views.Download
+namespace LSL.Views.Download;
+
+public partial class ModDown : UserControl
 {
-    public partial class ModDown : UserControl
+    public ModDown()
     {
-        public ModDown()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

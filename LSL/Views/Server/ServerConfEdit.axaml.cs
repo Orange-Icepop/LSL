@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace LSL.Views.Server
+namespace LSL.Views.Server;
+
+public partial class ServerConfEdit : UserControl
 {
-    public partial class ServerConfEdit : UserControl
+    public ServerConfEdit()
     {
-        public ServerConfEdit()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

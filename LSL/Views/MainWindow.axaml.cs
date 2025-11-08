@@ -2,14 +2,11 @@
 using System.ComponentModel;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Platform.Storage;
 using Avalonia.ReactiveUI;
-using Avalonia.Threading;
 using LSL.Common.Models;
 using LSL.ViewModels;
 using Microsoft.Extensions.Logging;
@@ -35,10 +32,8 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
             .ObserveOn(RxApp.MainThreadScheduler)
             .Where(args => args.Body is not WindowOperationArgType.Raise)
             .Subscribe(args => CloseHandler(args.Body));
-        _ = Task.Run((() => HandlePopup(_popupCts.Token)));
         this.WhenActivated(action =>
         {
-            action(this.ViewModel!.AppState.InteractionUnits.PopupInteraction.RegisterHandler(AddPopupTask));
             action(this.ViewModel!.AppState.InteractionUnits.NotifyInteraction.RegisterHandler(ShowNotification));
             action(this.ViewModel!.AppState.InteractionUnits.FilePickerInteraction.RegisterHandler(OpenFileOperation));
         });
@@ -143,67 +138,7 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
         context.SetOutput(Unit.Default);
     }
     #endregion
-
-    #region 弹窗
-
-    private readonly CancellationTokenSource _popupCts = new();
-    private readonly Channel<(IInteractionContext<InvokePopupArgs, PopupResult> interaction, TaskCompletionSource tcs)> _popupChannel =
-        Channel.CreateUnbounded<(IInteractionContext<InvokePopupArgs, PopupResult>, TaskCompletionSource)>();
-
-    private async Task HandlePopup(CancellationToken token)
-    {
-        try
-        {
-            await foreach (var (interaction, tcs) in _popupChannel.Reader.ReadAllAsync(token))
-            {
-                await PopupTaskProcessor(interaction, tcs);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            Logger?.LogInformation("Popup handling queue cancelled.");
-        }
-        catch (Exception e)
-        {
-            Logger?.LogError(e, "An error occured in popup handling task.");
-        }
-    }
-    private async Task PopupTaskProcessor(IInteractionContext<InvokePopupArgs, PopupResult> interaction, TaskCompletionSource tcs)
-    {
-        var args = interaction.Input;
-        var task = PopupDialog.ShowAsync(args.PType, args.PTitle, args.PContent);
-        await ShowDialog();
-        var result = await task;
-        await HideDialog();
-        interaction.SetOutput(result);
-        tcs.TrySetResult();
-    }
-
-    private Task AddPopupTask(IInteractionContext<InvokePopupArgs, PopupResult> interaction)
-    {
-        var tcs = new TaskCompletionSource();
-        _popupChannel.Writer.TryWrite((interaction, tcs));
-        return tcs.Task;
-    }
-
-    private async Task ShowDialog()
-    {
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            PopupDialog.IsVisible = true;
-            PopupDialog.Opacity = 1;
-        });
-        await Task.Delay(500);
-    }
-
-    private async Task HideDialog()
-    {
-        await Dispatcher.UIThread.InvokeAsync(() => PopupDialog.Opacity = 0);
-        await Task.Delay(500);
-        await Dispatcher.UIThread.InvokeAsync(() => PopupDialog.IsVisible = false);
-    }
-    #endregion
-
+    
     #region 文件选择
     private static FilePickerFileType CoreFileType { get; } = new("Minecraft服务器核心文件")
     {

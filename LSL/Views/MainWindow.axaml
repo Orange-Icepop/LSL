@@ -5,33 +5,34 @@
         xmlns:views="clr-namespace:LSL.Views"
         xmlns:vm="using:LSL.ViewModels"
         x:DataType="vm:InitializationViewModel"
-		Width="1200" Height="650"
+        Width="1200" Height="650"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
         x:Class="LSL.Views.MainWindow"
         Icon="/Assets/icon.ico"
         Title="Lime Server Launcher"
-		WindowStartupLocation="CenterScreen"
-		MinHeight="400"
-		MinWidth="1000">
+        WindowStartupLocation="CenterScreen"
+        MinHeight="400"
+        MinWidth="1000">
 
-	<Window.Styles>
-		<Style Selector="views|MessageDialog#PopupDialog">
-			<Setter Property="Transitions">
-				<Transitions>
-					<DoubleTransition Property="Opacity" Duration="0:0:0.5"/>
-				</Transitions>
-			</Setter>
-		</Style>
-	</Window.Styles>
-	<Grid>
-		<TransitioningContentControl x:Name="MainViewControl" Content="{Binding MainWindowView}">
-			<TransitioningContentControl.PageTransition>
-				<CompositePageTransition>
-					<CrossFade Duration="0:0:1"/>
-				</CompositePageTransition>
-			</TransitioningContentControl.PageTransition>
-		</TransitioningContentControl>
-		<views:MessageDialog x:Name="PopupDialog" Opacity="0"/>
-	</Grid>
+    <Window.Styles>
+        <Style Selector="views|MessageDialog#PopupDialog">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.5" />
+                </Transitions>
+            </Setter>
+        </Style>
+    </Window.Styles>
+    <Grid>
+        <TransitioningContentControl x:Name="MainViewControl" Content="{Binding MainWindowView}">
+            <TransitioningContentControl.PageTransition>
+                <CompositePageTransition>
+                    <CrossFade Duration="0:0:1" />
+                </CompositePageTransition>
+            </TransitioningContentControl.PageTransition>
+        </TransitioningContentControl>
+        <views:MessageDialog x:Name="PopupDialog" Opacity="{Binding DialogModel.Opacity}"
+                             IsVisible="{Binding DialogModel.IsVisible}" HorizontalAlignment="Stretch"
+                             VerticalAlignment="Stretch" />
+    </Grid>
 </Window>
-
