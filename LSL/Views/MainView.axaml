@@ -40,7 +40,7 @@
 							HorizontalAlignment="Left">
 				<TransitioningContentControl.PageTransition>
 					<CompositePageTransition>
-						<CrossFade Duration="0:00:00.3"/>
+						<CrossFade Duration="0:0:0.3"/>
 					</CompositePageTransition>
 				</TransitioningContentControl.PageTransition>
 			</TransitioningContentControl>
@@ -55,8 +55,8 @@
 									 Content="{Binding RightViewModel.CurrentView}">
 			<TransitioningContentControl.PageTransition>
 				<CompositePageTransition>
-					<CrossFade Duration="0:00:00.4"/>
-					<PageSlide Duration="0:00:00.4" Orientation="Vertical" SlideInEasing="ExponentialEaseOut" SlideOutEasing="SineEaseInOut"/>
+					<CrossFade Duration="0:0:0.4"/>
+					<PageSlide Duration="0:0:0.4" Orientation="Horizontal" SlideInEasing="ExponentialEaseOut" SlideOutEasing="ExponentialEaseIn"/>
 				</CompositePageTransition>
 			</TransitioningContentControl.PageTransition>
 		</TransitioningContentControl>

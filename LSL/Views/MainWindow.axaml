@@ -18,7 +18,7 @@
         <Style Selector="views|MessageDialog#PopupDialog">
             <Setter Property="Transitions">
                 <Transitions>
-                    <DoubleTransition Property="Opacity" Duration="0:0:0.5" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.5" Easing="SineEaseIn" />
                 </Transitions>
             </Setter>
         </Style>
@@ -27,7 +27,7 @@
         <TransitioningContentControl x:Name="MainViewControl" Content="{Binding MainWindowView}">
             <TransitioningContentControl.PageTransition>
                 <CompositePageTransition>
-                    <CrossFade Duration="0:0:1" />
+                    <CrossFade Duration="0:0:0.5" />
                 </CompositePageTransition>
             </TransitioningContentControl.PageTransition>
         </TransitioningContentControl>
