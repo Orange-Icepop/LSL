@@ -107,4 +107,45 @@ public static class DirectoryExtensions
                 cancellationToken: cancellationToken);
         }
     }
+    
+    public static async Task DeleteDirectoryAsync(string targetDir, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(targetDir))
+            throw new ArgumentException("目标目录不能为空", nameof(targetDir));
+        
+        if (!Directory.Exists(targetDir))
+            return;
+
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // delete all files
+            string[] files = Directory.GetFiles(targetDir);
+            foreach (string file in files)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await FileExtensions.DeleteFileAsync(file, cancellationToken);
+            }
+
+            // delete all dirs recursively
+            string[] subDirs = Directory.GetDirectories(targetDir);
+            foreach (string subDir in subDirs)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await DeleteDirectoryAsync(subDir, cancellationToken);
+            }
+
+            // delete current directory
+            await Task.Run(() => Directory.Delete(targetDir, false), cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            throw new InvalidOperationException($"Unable to delete directory {targetDir}: {ex.Message}", ex);
+        }
+    }
 }

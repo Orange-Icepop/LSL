@@ -105,7 +105,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         var parentPath = "服务器文件夹：" + parent.FullName;
         if (File.Exists(Path.Combine(parent.FullName, "lslconfig.json")))
         {
-            var res = ServerConfigManager.GetSingleServerConfig(0, parent.FullName);
+            var res = await ServerConfigManager.GetSingleServerConfigAsync(0, parent.FullName);//TODO, 转换为中间层调用方法
             if (res.Status is ServerConfigParseResultType.Success)
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
@@ -155,12 +155,13 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             $"服务器信息：\r名称：{serverInfo.ServerName}\rJava路径：{serverInfo.JavaPath}\r核心文件路径：{serverInfo.CorePath}\r服务器类型：{coreType}\r内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\r附加JVM参数：{serverInfo.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = await Connector.AddServer(serverInfo);
-            if (success)
+            var success = AppState.InteractionUnits.SubmitServiceError(await Connector.AddServer(serverInfo));
+            if (success.IsSuccess)
             {
                 AppState.InteractionUnits.Notify(1, null, "服务器配置成功！");
-                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreen2Common));
+                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
             }
+            else await success;
         }
     }
     #endregion
@@ -180,19 +181,20 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         if (int.Parse(info.MaxMem) < 512)
         {
             var confirm =
-                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。" + Environment.NewLine + "建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
+                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\r建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
             if (confirm == PopupResult.No) return;
         }
         var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定修改此服务器吗？",
             $"服务器信息：\r服务器路径：{info.CorePath}\r名称：{info.ServerName}\rJava路径：{info.JavaPath}\r内存范围：{info.MinMem}MB ~ {info.MaxMem}MB\r附加JVM参数：{info.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = await Connector.EditServer(id, info);
-            if (success)
+            var success = AppState.InteractionUnits.SubmitServiceError(await Connector.EditServer(id, info));
+            if (success.IsSuccess)
             {
                 AppState.InteractionUnits.Notify(1, null, "服务器配置修改成功！");
-                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreen2Common));
+                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
             }
+            else await success;
         }
 
     }
@@ -226,12 +228,13 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             $"服务器信息：\r名称：{serverInfo.ServerName}\rJava路径：{serverInfo.JavaPath}\r核心文件路径：{serverInfo.CorePath}\r服务器类型：{coreType}\r内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\r附加JVM参数：{serverInfo.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = await Connector.AddExistedServer(serverInfo);
-            if (success)
+            var success = AppState.InteractionUnits.SubmitServiceError(await Connector.AddExistedServer(serverInfo));
+            if (success.IsSuccess)
             {
                 AppState.InteractionUnits.Notify(1, null, "服务器配置成功！");
-                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreen2Common));
+                MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
             }
+            else await success;
         }
     }
     #endregion

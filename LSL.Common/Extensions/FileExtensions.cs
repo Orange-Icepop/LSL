@@ -83,4 +83,21 @@ public static class FileExtensions
             progress?.Report(totalBytesRead);
         }
     }
+    
+    public static async Task DeleteFileAsync(string filePath, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Run(() => File.Delete(filePath), cancellationToken);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Remove readonly attribute
+            await Task.Run(() =>
+            {
+                File.SetAttributes(filePath, FileAttributes.Normal);
+                File.Delete(filePath);
+            }, cancellationToken);
+        }
+    }
 }

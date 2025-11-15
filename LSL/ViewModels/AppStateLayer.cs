@@ -150,7 +150,7 @@ public class AppStateLayer : ReactiveObject
     {
         switch (command)
         {
-            case NavigateCommandType.FullScreen2Common:
+            case NavigateCommandType.FullScreenToCommon:
                 Navigate(_lastPage.Item1, _lastPage.Item2, _lastPage.Item3);
                 break;
             case NavigateCommandType.Refresh:

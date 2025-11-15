@@ -27,47 +27,65 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 读取各个服务器的LSL配置文件ReadServerConfig
 
-    public ServerConfigReadResult ReadServerConfig()
+    public async Task<ServerConfigReadResult> ReadServerConfig()
     {
         _logger.LogInformation("Start reading server config...");
         string mainPath = ConfigPathProvider.ServerConfigPath;
         // 读取服务器主配置文件
-        var indexRes = GetIndexConfig(mainPath);
-        if (indexRes.HasError || indexRes.Result is null)
-            return ServerConfigReadResult.Fail(indexRes.Error ??
-                                               new Exception($"Error reading main server config {mainPath}."));
-        MainServerConfig = indexRes.Result;
-        var detailRes = GetServerDetails(MainServerConfig);
-        if (detailRes.ResultType is ServiceResultType.Error)
-            return ServerConfigReadResult.Fail(detailRes.Error ??
-                                               new Exception($"Error reading server config {mainPath}."));
-        ServerConfigs = detailRes.Configs;
-        if (detailRes.ResultType is ServiceResultType.FinishWithWarning)
+        var indexRes = await GetIndexConfigAsync(mainPath);
+        if (!indexRes.HasResult)
         {
-            _logger.LogWarning("Some servers failed to load. Not found: {notfound}, Config errors: {configerror}",
-                string.Join(", ", detailRes.NotFoundServers),
-                string.Join(", ", detailRes.ConfigErrorServers));
+            _logger.LogError(indexRes.Error, "Error reading index config file of servers at {MainPath}", mainPath);
+            return ServerConfigReadResult.Fail(indexRes.Error);
+        }
+
+        MainServerConfig = indexRes.Result;
+        var detailRes = await GetServerDetailsAsync(MainServerConfig);
+        if (!detailRes.HasResult)
+        {
+            _logger.LogError(detailRes.Error, "Error reading server config file of servers at {ServersFolder}",
+                ConfigPathProvider.ServersFolder);
+            return ServerConfigReadResult.Fail(detailRes.Error);
+        }
+
+        ServerConfigs = detailRes.Result;
+        if (detailRes.IsFinishedWithWarning)
+        {
+            _logger.LogWarning(
+                "Some servers failed to load.\rServer not found: {NotfoundServers}\rconfig errors(file nonexist, no permission or bad format): {ConfigErrorServers}",
+                string.Join('\n', detailRes.NotFoundServers),
+                string.Join('\n', detailRes.ConfigErrorServers));
             return detailRes;
         }
 
         _logger.LogInformation("Finished reading server config.");
-        return ServerConfigReadResult.Success(detailRes.Configs);
+        return ServerConfigReadResult.Success(detailRes.Result);
     }
 
     #endregion
 
     #region 刷新服务器主配置文件
 
-    private ServiceResult<FrozenDictionary<int, string>> GetIndexConfig(string path)
+    private async Task<ServiceResult<FrozenDictionary<int, string>>> GetIndexConfigAsync(string path)
     {
         if (!File.Exists(path))
         {
             var ex = new FileNotFoundException($"Server main config at {path} not found.");
-            _logger.LogError(ex, "");
+            _logger.LogError(ex, "Server main config at {p} not found.", path);
             return ServiceResult.Fail<FrozenDictionary<int, string>>(ex);
         }
 
-        string mainFile = File.ReadAllText(path);
+        string mainFile;
+        try
+        {
+            mainFile = await File.ReadAllTextAsync(path);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ServiceResult.Fail<FrozenDictionary<int, string>>(
+                new UnauthorizedAccessException($"Current user have no permission to read file {path}.", ex));
+        }
+
         if (string.IsNullOrWhiteSpace(mainFile) || mainFile == "{}")
         {
             _logger.LogInformation("No server is registered in the main server config file.");
@@ -81,10 +99,10 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 ? throw new JsonException("The Main Server Config file cannot be converted.")
                 : ServiceResult.Success(configs.ToFrozenDictionary());
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
             var err = new JsonReaderException(
-                $"The main server config file at {path} is not a valid LSL server config file.");
+                $"The main server config file at {path} is not a valid LSL server config file.", ex);
             _logger.LogError(err, "");
             return ServiceResult.Fail<FrozenDictionary<int, string>>(err);
         }
@@ -94,7 +112,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 逐个获取服务器各自的配置文件
 
-    private static ServerConfigReadResult GetServerDetails(
+    private static async Task<ServerConfigReadResult> GetServerDetailsAsync(
         IDictionary<int, string> mainConfigs)
     {
         List<string> notfoundServers = [];
@@ -103,7 +121,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         Dictionary<int, ServerConfig> scCache = [];
         foreach (var (key, targetDir) in mainConfigs)
         {
-            var result = GetSingleServerConfig(key, targetDir);
+            var result = await GetSingleServerConfigAsync(key, targetDir);
             switch (result.Status)
             {
                 case ServerConfigParseResultType.ServerNotFound:
@@ -111,10 +129,11 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                     notfoundServers.Add(targetDir);
                     break;
                 }
-                case ServerConfigParseResultType.ConfigFileNotFound:
+                case ServerConfigParseResultType.NoReadAccess:
                 case ServerConfigParseResultType.EmptyConfig:
                 case ServerConfigParseResultType.Unparsable:
                 case ServerConfigParseResultType.MissingKey:
+                case ServerConfigParseResultType.ConfigFileNotFound:
                 {
                     configErrorServers.Add(targetDir);
                     break;
@@ -130,21 +149,30 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         // 检查错误
         if (notfoundServers.Count > 0 || configErrorServers.Count > 0)
         {
-            return ServerConfigReadResult.PartConfigError(scCache.ToFrozenDictionary(), notfoundServers,
+            return ServerConfigReadResult.PartialError(scCache.ToFrozenDictionary(), notfoundServers,
                 configErrorServers);
         }
 
         return ServerConfigReadResult.Success(scCache.ToFrozenDictionary());
     }
 
-    public static ServerConfigParseResult GetSingleServerConfig(int key, string targetDir)
+    public static async Task<ServerConfigParseResult> GetSingleServerConfigAsync(int key, string targetDir)
     {
         if (!Directory.Exists(targetDir))
             return new ServerConfigParseResult(ServerConfigParseResultType.ServerNotFound);
         string targetConfig = Path.Combine(targetDir, "lslconfig.json");
         if (!File.Exists(targetConfig))
             return new ServerConfigParseResult(ServerConfigParseResultType.ConfigFileNotFound);
-        var configFile = File.ReadAllText(targetConfig);
+        string configFile;
+        try
+        {
+            configFile = await File.ReadAllTextAsync(targetConfig);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return new ServerConfigParseResult(ServerConfigParseResultType.NoReadAccess);
+        }
+
         if (string.IsNullOrWhiteSpace(configFile) || configFile == "{}")
             return new ServerConfigParseResult(ServerConfigParseResultType.EmptyConfig);
         try
@@ -152,7 +180,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             var serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile);
             if (serverConfig is null) return new ServerConfigParseResult(ServerConfigParseResultType.Unparsable);
             var vResult = CheckService.VerifyServerConfig(key, targetDir, serverConfig);
-            if (!vResult.IsFullSuccess || vResult.Result is null)
+            if (!vResult.IsSuccess || vResult.Result is null)
                 return new ServerConfigParseResult(ServerConfigParseResultType.MissingKey);
             return new ServerConfigParseResult(ServerConfigParseResultType.Success, vResult.Result);
         }
@@ -168,58 +196,67 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 注册服务器方法RegisterServer
 
-    public ServiceResult RegisterServer(string serverName, string usingJava, string corePath, uint minMem, uint maxMem,
+    public async Task<ServiceResult> RegisterServer(string serverName, string usingJava, string corePath, uint minMem,
+        uint maxMem,
         string extJvm)
     {
-        if (!File.Exists(ConfigPathProvider.ServerConfigPath))
+        try
         {
-            File.WriteAllText(ConfigPathProvider.ServerConfigPath, "{}");
-        }
+            if (!File.Exists(ConfigPathProvider.ServerConfigPath))
+            {
+                await File.WriteAllTextAsync(ConfigPathProvider.ServerConfigPath, "{}");
+            }
 
-        // 连接服务器路径
-        string addedServerPath = Path.Combine(ConfigPathProvider.ServersFolder, serverName);
-        string addedConfigPath = Path.Combine(addedServerPath, "lslconfig.json");
-        string trueCorePath = Path.Combine(addedServerPath, Path.GetFileName(corePath));
-        string coreName = Path.GetFileName(corePath);
-        Directory.CreateDirectory(addedServerPath);
-        File.Copy(corePath, trueCorePath, true); // 复制核心文件到服务器文件夹内
-        // 初始化服务器配置文件
-        var initialConfig = new
-        {
-            name = serverName,
-            using_java = usingJava,
-            core_name = coreName,
-            min_memory = minMem,
-            max_memory = maxMem,
-            ext_jvm = extJvm
-        };
-        string serializedConfig = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
-        File.WriteAllText(addedConfigPath, serializedConfig); // 写入服务器文件夹内的配置文件
-        // 创建Eula文件
-        if (!_mainConfigManager.CurrentConfigs.TryGetValue("auto_eula", out var rawEula) ||
-            !bool.TryParse(rawEula.ToString(), out var eula)) eula = false;
-        string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        File.WriteAllText(Path.Combine(addedServerPath, "eula.txt"),
-            $"# Generated by LSL at {time}\r# For details of Mojang EULA, go to https://aka.ms/MinecraftEULA\reula={eula}");
-        //找到空闲id
-        int targetId = 0;
-        while (MainServerConfig.ContainsKey(targetId))
-        {
-            ++targetId;
-        }
+            // 连接服务器路径
+            string addedServerPath = Path.Combine(ConfigPathProvider.ServersFolder, serverName);
+            string addedConfigPath = Path.Combine(addedServerPath, "lslconfig.json");
+            string trueCorePath = Path.Combine(addedServerPath, Path.GetFileName(corePath));
+            string coreName = Path.GetFileName(corePath);
+            Directory.CreateDirectory(addedServerPath);
+            File.Copy(corePath, trueCorePath, true); // 复制核心文件到服务器文件夹内
+            // 初始化服务器配置文件
+            var initialConfig = new
+            {
+                name = serverName,
+                using_java = usingJava,
+                core_name = coreName,
+                min_memory = minMem,
+                max_memory = maxMem,
+                ext_jvm = extJvm
+            };
+            string serializedConfig = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
+            await File.WriteAllTextAsync(addedConfigPath, serializedConfig); // 写入服务器文件夹内的配置文件
+            // 创建Eula文件
+            if (!_mainConfigManager.CurrentConfigs.TryGetValue("auto_eula", out var rawEula) ||
+                !bool.TryParse(rawEula.ToString(), out var eula)) eula = false;
+            string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            await File.WriteAllTextAsync(Path.Combine(addedServerPath, "eula.txt"),
+                $"# Generated by LSL at {time}\r# For details of Mojang EULA, go to https://aka.ms/MinecraftEULA\reula={eula}");
+            //找到空闲id
+            int targetId = 0;
+            while (MainServerConfig.ContainsKey(targetId))
+            {
+                ++targetId;
+            }
 
-        JsonHelper.AddJson(ConfigPathProvider.ServerConfigPath, targetId.ToString(),
-            addedServerPath); // 在服务器列表文件中注册新服务器
-        _logger.LogInformation("Server {serverName} registered, config file path {addedConfigPath}", serverName,
-            addedConfigPath);
-        return ServiceResult.Success();
+            JsonHelper.AddJson(ConfigPathProvider.ServerConfigPath, targetId.ToString(),
+                addedServerPath); // 在服务器列表文件中注册新服务器
+            _logger.LogInformation("Server {ServerName} registered, config file path {AddedConfigPath}", serverName,
+                addedConfigPath);
+            return ServiceResult.Success();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Server {ServerName} could not be registered", serverName);
+            return ServiceResult.Fail(e);
+        }
     }
 
     #endregion
 
     #region 修改服务器方法EditServer
 
-    public ServiceResult EditServer(int serverId, string serverName, string usingJava, uint minMem, uint maxMem,
+    public async Task<ServiceResult> EditServer(int serverId, string serverName, string usingJava, uint minMem, uint maxMem,
         string extJvm)
     {
         try
@@ -239,7 +276,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                     ext_jvm = extJvm
                 };
                 string serializedConfig = JsonConvert.SerializeObject(newConfig, Formatting.Indented);
-                File.WriteAllText(editedConfigPath, serializedConfig); // 写入服务器文件夹内的配置文件
+                await File.WriteAllTextAsync(editedConfigPath, serializedConfig); // 写入服务器文件夹内的配置文件
                 _logger.LogInformation("Server Edited:{id}", serverId);
                 return ServiceResult.Success();
             }
@@ -251,7 +288,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         }
         catch (Exception e)
         {
-            _logger.LogError("{e}", e.Message);
+            _logger.LogError(e, "Server {ServerId} failed to edit.", serverId);
             return ServiceResult.Fail(e);
         }
     }
@@ -260,7 +297,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 删除服务器方法DeleteServer
 
-    public ServiceResult DeleteServer(int serverId)
+    public async Task<ServiceResult> DeleteServer(int serverId)
     {
         if (!ServerConfigs.TryGetValue(serverId, out var config))
         {
@@ -275,9 +312,18 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             return ServiceResult.Fail(new FileNotFoundException($"编号为{serverId}的服务器的路径不存在。"));
         }
 
-        JsonHelper.DeleteJsonKey(ConfigPathProvider.ServerConfigPath, serverId.ToString()); // 在服务器列表文件中删除服务器
-        Directory.Delete(serverPath, true); // 删除服务器文件夹
-        _logger.LogInformation("Server Deleted:{id}", serverId);
+        try
+        {
+            await JsonHelper.DeleteJsonKeyAsync(ConfigPathProvider.ServerConfigPath, serverId.ToString()); // 在服务器列表文件中删除服务器
+            await DirectoryExtensions.DeleteDirectoryAsync(serverPath); // 删除服务器文件夹
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Server {ServerId} could not be deleted", serverId);
+            return ServiceResult.Fail(e);
+        }
+        
+        _logger.LogInformation("Server deleted:{id}", serverId);
         return ServiceResult.Success();
     }
 
@@ -308,6 +354,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 DirectoryCopyMode.CopyContentsOnly, FileOverwriteMode.Overwrite,
                 fileNameProgress: progress); // 复制核心文件到服务器文件夹内
         }
+
         // 初始化服务器配置文件
         var initialConfig = new
         {

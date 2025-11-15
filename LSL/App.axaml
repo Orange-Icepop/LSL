@@ -33,7 +33,7 @@
 						<NativeMenuItem Header="强制关闭所有服务器"/>
 						-->
 						<NativeMenuItemSeparator />
-						<NativeMenuItem Header="关闭应用程序" Command="{Binding QuitCmd}"/>
+						<NativeMenuItem Header="关闭应用程序" Command="{Binding TrayQuitCmd}"/>
 						<!--示例，NativeMenu可以嵌套
 						<NativeMenuItem Header="Settings">
 							<NativeMenu>

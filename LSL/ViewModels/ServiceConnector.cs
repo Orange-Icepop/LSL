@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -31,7 +32,7 @@ namespace LSL.ViewModels;
 /* 用于连接视图模型与服务层
  主要成员为void，用于调用服务层方法
  编写原则：
- 永不调用Notify（因为没有可执行保证）
+ 永不调用Notify与Popup，而是交由上游进行报告，有特殊需求的除外
  */
 public class ServiceConnector
 {
@@ -41,7 +42,9 @@ public class ServiceConnector
     private readonly ServerOutputStorage _outputStorage;
     private readonly NetService _webHost;
     private readonly ILogger<ServiceConnector> _logger;
-    public ServiceConnector(AppStateLayer appState, ConfigManager cfm, ServerHost daemon, ServerOutputStorage optStorage, NetService netService)
+
+    public ServiceConnector(AppStateLayer appState, ConfigManager cfm, ServerHost daemon,
+        ServerOutputStorage optStorage, NetService netService)
     {
         _appState = appState;
         _configManager = cfm;
@@ -58,124 +61,99 @@ public class ServiceConnector
 
     #region 配置部分
 
-    public async Task ReadMainConfig(bool readFile = false)
+    public async Task<ServiceResult> ReadMainConfig(bool readFile = false)
     {
         if (readFile)
         {
-            var res = _configManager.ReadMainConfig();
-            var notCritical = await _appState.InteractionUnits.SubmitServiceError(res);
-            if (!notCritical)
-            {
-                //var err = res.Error?.ToString() ?? string.Empty;
-                Environment.Exit(1);
-            }
+            var res = await _configManager.ReadMainConfig();
+            if (res.IsError) return res;
         }
-        _appState.CurrentConfigs = _configManager.MainConfigs;
+
+        await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentConfigs = _configManager.MainConfigs);
+        return ServiceResult.Success();
     }
 
-    public async Task ReadJavaConfig(bool readFile = false)
+    public async Task<ServiceResult> ReadJavaConfig(bool readFile = false)
     {
+        Exception? warning = null;
         if (readFile)
         {
-            var res = _configManager.ReadJavaConfig();
-            if (res.ResultType is ServiceResultType.Error)
+            var res = await _configManager.ReadJavaConfig();
+            if (!res.HasResult) return ServiceResult.Fail(res.Error);
+
+            if (res.Result.NotFound.Any() || res.Result.NotJava.Any())
             {
-                // var err = res.Error?.ToString() ?? string.Empty;
-                Environment.Exit(1);
-                //TODO:别这么搞，把退出任务交给上游
-            }
-            if (res.Result is not null)
-            {
-                if (res.Result.NotFound.Any() || res.Result.NotJava.Any())
+                var error = new StringBuilder("在读取已保存的Java列表时出现了一些非致命错误:");
+                error.AppendLine();
+                if (res.Result.NotFound.Any())
                 {
-                    var error = new StringBuilder("在读取已保存的Java列表时出现了一些非致命错误:");
-                    error.AppendLine();
-                    if (res.Result.NotFound.Any())
-                    {
-                        error.AppendLine("以下Java不存在或无法被访问:");
-                        error.AppendJoin(Environment.NewLine, res.Result.NotFound);
-                    }
-
-                    if (res.Result.NotJava.Any())
-                    {
-                        error.AppendLine("以下文件不是Java:");
-                        error.AppendJoin(Environment.NewLine, res.Result.NotJava);
-                    }
-                    error.AppendLine();
-                    error.AppendLine("这些配置没有被读取。你可以通过重新搜索Java来解决这个问题。");
-                    _logger.LogWarning("Some nonfatal error occured when reading java, please refer to the service logfile for more details.");
-                    await _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningConfirm, "读取Java配置时出错", error.ToString()));
+                    error.AppendLine("以下Java不存在或无法被访问:");
+                    error.AppendJoin(Environment.NewLine, res.Result.NotFound);
                 }
-            }
 
+                if (res.Result.NotJava.Any())
+                {
+                    error.AppendLine("以下文件不是Java:");
+                    error.AppendJoin(Environment.NewLine, res.Result.NotJava);
+                }
+
+                error.AppendLine();
+                error.AppendLine("这些配置没有被读取。你可以通过重新搜索Java来解决这个问题。");
+                _logger.LogWarning(
+                    "Some nonfatal error occured when reading java, please refer to the service logfile for more details.");
+                warning = new Exception(error.ToString());
+            }
         }
-        await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentJavaDict = _configManager.JavaConfigs);
+        Dispatcher.UIThread.Invoke(() => _appState.CurrentJavaDict = _configManager.JavaConfigs);
+        return warning is not null ? ServiceResult.FinishWithWarning(warning) : ServiceResult.Success();
     }
 
-    public async Task ReadServerConfig(bool readFile = false)
+    public async Task<ServiceResult> ReadServerConfig(bool readFile = false)
     {
+        Exception? exception = null;
         if (readFile)
         {
-            var res = _configManager.ReadServerConfig();
-            if (res.ResultType is ServiceResultType.Error)
-            {
-                // 如果是致命错误，直接退出
-                if (res.Error is not null) await _appState.InteractionUnits.SubmitServiceError(res);
-                _logger.LogCritical(res.Error, "A critical error occured while reading server config. Exiting......");
-                Environment.Exit(1);
-                return;
-            }
-            else if (res.ResultType is ServiceResultType.FinishWithWarning)
+            var res = await _configManager.ReadServerConfig();
+            if (res.IsError) return ServiceResult.Fail(res.Error);
+            else if (res.IsFinishedWithWarning)
             {
                 var error = new StringBuilder("在读取服务器配置时出现了一些非致命错误:");
                 if (res.NotFoundServers.Count > 0)
                 {
                     error.AppendLine()
                         .AppendLine($"有{res.NotFoundServers.Count}个已注册的服务器不存在：")
-                        .AppendJoin(Environment.NewLine, res.NotFoundServers);
+                        .AppendJoin('\n', res.NotFoundServers);
                 }
 
                 if (res.ConfigErrorServers.Count > 0)
                 {
                     error.AppendLine()
-                        .AppendLine($"有{res.ConfigErrorServers.Count}个服务器的配置文件不存在或格式不正确：")
-                        .AppendJoin(Environment.NewLine, res.ConfigErrorServers);
+                        .AppendLine($"有{res.ConfigErrorServers.Count}个服务器的配置文件不存在、没有读取权限或格式不正确：")
+                        .AppendJoin('\n', res.ConfigErrorServers);
                 }
-                error.AppendLine("这些服务器将不会被读取。你可以通过重新添加服务器来解决这个问题。");
-                await _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningConfirm, "读取服务器配置时发生错误", error.ToString()));
+                error.AppendLine();
+                error.Append("这些服务器将不会被读取。你可以通过重新添加服务器来解决这个问题。");
+                exception = new FileNotFoundException(error.ToString());
             }
         }
 
-        var cache = _configManager.ServerConfigs.Clone2Dict();
+        var cache = _configManager.ServerConfigs.CloneToDict();
         if (cache.Count == 0)
         {
             cache.Add(-1, ServerConfig.None);
         }
-
         await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = cache.ToFrozenDictionary());
+        return exception is null ? ServiceResult.Success() : ServiceResult.FinishWithWarning(exception);
     }
 
-    public async Task<bool> UpdateConfig(IDictionary<int, object> currentConfigs)
-    {
-        var saveSuccess = await SaveConfig();
-        if (!saveSuccess) return false;
-        await ReadMainConfig(true);
-        return true;
-    }
-    public async Task<bool> SaveConfig()
-    {
-        var result = _configManager.ConfirmMainConfig(_appState.CurrentConfigs);
-        await _appState.InteractionUnits.SubmitServiceError(result);
-        return result.IsFullSuccess;
-    }
+    public Task<ServiceResult<FrozenDictionary<string, object>>> SaveConfig() =>
+        _configManager.ConfirmMainConfig(_appState.CurrentConfigs);
 
-    public async Task<bool> FindJava()
+    public async Task<ServiceResult> FindJava()
     {
-        var result = await _configManager.DetectJava();
-        await _appState.InteractionUnits.SubmitServiceError(result);
-        bool success = result.IsFullSuccess;
-        await ReadJavaConfig(true);
-        return success;
+        var detectResult = await _configManager.DetectJavaAsync();
+        if(detectResult.IsError) return detectResult;
+        return await ReadJavaConfig();
     }
 
     #endregion
@@ -214,7 +192,8 @@ public class ServiceConnector
 
     public async Task EndServer(int serverId)
     {
-        var confirm = await _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo, "确定要终止该服务端进程吗？",
+        var confirm = await _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
+            PopupType.WarningYesNo, "确定要终止该服务端进程吗？",
             "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！"));
         if (confirm == PopupResult.Yes) _daemonHost.EndServer(serverId);
     }
@@ -269,7 +248,7 @@ public class ServiceConnector
                 }
             }
         }
-        catch(OperationCanceledException)
+        catch (OperationCanceledException)
         {
             _logger.LogInformation("Server output handling queue cancelled.");
         }
@@ -351,9 +330,11 @@ public class ServiceConnector
             if (item.Value.IsRunning) _appState.RunningServerCount++;
         }
     }
+
     #endregion
-        
+
     #region 接收服务器资源占用信息
+
     private void ReceiveMetrics(IMetricsArgs args)
     {
         switch (args)
@@ -388,8 +369,10 @@ public class ServiceConnector
 
         _appState.GeneralCpuMetrics = cpu;
         _appState.GeneralRamMetrics = ram;
-        _appState.OnGeneralMetricsUpdated(args.CpuHistory.LastItem, args.RamPctHistory.LastItem, args.RamBytesAvgHistory.LastItem);
+        _appState.OnGeneralMetricsUpdated(args.CpuHistory.LastItem, args.RamPctHistory.LastItem,
+            args.RamBytesAvgHistory.LastItem);
     }
+
     #endregion
 
     #region 服务器添加、修改与删除
@@ -410,13 +393,16 @@ public class ServiceConnector
         {
             return (0, errorInfo);
         }
-        if (skipCorePathCheck) return (1, null);// 不检查核心，直接返回
+
+        if (skipCorePathCheck) return (1, null); // 不检查核心，直接返回
         var coreResult = CoreValidationService.Validate(config.CorePath, out var problem);
         return coreResult switch
         {
             CoreValidationService.CoreType.Error => (0, "验证核心文件时发生错误。\r" + problem),
-            CoreValidationService.CoreType.ForgeInstaller => (0, "您选择的文件是一个Forge安装器，而不是一个Minecraft服务端核心文件。LSL暂不支持Forge服务器的添加与启动。"),
-            CoreValidationService.CoreType.FabricInstaller => (0, "您选择的文件是一个Fabric安装器，而不是一个Minecraft服务端核心文件。请下载Fabric官方服务器jar文件，而不是安装器。"),
+            CoreValidationService.CoreType.ForgeInstaller => (0,
+                "您选择的文件是一个Forge安装器，而不是一个Minecraft服务端核心文件。LSL暂不支持Forge服务器的添加与启动。"),
+            CoreValidationService.CoreType.FabricInstaller => (0,
+                "您选择的文件是一个Fabric安装器，而不是一个Minecraft服务端核心文件。请下载Fabric官方服务器jar文件，而不是安装器。"),
             CoreValidationService.CoreType.Unknown => (-1,
                 "LSL无法确认您选择的文件是否为Minecraft服务端核心文件。\r这可能是由于LSL没有收集足够的关于服务器核心的辨识信息造成的。如果这是确实一个Minecraft服务端核心并且具有一定的知名度，请您前往LSL的仓库（https://github.com/Orange-Icepop/LSL）提交相关Issue。\r您可以直接点击确认绕过校验，但是LSL及其开发团队不为因此造成的后果作担保。"),
             CoreValidationService.CoreType.Client => (0, "您选择的文件是一个Minecraft客户端核心文件，而不是一个服务端核心文件。"),
@@ -429,43 +415,41 @@ public class ServiceConnector
         return CoreValidationService.Validate(corePath, out _).ToString();
     }
 
-    public async Task<bool> AddServer(FormedServerConfig config)
-    { 
-        var result = _configManager.RegisterServer(config);
-        await _appState.InteractionUnits.SubmitServiceError(result);
-        await ReadServerConfig(true);
-        return result.IsFullSuccess;
-    }
-
-    public async Task<bool> EditServer(int id, FormedServerConfig config)
+    public async Task<ServiceResult> AddServer(FormedServerConfig config)
     {
-        var result = _configManager.EditServer(id, config);
-        await _appState.InteractionUnits.SubmitServiceError(result);
-        await ReadServerConfig(true);
-        return result.IsFullSuccess;
+        var registerResult = await _configManager.RegisterServer(config);
+        if (!registerResult.IsSuccess) return registerResult;
+        return await ReadServerConfig(true);
     }
 
-    public async Task<bool> DeleteServer(int serverId)
+    public async Task<ServiceResult> EditServer(int id, FormedServerConfig config)
     {
-        var result = _configManager.DeleteServer(serverId); 
-        await _appState.InteractionUnits.SubmitServiceError(result);
-        await ReadServerConfig(true);
-        return result.IsFullSuccess;
+        var result = await _configManager.EditServer(id, config);
+        if (!result.IsSuccess) return result;
+        return await ReadServerConfig(true);
     }
 
-    public async Task<bool> AddExistedServer(FormedServerConfig config)
+    public async Task<ServiceResult> DeleteServer(int serverId)
+    {
+        var result = await _configManager.DeleteServer(serverId);
+        if (!result.IsSuccess) return result;
+        return await ReadServerConfig(true);
+    }
+
+    public async Task<ServiceResult> AddExistedServer(FormedServerConfig config)
     {
         var result = await _configManager.AddExistedServer(config);
-        await _appState.InteractionUnits.SubmitServiceError(result);
-        await ReadServerConfig(true);
-        return result.IsFullSuccess;
+        if (!result.IsSuccess) return result;
+        return await ReadServerConfig(true);
     }
 
     #endregion
 
     #region 从服务线程拷贝服务器输出字典
+
     private readonly Task _initializationTask;
     private readonly SemaphoreSlim _copyLock = new(1, 1);
+
     private async Task CopyServerOutput()
     {
         // 保险起见用锁Throttle一下，别瞎玩搞竞态了
@@ -524,19 +508,20 @@ public class ServiceConnector
             _copyLock.Release();
         }
     }
+
     #endregion
-        
+
     #region 网络项
 
-    public async Task<bool> Download(string url, string dir, IProgress<double>? progress, CancellationToken? token)
-    {
-        var result = token is not null ? await _webHost.GetFileAsync(url, dir, progress, (CancellationToken)token) : await _webHost.GetFileAsync(url, dir, progress);
-        var success = !await _appState.InteractionUnits.SubmitServiceError(result);
-        return success;
-    }
+    public async Task<ServiceResult> Download(string url, string dir, IProgress<double>? progress, CancellationToken? token) =>
+        token is not null
+            ? await _webHost.GetFileAsync(url, dir, progress, (CancellationToken)token)
+            : await _webHost.GetFileAsync(url, dir, progress);
+
     #endregion
-        
+
     #region 配置与自启项
+
     public async Task CheckForUpdates()
     {
         try
@@ -552,15 +537,19 @@ public class ServiceConnector
             }
 
             Dispatcher.UIThread.Post(() => _appState.InteractionUnits.Notify(0, "更新检查", "开始检查LSL更新......"));
-            string url = betaUpdate ? "https://api.orllow.cn/lsl/latest/prerelease" : "https://api.orllow.cn/lsl/latest/stable";
+            string url = betaUpdate
+                ? "https://api.orllow.cn/lsl/latest/prerelease"
+                : "https://api.orllow.cn/lsl/latest/stable";
             var result = await _webHost.ApiGet(url);
             switch (result.StatusCode)
             {
                 case 0:
                     throw new HttpRequestException("Cannot connect to the server.");
                 case < 200 or >= 300:
-                    throw new HttpRequestException($"Error getting update API(code {result.StatusCode}){Environment.NewLine}{result.Message}");
+                    throw new HttpRequestException(
+                        $"Error getting update API(code {result.StatusCode}){Environment.NewLine}{result.Message}");
             }
+
             var jobj = JsonConvert.DeserializeObject<Dictionary<string, object>>(result.Message) ??
                        throw new FormatException("Update API Response can't be serialized as dictionary.");
             var remoteVerString = jobj["tag_name"].ToString() ??
@@ -568,7 +557,8 @@ public class ServiceConnector
                                       "API Response doesn't contain required key tag_name.");
             var remoteVer = remoteVerString.TrimStart('v');
             var needUpdate = AlgoServices.IsGreaterVersion(DesktopConstant.Version, remoteVer);
-            _logger.LogInformation("Got remote version update. Local:{LC}, remote:{RM}.", DesktopConstant.Version, remoteVer);
+            _logger.LogInformation("Got remote version update. Local:{LC}, remote:{RM}.", DesktopConstant.Version,
+                remoteVer);
             if (needUpdate)
             {
                 var updateMessage = jobj["body"].ToString() ??
@@ -586,6 +576,7 @@ public class ServiceConnector
             else
                 Dispatcher.UIThread.Post(() =>
                     _appState.InteractionUnits.Notify(1, "更新检查完毕", $"当前LSL版本已为最新：{DesktopConstant.Version}"));
+
             _logger.LogInformation("Check for updates completed.");
         }
         catch (Exception ex)
@@ -599,6 +590,7 @@ public class ServiceConnector
             _logger.LogInformation("Error checking for updates:{ex}", ex.Message);
         }
     }
+
     #endregion
 }
 

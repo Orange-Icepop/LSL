@@ -53,7 +53,7 @@ public class ServerConfig(
 
 public static class ServerConfigExtensions
 {
-    public static Dictionary<int, ServerConfig> Clone2Dict(
+    public static Dictionary<int, ServerConfig> CloneToDict(
         this FrozenDictionary<int, ServerConfig> serverConfigs)
     {
         var result = new Dictionary<int, ServerConfig>();

@@ -3,6 +3,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using LSL.Common.Models;
 using LSL.Common.Validation;
 using Microsoft.Extensions.Logging;
@@ -73,10 +74,10 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
     #region 集体修改配置方法 ConfirmConfig(Dictionary<string, object> confs)
 
-    public ServiceResult<FrozenDictionary<string, object>> ConfirmConfig(IDictionary<string, object> confs)
+    public async Task<ServiceResult<FrozenDictionary<string, object>>> ConfirmConfig(IDictionary<string, object> configs)
     {
         Dictionary<string, object> fin = [];
-        foreach (var conf in confs)
+        foreach (var conf in configs)
         {
             if (CheckService.VerifyConfig(conf.Key, conf.Value))
             {
@@ -84,7 +85,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
             }
         }
         CurrentConfigs = fin.ToFrozenDictionary();
-        File.WriteAllText(ConfigPathProvider.ConfigFilePath,
+        await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath,
             JsonConvert.SerializeObject(fin, Formatting.Indented));
         _logger.LogInformation("New LSL main config is written.");
         return ServiceResult.Success(fin.ToFrozenDictionary());
@@ -97,13 +98,13 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
     // 当前配置字典
     public FrozenDictionary<string, object> CurrentConfigs { get; private set; } = FrozenDictionary<string, object>.Empty;
 
-    public ServiceResult LoadConfig()
+    public async Task<ServiceResult> LoadConfig()
     {
         _logger.LogInformation("Loading main config...");
         JObject configs;
         try
         {
-            configs = JObject.Parse(File.ReadAllText(ConfigPathProvider.ConfigFilePath));
+            configs = JObject.Parse(await File.ReadAllTextAsync(ConfigPathProvider.ConfigFilePath));
         }
         catch (FileNotFoundException ex)
         {
@@ -153,7 +154,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
         if (keysNeedToRepair.Count > 0) // 修复配置
         {
-            File.WriteAllText(ConfigPathProvider.ConfigFilePath, JsonConvert.SerializeObject(cache, Formatting.Indented));
+            await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, JsonConvert.SerializeObject(cache, Formatting.Indented));
             CurrentConfigs = cache.ToFrozenDictionary();
             var list = new StringBuilder("The following main config keys are reset due to value type mismatch:");
             list.AppendJoin(", ", keysNeedToRepair);

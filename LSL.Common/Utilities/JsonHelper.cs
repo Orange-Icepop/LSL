@@ -128,6 +128,12 @@ public static class JsonHelper
         jObject.Remove(keyPath);
         File.WriteAllText(filePath, jObject.ToString());
     }
+    public static async Task DeleteJsonKeyAsync(string filePath, string keyPath)
+    {
+        var jObject = JObject.Parse(await File.ReadAllTextAsync(filePath));
+        jObject.Remove(keyPath);
+        await File.WriteAllTextAsync(filePath, jObject.ToString());
+    }
 
     #endregion
 

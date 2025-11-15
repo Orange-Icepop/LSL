@@ -92,7 +92,7 @@ public partial class ShellViewModel
         // 自动保存配置
         if (AppState.CurrentGeneralPage == GeneralPageState.Settings) await ConfigVM.ConfirmConfigAsync();
         // 新视图预操作
-        if (gps == GeneralPageState.Settings) await ConfigVM.GetConfigAsync();
+        if (gps == GeneralPageState.Settings) await ConfigVM.TryCacheConfigFromFileAsync();
         // 导航
         MessageBus.Current.SendMessage(new NavigateArgs
             { BarTarget = BarState.Undefined, LeftTarget = gps, RightTarget = rps });
@@ -106,7 +106,7 @@ public partial class ShellViewModel
     public void NavigateFullScreenView(string viewName)
     {
         FullViewBackCmd = ReactiveCommand.Create(() =>
-            MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreen2Common)));
+            MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon)));
         if (!Enum.TryParse<RightPageState>(viewName, out var rightPageState)) return;
         if (rightPageState is RightPageState.AddCore or RightPageState.ServerConfEdit or RightPageState.AddFolder)
         {
@@ -190,7 +190,7 @@ public enum NavigateCommandType
 {
     None,
     Refresh,
-    FullScreen2Common
+    FullScreenToCommon
 }
 
 #endregion

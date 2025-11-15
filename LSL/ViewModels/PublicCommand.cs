@@ -22,9 +22,13 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         SearchJava = ReactiveCommand.CreateFromTask(async () =>
         {
             await Dispatcher.UIThread.InvokeAsync(() => AppState.InteractionUnits.Notify(0, "正在搜索Java", "请耐心等待......"));
-            var result = await Connector.FindJava();
-            if (!result) return;
-            await Dispatcher.UIThread.InvokeAsync(() => AppState.InteractionUnits.Notify(1, "Java搜索完成！", $"搜索到了{AppState.CurrentJavaDict.Count}个Java"));
+            var success = AppState.InteractionUnits.SubmitServiceError(await Connector.FindJava());
+            if (success.IsSuccess)
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                    AppState.InteractionUnits.Notify(1, "Java搜索完成！", $"搜索到了{AppState.CurrentJavaDict.Count}个Java"));
+            }
+            else await success;
         });// 搜索Java命令-实现
         CheckUpdateCmd = ReactiveCommand.CreateFromTask(serveCon.CheckForUpdates);
     }

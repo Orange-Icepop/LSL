@@ -17,17 +17,16 @@ namespace LSL.Services.ConfigServices;
 /// <param name="logger">An ILogger that logs logs. （拜托，想个更好的双关语吧（彼得帕克音））</param> 
 public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关服务
 {
-    private readonly ILogger<JavaConfigManager> _logger = logger;
     public FrozenDictionary<int, JavaInfo> JavaDict { get; private set; } = FrozenDictionary<int, JavaInfo>.Empty; // 目前读取的Java列表
 
     #region 读取Java列表
-    public ServiceResult<JavaConfigReadResult> ReadJavaConfig()
+    public async Task<ServiceResult<JavaConfigReadResult>> ReadJavaConfig()
     {
-        _logger.LogInformation("Start reading JavaConfig...");
+        logger.LogInformation("Start reading JavaConfig...");
         try
         {
             // read
-            var file = File.ReadAllText(ConfigPathProvider.JavaListPath);
+            var file = await File.ReadAllTextAsync(ConfigPathProvider.JavaListPath);
             var jsonObj = JObject.Parse(file);
             Dictionary<int, JavaInfo> tmpDict = [];
             foreach (var item in jsonObj.Properties()) //遍历配置文件中的所有Java
@@ -71,7 +70,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
 
             // end
             JavaDict = tmpDict.ToFrozenDictionary();
-            _logger.LogDebug("Read JavaConfig complete, Parsing...");
+            logger.LogDebug("Read JavaConfig complete, Parsing...");
             if (notFound.Count > 0 || notJava.Count > 0)
             {
                 var error = new StringBuilder("Some nonfatal error occured when reading java config:");
@@ -88,14 +87,14 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                     error.AppendJoin(Environment.NewLine, notJava);
                 }
                 error.AppendLine();
-                error.AppendLine("You may need to re-detect java to solve this problem.");
-                _logger.LogWarning("{}", error.ToString());
+                error.Append("You may need to re-detect java to solve this problem.");
+                logger.LogWarning("{}", error.ToString());
                 return ServiceResult.FinishWithWarning(new JavaConfigReadResult(notFound, notJava), new Exception(error.ToString()));
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occured when reading java config.");
+            logger.LogError(ex, "An error occured when reading java config.");
             return ServiceResult.Fail<JavaConfigReadResult>(ex);
         }
         return ServiceResult.Success(new JavaConfigReadResult());
@@ -105,14 +104,14 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
 
     #region 获取系统中的Java
 
-    public async Task<ServiceResult> DetectJava()
+    public async Task<ServiceResult> DetectJavaAsync()
     {
         if (!File.Exists(ConfigPathProvider.JavaListPath))
         {
             await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "{}");
         }
 
-        _logger.LogInformation("Start detecting Java...");
+        logger.LogInformation("Start detecting Java...");
         List<JavaInfo> javaList;
         try
         {
@@ -120,7 +119,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error Detecting Java.");
+            logger.LogError(e, "Error Detecting Java.");
             return ServiceResult.Fail(new KeyNotFoundException(e.Message));
         }
         Dictionary<string, JavaInfo> javaDict = [];
@@ -135,7 +134,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
 
         await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath,
             JsonConvert.SerializeObject(javaDict, Formatting.Indented)); //写入配置文件
-        _logger.LogInformation("Java detection completed, found {count} javas.", javaDict.Count);
+        logger.LogInformation("Java detection completed, found {count} javas.", javaDict.Count);
         return ServiceResult.Success();
     }
 

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using LSL.Common.Models;
 using LSL.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,19 +15,22 @@ namespace LSL.ViewModels;
 
 public class InitializationViewModel : ViewModelBase
 {
-
     [Reactive] public UserControl MainWindowView { get; private set; }
 
     public AppStateLayer AppState { get; }
     public ShellViewModel? Shell { get; private set; }
     public DialogViewModel DialogModel { get; }
 
-    public InitializationViewModel(ILogger<InitializationViewModel> logger, AppStateLayer appState, DialogViewModel dialogModel) : base(logger)
+    public InitializationViewModel(ILogger<InitializationViewModel> logger, AppStateLayer appState,
+        DialogViewModel dialogModel) : base(logger)
     {
+        MessageBus.Current.Listen<ViewModelFatalError>()
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(ex => _ = OnFatalErrorReceived(ex));
         AppState = appState;
         DialogModel = dialogModel;
         ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
-        QuitCmd = ReactiveCommand.Create(Quit);
+        TrayQuitCmd = ReactiveCommand.Create(TrayCalledQuit);
         MainWindowView = new SplashView();
         Logger.LogInformation("Initialization VM ctor complete.");
     }
@@ -46,13 +51,36 @@ public class InitializationViewModel : ViewModelBase
         });
         Logger.LogInformation("===== App started =====");
     }
-    
-    public ICommand ShowMainWindowCmd { get; }// 显示主窗口命令
-    public ICommand QuitCmd { get; }// 退出命令
+
+    public ICommand ShowMainWindowCmd { get; } // 显示主窗口命令
+    public ICommand TrayQuitCmd { get; } // 退出命令
 
     public static void ShowMainWindow()
     {
         MessageBus.Current.SendMessage(new ViewBroadcastArgs(typeof(MainWindow), "Show"));
     }
-    public static void Quit() { Environment.Exit(0); }
+
+    private static void TrayCalledQuit()
+    {
+        Environment.Exit(0);
+    }
+
+    private async Task OnFatalErrorReceived(ViewModelFatalError error)
+    {
+        try
+        {
+            Logger.LogCritical(error.Ex, "{}", error.Message);
+            ShowMainWindow();
+            await Dispatcher.UIThread.InvokeAsync(() => AppState.InteractionUnits.PopupInteraction.Handle(
+                new InvokePopupArgs(PopupType.ErrorConfirm, "致命错误",
+                    "LSL Desktop在运行时发生了致命错误。请您确认并复制该报错信息以方便排查和上报Bug，随后LSL Desktop将自行关闭。" + Environment.NewLine +
+                    (error.PopupMessage ?? error.Message) + Environment.NewLine + error.Ex)));
+        }
+        finally
+        {
+            Environment.Exit(1);
+        }
+    }
 }
+
+public record ViewModelFatalError(Exception Ex, string Message, string? PopupMessage);

@@ -1,21 +1,41 @@
-﻿namespace LSL.Common.Models;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace LSL.Common.Models;
 
 public interface IServiceResult
 {
     ServiceResultType ResultType { get; }
     Exception? Error { get; }
+    
+    [MemberNotNullWhen(false, nameof(Error))]
+    bool IsSuccess => ResultType == ServiceResultType.Success;
+    [MemberNotNullWhen(true, nameof(Error))]
+    bool IsFinishedWithWarning => ResultType == ServiceResultType.FinishWithWarning;
+    [MemberNotNullWhen(true, nameof(Error))]
+    bool IsError => ResultType == ServiceResultType.Error;
+    [MemberNotNullWhen(true, nameof(Error))]
+    bool HasError => ResultType != ServiceResultType.Success;
 }
 
-public class ServiceResult<T> : IServiceResult
+public record ServiceResult<T> : IServiceResult
 {
     public T? Result { get; }
-
     public ServiceResultType ResultType { get; }
     public Exception? Error { get; }
-    public bool IsFullSuccess => ResultType == ServiceResultType.Success;
-    public bool HasResult => ResultType != ServiceResultType.Error;
-    public bool IsFullError => ResultType == ServiceResultType.Error;
+    
+    [MemberNotNullWhen(true, nameof(Result))]
+    [MemberNotNullWhen(false, nameof(Error))]
+    public bool IsSuccess => ResultType == ServiceResultType.Success;
+    [MemberNotNullWhen(true, nameof(Result))]
+    [MemberNotNullWhen(true, nameof(Error))]
+    public bool IsFinishedWithWarning => ResultType == ServiceResultType.FinishWithWarning;
+    [MemberNotNullWhen(true, nameof(Error))]
+    public bool IsError => ResultType == ServiceResultType.Error;
+    [MemberNotNullWhen(true, nameof(Error))]
     public bool HasError => ResultType != ServiceResultType.Success;
+    [MemberNotNullWhen(true, nameof(Result))]
+    [MemberNotNullWhen(false, nameof(Error))]
+    public bool HasResult => ResultType != ServiceResultType.Error;
 
     // 内部构造器防止不规范创建
     internal ServiceResult(ServiceResultType errorCode, T? result, Exception? error)
@@ -26,14 +46,27 @@ public class ServiceResult<T> : IServiceResult
     }
 }
 
-public class ServiceResult(ServiceResultType code, Exception? error) : IServiceResult
+public record ServiceResult : IServiceResult
 {
-    public ServiceResultType ResultType { get; } = code;
-    public Exception? Error { get; } = error;
-    public bool IsFullSuccess => ResultType == ServiceResultType.Success;
-    public bool IsFullError => ResultType == ServiceResultType.Error;
+    private ServiceResult(ServiceResultType ResultType, Exception? Error)
+    {
+        this.ResultType = ResultType;
+        this.Error = Error;
+    }
+
+    [MemberNotNullWhen(false, nameof(Error))]
+    public bool IsSuccess => ResultType == ServiceResultType.Success;
+    [MemberNotNullWhen(true, nameof(Error))]
+    public bool IsFinishedWithWarning => ResultType == ServiceResultType.FinishWithWarning;
+    [MemberNotNullWhen(true, nameof(Error))]
+    public bool IsError => ResultType == ServiceResultType.Error;
+    [MemberNotNullWhen(true, nameof(Error))]
     public bool HasError => ResultType != ServiceResultType.Success;
-    
+
+    public ServiceResultType ResultType { get; init; }
+    public Exception? Error { get; init; }
+
+
     public static ServiceResult Success() => new (ServiceResultType.Success, null);
     public static ServiceResult Fail(Exception error) => new(ServiceResultType.Error, error);
     public static ServiceResult FinishWithWarning(Exception error) => new(ServiceResultType.FinishWithWarning, error);
@@ -42,7 +75,14 @@ public class ServiceResult(ServiceResultType code, Exception? error) : IServiceR
     public static ServiceResult<T> Fail<T>(Exception error) => new(ServiceResultType.Error, default, error);
     public static ServiceResult<T> Fail<T>(T? fallbackResult, Exception error) => new(ServiceResultType.Error, fallbackResult, error);
     public static ServiceResult<T> FinishWithWarning<T>(T result, Exception error) => new(ServiceResultType.FinishWithWarning, result, error);
+
+    public void Deconstruct(out ServiceResultType ResultType, out Exception? Error)
+    {
+        ResultType = this.ResultType;
+        Error = this.Error;
+    }
 }
+
 public enum ServiceResultType
 {
     Success,

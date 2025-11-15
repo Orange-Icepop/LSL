@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -9,6 +10,7 @@ using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Threading;
 using LSL.Common.Models;
 using LSL.Common.Validation;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -39,11 +41,26 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         DeleteServerCmd = ReactiveCommand.CreateFromTask(async () => await DeleteServer());
     }
 
-    public async Task Init()
+    public async Task<bool> Init()
     {
-        await GetConfigAsync(true); // cached config需要手动同步，不能依赖自动更新
-        await Connector.ReadServerConfig(true); // 服务器配置由于较为复杂，统一为手动控制
-        await Connector.ReadJavaConfig(true);
+        try
+        {
+            var res1 = await Connector.ReadMainConfig(true);
+            if (res1.IsError) throw res1.Error;
+            var res2 = await Connector.ReadServerConfig(true);
+            if (res2.IsError) throw res2.Error;
+            else await AppState.InteractionUnits.SubmitServiceError(res2);
+            var res3 = await Connector.ReadJavaConfig(true);
+            if (res3.IsError) throw res3.Error;
+            else await AppState.InteractionUnits.SubmitServiceError(res3);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Logger.LogCritical(e, "A fatal error occured when initializing LSL.");
+            MessageBus.Current.SendMessage(new ViewModelFatalError(e, "A fatal error occured when initializing LSL.", "初始化LSL时发生了致命错误。"));
+            return false;
+        }
     }
 
     private ConcurrentDictionary<string, object> _cachedConfig = [];
@@ -53,100 +70,110 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     public bool AutoEula
     {
         get => (bool)_cachedConfig["auto_eula"];
-        set => CacheConfig("auto_eula", value);
+        set => SaveConfigToCache("auto_eula", value);
     }
 
     public int AppPriority
     {
         get => (int)_cachedConfig["app_priority"];
-        set => CacheConfig("app_priority", value);
+        set => SaveConfigToCache("app_priority", value);
     }
 
     public bool EndServerWhenClose
     {
         get => (bool)_cachedConfig["end_server_when_close"];
-        set => CacheConfig("end_server_when_close", value);
+        set => SaveConfigToCache("end_server_when_close", value);
     }
 
     public bool Daemon
     {
         get => (bool)_cachedConfig["daemon"];
-        set => CacheConfig("daemon", value);
+        set => SaveConfigToCache("daemon", value);
     }
 
     public bool ColoringTerminal
     {
         get => (bool)_cachedConfig["coloring_terminal"];
-        set => CacheConfig("coloring_terminal", value);
+        set => SaveConfigToCache("coloring_terminal", value);
     }
 
     public int DownloadSource
     {
         get => (int)_cachedConfig["download_source"];
-        set => CacheConfig("download_source", value);
+        set => SaveConfigToCache("download_source", value);
     }
 
     public int DownloadThreads
     {
         get => (int)_cachedConfig["download_threads"];
-        set => CacheConfig("download_threads", value);
+        set => SaveConfigToCache("download_threads", value);
     }
 
     [DownloadLimitValidator]
     public string? DownloadLimit
     {
         get => _cachedConfig["download_limit"].ToString();
-        set => CacheConfig("download_limit", value);
+        set => SaveConfigToCache("download_limit", value);
     }
 
     public bool PanelEnable
     {
         get => (bool)_cachedConfig["panel_enable"];
-        set => CacheConfig("panel_enable", value);
+        set => SaveConfigToCache("panel_enable", value);
     }
 
     [PanelPortValidator]
     public string? PanelPort
     {
         get => _cachedConfig["panel_port"].ToString();
-        set => CacheConfig("panel_port", value);
+        set => SaveConfigToCache("panel_port", value);
     }
 
     public bool PanelMonitor
     {
         get => (bool)_cachedConfig["panel_monitor"];
-        set => CacheConfig("panel_monitor", value);
+        set => SaveConfigToCache("panel_monitor", value);
     }
 
     public bool PanelTerminal
     {
         get => (bool)_cachedConfig["panel_terminal"];
-        set => CacheConfig("panel_terminal", value);
+        set => SaveConfigToCache("panel_terminal", value);
     }
 
     public bool AutoUpdate
     {
         get => (bool)_cachedConfig["auto_update"];
-        set => CacheConfig("auto_update", value);
+        set => SaveConfigToCache("auto_update", value);
     }
 
     public bool BetaUpdate
     {
         get => (bool)_cachedConfig["beta_update"];
-        set => CacheConfig("beta_update", value);
+        set => SaveConfigToCache("beta_update", value);
     }
 
     #endregion
 
     #region 主配置操作
 
-    public async Task GetConfigAsync(bool rf = false)
+    public async Task<bool> TryCacheConfigFromFileAsync(bool rf = false)
     {
-        await Connector.ReadMainConfig(rf);
-        await Dispatcher.UIThread.InvokeAsync(() => _cachedConfig = new ConcurrentDictionary<string, object>(AppState.CurrentConfigs));
+        var success = await Connector.ReadMainConfig(rf);
+        if (success.IsSuccess)
+        {
+            Dispatcher.UIThread.Invoke(() =>
+                _cachedConfig = new ConcurrentDictionary<string, object>(AppState.CurrentConfigs));
+            return true;
+        }
+        else
+        {
+            await AppState.InteractionUnits.SubmitServiceError(success);
+            return false;
+        }
     }
 
-    private void CacheConfig(string key, object? value) // 向缓存字典中写入新配置
+    private void SaveConfigToCache(string key, object? value) // 向缓存字典中写入新配置
     {
         if (value == null) return;
         _cachedConfig.AddOrUpdate(key, _ => value, (_, _) => value);
@@ -154,14 +181,17 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     public async Task ConfirmConfigAsync()
     {
+        var res = await Connector.SaveConfig();
+        await AppState.InteractionUnits.SubmitServiceError(res);
         AppState.CurrentConfigs = _cachedConfig.ToFrozenDictionary();
-        await Connector.SaveConfig();
     }
 
     #endregion
 
     #region 服务器配置操作
+
     public ICommand DeleteServerCmd { get; }
+
     public async Task DeleteServer()
     {
         // 检查是否可以删除
@@ -171,7 +201,9 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
             await AppState.InteractionUnits.ThrowError("选定的服务器不存在", "你没有添加过服务器。该服务器是LSL提供的占位符，不支持删除。");
             return;
         }
-        if (!AppState.ServerStatuses.TryGetValue(serverId, out var status) || !AppState.CurrentServerConfigs.TryGetValue(serverId, out var config))
+
+        if (!AppState.ServerStatuses.TryGetValue(serverId, out var status) ||
+            !AppState.CurrentServerConfigs.TryGetValue(serverId, out var config))
         {
             await AppState.InteractionUnits.ThrowError("无法删除服务器", "指定的服务器不存在。");
             return;
@@ -181,24 +213,28 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
             await AppState.InteractionUnits.ThrowError("无法删除服务器", $"指定的服务器{config.Name}正在运行，请先关闭服务器再删除。");
             return;
         }
-            
-        var result1 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo,
+
+        var result1 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
+            PopupType.WarningYesNo,
             $"确认删除服务器{config.Name}吗？",
             "注意！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result1 == PopupResult.No) return;
-        var result2 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo,
+        var result2 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
+            PopupType.WarningYesNo,
             $"第二次确认，删除服务器{config.Name}吗？",
             "注意！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result2 == PopupResult.No) return;
-        var result3 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo,
+        var result3 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
+            PopupType.WarningYesNo,
             $"最后一次确认，你确定要删除服务器{config.Name}吗？",
             "这是最后一次警告！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result3 == PopupResult.No) return;
-        var deleteResult = await Connector.DeleteServer(serverId);
-        if (deleteResult)
+        var deleteResult = AppState.InteractionUnits.SubmitServiceError(await Connector.DeleteServer(serverId));
+        if (deleteResult.IsSuccess)
         {
             AppState.InteractionUnits.Notify(1, null, $"服务器{config.Name}删除成功");
         }
+        else await deleteResult;
     }
 
     #endregion
@@ -215,7 +251,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     [Reactive] public string SelectedServerName { get; private set; }
     [Reactive] public string SelectedServerPath { get; private set; }
 
-    private void RaiseServerConfigChanged(int serverId, FrozenDictionary<int,ServerConfig> serverConfig)
+    private void RaiseServerConfigChanged(int serverId, FrozenDictionary<int, ServerConfig> serverConfig)
     {
         if (serverConfig.TryGetValue(serverId, out var config))
         {
@@ -231,5 +267,6 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
             SelectedServerPath = cache.ServerPath;
         }
     }
+
     #endregion
 }

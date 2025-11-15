@@ -8,6 +8,7 @@ public enum ServerConfigParseResultType
     MissingKey,
     Unparsable,
     EmptyConfig,
+    NoReadAccess
 }
 
 public record ServerConfigParseResult
