@@ -25,12 +25,10 @@ public class ConfigManager
         _scm = scm;
         _jcm = jcm;
         _logger = logger;
-        //初始化配置文件
-        Initialize();
     }
 
     #region 初始化配置文件
-    private ServiceResult Initialize()//TODO:异步化
+    public async Task<ServiceResult> Initialize()
     {
         // 检查权限
         if (!ConfigPathProvider.HasReadWriteAccess(ConfigPathProvider.LSLFolder))
@@ -50,21 +48,21 @@ public class ConfigManager
         Directory.CreateDirectory(ConfigPathProvider.ServersFolder);
         if (!File.Exists(ConfigPathProvider.ConfigFilePath))
         {
-            File.WriteAllText(ConfigPathProvider.ConfigFilePath, "{}");
-            var mainRes = _mcm.Init();
+            await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, "{}");
+            var mainRes = await MainConfigManager.InitAsync();
             if (mainRes.ResultType == ServiceResultType.Error) return mainRes;
             _logger.LogInformation("Config.json initialized.");
         }
 
         if (!File.Exists(ConfigPathProvider.ServerConfigPath))
         {
-            File.WriteAllText(ConfigPathProvider.ServerConfigPath, "{}");
+            await File.WriteAllTextAsync(ConfigPathProvider.ServerConfigPath, "{}");
             _logger.LogInformation("ServerConfig.json initialized.");
         }
 
         if (!File.Exists(ConfigPathProvider.JavaListPath))
         {
-            File.WriteAllText(ConfigPathProvider.JavaListPath, "{}");
+            await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "{}");
             _logger.LogInformation("JavaList.json initialized.");
         }
         return ServiceResult.Success();

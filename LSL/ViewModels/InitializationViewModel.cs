@@ -4,7 +4,9 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using LSL.Services.ConfigServices;
 using LSL.Views;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -37,6 +39,13 @@ public class InitializationViewModel : ViewModelBase
     public async Task Initialize(IServiceProvider provider)
     {
         Logger.LogInformation("===== Starting App =====");
+        var configMgr = provider.GetRequiredService<ConfigManager>(); 
+        var res = await configMgr.Initialize();
+        if (res.IsError)
+        {
+            Logger.LogCritical(res.Error, "Config initialization failed.");
+            throw new Exception("Config initialization failed.", res.Error);
+        }
         Shell = provider.GetRequiredService<ShellViewModel>();
         if (Shell is null) throw new Exception("ShellViewModel failed to initialize");
         await Task.Run(async () =>

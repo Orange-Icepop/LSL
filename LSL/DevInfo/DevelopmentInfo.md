@@ -41,9 +41,9 @@
  - [ ] 添加更新内容的检查
 
 ### 重写
- - [ ] 将主配置文件设计为class而非Dictionary，并相应修改UI层处理方式
+ - [ ] 重写整个配置文件系统，使用IConfigurationManager与程序特化的配置类
  - [x] 将初始化错误处理交给上游
  - [x] 将弹窗改为MVVM模式
  - [x] 命名所有日志模板
  - [x] 将Environment.NewLine修改为\n
- - [ ] 为所有服务层方法外套try-catch
+ - [x] 为所有服务层方法外套try-catch

@@ -22,9 +22,9 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
     #region 读取Java列表
     public async Task<ServiceResult<JavaConfigReadResult>> ReadJavaConfig()
     {
-        logger.LogInformation("Start reading JavaConfig...");
         try
         {
+            logger.LogInformation("Start reading JavaConfig...");
             // read
             var file = await File.ReadAllTextAsync(ConfigPathProvider.JavaListPath);
             var jsonObj = JObject.Parse(file);
@@ -91,13 +91,13 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                 logger.LogWarning("{}", error.ToString());
                 return ServiceResult.FinishWithWarning(new JavaConfigReadResult(notFound, notJava), new Exception(error.ToString()));
             }
+            return ServiceResult.Success(new JavaConfigReadResult());
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "An error occured when reading java config.");
             return ServiceResult.Fail<JavaConfigReadResult>(ex);
         }
-        return ServiceResult.Success(new JavaConfigReadResult());
     }
 
     #endregion
@@ -106,36 +106,44 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
 
     public async Task<ServiceResult> DetectJavaAsync()
     {
-        if (!File.Exists(ConfigPathProvider.JavaListPath))
-        {
-            await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "{}");
-        }
-
-        logger.LogInformation("Start detecting Java...");
-        List<JavaInfo> javaList;
         try
         {
-            javaList = await Task.Run(JavaFinder.GetInstalledJavaInfosAsync); //调用JavaFinder查找JAVA
+            if (!File.Exists(ConfigPathProvider.JavaListPath))
+            {
+                await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "{}");
+            }
+
+            logger.LogInformation("Start detecting Java...");
+            List<JavaInfo> javaList;
+            try
+            {
+                javaList = await Task.Run(JavaFinder.GetInstalledJavaInfosAsync); //调用JavaFinder查找JAVA
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Error Detecting Java.");
+                return ServiceResult.Fail(new KeyNotFoundException(e.Message));
+            }
+            Dictionary<string, JavaInfo> javaDict = [];
+            //遍历写入Java信息
+            int id = 0;
+            foreach (var javaInfo in javaList)
+            {
+                string writtenId = id.ToString();
+                javaDict.Add(writtenId, javaInfo);
+                id++;
+            }
+
+            await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath,
+                JsonConvert.SerializeObject(javaDict, Formatting.Indented)); //写入配置文件
+            logger.LogInformation("Java detection completed, found {count} javas.", javaDict.Count);
+            return ServiceResult.Success();
         }
         catch (Exception e)
         {
             logger.LogError(e, "Error Detecting Java.");
-            return ServiceResult.Fail(new KeyNotFoundException(e.Message));
+            return ServiceResult.Fail(e);
         }
-        Dictionary<string, JavaInfo> javaDict = [];
-        //遍历写入Java信息
-        int id = 0;
-        foreach (var javaInfo in javaList)
-        {
-            string writtenId = id.ToString();
-            javaDict.Add(writtenId, javaInfo);
-            id++;
-        }
-
-        await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath,
-            JsonConvert.SerializeObject(javaDict, Formatting.Indented)); //写入配置文件
-        logger.LogInformation("Java detection completed, found {count} javas.", javaDict.Count);
-        return ServiceResult.Success();
     }
 
     #endregion

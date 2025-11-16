@@ -17,8 +17,6 @@ namespace LSL.Services.ConfigServices;
 /// <param name="logger">An ILogger that logs logs. （拜托，想个更好的双关语吧（彼得帕克音））</param> 
 public class MainConfigManager(ILogger<MainConfigManager> logger)
 {
-    private readonly ILogger<MainConfigManager> _logger = logger;
-    
     #region 默认配置字典
 
     private static readonly FrozenDictionary<string, object> s_defaultConfigs = new Dictionary<string, object>()
@@ -76,19 +74,27 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
     public async Task<ServiceResult<FrozenDictionary<string, object>>> ConfirmConfig(IDictionary<string, object> configs)
     {
-        Dictionary<string, object> fin = [];
-        foreach (var conf in configs)
+        try
         {
-            if (CheckService.VerifyConfig(conf.Key, conf.Value))
+            Dictionary<string, object> fin = [];
+            foreach (var conf in configs)
             {
-                fin.TryAdd(conf.Key, conf.Value);
+                if (CheckService.VerifyConfig(conf.Key, conf.Value))
+                {
+                    fin.TryAdd(conf.Key, conf.Value);
+                }
             }
+            CurrentConfigs = fin.ToFrozenDictionary();
+            await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath,
+                JsonConvert.SerializeObject(fin, Formatting.Indented));
+            logger.LogInformation("New LSL main config is written.");
+            return ServiceResult.Success(fin.ToFrozenDictionary());
         }
-        CurrentConfigs = fin.ToFrozenDictionary();
-        await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath,
-            JsonConvert.SerializeObject(fin, Formatting.Indented));
-        _logger.LogInformation("New LSL main config is written.");
-        return ServiceResult.Success(fin.ToFrozenDictionary());
+        catch (Exception e)
+        {
+            logger.LogError(e, "An error occured while writing new main config.");
+            return ServiceResult.Fail<FrozenDictionary<string, object>>(e);
+        }
     }
 
     #endregion
@@ -100,81 +106,90 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
     public async Task<ServiceResult> LoadConfig()
     {
-        _logger.LogInformation("Loading main config...");
-        JObject configs;
         try
         {
-            configs = JObject.Parse(await File.ReadAllTextAsync(ConfigPathProvider.ConfigFilePath));
-        }
-        catch (FileNotFoundException ex)
-        {
-            _logger.LogError(ex, "LSL main config file not found.");
-            return ServiceResult.Fail(ex);
-        }
-        catch (JsonReaderException ex)
-        {
-            _logger.LogError(ex, "LSL main config file is not parsable.");
-            return ServiceResult.Fail(ex);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occured while reading main config file.");
-            return ServiceResult.Fail(ex);
-        }
+            logger.LogInformation("Loading main config...");
+            JObject configs;
+            try
+            {
+                configs = JObject.Parse(await File.ReadAllTextAsync(ConfigPathProvider.ConfigFilePath));
+            }
+            catch (FileNotFoundException ex)
+            {
+                logger.LogError(ex, "LSL main config file not found.");
+                return ServiceResult.Fail(ex);
+            }
+            catch (JsonReaderException ex)
+            {
+                logger.LogError(ex, "LSL main config file is not parsable.");
+                return ServiceResult.Fail(ex);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occured while reading main config file.");
+                return ServiceResult.Fail(ex);
+            }
 
-        Dictionary<string, object> cache = [];
-        List<string> keysNeedToRepair = [];
-        foreach (var key in s_configKeys)
-        {
-            var config = configs.TryGetValue(key, out var value) ? value : null;
-            object? keyValue = config?.Type switch // 根据值类型读取
+            Dictionary<string, object> cache = [];
+            List<string> keysNeedToRepair = [];
+            foreach (var key in s_configKeys)
             {
-                JTokenType.Boolean => config.Value<bool>(),
-                JTokenType.Integer => config.Value<int>(),
-                JTokenType.String => config.Value<string>(),
-                _ => null,
-            };
-            if (keyValue == null || !CheckService.VerifyConfig(key, keyValue))
-            {
-                if (!s_defaultConfigs.TryGetValue(key, out var defaultConfig))
+                var config = configs.TryGetValue(key, out var value) ? value : null;
+                object? keyValue = config?.Type switch // 根据值类型读取
                 {
-                    var msg = new KeyNotFoundException($"No such key found in default config:{key}");
-                    _logger.LogError(msg, "");
-                    return ServiceResult.Fail(msg);
+                    JTokenType.Boolean => config.Value<bool>(),
+                    JTokenType.Integer => config.Value<int>(),
+                    JTokenType.String => config.Value<string>(),
+                    _ => null,
+                };
+                if (keyValue == null || !CheckService.VerifyConfig(key, keyValue))
+                {
+                    if (!s_defaultConfigs.TryGetValue(key, out var defaultConfig))
+                    {
+                        var msg = new KeyNotFoundException($"No such key found in default config:{key}");
+                        logger.LogError(msg, "");
+                        return ServiceResult.Fail(msg);
+                    }
+
+                    cache.Add(key, defaultConfig);
+                    keysNeedToRepair.Add(key);
                 }
-
-                cache.Add(key, defaultConfig);
-                keysNeedToRepair.Add(key);
+                else
+                {
+                    cache.Add(key, keyValue);
+                }
             }
-            else
+
+            if (keysNeedToRepair.Count > 0) // 修复配置
             {
-                cache.Add(key, keyValue);
+                await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, JsonConvert.SerializeObject(cache, Formatting.Indented));
+                CurrentConfigs = cache.ToFrozenDictionary();
+                var list = new StringBuilder("The following main config keys are reset due to value type mismatch:");
+                list.AppendJoin(",", keysNeedToRepair);
+                logger.LogWarning("{}", list.ToString());
+                logger.LogInformation("Config.json loaded and repaired.");
+                return ServiceResult.FinishWithWarning(new Exception(list.ToString()));
             }
-        }
-
-        if (keysNeedToRepair.Count > 0) // 修复配置
-        {
-            await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, JsonConvert.SerializeObject(cache, Formatting.Indented));
             CurrentConfigs = cache.ToFrozenDictionary();
-            var list = new StringBuilder("The following main config keys are reset due to value type mismatch:");
-            list.AppendJoin(",", keysNeedToRepair);
-            _logger.LogWarning("{}", list.ToString());
-            _logger.LogInformation("Config.json loaded and repaired.");
-            return ServiceResult.FinishWithWarning(new Exception(list.ToString()));
+            logger.LogInformation("Config.json loaded.");
+            return ServiceResult.Success();
+
         }
-        CurrentConfigs = cache.ToFrozenDictionary();
-        _logger.LogInformation("Config.json loaded.");
-        return ServiceResult.Success();
+        catch (Exception e)
+        {
+            logger.LogError(e, "An error occured while loading main config.");
+            return ServiceResult.Fail(e);
+        }
     }
 
     #endregion
 
     #region 初始化
-    public ServiceResult Init()
+    internal static async Task<ServiceResult> InitAsync()
     {
         // 将初始配置字典序列化成JSON字符串并写入文件  
         string configString = JsonConvert.SerializeObject(s_defaultConfigs, Formatting.Indented);
-        File.WriteAllText(ConfigPathProvider.ConfigFilePath, configString);
+        await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, configString);
         return ServiceResult.Success();
     }
 
