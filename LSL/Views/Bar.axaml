@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:local="using:LSL.Components"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="50"
              x:Class="LSL.Views.Bar">

@@ -1,0 +1,19 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:LSL.Components">
+    <Design.PreviewWith>
+        <controls:MyBarButton />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|MyBarButton">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
+                    <Image Source="{TemplateBinding Icon}" Width="20" Margin="5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{TemplateBinding Title}" FontSize="10"/>
+                </StackPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>
