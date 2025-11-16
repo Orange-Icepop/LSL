@@ -114,13 +114,3 @@ public partial class App : Application
         this.DataContext = _startupViewModel;
     }
 }
-
-#region 全局常量
-
-public static class DesktopConstant
-{
-    public const string AppName = "Orllow_LSL_Desktop";
-    public const string Version = "0.09";
-}
-
-#endregion

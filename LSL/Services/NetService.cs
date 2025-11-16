@@ -87,7 +87,7 @@ public class NetService
         _logger.LogInformation("Start getting API: {URL}", url);
         if (string.IsNullOrWhiteSpace(url)) return new ApiResult(0, "The requested URL is empty.");
         using var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("LSL/0.08.2");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd($"LSL/{DesktopConstant.Version}");
         try
         {
             using var response =

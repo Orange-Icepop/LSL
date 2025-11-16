@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reactive.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -549,9 +550,9 @@ public class ServiceConnector
                         $"Error getting update API(code {result.StatusCode})\n{result.Message}");
             }
 
-            var jobj = JsonConvert.DeserializeObject<Dictionary<string, object>>(result.Message) ??
+            var jsonObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(result.Message) ??
                        throw new FormatException("Update API Response can't be serialized as dictionary.");
-            var remoteVerString = jobj["tag_name"].ToString() ??
+            var remoteVerString = jsonObj["tag_name"].ToString() ??
                                   throw new NullReferenceException(
                                       "API Response doesn't contain required key tag_name.");
             var remoteVer = remoteVerString.TrimStart('v');
@@ -560,9 +561,10 @@ public class ServiceConnector
                 remoteVer);
             if (needUpdate)
             {
-                var updateMessage = jobj["body"].ToString() ??
+                var updateMessage = jsonObj["body"].ToString() ??
                                     throw new NullReferenceException(
                                         "API Response doesn't contain required key body.");
+                updateMessage = updateMessage.Replace(@"\r\n", "\n").Replace(@"\n", "\n");
                 var message =
                     $"LSL已经推出了新版本：{remoteVerString}。可前往https://github.com/Orange-Icepop/LSL/releases下载。\n{updateMessage}";
                 await Dispatcher.UIThread.InvokeAsync(() =>
