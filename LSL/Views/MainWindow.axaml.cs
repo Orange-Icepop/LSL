@@ -24,13 +24,9 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
     {
         InitializeComponent();
         this.Closing += MainWindow_Closing;// 重定向关闭窗口事件
-        MessageBus.Current.Listen<ViewBroadcastArgs>()
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .Where(args => args.Target == typeof(MainWindow))
-            .Subscribe(args => BroadcastHandler(args.Message));
         MessageBus.Current.Listen<WindowOperationArgs>()
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Where(args => args.Body is not WindowOperationArgType.Raise)
+            .Where(args => args.Body is not WindowOperationArgType.CheckForClose)
             .Subscribe(args => CloseHandler(args.Body));
         this.WhenActivated(action =>
         {
@@ -57,17 +53,16 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
         else
         {
             e.Cancel = true;
-            MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.Raise));
+            MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.CheckForClose));
         }
-        //TODO:add good force exit in initvm or sth else
     }
 
     private void CloseHandler(WindowOperationArgType cType)
     {
         switch (cType)
         {
-            case WindowOperationArgType.Raise: return;
-            case WindowOperationArgType.Confirm: 
+            case WindowOperationArgType.CheckForClose: return;
+            case WindowOperationArgType.ConfirmClose: 
             case WindowOperationArgType.ForceClose:
                 _confirmClose = true;
                 this.Close();
@@ -80,23 +75,6 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
     }
     #endregion
 
-    private void BroadcastHandler(string arg)
-    {
-        switch (arg)
-        {
-            case "Show":
-            {
-                this.Show();
-                break;
-            }
-            case "Close":
-            {
-                this.Close();
-                break;
-            }
-            default: return;
-        }
-    }
     #region 显示通知
     private void ShowNotification(IInteractionContext<NotifyArgs, Unit> context)
     {

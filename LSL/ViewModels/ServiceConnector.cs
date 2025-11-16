@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -538,8 +537,8 @@ public class ServiceConnector
 
             Dispatcher.UIThread.Post(() => _appState.InteractionUnits.Notify(0, "更新检查", "开始检查LSL更新......"));
             string url = betaUpdate
-                ? "https://api.orllow.cn/lsl/latest/prerelease"
-                : "https://api.orllow.cn/lsl/latest/stable";
+                ? "https://api.orllow.top/lsl/latest/prerelease"
+                : "https://api.orllow.top/lsl/latest/stable";
             var result = await _webHost.ApiGet(url);
             switch (result.StatusCode)
             {

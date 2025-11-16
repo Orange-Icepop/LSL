@@ -65,7 +65,7 @@ public partial class ShellViewModel : ViewModelBase
 
         MessageBus.Current.Listen<WindowOperationArgs>()
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Where(args => args.Body is WindowOperationArgType.Raise)
+            .Where(args => args.Body is WindowOperationArgType.CheckForClose)
             .Select(_ => Observable.FromAsync(PreExitOperations))
             .Switch()
             .Subscribe(
@@ -74,13 +74,13 @@ public partial class ShellViewModel : ViewModelBase
                     switch (result)
                     {
                         case 1: MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.Hide)); break;
-                        case 0: MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.Confirm)); break;
+                        case 0: MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.ConfirmClose)); break;
                     }
                 },
                 onError: ex =>
                 {
                     Logger.LogError(ex, "An error occured while processing window exit operation.");
-                    InteractionSocket.NotifyInteraction.Handle(new NotifyArgs(3, "窗口退出处理错误", $"LSL在处理退出操作时出现了错误"));
+                    InteractionSocket.PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, "窗口退出处理错误", $"LSL在处理退出操作时出现了错误。\n{ex}"));
                 }
             );
     }
@@ -119,7 +119,7 @@ public partial class ShellViewModel : ViewModelBase
         {
             var res = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNoCancel,
                 "是否要关闭所有服务器？",
-                $"你正在尝试关闭LSL，但是有服务器正在运行。\n点击是将立刻关闭所有服务器；\n点击否将让这些服务器进程在后台运行，并且LSL不再管理它们；\n点击取消以取消关闭LSL的操作。"));
+                "你正在尝试关闭LSL，但是有服务器正在运行。\n点击是将立刻关闭所有服务器；\n点击否将让这些服务器进程在后台运行，并且LSL不再管理它们；\n点击取消以取消关闭LSL的操作。"));
             switch (res)
             {
                 case PopupResult.Yes:

@@ -75,12 +75,6 @@ public record ServiceResult : IServiceResult
     public static ServiceResult<T> Fail<T>(Exception error) => new(ServiceResultType.Error, default, error);
     public static ServiceResult<T> Fail<T>(T? fallbackResult, Exception error) => new(ServiceResultType.Error, fallbackResult, error);
     public static ServiceResult<T> FinishWithWarning<T>(T result, Exception error) => new(ServiceResultType.FinishWithWarning, result, error);
-
-    public void Deconstruct(out ServiceResultType ResultType, out Exception? Error)
-    {
-        ResultType = this.ResultType;
-        Error = this.Error;
-    }
 }
 
 public enum ServiceResultType

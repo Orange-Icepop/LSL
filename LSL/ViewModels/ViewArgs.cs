@@ -53,10 +53,12 @@ public class PopupArgs(int type, string title, string message)
 
 public enum WindowOperationArgType
 {
-    Raise,
-    Confirm,
-    ForceClose,
-    Hide,
+    Hide, // to MainWindow only
+    Show, // to MainWindow only
+    RequestClose, // to MainWindow only
+    CheckForClose,// from MainWindow to ShellVM only
+    ConfirmClose, // from ShellVM to MainWindow only
+    ForceClose, // to MainWindow only
 }
 
 public class WindowOperationArgs(WindowOperationArgType cType)

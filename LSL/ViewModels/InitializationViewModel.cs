@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using LSL.Common.Models;
 using LSL.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -57,12 +56,12 @@ public class InitializationViewModel : ViewModelBase
 
     public static void ShowMainWindow()
     {
-        MessageBus.Current.SendMessage(new ViewBroadcastArgs(typeof(MainWindow), "Show"));
+        MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.Show));
     }
 
     private static void TrayCalledQuit()
     {
-        Environment.Exit(0);
+        MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.RequestClose));
     }
 
     private async Task OnFatalErrorReceived(ViewModelFatalError error)
@@ -71,9 +70,9 @@ public class InitializationViewModel : ViewModelBase
         {
             Logger.LogCritical(error.Ex, "A fatal error occured when running LSL, resulting a crash.");
             ShowMainWindow();
-            await Dispatcher.UIThread.InvokeAsync(() => AppState.InteractionUnits.PopupInteraction.Handle(
+            await AppState.InteractionUnits.PopupInteraction.Handle(
                 new InvokePopupArgs(PopupType.ErrorConfirm, "致命错误",
-                    $"LSL Desktop在运行时发生了致命错误。请您确认并复制该报错信息以方便排查和上报Bug，随后LSL Desktop将自行关闭。\n{error.PopupMessage ?? error.Message}\n{error.Ex}")));
+                    $"LSL Desktop在运行时发生了致命错误。请您确认并复制该报错信息以方便排查和上报Bug，随后LSL Desktop将自行关闭。\n{error.PopupMessage ?? error.Message}\n{error.Ex}"));
         }
         finally
         {
