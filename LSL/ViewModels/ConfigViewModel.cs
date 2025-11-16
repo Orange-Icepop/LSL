@@ -217,17 +217,17 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         var result1 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
             $"确认删除服务器{config.Name}吗？",
-            "注意！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
+            "注意！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result1 == PopupResult.No) return;
         var result2 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
             $"第二次确认，删除服务器{config.Name}吗？",
-            "注意！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
+            "注意！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result2 == PopupResult.No) return;
         var result3 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
             $"最后一次确认，你确定要删除服务器{config.Name}吗？",
-            "这是最后一次警告！此操作不可逆！" + Environment.NewLine + "服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
+            "这是最后一次警告！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result3 == PopupResult.No) return;
         var deleteResult = AppState.InteractionUnits.SubmitServiceError(await Connector.DeleteServer(serverId));
         if (deleteResult.IsSuccess)

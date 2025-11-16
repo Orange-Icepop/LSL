@@ -78,13 +78,13 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                 if (notFound.Count > 0)
                 {
                     error.AppendLine("The following items cannot be found:");
-                    error.AppendJoin(Environment.NewLine, notFound);
+                    error.AppendJoin('\n', notFound);
                 }
 
                 if (notJava.Count > 0)
                 {
                     error.AppendLine("The following items are not an executable java file:");
-                    error.AppendJoin(Environment.NewLine, notJava);
+                    error.AppendJoin('\n', notJava);
                 }
                 error.AppendLine();
                 error.Append("You may need to re-detect java to solve this problem.");

@@ -60,7 +60,7 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
             if (noBrowser.ErrorCode == -2147467259)
             {
                 await AppState.InteractionUnits.ThrowError("打开网页失败",
-                    $"LSL未能成功打开网页{url}，请检查您的系统是否设置了默认浏览器。\r错误内容：{noBrowser.Message}");
+                    $"LSL未能成功打开网页{url}，请检查您的系统是否设置了默认浏览器。\n错误内容：{noBrowser.Message}");
                 Logger.LogError(noBrowser, "Error opening webpage {url} because no default web browser is set.",
                     url);
             }
@@ -70,7 +70,7 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
             var logMsg = OperatingSystem.IsLinux()
                 ? "Please install xdg-utils to open webpage."
                 : "Please check MacOS's default web browser configuration.";
-            Logger.LogError(ex, "Error opening webpage {url}.\r{logMsg}", url, logMsg);
+            Logger.LogError(ex, "Error opening webpage {url}.\n{logMsg}", url, logMsg);
             var uiMsg = OperatingSystem.IsLinux()
                 ? "请确保安装了 xdg-utils 并且设置了默认浏览器以使用打开浏览器网址的功能。"
                 : "在此MacOS系统上似乎无法正常打开网页，请检查默认浏览器设置。";
@@ -109,7 +109,7 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         catch (Exception e)
         {
             Logger.LogError(e, "Error executing open explorer task.");
-            await AppState.InteractionUnits.ThrowError("打开文件失败", $"在文件资源管理器中打开{url}时出现以下报错：\r{e.Message}");
+            await AppState.InteractionUnits.ThrowError("打开文件失败", $"在文件资源管理器中打开{url}时出现以下报错：\n{e.Message}");
         }
     }
 

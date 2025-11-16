@@ -169,7 +169,7 @@ public static class CheckService
             }
 
             if (!vResult.Passed) return ServiceResult.Fail<ServerConfig>(
-                new ValidationException($"Error validating server config with id {id} at key {vResult.Key}:{Environment.NewLine}{vResult.Reason}"));
+                new ValidationException($"Error validating server config with id {id} at key {vResult.Key}:\n{vResult.Reason}"));
         }
         return ServiceResult.Success(cache);
     }

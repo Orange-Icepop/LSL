@@ -44,6 +44,6 @@
  - [ ] 将主配置文件设计为class而非Dictionary，并相应修改UI层处理方式
  - [x] 将初始化错误处理交给上游
  - [x] 将弹窗改为MVVM模式
- - [ ] 命名所有日志模板
- - [ ] 将Environment.NewLine修改为\n
+ - [x] 命名所有日志模板
+ - [x] 将Environment.NewLine修改为\n
  - [ ] 为所有服务层方法外套try-catch

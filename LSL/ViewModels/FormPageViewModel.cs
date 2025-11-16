@@ -97,7 +97,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         var parent = Directory.GetParent(result);
         if (parent is null)
         {
-            Logger.LogError("Error getting the parent folder info of an existing server's core:{r}", result);
+            Logger.LogError("Error getting the parent folder info of an existing server's core:{result}", result);
             await AppState.InteractionUnits.ThrowError("解析服务器根目录时发生错误", $"无法获取到指定服务器核心的根目录:{result}");
             return;
         }
@@ -147,12 +147,12 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         if (int.Parse(serverInfo.MaxMem) < 512)
         {
             var confirm =
-                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。" + Environment.NewLine + "建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
+                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
             if (confirm == PopupResult.No) return;
         }
         var coreType = ServiceConnector.GetCoreType(serverInfo.CorePath);
         var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定添加此服务器吗？",
-            $"服务器信息：\r名称：{serverInfo.ServerName}\rJava路径：{serverInfo.JavaPath}\r核心文件路径：{serverInfo.CorePath}\r服务器类型：{coreType}\r内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\r附加JVM参数：{serverInfo.ExtJvm}"));
+            $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreType}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
             var success = AppState.InteractionUnits.SubmitServiceError(await Connector.AddServer(serverInfo));
@@ -181,11 +181,11 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         if (int.Parse(info.MaxMem) < 512)
         {
             var confirm =
-                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\r建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
+                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
             if (confirm == PopupResult.No) return;
         }
         var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定修改此服务器吗？",
-            $"服务器信息：\r服务器路径：{info.CorePath}\r名称：{info.ServerName}\rJava路径：{info.JavaPath}\r内存范围：{info.MinMem}MB ~ {info.MaxMem}MB\r附加JVM参数：{info.ExtJvm}"));
+            $"服务器信息：\n服务器路径：{info.CorePath}\n名称：{info.ServerName}\nJava路径：{info.JavaPath}\n内存范围：{info.MinMem}MB ~ {info.MaxMem}MB\n附加JVM参数：{info.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
             var success = AppState.InteractionUnits.SubmitServiceError(await Connector.EditServer(id, info));
@@ -220,12 +220,12 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         if (int.Parse(serverInfo.MaxMem) < 512)
         {
             var confirm =
-                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。" + Environment.NewLine + "建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
+                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
             if (confirm == PopupResult.No) return;
         }
         var coreType = ServiceConnector.GetCoreType(serverInfo.CorePath);
         var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定添加此服务器吗？",
-            $"服务器信息：\r名称：{serverInfo.ServerName}\rJava路径：{serverInfo.JavaPath}\r核心文件路径：{serverInfo.CorePath}\r服务器类型：{coreType}\r内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\r附加JVM参数：{serverInfo.ExtJvm}"));
+            $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreType}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
             var success = AppState.InteractionUnits.SubmitServiceError(await Connector.AddExistedServer(serverInfo));
@@ -248,8 +248,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             case RightPageState.ServerConfEdit:
             {
                 if (!AppState.CurrentServerConfigs.TryGetValue(AppState.SelectedServerId, out var tmp))
-                    throw new ArgumentNullException("选中的服务器不存在已经被读取的配置。" + Environment.NewLine +
-                                                    "作者认为LSL理论上不应该抛出该异常，因为您不可能在不存在该服务器时编辑其配置。");
+                    throw new Exception("选中的服务器不存在已经被读取的配置。\nLSL作者认为LSL理论上不应该抛出该异常，因为您不可能在不存在该服务器时编辑其配置。");
                 DeployConfig(tmp);
                 break;
             }

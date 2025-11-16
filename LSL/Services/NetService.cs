@@ -96,7 +96,7 @@ public class NetService
             {
                 var code = (int)response.StatusCode;
                 var msg = response.ReasonPhrase ?? string.Empty;
-                _logger.LogError("API returned error code: {c}.\n{m}", code, msg);
+                _logger.LogError("API returned error code: {code}.\n{message}", code, msg);
                 return new ApiResult(code, msg);
             }
 

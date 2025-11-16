@@ -35,15 +35,15 @@ public class ConfigManager
         // 检查权限
         if (!ConfigPathProvider.HasReadWriteAccess(ConfigPathProvider.LSLFolder))
         {
-            var error = $"LSL does not have write access to config folder:{ConfigPathProvider.LSLFolder}";
-            _logger.LogCritical("{}", error);
-            return ServiceResult.Fail(new UnauthorizedAccessException(error));
+            var error = new UnauthorizedAccessException($"LSL does not have write access to config folder:{ConfigPathProvider.LSLFolder}");
+            _logger.LogCritical(error, "");
+            return ServiceResult.Fail(error);
         }
         if (!ConfigPathProvider.HasReadWriteAccess(ConfigPathProvider.ServersFolder))
         {
-            var error = $"LSL does not have write access to the servers folder:{ConfigPathProvider.ServersFolder}";
-            _logger.LogCritical("{}", error);
-            return ServiceResult.Fail(new UnauthorizedAccessException(error));
+            var error = new UnauthorizedAccessException($"LSL does not have write access to the servers folder:{ConfigPathProvider.ServersFolder}");
+            _logger.LogCritical(error, "");
+            return ServiceResult.Fail(error);
         }
         // 确保LSL文件夹存在  
         Directory.CreateDirectory(ConfigPathProvider.LSLFolder);

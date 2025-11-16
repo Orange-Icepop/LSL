@@ -138,9 +138,9 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
             {
                 if (!s_defaultConfigs.TryGetValue(key, out var defaultConfig))
                 {
-                    string msg = $"No such key found in default config:{key}";
-                    _logger.LogError("{msg}", msg);
-                    return ServiceResult.Fail(new Exception(msg));
+                    var msg = new KeyNotFoundException($"No such key found in default config:{key}");
+                    _logger.LogError(msg, "");
+                    return ServiceResult.Fail(msg);
                 }
 
                 cache.Add(key, defaultConfig);
@@ -157,7 +157,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
             await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, JsonConvert.SerializeObject(cache, Formatting.Indented));
             CurrentConfigs = cache.ToFrozenDictionary();
             var list = new StringBuilder("The following main config keys are reset due to value type mismatch:");
-            list.AppendJoin(", ", keysNeedToRepair);
+            list.AppendJoin(",", keysNeedToRepair);
             _logger.LogWarning("{}", list.ToString());
             _logger.LogInformation("Config.json loaded and repaired.");
             return ServiceResult.FinishWithWarning(new Exception(list.ToString()));

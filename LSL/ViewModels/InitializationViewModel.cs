@@ -69,12 +69,11 @@ public class InitializationViewModel : ViewModelBase
     {
         try
         {
-            Logger.LogCritical(error.Ex, "{}", error.Message);
+            Logger.LogCritical(error.Ex, "A fatal error occured when running LSL, resulting a crash.");
             ShowMainWindow();
             await Dispatcher.UIThread.InvokeAsync(() => AppState.InteractionUnits.PopupInteraction.Handle(
                 new InvokePopupArgs(PopupType.ErrorConfirm, "致命错误",
-                    "LSL Desktop在运行时发生了致命错误。请您确认并复制该报错信息以方便排查和上报Bug，随后LSL Desktop将自行关闭。" + Environment.NewLine +
-                    (error.PopupMessage ?? error.Message) + Environment.NewLine + error.Ex)));
+                    $"LSL Desktop在运行时发生了致命错误。请您确认并复制该报错信息以方便排查和上报Bug，随后LSL Desktop将自行关闭。\n{error.PopupMessage ?? error.Message}\n{error.Ex}")));
         }
         finally
         {

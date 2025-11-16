@@ -88,13 +88,13 @@ public class ServiceConnector
                 if (res.Result.NotFound.Any())
                 {
                     error.AppendLine("以下Java不存在或无法被访问:");
-                    error.AppendJoin(Environment.NewLine, res.Result.NotFound);
+                    error.AppendJoin('\n', res.Result.NotFound);
                 }
 
                 if (res.Result.NotJava.Any())
                 {
                     error.AppendLine("以下文件不是Java:");
-                    error.AppendJoin(Environment.NewLine, res.Result.NotJava);
+                    error.AppendJoin('\n', res.Result.NotJava);
                 }
 
                 error.AppendLine();
@@ -385,7 +385,7 @@ public class ServiceConnector
         {
             if (!item.Passed)
             {
-                errorInfo += $"{item.Reason}\r";
+                errorInfo += $"{item.Reason}\n";
             }
         }
 
@@ -398,13 +398,13 @@ public class ServiceConnector
         var coreResult = CoreValidationService.Validate(config.CorePath, out var problem);
         return coreResult switch
         {
-            CoreValidationService.CoreType.Error => (0, "验证核心文件时发生错误。\r" + problem),
+            CoreValidationService.CoreType.Error => (0, "验证核心文件时发生错误。\n" + problem),
             CoreValidationService.CoreType.ForgeInstaller => (0,
                 "您选择的文件是一个Forge安装器，而不是一个Minecraft服务端核心文件。LSL暂不支持Forge服务器的添加与启动。"),
             CoreValidationService.CoreType.FabricInstaller => (0,
                 "您选择的文件是一个Fabric安装器，而不是一个Minecraft服务端核心文件。请下载Fabric官方服务器jar文件，而不是安装器。"),
             CoreValidationService.CoreType.Unknown => (-1,
-                "LSL无法确认您选择的文件是否为Minecraft服务端核心文件。\r这可能是由于LSL没有收集足够的关于服务器核心的辨识信息造成的。如果这是确实一个Minecraft服务端核心并且具有一定的知名度，请您前往LSL的仓库（https://github.com/Orange-Icepop/LSL）提交相关Issue。\r您可以直接点击确认绕过校验，但是LSL及其开发团队不为因此造成的后果作担保。"),
+                "LSL无法确认您选择的文件是否为Minecraft服务端核心文件。\n这可能是由于LSL没有收集足够的关于服务器核心的辨识信息造成的。如果这是确实一个Minecraft服务端核心并且具有一定的知名度，请您前往LSL的仓库（https://github.com/Orange-Icepop/LSL）提交相关Issue。\n您可以直接点击确认绕过校验，但是LSL及其开发团队不为因此造成的后果作担保。"),
             CoreValidationService.CoreType.Client => (0, "您选择的文件是一个Minecraft客户端核心文件，而不是一个服务端核心文件。"),
             _ => (1, null)
         };
@@ -547,7 +547,7 @@ public class ServiceConnector
                     throw new HttpRequestException("Cannot connect to the server.");
                 case < 200 or >= 300:
                     throw new HttpRequestException(
-                        $"Error getting update API(code {result.StatusCode}){Environment.NewLine}{result.Message}");
+                        $"Error getting update API(code {result.StatusCode})\n{result.Message}");
             }
 
             var jobj = JsonConvert.DeserializeObject<Dictionary<string, object>>(result.Message) ??
@@ -557,7 +557,7 @@ public class ServiceConnector
                                       "API Response doesn't contain required key tag_name.");
             var remoteVer = remoteVerString.TrimStart('v');
             var needUpdate = AlgoServices.IsGreaterVersion(DesktopConstant.Version, remoteVer);
-            _logger.LogInformation("Got remote version update. Local:{LC}, remote:{RM}.", DesktopConstant.Version,
+            _logger.LogInformation("Got remote version update. Local:{LocalVer}, remote:{RemoteVer}.", DesktopConstant.Version,
                 remoteVer);
             if (needUpdate)
             {
@@ -565,7 +565,7 @@ public class ServiceConnector
                                     throw new NullReferenceException(
                                         "API Response doesn't contain required key body.");
                 var message =
-                    $"LSL已经推出了新版本：{remoteVerString}。可前往https://github.com/Orange-Icepop/LSL/releases下载。{Environment.NewLine}{updateMessage}";
+                    $"LSL已经推出了新版本：{remoteVerString}。可前往https://github.com/Orange-Icepop/LSL/releases下载。\n{updateMessage}";
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     _appState.InteractionUnits.PopupInteraction
@@ -584,10 +584,10 @@ public class ServiceConnector
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, "更新检查出错",
-                        "LSL在检查更新时出现了问题。" + Environment.NewLine + ex.Message))
+                        $"LSL在检查更新时出现了问题。\n{ex.Message}"))
                     .Subscribe();
             });
-            _logger.LogInformation("Error checking for updates:{ex}", ex.Message);
+            _logger.LogError(ex, "An error occured when checking for LSL updates.");
         }
     }
 

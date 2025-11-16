@@ -119,7 +119,7 @@ public partial class ShellViewModel : ViewModelBase
         {
             var res = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNoCancel,
                 "是否要关闭所有服务器？",
-                $"你正在尝试关闭LSL，但是有服务器正在运行。{Environment.NewLine}点击是将立刻关闭所有服务器；{Environment.NewLine}点击否将让这些服务器进程在后台运行，并且LSL不再管理它们；{Environment.NewLine}点击取消以取消关闭LSL的操作。"));
+                $"你正在尝试关闭LSL，但是有服务器正在运行。\n点击是将立刻关闭所有服务器；\n点击否将让这些服务器进程在后台运行，并且LSL不再管理它们；\n点击取消以取消关闭LSL的操作。"));
             switch (res)
             {
                 case PopupResult.Yes:

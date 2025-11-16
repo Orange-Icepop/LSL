@@ -160,7 +160,7 @@ public sealed class Utf8ConsoleFormatter : ConsoleFormatter
             LogLevel.Critical => "DEAD",
             _ => string.Empty,
         };
-        var message = $"[{DateTime.Now.ToString("hh:mm:ss")}] [{logEntry.Category}|{level}] ";
+        var message = $"[{DateTime.Now:hh:mm:ss}] [{logEntry.Category}|{level}] ";
         message += logEntry.Formatter(logEntry.State, logEntry.Exception);
 
         if (logEntry.Exception != null)
