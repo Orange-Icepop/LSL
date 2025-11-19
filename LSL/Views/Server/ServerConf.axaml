@@ -2,14 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:local="using:LSL.Components"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerConf">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel>
-            <local:MyCard Text="概述">
+            <controls:MyCard Text="概述">
                 <Grid HorizontalAlignment="Left" Margin="20,50,10,20" ColumnDefinitions="*,*,*">
                     <DockPanel Grid.Column="0">
                         <Image DockPanel.Dock="Left" Source="/Assets/mc.png" Width="32" Height="32" Margin="10" />
@@ -21,8 +21,8 @@
                                    Width="500" />
                     </DockPanel>
                 </Grid>
-            </local:MyCard>
-            <local:MyCard Text="详细信息">
+            </controls:MyCard>
+            <controls:MyCard Text="详细信息">
                 <Grid Margin="25,50,25,25" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,Auto">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="LSL注册ID："/>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="最小内存（MB）："/>
@@ -35,28 +35,28 @@
                     <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.UsingJava}"/>
                     <SelectableTextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.ExtJvm}"/>
                 </Grid>
-            </local:MyCard>
-            <local:MyCard Text="配置操作">
+            </controls:MyCard>
+            <controls:MyCard Text="配置操作">
                 <DockPanel Margin="25,50,25,25">
-                    <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight"
+                    <controls:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight"
                                     Height="30" Width="100" Margin="10" Command="{Binding FullViewCmd}"
                                     IsEnabled="{Binding AppState.NotTemplateServer}"
                                     CommandParameter="ServerConfEdit">
                         修改配置
-                    </local:MyButton>
-                    <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight"
+                    </controls:MyButton>
+                    <controls:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight"
                                     Height="30" Width="100" Margin="10" Command="{Binding PublicCmd.OpenFileCmd}"
                                     CommandParameter="{Binding ConfigVM.SelectedServerPath}"
                                     IsEnabled="{Binding AppState.NotTemplateServer}">
                         打开文件夹
-                    </local:MyButton>
-                    <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Red" Height="30"
+                    </controls:MyButton>
+                    <controls:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Red" Height="30"
                                     Width="100" Margin="10" Command="{Binding ConfigVM.DeleteServerCmd}"
                                     IsEnabled="{Binding AppState.NotTemplateServer}">
                         删除服务器
-                    </local:MyButton>
+                    </controls:MyButton>
                 </DockPanel>
-            </local:MyCard>
+            </controls:MyCard>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

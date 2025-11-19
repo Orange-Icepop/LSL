@@ -2,25 +2,25 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:local="using:LSL.Components"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Download.ASViews.AddFolder">
     <ScrollViewer>
         <StackPanel>
-            <local:MyCard Text="从文件夹添加现有服务器">
+            <controls:MyCard Text="从文件夹添加现有服务器">
                 <StackPanel Margin="25,10,25,15">
                     <StackPanel Margin="30,50,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器核心路径</TextBlock>
                         <StackPanel Orientation="Horizontal">
                             <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300"
                                      Text="{Binding FormViewModel.CorePath}" />
-                            <local:MyButton VerticalAlignment="Center" HorizontalAlignment="Left"
+                            <controls:MyButton VerticalAlignment="Center" HorizontalAlignment="Left"
                                             Command="{Binding FormViewModel.SelectFolderCoreCmd}" Width="100" Height="30"
                                             Margin="10,0,10,0">
                                 选择核心
-                            </local:MyButton>
+                            </controls:MyButton>
                         </StackPanel>
                         <TextBlock Margin="0,0,10,0" FontSize="10" Foreground="Gray">核心文件所在的目录将被视作该服务器的根目录，并且整个服务器将被拷贝到LSL服务器文件夹中。</TextBlock>
                         <TextBlock Margin="0,0,10,0" FontSize="13" Foreground="DarkGray" Text="{Binding FormViewModel.ExistedServerPath}"/>
@@ -69,11 +69,11 @@
                                       ItemsSource="{Binding FormViewModel.JavaList}"
                                       SelectedIndex="{Binding FormViewModel.SelectedJavaIndex}">
                             </ComboBox>
-                            <local:MyButton Name="GetJavaBtn" VerticalAlignment="Center" HorizontalAlignment="Left"
+                            <controls:MyButton Name="GetJavaBtn" VerticalAlignment="Center" HorizontalAlignment="Left"
                                             Width="100"
                                             Height="30" Margin="10,0,0,0" Command="{Binding PublicCmd.SearchJava}">
                                 搜索Java
-                            </local:MyButton>
+                            </controls:MyButton>
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Margin="30,10,0,5">
@@ -81,13 +81,13 @@
                         <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" TextWrapping="Wrap"
                                  Text="{Binding FormViewModel.ExtJvm}" />
                     </StackPanel>
-                    <local:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
+                    <controls:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
                                     Height="30" Margin="30,10,0,5" ColorType="Highlight"
                                     Command="{Binding FormViewModel.AddExistedServerCmd}">
                         确认添加
-                    </local:MyButton>
+                    </controls:MyButton>
                 </StackPanel>
-            </local:MyCard>
+            </controls:MyCard>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

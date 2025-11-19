@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 
-namespace LSL.Components;
+namespace LSL.Controls;
 
 public class MyCard : ContentControl
 {

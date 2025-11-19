@@ -2,14 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:local="using:LSL.Components"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.About">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel>
-            <local:MyCard Text="关于">
+            <controls:MyCard Text="关于">
                 <StackPanel Margin="25,40,23,15">
                     <DockPanel>
                         <Image Source="avares://LSL/Assets/icon.ico" Width="70" HorizontalAlignment="Left"
@@ -22,63 +22,63 @@
                                    FontWeight="Bold" DockPanel.Dock="Top" />
                     </DockPanel>
                 </StackPanel>
-            </local:MyCard>
-            <local:MyCard Text="更新">
+            </controls:MyCard>
+            <controls:MyCard Text="更新">
                 <StackPanel Margin="25,40,23,15">
                     <TextBlock Margin="0,10,0,0">
                         <Run Text="当前版本:" />
                         <Run Text="{Binding Version}" />
                     </TextBlock>
-                    <local:MyButton ColorType="Highlight" HorizontalAlignment="Left" Width="90" Height="30"
+                    <controls:MyButton ColorType="Highlight" HorizontalAlignment="Left" Width="90" Height="30"
                                     Margin="0,10,0,10" Command="{Binding PublicCmd.CheckUpdateCmd}">
                         检查更新
-                    </local:MyButton>
+                    </controls:MyButton>
                     <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.AutoUpdate}">启动时自动检查更新</CheckBox>
                     <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.BetaUpdate}">更新测试版</CheckBox>
                 </StackPanel>
-            </local:MyCard>
-            <local:MyCard Text="相关链接">
+            </controls:MyCard>
+            <controls:MyCard Text="相关链接">
                 <StackPanel Margin="25,40,23,15">
-                    <local:MyButton Width="80" Height="30" Margin="0,10,0,10" HorizontalAlignment="Left"
+                    <controls:MyButton Width="80" Height="30" Margin="0,10,0,10" HorizontalAlignment="Left"
                                     Command="{Binding PublicCmd.OpenWebPageCmd}"
                                     CommandParameter="https://github.com/Orange-Icepop/LSL/">
                         GitHub
-                    </local:MyButton>
+                    </controls:MyButton>
                 </StackPanel>
-            </local:MyCard>
-            <local:MyCard Text="开源库使用声明">
+            </controls:MyCard>
+            <controls:MyCard Text="开源库使用声明">
                 <StackPanel Margin="25,40,23,15">
-                    <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/dotnet.ico" Title=".NET Runtime"
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/dotnet.ico" Title=".NET Runtime"
                                       Info="开放公共语言运行库，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/dotnet/runtime" />
-                    <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/AvaloniaUI.png" Title="AvaloniaUI"
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/AvaloniaUI.png" Title="AvaloniaUI"
                                       Info="UI框架，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/AvaloniaUI/Avalonia" />
-                    <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/ReactiveUI.png" Title="ReactiveUI"
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/ReactiveUI.png" Title="ReactiveUI"
                                       Info="反应式UI辅助框架，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/reactiveui/reactiveui" />
-                    <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/Json.Net.png"
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/Json.Net.png"
                                       Title="Newtonsoft.Json" Info="Json编解码器，MIT"
                                       Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/JamesNK/Newtonsoft.Json" />
-                    <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/sharpziplib.png" Title="SharpZipLib"
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/sharpziplib.png" Title="SharpZipLib"
                                       Info="解压缩库，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/icsharpcode/SharpZipLib" />
-                    <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/Serilog.png" Title="Serilog"
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/Serilog.png" Title="Serilog"
                                       Info="日志记录库，Apache-2.0" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/serilog/serilog" />
                 </StackPanel>
-            </local:MyCard>
-            <local:MyCard Text="开源字体使用声明">
+            </controls:MyCard>
+            <controls:MyCard Text="开源字体使用声明">
                 <StackPanel Margin="25,40,23,15">
-                    <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/fonts/SmileySans.png" Title="SmileySans 得意黑"
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/fonts/SmileySans.png" Title="SmileySans 得意黑"
                                       Info="v2.0.1, OFL-1.1" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/atelier-anchor/smiley-sans" />
-                    <local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/fonts/MapleMono.png" Title="Maple Mono"
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/fonts/MapleMono.png" Title="Maple Mono"
                                       Info="v7.5, OFL-1.1" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/subframe7536/Maple-font" />
                 </StackPanel>
-            </local:MyCard>
+            </controls:MyCard>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

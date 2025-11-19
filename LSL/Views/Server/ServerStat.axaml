@@ -2,9 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:local="using:LSL.Components"
              xmlns:vm="using:LSL.ViewModels"
              xmlns:server="clr-namespace:LSL.Views.Server"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerStat">
@@ -13,7 +13,7 @@
         <server:CurrentMemMetricsConverter x:Key="CurrentMemConverter" />
     </UserControl.Resources>
     <DockPanel>
-        <local:MyCard Text="资源占用" DockPanel.Dock="Top" Height="200">
+        <controls:MyCard Text="资源占用" DockPanel.Dock="Top" Height="200">
             <Grid Margin="30,50,10,10" ColumnDefinitions="*,*" RowDefinitions="15,*">
                 <TextBlock Grid.Row="0" Grid.Column="0" FontSize="12">
                     <TextBlock.Text>
@@ -22,7 +22,7 @@
                         </MultiBinding>
                     </TextBlock.Text>
                 </TextBlock>
-                <local:MyPlot Grid.Row="1" Grid.Column="0" LineColor="#019eff" FillColor="#80019eff"
+                <controls:MyPlot Grid.Row="1" Grid.Column="0" LineColor="#019eff" FillColor="#80019eff"
                               ItemsSource="{Binding MonitorVM.CurrentCpuMetrics}" Margin="5" />
                 <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="True">
                     <TextBlock FontSize="12" HorizontalAlignment="Left" DockPanel.Dock="Left">
@@ -50,11 +50,11 @@
                         </ToolTip.Tip>
                     </Border>
                 </DockPanel>
-                <local:MyPlot Grid.Row="1" Grid.Column="1" LineColor="#FFE39A6B" FillColor="#80E39A6B"
+                <controls:MyPlot Grid.Row="1" Grid.Column="1" LineColor="#FFE39A6B" FillColor="#80E39A6B"
                               ItemsSource="{Binding MonitorVM.CurrentRamMetrics}" Margin="5" />
             </Grid>
-        </local:MyCard>
-        <local:MyCard Text="玩家列表" DockPanel.Dock="Left" Width="250">
+        </controls:MyCard>
+        <controls:MyCard Text="玩家列表" DockPanel.Dock="Left" Width="250">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <TreeDataGrid Width="200"
                               Margin="0,50,0,0"
@@ -67,8 +67,8 @@
                     </TreeDataGrid.Styles>
                 </TreeDataGrid>
             </ScrollViewer>
-        </local:MyCard>
-        <local:MyCard Text="玩家消息" DockPanel.Dock="Left">
+        </controls:MyCard>
+        <controls:MyCard Text="玩家消息" DockPanel.Dock="Left">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ItemsRepeater Name="UserMessage" ItemsSource="{Binding ServerVM.CurrentUserMessage}">
                     <ItemsRepeater.ItemTemplate>
@@ -78,6 +78,6 @@
                     </ItemsRepeater.ItemTemplate>
                 </ItemsRepeater>
             </ScrollViewer>
-        </local:MyCard>
+        </controls:MyCard>
     </DockPanel>
 </UserControl>

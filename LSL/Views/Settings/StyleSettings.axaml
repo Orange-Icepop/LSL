@@ -2,16 +2,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:local="using:LSL.Components"
+             xmlns:controls="clr-namespace:LSL.Controls"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.StyleSettings">
 	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 		<StackPanel>
-			<local:MyCard Text="个性化">
+			<controls:MyCard Text="个性化">
 				<StackPanel Margin="25,40,23,15">
 					<TextBlock HorizontalAlignment="Center" FontSize="20" Text="该功能暂未开放！"/>
 				</StackPanel>
-			</local:MyCard>
+			</controls:MyCard>
 		</StackPanel>
 	</ScrollViewer>
 </UserControl>

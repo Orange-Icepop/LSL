@@ -3,7 +3,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 
-namespace LSL.Components;
+namespace LSL.Controls;
 
 public enum MyButtonColorType
 {

@@ -2,13 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:local="using:LSL.Components"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerTerminal">
     <Grid RowDefinitions="*,70" ColumnDefinitions="*,200">
-        <local:MyCard Text="终端" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+        <controls:MyCard Text="终端" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <ScrollViewer VerticalAlignment="Stretch"
                           HorizontalAlignment="Stretch"
                           Margin="30,60,30,20"
@@ -26,19 +26,19 @@
                     </ItemsRepeater.ItemTemplate>
                 </ItemsRepeater>
             </ScrollViewer>
-        </local:MyCard>
-        <local:MyCard Grid.Row="1" Grid.Column="0">
+        </controls:MyCard>
+        <controls:MyCard Grid.Row="1" Grid.Column="0">
             <Grid VerticalAlignment="Center" HorizontalAlignment="Stretch" ColumnDefinitions="*,Auto">
                 <TextBox Grid.Column="0" Height="30" Margin="10" Text="{Binding ServerVM.InputText,Mode=TwoWay}"
                          AcceptsReturn="True" VerticalAlignment="Center" HorizontalAlignment="Stretch" />
-                <local:MyButton Content="发送" Grid.Column="1" Margin="10" Width="50" Height="30"
+                <controls:MyButton Content="发送" Grid.Column="1" Margin="10" Width="50" Height="30"
                                 VerticalAlignment="Center" HorizontalAlignment="Right"
                                 Command="{Binding ServerVM.SendCommand}" />
             </Grid>
-        </local:MyCard>
-        <local:MyCard Grid.Row="1" Grid.Column="1">
+        </controls:MyCard>
+        <controls:MyCard Grid.Row="1" Grid.Column="1">
             <Grid VerticalAlignment="Center" HorizontalAlignment="Center" ColumnDefinitions="*,*,*">
-                <local:MyButton BorderThickness="2"
+                <controls:MyButton BorderThickness="2"
                                 Padding="0"
                                 VerticalAlignment="Center"
                                 Grid.Column="0" Margin="2"
@@ -49,8 +49,8 @@
                                VerticalAlignment="Center"
                                Margin="8,5"
                                FontSize="14" />
-                </local:MyButton>
-                <local:MyButton BorderThickness="2"
+                </controls:MyButton>
+                <controls:MyButton BorderThickness="2"
                                 Padding="0"
                                 VerticalAlignment="Center"
                                 Grid.Column="1" Margin="2"
@@ -61,8 +61,8 @@
                                VerticalAlignment="Center"
                                Margin="8,5"
                                FontSize="14" />
-                </local:MyButton>
-                <local:MyButton BorderThickness="2"
+                </controls:MyButton>
+                <controls:MyButton BorderThickness="2"
                                 VerticalAlignment="Center"
                                 Grid.Column="2" Margin="2"
                                 Command="{Binding ServerVM.EndServerCmd}"
@@ -72,8 +72,8 @@
                                VerticalAlignment="Center"
                                Margin="8,5"
                                FontSize="14" />
-                </local:MyButton>
+                </controls:MyButton>
             </Grid>
-        </local:MyCard>
+        </controls:MyCard>
     </Grid>
 </UserControl>

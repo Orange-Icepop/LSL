@@ -3,17 +3,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:LSL.ViewModels"
-             xmlns:local="using:LSL.Components"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="50"
              x:Class="LSL.Views.Bar">
 	<Grid RowDefinitions="*" Background="{DynamicResource OBlue}" Name="Bkg">
 		<TextBlock Name="Title" Text="Lime Server Launcher" FontFamily="{StaticResource SmileySans}" FontSize="27" Margin="15,0,0,0" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 		<DockPanel Name="Navigation" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-			<local:MyBarButton Name="Home" Title="主页" Icon="avares://LSL/Assets/Built-In-Icons/Home.png" IsSelected="{Binding BarViewModel.HomeButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="HomeLeft"/>
-			<local:MyBarButton Name="Server" Title="服务器" Icon="avares://LSL/Assets/Built-In-Icons/Server.png" IsSelected="{Binding BarViewModel.ServerButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="ServerLeft"/>
-			<local:MyBarButton Name="Download" Title="下载" Icon="avares://LSL/Assets/Built-In-Icons/Download.png" IsSelected="{Binding BarViewModel.DownloadButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="DownloadsLeft"/>
-			<local:MyBarButton Name="Settings" Title="设置" Icon="avares://LSL/Assets/Built-In-Icons/Cog.png" IsSelected="{Binding BarViewModel.SettingsButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="SettingsLeft"/>
+			<controls:MyBarButton Name="Home" Title="主页" Icon="avares://LSL/Assets/Built-In-Icons/Home.png" IsSelected="{Binding BarViewModel.HomeButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="HomeLeft"/>
+			<controls:MyBarButton Name="Server" Title="服务器" Icon="avares://LSL/Assets/Built-In-Icons/Server.png" IsSelected="{Binding BarViewModel.ServerButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="ServerLeft"/>
+			<controls:MyBarButton Name="Download" Title="下载" Icon="avares://LSL/Assets/Built-In-Icons/Download.png" IsSelected="{Binding BarViewModel.DownloadButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="DownloadsLeft"/>
+			<controls:MyBarButton Name="Settings" Title="设置" Icon="avares://LSL/Assets/Built-In-Icons/Cog.png" IsSelected="{Binding BarViewModel.SettingsButtonClass}" Command="{Binding LeftViewCmd}" CommandParameter="SettingsLeft"/>
 		</DockPanel>
 	</Grid>
 </UserControl>

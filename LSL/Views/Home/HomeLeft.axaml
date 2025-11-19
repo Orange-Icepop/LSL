@@ -2,20 +2,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:local="using:LSL.Components"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="600"
              x:Class="LSL.Views.Home.HomeLeft">
 	<DockPanel Width="350">
 		<TextBlock DockPanel.Dock="Top" Text="欢迎回来" FontSize="30" HorizontalAlignment="Center" Margin="50"/>
 		<Grid DockPanel.Dock="Bottom" ColumnDefinitions="*" Width="270" Margin="0,0,0,20" HorizontalAlignment="Center">
-			<local:MyButton Grid.Row="0" Grid.Column="0" Margin="10,0" FontSize="20" Content="服务器设置" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="50" Command="{Binding ServerConfigCmd}"/>
+			<controls:MyButton Grid.Row="0" Grid.Column="0" Margin="10,0" FontSize="20" Content="服务器设置" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="50" Command="{Binding ServerConfigCmd}"/>
 			<!--
 			<local:MyButton Grid.Row="0" Grid.Column="1" Margin="10,0" FontSize="20" Content="面板设置" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="50" Command="{Binding PanelConfigCmd}"/>
 			-->
 		</Grid>
-		<local:MyButton DockPanel.Dock="Bottom"
+		<controls:MyButton DockPanel.Dock="Bottom"
 						FontSize="20" 
 						Content="{Binding ServerVM.LaunchButtonContent}" 
 						ColorType="Highlight" 

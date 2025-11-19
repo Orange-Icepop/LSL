@@ -2,8 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:local="using:LSL.Components"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerLeft">
@@ -13,7 +13,7 @@
 		<TextBlock DockPanel.Dock="Top" Text="选择服务器" Margin="10,10,0,0" Foreground="Gray"/>
 		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10" ItemsSource="{Binding AppState.ServerNames}" SelectedIndex="{Binding AppState.SelectedServerIndex, Mode=TwoWay}">
 		</ComboBox>
-		<local:MyButton Name="LaunchServerButton"
+		<controls:MyButton Name="LaunchServerButton"
 						Command="{Binding ServerVM.LaunchButtonCmd}"
 						DockPanel.Dock="Top"
 						ColorType="Highlight"
@@ -26,7 +26,7 @@
 		<Button Width="250" DockPanel.Dock="Top" Name="StatusButton" Content="状态" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightServerStat}" Command="{Binding RightViewCmd}" CommandParameter="ServerStat"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="TerminalButton" Content="终端" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightServerTerminal}" Command="{Binding RightViewCmd}" CommandParameter="ServerTerminal"/>
 		<Button Width="250" DockPanel.Dock="Top" Name="ConfButton" Content="设置" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightServerConf}" Command="{Binding RightViewCmd}" CommandParameter="ServerConf"/>
-		<local:MyButton Classes="right"
+		<controls:MyButton Classes="right"
 				Name="AddServerButton"
 				Command="{Binding LeftViewCmd}"
 				CommandParameter="DownloadsLeft"
@@ -35,6 +35,6 @@
 				HorizontalAlignment="Center"
 				Margin="0,0,0,10"
 				Width="130"
-				Height="40">添加服务器</local:MyButton>
+				Height="40">添加服务器</controls:MyButton>
 	</DockPanel>
 </UserControl>

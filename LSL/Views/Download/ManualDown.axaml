@@ -2,15 +2,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:local="using:LSL.Components"
+             xmlns:controls="clr-namespace:LSL.Controls"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Download.ManualDown">
 	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 		<StackPanel>
-			<local:MyCard Text="手动下载">
+			<controls:MyCard Text="手动下载">
 				<DockPanel Margin="25,40,23,15">
 				</DockPanel>
-			</local:MyCard>
+			</controls:MyCard>
 		</StackPanel>
 	</ScrollViewer>
 </UserControl>

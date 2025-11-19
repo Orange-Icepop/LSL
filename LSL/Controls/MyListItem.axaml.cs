@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 
-namespace LSL.Components;
+namespace LSL.Controls;
 
 public class MyListItem : Button
 {

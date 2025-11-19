@@ -2,14 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:local="using:LSL.Components"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.CommonSettings">
 	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 		<StackPanel>
-			<local:MyCard Text="常规设置">
+			<controls:MyCard Text="常规设置">
 				<StackPanel Margin="25,40,23,15">
 					<CheckBox Margin="0,10,0,5" IsChecked="{Binding ConfigVM.AutoEula}">自动同意EULA</CheckBox>
 					<DockPanel Margin="0,5,0,5">
@@ -23,9 +23,9 @@
 					<CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.EndServerWhenClose}">关闭启动器时终止服务器进程</CheckBox>
 					<CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.Daemon}">保持后台进程开启</CheckBox>
 				</StackPanel>
-			</local:MyCard>
+			</controls:MyCard>
 
-			<local:MyCard Text="Java设置">
+			<controls:MyCard Text="Java设置">
 				<StackPanel Margin="25,40,23,15">
 					<TreeDataGrid Margin="0,5,0,5"
 							  Source="{Binding ConfigVM.JavaVersions}"
@@ -40,18 +40,18 @@
 						</TreeDataGrid.Styles>
 					</TreeDataGrid>
 					<DockPanel Margin="0,5,0,5">
-						<local:MyButton ColorType="Highlight" HorizontalAlignment="Left" Margin="0,0,10,0" Width="120" Height="30" Command="{Binding PublicCmd.SearchJava}">查找可用Java</local:MyButton>
+						<controls:MyButton ColorType="Highlight" HorizontalAlignment="Left" Margin="0,0,10,0" Width="120" Height="30" Command="{Binding PublicCmd.SearchJava}">查找可用Java</controls:MyButton>
 						<!--
 					<local:MyButton HorizontalAlignment="Left" Margin="0,0,10,0" Width="120" Height="30">手动选择Java</local:MyButton>-->
 					</DockPanel>
 				</StackPanel>
-			</local:MyCard>
+			</controls:MyCard>
 
-			<local:MyCard Text="终端设置">
+			<controls:MyCard Text="终端设置">
 				<StackPanel Margin="25,40,23,15">
 					<CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.ColoringTerminal}">终端分层设色</CheckBox>
 				</StackPanel>
-			</local:MyCard>
+			</controls:MyCard>
 
 		</StackPanel>
 	</ScrollViewer>

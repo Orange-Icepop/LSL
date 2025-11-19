@@ -2,19 +2,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:local="using:LSL.Components"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Download.AddServer">
 	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 		<StackPanel>
-			<local:MyCard Text="导入服务器">
+			<controls:MyCard Text="导入服务器">
 				<StackPanel Margin="25,40,23,15">
-					<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/JavaIcon.png" Title="从核心添加服务器" Info="构建一个新的服务器" Command="{Binding FullViewCmd}" CommandParameter="AddCore"/>
-					<local:MyListItem Logo="avares://LSL/Assets/Imported-Icons/Folder.png" Title="导入服务器文件夹" Info="无缝使用现有的服务器" Command="{Binding FullViewCmd}" CommandParameter="AddFolder"/>
+					<controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/JavaIcon.png" Title="从核心添加服务器" Info="构建一个新的服务器" Command="{Binding FullViewCmd}" CommandParameter="AddCore"/>
+					<controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/Folder.png" Title="导入服务器文件夹" Info="无缝使用现有的服务器" Command="{Binding FullViewCmd}" CommandParameter="AddFolder"/>
 				</StackPanel>
-			</local:MyCard>
+			</controls:MyCard>
 		</StackPanel>
 	</ScrollViewer>
 </UserControl>

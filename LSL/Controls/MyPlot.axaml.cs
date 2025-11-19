@@ -7,7 +7,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using LSL.Common.Collections;
 
-namespace LSL.Components;
+namespace LSL.Controls;
 
 public class MyPlot : Control
 {

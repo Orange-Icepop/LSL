@@ -2,26 +2,26 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:local="using:LSL.Components"
+             xmlns:controls="clr-namespace:LSL.Controls"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Download.ModDown">
 	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 		<StackPanel>
-			<local:MyCard Text="Mod下载">
+			<controls:MyCard Text="Mod下载">
 				<StackPanel>
 					<DockPanel Margin="30,50,0,10">
 						<TextBlock DockPanel.Dock="Left" Text="名称" VerticalAlignment="Center" Margin="0,0,10,0"/>
 						<TextBox DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Center" Width="400"/>
 					</DockPanel>
 					<DockPanel Margin="30,0,0,20">
-						<local:MyButton HorizontalAlignment="Left" ColorType="Highlight" Width="100" Height="40" Margin="0,0,10,0">搜索</local:MyButton>
-						<local:MyButton HorizontalAlignment="Left" Width="100" Height="40" Margin="0,0,10,0">清空条件</local:MyButton>
+						<controls:MyButton HorizontalAlignment="Left" ColorType="Highlight" Width="100" Height="40" Margin="0,0,10,0">搜索</controls:MyButton>
+						<controls:MyButton HorizontalAlignment="Left" Width="100" Height="40" Margin="0,0,10,0">清空条件</controls:MyButton>
 					</DockPanel>
 				</StackPanel>
-			</local:MyCard>
-			<local:MyCard>
+			</controls:MyCard>
+			<controls:MyCard>
 				<ContentControl/>
-			</local:MyCard>
+			</controls:MyCard>
 		</StackPanel>
 	</ScrollViewer>
 </UserControl>

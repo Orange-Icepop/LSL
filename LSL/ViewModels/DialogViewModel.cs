@@ -9,7 +9,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
-using LSL.Components;
+using LSL.Controls;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -180,7 +180,7 @@ public class DialogViewModel : ViewModelBase
     private MyButton CreateButton(MyButtonColorType color, string content, PopupResult resultType) =>
         new(color, content, ReactiveCommand.Create(() => Close(resultType))){Padding = new Thickness(5)};
 
-    private static StackPanel CreateButtonCollection(Controls content)
+    private static StackPanel CreateButtonCollection(Avalonia.Controls.Controls content)
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal, FlowDirection = FlowDirection.RightToLeft };
         panel.Children.AddRange(content);

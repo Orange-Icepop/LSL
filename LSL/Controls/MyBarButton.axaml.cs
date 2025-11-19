@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
 using Avalonia.Media;
 
-namespace LSL.Components;
+namespace LSL.Controls;
 
 [PseudoClasses(":selected")]
 public class MyBarButton : Button
