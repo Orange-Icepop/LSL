@@ -1,16 +1,19 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Metadata;
 using Avalonia.Media;
 
 namespace LSL.Components;
 
+[PseudoClasses(":selected")]
 public class MyBarButton : Button
 {
     public static readonly StyledProperty<string> TitleProperty =
         AvaloniaProperty.Register<MyListItem, string>(nameof(Title));
     public static readonly StyledProperty<IImage?> IconProperty =
         AvaloniaProperty.Register<MyListItem, IImage?>(nameof(Icon));
+    public static readonly StyledProperty<bool> IsSelectedProperty =
+        AvaloniaProperty.Register<MyListItem, bool>(nameof(IsSelected));
 
     public string Title
     {
@@ -22,10 +25,13 @@ public class MyBarButton : Button
         get => GetValue(IconProperty);
         set => SetValue(IconProperty, value);
     }
-        
-    public MyBarButton()
+    public bool IsSelected
     {
-        Padding = new Thickness(10, 5);
+        get => GetValue(IsSelectedProperty);
+        set
+        {
+            SetValue(IsSelectedProperty, value); 
+            PseudoClasses.Set(":selected", value);
+        }
     }
-
 }
