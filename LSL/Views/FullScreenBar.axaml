@@ -3,14 +3,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="50"
              x:Class="LSL.Views.FullScreenBar">
 
 	<Grid RowDefinitions="*" ColumnDefinitions="Auto,Auto" Background="{DynamicResource OBlue}" Name="Bkg">
-		<Button Classes="bar" Grid.Column="0" Width="30" Height="30" Margin="15,0,0,0" Command="{Binding FullViewBackCmd}">
-			<Image Source="avares://LSL/Assets/Built-In-Icons/LArrow.png" Margin="5,5,5,5"/>
-		</Button>
+		<controls:MyBarButton Icon="avares://LSL/Assets/Built-In-Icons/LArrow.png" Grid.Column="0" Width="30" Height="30" Margin="15,0,0,0" Command="{Binding FullViewBackCmd}"/>
 		<TextBlock Name="Title" 
 				   Text="{Binding BarViewModel.FullScreenTitle}" 
 				   FontSize="25" 
