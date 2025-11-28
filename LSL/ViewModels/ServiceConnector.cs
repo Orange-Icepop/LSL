@@ -70,13 +70,13 @@ public class ServiceConnector
         return ServiceResult.Success();
     }
 
-    public async Task<ServiceResult> ReadJavaConfig(bool readFile = false)
+    public async Task<ServiceResult<int>> ReadJavaConfig(bool readFile = false)
     {
         Exception? warning = null;
         if (readFile)
         {
             var res = await _configManager.ReadJavaConfig();
-            if (!res.HasResult) return ServiceResult.Fail(res.Error);
+            if (!res.HasResult) return ServiceResult.Fail<int>(res.Error);
 
             if (res.Result.NotFound.Any() || res.Result.NotJava.Any())
             {
@@ -102,7 +102,7 @@ public class ServiceConnector
             }
         }
         Dispatcher.UIThread.Invoke(() => _appState.CurrentJavaDict = _configManager.JavaConfigs);
-        return warning is not null ? ServiceResult.FinishWithWarning(warning) : ServiceResult.Success();
+        return warning is null ? ServiceResult.Success(_configManager.JavaConfigs.Count) : ServiceResult.FinishWithWarning(_configManager.JavaConfigs.Count, warning);
     }
 
     public async Task<ServiceResult> ReadServerConfig(bool readFile = false)
@@ -146,11 +146,11 @@ public class ServiceConnector
     public Task<ServiceResult<FrozenDictionary<string, object>>> SaveConfig() =>
         _configManager.ConfirmMainConfig(_appState.CurrentConfigs);
 
-    public async Task<ServiceResult> FindJava()
+    public async Task<ServiceResult<int>> FindJava()
     {
         var detectResult = await _configManager.DetectJavaAsync();
-        if(detectResult.IsError) return detectResult;
-        return await ReadJavaConfig();
+        if(detectResult.IsError) return ServiceResult.Fail<int>(detectResult.Error);
+        return await ReadJavaConfig(true);
     }
 
     #endregion

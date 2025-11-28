@@ -26,7 +26,7 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
             if (success.IsSuccess)
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
-                    AppState.InteractionUnits.Notify(1, "Java搜索完成！", $"搜索到了{AppState.CurrentJavaDict.Count}个Java"));
+                    AppState.InteractionUnits.Notify(1, "Java搜索完成！", $"搜索到了{success.Result}个Java"));
             }
             else await success;
         });// 搜索Java命令-实现
