@@ -6,7 +6,6 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using LSL.Services.ConfigServices;
 using LSL.Views;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;

@@ -11,12 +11,26 @@ public struct LSLDesktopConfig
     // styles
     public string ThemeColor;
     public string BackgroundColor;
-    public uint BackgroundStretchOption;// 0 Fill:fill without reserving the aspect ratio, 1 Uniform:inscribed, 2 UniformToFill:external attach
+    public BackgroundStretchOption BackgroundStretch;
     public double BackgroundOpacity;
     public string CustomTitleText;
-    public uint CustomPageOption;// 0:Disable, 1:Use custom.xaml under the LSL folder, 2:Use the xaml provider online
+    public CustomPageOption CustomPageType;
     public string CustomPageUrl;
     // about
     public bool AutoCheckUpdate;
     public bool BetaUpdate;
+}
+
+public enum BackgroundStretchOption
+{
+    Fill,// fill without reserving the aspect ratio
+    Uniform,// inscribed
+    UniformToFill// external attach
+}
+
+public enum CustomPageOption
+{
+    None,// disable
+    File,// Use custom.xaml under the LSL folder
+    Url// Use the xaml provider online
 }

@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Reactive.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -18,14 +17,12 @@ using LSL.Common.DTOs;
 using LSL.Common.Models;
 using LSL.Common.Utilities;
 using LSL.Common.Validation;
+using LSL.Models;
 using LSL.Services;
 using LSL.Services.ConfigServices;
 using LSL.Services.ServerServices;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-using MemoryInfo = LSL.Common.Utilities.MemoryInfo;
 
 namespace LSL.ViewModels;
 
@@ -594,61 +591,3 @@ public class ServiceConnector
 
     #endregion
 }
-
-#region 服务器状态类
-
-public class ServerStatus : ReactiveObject
-{
-    public ServerStatus()
-    {
-        IsRunning = false;
-        IsOnline = false;
-    }
-
-    public ServerStatus((bool, bool) param)
-    {
-        IsRunning = param.Item1;
-        IsOnline = param.Item2;
-    }
-
-    public ServerStatus(bool isRunning, bool isOnline)
-    {
-        IsRunning = isRunning;
-        IsOnline = isOnline;
-    }
-
-    public ServerStatus Update(bool isRunning, bool isOnline)
-    {
-        IsRunning = isRunning;
-        IsOnline = isOnline;
-        return this;
-    }
-
-    public ServerStatus Update((bool, bool) param)
-    {
-        IsRunning = param.Item1;
-        IsOnline = param.Item2;
-        return this;
-    }
-
-    [Reactive] public bool IsRunning { get; private set; }
-    [Reactive] public bool IsOnline { get; private set; }
-}
-
-#endregion
-
-#region 用户记录类
-
-public class PlayerInfo
-{
-    public PlayerInfo(string uuid, string playerName)
-    {
-        this.UUID = uuid;
-        this.PlayerName = playerName;
-    }
-
-    public string UUID { get; set; }
-    public string PlayerName { get; set; }
-}
-
-#endregion

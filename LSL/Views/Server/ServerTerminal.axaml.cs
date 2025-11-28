@@ -1,25 +1,16 @@
 using System;
 using System.Reactive.Linq;
-using Avalonia.ReactiveUI;
+using Avalonia.Controls;
 using LSL.ViewModels;
 using ReactiveUI;
 
 namespace LSL.Views.Server;
 
-public partial class ServerTerminal : ReactiveUserControl<ShellViewModel>
+public partial class ServerTerminal : UserControl
 {
     public ServerTerminal()
     {
         InitializeComponent();
-        /*
-        this.WhenActivated(disposables =>
-        {
-            this.ViewModel.MainVM.ScrollTerminal
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(_ => TurnToEnd())
-                .DisposeWith(disposables);
-        });
-        */
         MessageBus.Current.Listen<ViewBroadcastArgs>()
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(ForceScroll);

@@ -41,6 +41,10 @@
 		<Compile Remove="ViewModels\MainViewModel.Server.cs" />
 		<Compile Remove="ViewModels\MainViewModel.ViewControl.cs" />
 		<Compile Remove="ViewModels\SharedData.cs" />
+		<Compile Update="Controls\MyTerminal.axaml.cs">
+		  <DependentUpon>MyTerminal.axaml</DependentUpon>
+		  <SubType>Code</SubType>
+		</Compile>
 	</ItemGroup>
 
 

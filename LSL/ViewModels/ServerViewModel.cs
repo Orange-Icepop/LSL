@@ -4,8 +4,8 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
-using Avalonia.Media;
 using Avalonia.Threading;
+using LSL.Models;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -120,23 +120,4 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
     public ObservableCollection<ColoredLine> TerminalText { [ObservableAsProperty] get; }
     public FlatTreeDataGridSource<PlayerInfo> CurrentUsers { [ObservableAsProperty] get; }
     public ObservableCollection<UserMessageLine> CurrentUserMessage { [ObservableAsProperty] get; }
-}
-public class UserMessageLine(string msg)
-{
-    public string Message { get; set; } = msg;
-}
-public class ColoredLine : ReactiveObject
-{
-    [Reactive] public string Line { get; init; }
-    [Reactive] public ISolidColorBrush LineColor { get; init; }
-    public ColoredLine(string line, ISolidColorBrush lineColor)
-    {
-        Line = line;
-        LineColor = lineColor;
-    }
-    public ColoredLine(string line, string colorHex)
-    {
-        Line = line;
-        LineColor = new SolidColorBrush(Color.Parse(colorHex));
-    }
 }

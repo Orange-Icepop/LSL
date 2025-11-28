@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using LSL.Common.Collections;
 using LSL.Common.Models;
+using LSL.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;

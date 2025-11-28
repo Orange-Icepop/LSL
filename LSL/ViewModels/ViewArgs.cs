@@ -34,9 +34,9 @@ public class ViewBroadcastArgs(Type target, string msg)
 
 public class NavigateArgs
 {
-    public required BarState BarTarget { get; set; } = BarState.Undefined;
-    public required GeneralPageState LeftTarget { get; set; } = GeneralPageState.Undefined;
-    public required RightPageState RightTarget { get; set; } = RightPageState.Undefined;
+    public BarState BarTarget { get; init; } = BarState.Undefined;
+    public GeneralPageState LeftTarget { get; init; } = GeneralPageState.Undefined;
+    public RightPageState RightTarget { get; init; } = RightPageState.Undefined;
 }
 
 public class NavigateCommand(NavigateCommandType cType)

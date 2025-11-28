@@ -3,6 +3,7 @@
     <TargetFramework>net8.0-browser</TargetFramework>
 	  <OutputType>Exe</OutputType>
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	  <LangVersion>12</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Include="wwwroot\app.css" />
