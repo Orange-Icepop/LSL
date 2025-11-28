@@ -16,7 +16,6 @@ public partial class MyTerminal : UserControl
     public MyTerminal()
     {
         InitializeComponent();
-        TerminalBorder.BorderBrush = BorderBrush = SolidColorBrush.Parse("#019eff");
         TerminalOutput.ItemsSource = ItemsSource;
         TerminalScroll.ScrollChanged += OnScrollChanged;
     }
@@ -85,17 +84,5 @@ public partial class MyTerminal : UserControl
     {
         _isUserScrolling = false;
         ScrollToBottom();
-    }
-
-    protected override void OnGotFocus(GotFocusEventArgs e)
-    {
-        base.OnGotFocus(e);
-        TerminalBorder.BorderBrush = BorderBrush;
-    }
-
-    protected override void OnLostFocus(RoutedEventArgs e)
-    {
-        base.OnLostFocus(e);
-        TerminalBorder.BorderBrush = Brushes.Gray;
     }
 }

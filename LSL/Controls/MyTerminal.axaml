@@ -5,22 +5,20 @@
              xmlns:models="using:LSL.Models"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="LSL.Controls.MyTerminal">
-    <Border x:Name="TerminalBorder">
-        <ScrollViewer VerticalAlignment="Stretch"
-                      HorizontalAlignment="Stretch"
-                      VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled"
-                      x:Name="TerminalScroll">
-            <ItemsRepeater x:Name="TerminalOutput">
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="models:ColoredLine">
-                        <SelectableTextBlock IsEnabled="True" Text="{Binding Line}"
-                                             Foreground="{Binding LineColor}" HorizontalAlignment="Left"
-                                             VerticalAlignment="Center" TextWrapping="Wrap"
-                                             FontFamily="{StaticResource MapleMono}" />
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
-        </ScrollViewer>
-    </Border>
+    <ScrollViewer VerticalAlignment="Stretch"
+                  HorizontalAlignment="Stretch"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  x:Name="TerminalScroll">
+        <ItemsRepeater x:Name="TerminalOutput">
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate DataType="models:ColoredLine">
+                    <SelectableTextBlock IsEnabled="True" Text="{Binding Line}"
+                                         Foreground="{Binding LineColor}" HorizontalAlignment="Left"
+                                         VerticalAlignment="Center" TextWrapping="Wrap"
+                                         FontFamily="{StaticResource MapleMono}" />
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+    </ScrollViewer>
 </UserControl>

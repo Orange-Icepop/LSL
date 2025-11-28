@@ -15,16 +15,11 @@ public partial class ServerTerminal : UserControl
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(ForceScroll);
     }
-    public void TurnToEnd()
-    {
-        double tolerance = 10.0;
-        if (Math.Abs(TerminalScroll.Offset.Y + TerminalScroll.Viewport.Height - TerminalScroll.Extent.Height) < tolerance) TerminalScroll.ScrollToEnd();
-    }
     public void ForceScroll(ViewBroadcastArgs args)
     {
         if (args.Target == typeof(ServerTerminal) && args.Message == "ScrollToEnd")
         {
-            TerminalScroll.ScrollToEnd();
+            Terminal.ForceScrollToBottom();
         }
     }
 }
