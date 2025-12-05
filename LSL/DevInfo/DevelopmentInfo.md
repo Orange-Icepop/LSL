@@ -50,5 +50,5 @@
  - [x] 将Environment.NewLine修改为\n
  - [x] 为所有服务层方法外套try-catch
  - [x] 简化所有页面按钮的状态绑定
- - [ ] 使用Geometry替代Bar按钮的图标以支持自动换色
+ - [x] 使用Geometry替代Bar按钮的图标以支持自动换色
  - [ ] 重写服务器管理逻辑

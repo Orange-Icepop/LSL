@@ -14,7 +14,7 @@
                         Background="{TemplateBinding Background}"
                         CornerRadius="5">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" FlowDirection="LeftToRight">
-                        <Image Source="{TemplateBinding Icon}" Width="20" Margin="0" VerticalAlignment="Center" />
+                        <Path Data="{TemplateBinding Icon}" Width="15" Margin="0,0,7,2" VerticalAlignment="Center" Fill="{TemplateBinding Foreground}" />
                         <TextBlock Text="{TemplateBinding Title}" Foreground="{TemplateBinding Foreground}"
                                    FontSize="15" VerticalAlignment="Center" />
                     </StackPanel>

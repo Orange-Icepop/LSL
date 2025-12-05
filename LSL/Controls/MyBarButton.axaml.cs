@@ -11,8 +11,8 @@ public class MyBarButton : Button
 {
     public static readonly StyledProperty<string> TitleProperty =
         AvaloniaProperty.Register<MyBarButton, string>(nameof(Title));
-    public static readonly StyledProperty<IImage?> IconProperty =
-        AvaloniaProperty.Register<MyBarButton, IImage?>(nameof(Icon));
+    public static readonly StyledProperty<StreamGeometry?> IconProperty =
+        AvaloniaProperty.Register<MyBarButton, StreamGeometry?>(nameof(Icon));
 
     public static readonly DirectProperty<MyBarButton, GeneralPageState> CurrentPageStateProperty =
         AvaloniaProperty.RegisterDirect<MyBarButton, GeneralPageState>(
@@ -25,7 +25,7 @@ public class MyBarButton : Button
         get => GetValue(TitleProperty);
         set => SetValue(TitleProperty, value);
     }
-    public IImage? Icon
+    public StreamGeometry? Icon
     {
         get => GetValue(IconProperty);
         set => SetValue(IconProperty, value);

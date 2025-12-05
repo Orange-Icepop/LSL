@@ -13,19 +13,19 @@
         <StackPanel x:Name="Navigation" Grid.Row="0" Grid.Column="0" Orientation="Horizontal" FlowDirection="LeftToRight"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">
-            <controls:MyBarButton x:Name="Home" Title="主页" Icon="avares://LSL/Assets/Built-In-Icons/Home.png"
+            <controls:MyBarButton x:Name="Home" Title="主页" Icon="{StaticResource IconHome}"
                                   Page="Home"
                                   CurrentPageState="{Binding BarViewModel.CurrentMainPageState}" Command="{Binding LeftViewCmd}"
                                   CommandParameter="HomeLeft" />
-            <controls:MyBarButton x:Name="Server" Title="服务器" Icon="avares://LSL/Assets/Built-In-Icons/Server.png"
+            <controls:MyBarButton x:Name="Server" Title="服务器" Icon="{StaticResource IconServer}"
                                   Page="Server"
                                   CurrentPageState="{Binding BarViewModel.CurrentMainPageState}" Command="{Binding LeftViewCmd}"
                                   CommandParameter="ServerLeft" />
-            <controls:MyBarButton x:Name="Download" Title="下载" Icon="avares://LSL/Assets/Built-In-Icons/Download.png"
+            <controls:MyBarButton x:Name="Download" Title="下载" Icon="{StaticResource IconDownload}"
                                   Page="Downloads"
                                   CurrentPageState="{Binding BarViewModel.CurrentMainPageState}"
                                   Command="{Binding LeftViewCmd}" CommandParameter="DownloadsLeft" />
-            <controls:MyBarButton x:Name="Settings" Title="设置" Icon="avares://LSL/Assets/Built-In-Icons/Cog.png"
+            <controls:MyBarButton x:Name="Settings" Title="设置" Icon="{StaticResource IconSettings}"
                                   Page="Settings"
                                   CurrentPageState="{Binding BarViewModel.CurrentMainPageState}"
                                   Command="{Binding LeftViewCmd}" CommandParameter="SettingsLeft" />
