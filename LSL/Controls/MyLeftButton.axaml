@@ -6,11 +6,47 @@
     </Design.PreviewWith>
 
     <Style Selector="controls|MyLeftButton">
-        <!-- Set Defaults -->
         <Setter Property="Template">
             <ControlTemplate>
-                <TextBlock Text="Templated Control" />
+                <Border BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="0">
+                    <TextBlock Text="{TemplateBinding Text}"
+                               Foreground="{TemplateBinding Foreground}"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Padding="10,0,0,0"/>
+                </Border>
             </ControlTemplate>
+        </Setter>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter	Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="FontSize" Value="18"/>
+
+        <Style Selector="^:pointerover">
+            <Setter Property="Background" Value="{DynamicResource OBlueWhite}"/>
+        </Style>
+
+        <Style Selector="^:selected">
+            <Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource OBlue}"/>
+            <Setter Property="BorderThickness" Value="5,0,0,0"/>
+        </Style>
+        
+        <Style Selector="^:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.98)" />
+        </Style>
+        
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.1"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
+                <BrushTransition Property="Foreground" Duration="0:0:0.1"/>
+                <ThicknessTransition Property="BorderThickness" Duration="0:0:0.1"/>
+            </Transitions>
         </Setter>
     </Style>
 </Styles>

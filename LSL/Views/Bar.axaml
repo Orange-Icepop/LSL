@@ -15,19 +15,19 @@
                     VerticalAlignment="Center">
             <controls:MyBarButton x:Name="Home" Title="主页" Icon="avares://LSL/Assets/Built-In-Icons/Home.png"
                                   Page="Home"
-                                  CurrentPageState="{Binding BarViewModel.CurrentMainPage}" Command="{Binding LeftViewCmd}"
+                                  CurrentPageState="{Binding BarViewModel.CurrentMainPageState}" Command="{Binding LeftViewCmd}"
                                   CommandParameter="HomeLeft" />
             <controls:MyBarButton x:Name="Server" Title="服务器" Icon="avares://LSL/Assets/Built-In-Icons/Server.png"
                                   Page="Server"
-                                  CurrentPageState="{Binding BarViewModel.CurrentMainPage}" Command="{Binding LeftViewCmd}"
+                                  CurrentPageState="{Binding BarViewModel.CurrentMainPageState}" Command="{Binding LeftViewCmd}"
                                   CommandParameter="ServerLeft" />
             <controls:MyBarButton x:Name="Download" Title="下载" Icon="avares://LSL/Assets/Built-In-Icons/Download.png"
                                   Page="Downloads"
-                                  CurrentPageState="{Binding BarViewModel.CurrentMainPage}"
+                                  CurrentPageState="{Binding BarViewModel.CurrentMainPageState}"
                                   Command="{Binding LeftViewCmd}" CommandParameter="DownloadsLeft" />
             <controls:MyBarButton x:Name="Settings" Title="设置" Icon="avares://LSL/Assets/Built-In-Icons/Cog.png"
                                   Page="Settings"
-                                  CurrentPageState="{Binding BarViewModel.CurrentMainPage}"
+                                  CurrentPageState="{Binding BarViewModel.CurrentMainPageState}"
                                   Command="{Binding LeftViewCmd}" CommandParameter="SettingsLeft" />
         </StackPanel>
     </Grid>

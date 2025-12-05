@@ -12,11 +12,11 @@ public class LeftRegionViewModel : RegionalViewModelBase<LeftRegionViewModel>
     public UserControl CurrentView { [ObservableAsProperty] get; }
 
     [Reactive] public double LeftWidth { get; set; }
+    [Reactive] public RightPageState CurrentRightPageState { get; private set; }
 
     public LeftRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
         CurrentView = null!;
-        ResetHighlight();
         AppState.WhenAnyValue(stateLayer => stateLayer.CurrentGeneralPage)
             .Where(generalPageState => generalPageState != GeneralPageState.Undefined)
             .Select(NavigateLeft)
@@ -52,55 +52,12 @@ public class LeftRegionViewModel : RegionalViewModelBase<LeftRegionViewModel>
     }
     #endregion
 
-    #region 左栏高亮
-    [Reactive] public bool HighLightServerGeneral { get; set; }
-    [Reactive] public bool HighLightServerStat { get; set; }
-    [Reactive] public bool HighLightServerTerminal { get; set; }
-    [Reactive] public bool HighLightServerConf { get; set; }
-    [Reactive] public bool HighLightAutoDown { get; set; }
-    [Reactive] public bool HighLightManualDown { get; set; }
-    [Reactive] public bool HighLightAddServer { get; set; }
-    [Reactive] public bool HighLightModDown { get; set; }
-    [Reactive] public bool HighLightCommonSettings { get; set; }
-    [Reactive] public bool HighLightDownloadSettings { get; set; }
-    [Reactive] public bool HighLightPanelSettings { get; set; }
-    [Reactive] public bool HighLightStyleSettings { get; set; }
-    [Reactive] public bool HighLightAbout { get; set; }
-    private void ResetHighlight()
-    {
-        HighLightServerGeneral = false;
-        HighLightServerStat = false;
-        HighLightServerTerminal = false;
-        HighLightServerConf = false;
-        HighLightAutoDown = false;
-        HighLightManualDown = false;
-        HighLightAddServer = false;
-        HighLightModDown = false;
-        HighLightCommonSettings = false;
-        HighLightDownloadSettings = false;
-        HighLightPanelSettings = false;
-        HighLightStyleSettings = false;
-        HighLightAbout = false;
-    }
     private void ChangeLeftHighlight(RightPageState rps)// 切换状态
     {
-        ResetHighlight();
-        switch (rps)
+        if (rps is not (RightPageState.HomeRight or RightPageState.ServerConfEdit or RightPageState.AddCore
+            or RightPageState.AddFolder or RightPageState.Empty or RightPageState.Undefined or RightPageState.Hold))
         {
-            case RightPageState.ServerGeneral: HighLightServerGeneral = true; break;
-            case RightPageState.ServerStat: HighLightServerStat = true; break;
-            case RightPageState.ServerTerminal: HighLightServerTerminal = true; break;
-            case RightPageState.ServerConf: HighLightServerConf = true; break;
-            case RightPageState.AutoDown: HighLightAutoDown = true; break;
-            case RightPageState.ManualDown: HighLightManualDown = true; break;
-            case RightPageState.AddServer: HighLightAddServer = true; break;
-            case RightPageState.ModDown: HighLightModDown = true; break;
-            case RightPageState.CommonSettings: HighLightCommonSettings = true; break;
-            case RightPageState.DownloadSettings: HighLightDownloadSettings = true; break;
-            case RightPageState.PanelSettings: HighLightPanelSettings = true; break;
-            case RightPageState.StyleSettings: HighLightStyleSettings = true; break;
-            case RightPageState.About: HighLightAbout = true; break;
+            CurrentRightPageState = rps;
         }
     }
-    #endregion
 }

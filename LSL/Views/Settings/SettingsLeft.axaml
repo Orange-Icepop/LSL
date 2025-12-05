@@ -3,17 +3,18 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:LSL.ViewModels"
+             xmlns:controls="clr-namespace:LSL.Controls"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.SettingsLeft">
 	<StackPanel Width="150">
 		<TextBlock DockPanel.Dock="Top" Text="设置" Margin="10,10,0,0" Foreground="Gray"/>
-		<Button Width="150" Content="常规" Name="Common" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightCommonSettings}" Command="{Binding RightViewCmd}" CommandParameter="CommonSettings" />
+		<controls:MyLeftButton Width="150" Text="常规" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="CommonSettings" x:Name="Common" Command="{Binding RightViewCmd}" CommandParameter="CommonSettings" />
 		<!--
-		<Button Width="150" Content="下载" Name="Download" Classes="left" Classes.selLeft="{Binding LeftVM.HLDownloadSettings}" Command="{Binding RightViewCmd}" CommandParameter="DownloadSettings"/>
-		<Button Width="150" Content="网页面板" Name="Panel" Classes="left" Classes.selLeft="{Binding LeftVM.HLPanelSettings}" Command="{Binding RightViewCmd}" CommandParameter="PanelSettings"/>
-		<Button Width="150" Content="个性化" Name="StyleButton" Classes="left" Classes.selLeft="{Binding LeftVM.HLStyleSettings}" Command="{Binding RightViewCmd}" CommandParameter="StyleSettings"/>
+		<controls:MyLeftButton Width="150" Text="下载" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="DownloadSettings" x:Name="Download" Command="{Binding RightViewCmd}" CommandParameter="DownloadSettings"/>
+		<controls:MyLeftButton Width="150" Text="网页面板" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="PanelSettings" x:Name="Panel" Command="{Binding RightViewCmd}" CommandParameter="PanelSettings"/>
+		<controls:MyLeftButton Width="150" Text="个性化" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="StyleSettings" x:Name="StyleButton" Command="{Binding RightViewCmd}" CommandParameter="StyleSettings"/>
 		-->
-		<Button Width="150" Content="关于" Name="About" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightAbout}" Command="{Binding RightViewCmd}" CommandParameter="About"/>
+		<controls:MyLeftButton Width="150" Text="关于" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="About" x:Name="About" Command="{Binding RightViewCmd}" CommandParameter="About"/>
 	</StackPanel>
 </UserControl>

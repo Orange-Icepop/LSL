@@ -9,6 +9,7 @@
     <StyleInclude Source="avares://LSL/Controls/MyBarButton.axaml"/>
     <StyleInclude Source="avares://LSL/Controls/MyButton.axaml"/>
     <StyleInclude Source="avares://LSL/Controls/MyCard.axaml"/>
+    <StyleInclude Source="avares://LSL/Controls/MyLeftButton.axaml"/>
     <StyleInclude Source="avares://LSL/Controls/MyListItem.axaml"/>
     <StyleInclude Source="avares://LSL/Controls/MyPlot.axaml"/>
 </Styles>

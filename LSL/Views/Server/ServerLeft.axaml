@@ -9,11 +9,11 @@
              x:Class="LSL.Views.Server.ServerLeft">
 	<DockPanel Width="250">
 		<TextBlock DockPanel.Dock="Top" Text="服务器管理" Margin="10,10,0,0" Foreground="Gray"/>
-		<Button Width="250" DockPanel.Dock="Top" Name="GeneralButton" Content="概览" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightServerGeneral}" Margin="0,10,0,0" Command="{Binding RightViewCmd}" CommandParameter="ServerGeneral"/>
+		<controls:MyLeftButton Width="250" DockPanel.Dock="Top" x:Name="GeneralButton" Text="概览" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="ServerGeneral" Margin="0,10,0,0" Command="{Binding RightViewCmd}" CommandParameter="ServerGeneral"/>
 		<TextBlock DockPanel.Dock="Top" Text="选择服务器" Margin="10,10,0,0" Foreground="Gray"/>
-		<ComboBox DockPanel.Dock="Top" Name="ServerList" Width="200" Margin="10,10,0,10" ItemsSource="{Binding AppState.ServerNames}" SelectedIndex="{Binding AppState.SelectedServerIndex, Mode=TwoWay}">
+		<ComboBox DockPanel.Dock="Top" x:Name="ServerList" Width="200" Margin="10,10,0,10" ItemsSource="{Binding AppState.ServerNames}" SelectedIndex="{Binding AppState.SelectedServerIndex, Mode=TwoWay}">
 		</ComboBox>
-		<controls:MyButton Name="LaunchServerButton"
+		<controls:MyButton x:Name="LaunchServerButton"
 						Command="{Binding ServerVM.LaunchButtonCmd}"
 						DockPanel.Dock="Top"
 						ColorType="Highlight"
@@ -23,11 +23,11 @@
 						Height="40"
 						IsEnabled="{Binding ServerVM.LaunchButtonEnabled}"
 						Content="{Binding ServerVM.LaunchButtonContent}"/>
-		<Button Width="250" DockPanel.Dock="Top" Name="StatusButton" Content="状态" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightServerStat}" Command="{Binding RightViewCmd}" CommandParameter="ServerStat"/>
-		<Button Width="250" DockPanel.Dock="Top" Name="TerminalButton" Content="终端" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightServerTerminal}" Command="{Binding RightViewCmd}" CommandParameter="ServerTerminal"/>
-		<Button Width="250" DockPanel.Dock="Top" Name="ConfButton" Content="设置" Classes="left" Classes.selLeft="{Binding LeftViewModel.HighLightServerConf}" Command="{Binding RightViewCmd}" CommandParameter="ServerConf"/>
+		<controls:MyLeftButton Width="250" DockPanel.Dock="Top" x:Name="StatusButton" Text="状态" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="ServerStat" Command="{Binding RightViewCmd}" CommandParameter="ServerStat"/>
+		<controls:MyLeftButton Width="250" DockPanel.Dock="Top" x:Name="TerminalButton" Text="终端" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="ServerTerminal" Command="{Binding RightViewCmd}" CommandParameter="ServerTerminal"/>
+		<controls:MyLeftButton Width="250" DockPanel.Dock="Top" x:Name="ConfButton" Text="设置" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="ServerConf" Command="{Binding RightViewCmd}" CommandParameter="ServerConf"/>
 		<controls:MyButton Classes="right"
-				Name="AddServerButton"
+				x:Name="AddServerButton"
 				Command="{Binding LeftViewCmd}"
 				CommandParameter="DownloadsLeft"
 				DockPanel.Dock="Bottom"

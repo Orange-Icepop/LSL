@@ -14,8 +14,10 @@ public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
     [Reactive] public UserControl CurrentView { get; private set; }
 
     #region 全屏顶栏板块
+
     [Reactive] public string FullScreenTitle { get; set; }
-    [Reactive] public GeneralPageState CurrentMainPage { get; private set; }
+    [Reactive] public GeneralPageState CurrentMainPageState { get; private set; }
+
     #endregion
 
     public BarRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
@@ -32,24 +34,19 @@ public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
 
     private void ChangeActiveButton(GeneralPageState state)
     {
-        switch (state)
+        CurrentMainPageState = state;
+        if (state == GeneralPageState.Empty)
         {
-            case GeneralPageState.Home or GeneralPageState.Server or GeneralPageState.Downloads
-                or GeneralPageState.Settings:
-                CurrentMainPage = state;
-                break;
-            case GeneralPageState.Empty:
-                Dispatcher.UIThread.Post(() => // 使用Post延迟操作以避免CRP未更新
+            Dispatcher.UIThread.Post(() => // 使用Post延迟操作以避免CRP未更新
+            {
+                FullScreenTitle = AppState.CurrentRightPage switch
                 {
-                    FullScreenTitle = AppState.CurrentRightPage switch
-                    {
-                        RightPageState.ServerConfEdit => "修改服务器配置",
-                        RightPageState.AddCore => "从核心添加服务器",
-                        RightPageState.AddFolder => "导入服务器文件夹",
-                        _ => ""
-                    };
-                });
-                break;
+                    RightPageState.ServerConfEdit => "修改服务器配置",
+                    RightPageState.AddCore => "从核心添加服务器",
+                    RightPageState.AddFolder => "导入服务器文件夹",
+                    _ => ""
+                };
+            });
         }
     }
 
