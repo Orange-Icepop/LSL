@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
+using LSL.Models;
 using LSL.Views;
 using LSL.Views.Download;
 using LSL.Views.Download.ASViews;
@@ -133,58 +134,7 @@ public partial class ShellViewModel
     #endregion
 }
 
-#region 页面状态枚举
 
-public enum BarState
-{
-    Common,
-    FullScreen,
-    Undefined
-}
-
-public enum GeneralPageState
-{
-    Home,
-    Server,
-    Downloads,
-    Settings,
-    Empty,
-    Undefined
-}
-
-public enum RightPageState
-{
-    HomeRight,
-
-    //Server
-    ServerGeneral,
-    ServerStat,
-    ServerTerminal,
-    ServerConf,
-
-    //Downloads
-    AutoDown,
-    ManualDown,
-    AddServer,
-    ModDown,
-
-    //Settings
-    CommonSettings,
-    DownloadSettings,
-    PanelSettings,
-    StyleSettings,
-    About,
-
-    //FullScreen
-    ServerConfEdit,
-    AddCore,
-    AddFolder,
-
-    //Others
-    Empty,
-    Undefined,
-    Hold
-}
 
 public enum NavigateCommandType
 {
@@ -193,7 +143,6 @@ public enum NavigateCommandType
     FullScreenToCommon
 }
 
-#endregion
     
 #region ViewFactory穷举并创建所有视图
 public static class ViewFactory

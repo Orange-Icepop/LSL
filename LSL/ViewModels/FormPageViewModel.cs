@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Avalonia.Threading;
 using LSL.Common.Models;
 using LSL.Common.Validation;
+using LSL.Models;
 using LSL.Services.ConfigServices;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;

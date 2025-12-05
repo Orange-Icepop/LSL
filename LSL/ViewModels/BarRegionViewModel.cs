@@ -2,6 +2,7 @@
 using System.Reactive.Linq;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using LSL.Models;
 using LSL.Views;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -14,19 +15,12 @@ public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
 
     #region 全屏顶栏板块
     [Reactive] public string FullScreenTitle { get; set; }
-    [Reactive] public bool HomeButtonClass { get; set; }
-    [Reactive] public bool ServerButtonClass { get; set; }
-    [Reactive] public bool DownloadButtonClass { get; set; }
-    [Reactive] public bool SettingsButtonClass { get; set; }
+    [Reactive] public GeneralPageState CurrentMainPage { get; private set; }
     #endregion
 
     public BarRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
         CurrentView = new Bar();
-        HomeButtonClass = true;
-        ServerButtonClass = false;
-        DownloadButtonClass = false;
-        SettingsButtonClass = false;
         FullScreenTitle = string.Empty;
         AppState.WhenAnyValue(stateLayer => stateLayer.CurrentGeneralPage)
             .Where(pageState => pageState != GeneralPageState.Undefined)
@@ -38,26 +32,14 @@ public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
 
     private void ChangeActiveButton(GeneralPageState state)
     {
-        HomeButtonClass = false;
-        ServerButtonClass = false;
-        DownloadButtonClass = false;
-        SettingsButtonClass = false;
         switch (state)
         {
-            case GeneralPageState.Home:
-                HomeButtonClass = true;
-                break;
-            case GeneralPageState.Server:
-                ServerButtonClass = true;
-                break;
-            case GeneralPageState.Downloads:
-                DownloadButtonClass = true;
-                break;
-            case GeneralPageState.Settings:
-                SettingsButtonClass = true;
+            case GeneralPageState.Home or GeneralPageState.Server or GeneralPageState.Downloads
+                or GeneralPageState.Settings:
+                CurrentMainPage = state;
                 break;
             case GeneralPageState.Empty:
-                Dispatcher.UIThread.Post(() =>// 使用Post延迟操作以避免CRP未更新
+                Dispatcher.UIThread.Post(() => // 使用Post延迟操作以避免CRP未更新
                 {
                     FullScreenTitle = AppState.CurrentRightPage switch
                     {

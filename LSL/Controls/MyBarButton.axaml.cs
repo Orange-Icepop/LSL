@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
 using Avalonia.Media;
+using LSL.Models;
 
 namespace LSL.Controls;
 
@@ -9,11 +10,15 @@ namespace LSL.Controls;
 public class MyBarButton : Button
 {
     public static readonly StyledProperty<string> TitleProperty =
-        AvaloniaProperty.Register<MyListItem, string>(nameof(Title));
+        AvaloniaProperty.Register<MyBarButton, string>(nameof(Title));
     public static readonly StyledProperty<IImage?> IconProperty =
-        AvaloniaProperty.Register<MyListItem, IImage?>(nameof(Icon));
-    public static readonly StyledProperty<bool> IsSelectedProperty =
-        AvaloniaProperty.Register<MyListItem, bool>(nameof(IsSelected));
+        AvaloniaProperty.Register<MyBarButton, IImage?>(nameof(Icon));
+
+    public static readonly DirectProperty<MyBarButton, GeneralPageState> CurrentPageStateProperty =
+        AvaloniaProperty.RegisterDirect<MyBarButton, GeneralPageState>(
+            nameof(CurrentPageState),
+            o => o.CurrentPageState,
+            (o, v) => o.CurrentPageState = v);
 
     public string Title
     {
@@ -25,13 +30,16 @@ public class MyBarButton : Button
         get => GetValue(IconProperty);
         set => SetValue(IconProperty, value);
     }
-    public bool IsSelected
+    public GeneralPageState Page { get; init; }
+
+    private GeneralPageState _currentPageState;
+    public GeneralPageState CurrentPageState
     {
-        get => GetValue(IsSelectedProperty);
+        get => _currentPageState;
         set
         {
-            SetValue(IsSelectedProperty, value); 
-            PseudoClasses.Set(":selected", value);
+            PseudoClasses.Set(":selected", value == Page);
+            SetAndRaise(CurrentPageStateProperty, ref _currentPageState, value);
         }
     }
 }

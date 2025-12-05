@@ -1,4 +1,5 @@
 ﻿using System;
+using LSL.Models;
 
 namespace LSL.ViewModels;
 

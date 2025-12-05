@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reactive.Linq;
 using Avalonia.Controls;
+using LSL.Models;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
