@@ -7,7 +7,7 @@ using LSL.Common.Exceptions;
 
 namespace LSL.Common.Models.ServerConfigs;
 
-public class ServerConfigV1
+public class ServerConfigV1 : IServerConfig<ServerConfigV1>
 {
     public string Name { get; set; } = string.Empty;
     public string UsingJava { get; set; } = string.Empty;
@@ -49,14 +49,8 @@ public class ServerConfigV1
         NumberHandling = JsonNumberHandling.Strict,
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) }
     };
-
-    public static ServerConfigV1 Parse(string configFile, bool ignoreWarnings)
-    {
-        using var doc = JsonDocument.Parse(configFile);
-        return Parse(doc.RootElement, ignoreWarnings);
-    }
-
-    public static ServerConfigV1 Parse(JsonElement configRoot, bool ignoreWarnings)
+    
+    public static ServerConfigV1 Deserialize(JsonElement configRoot, bool ignoreWarnings)
     {
         try
         {
@@ -73,7 +67,7 @@ public class ServerConfigV1
         }
     }
 
-    public static bool TryParse(JsonElement configRoot, bool ignoreWarnings,
+    public static bool TryDeserialize(JsonElement configRoot, bool ignoreWarnings,
         [NotNullWhen(true)] out ServerConfigV1? result)
     {
         try
@@ -95,5 +89,15 @@ public class ServerConfigV1
             result = null;
             return false;
         }
+    }
+
+    public PathedServerConfig Standardize(string path)
+    {
+        
+    }
+
+    public string Serialize()
+    {
+        
     }
 }

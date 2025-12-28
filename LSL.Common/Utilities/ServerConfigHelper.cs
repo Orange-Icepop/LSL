@@ -24,27 +24,23 @@ public static class ServerConfigHelper
             return ServiceResult.Fail<PathedServerConfig>(new ArgumentException(
                 "Target path doesn't have an lslconfig.json file.",
                 nameof(path)));
-        return await DeserializeConfig(JsonDocument.Parse(await File.ReadAllTextAsync(confPath)).RootElement,
+        return await DeserializeConfig(path, JsonDocument.Parse(await File.ReadAllTextAsync(confPath)).RootElement,
             ignoreWarnings);
     }
 
-    private static async Task<ServiceResult<PathedServerConfig>> DeserializeConfig(JsonElement configRoot,
+    private static async Task<ServiceResult<PathedServerConfig>> DeserializeConfig(string path, JsonElement configRoot,
         bool ignoreWarnings = false)
     {
         if (configRoot.TryGetProperty("version", out var version))
         {
             // config v1
-            return ServerConfigV1.TryParse(configRoot, ignoreWarnings, out var result)
-                ? ServiceResult.Success(result.Standardize())
+            return ServerConfigV1.TryDeserialize(configRoot, ignoreWarnings, out var result)
+                ? ServiceResult.Success(result.Standardize(path))
                 : ServiceResult.Fail<PathedServerConfig>(
                     new ServerConfigUnparsableException("Cannot parse the server config."));
         }
 
         return ServiceResult.Fail<PathedServerConfig>(
             new ServerConfigUnparsableException("Could not ensure the server config's version."));
-    }
-
-    private static PathedServerConfig Standardize(this ServerConfigV1 config)
-    {
     }
 }
