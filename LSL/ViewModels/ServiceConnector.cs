@@ -15,6 +15,7 @@ using Avalonia.Threading;
 using LSL.Common.Collections;
 using LSL.Common.DTOs;
 using LSL.Common.Models;
+using LSL.Common.Models.ServerConfigs;
 using LSL.Common.Utilities;
 using LSL.Common.Validation;
 using LSL.Models;
@@ -137,7 +138,7 @@ public class ServiceConnector
         var cache = _configManager.ServerConfigs.CloneToDict();
         if (cache.Count == 0)
         {
-            cache.Add(-1, ServerConfig.None);
+            cache.Add(-1, IndexedServerConfig.None);
         }
         await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = cache.ToFrozenDictionary());
         return exception is null ? ServiceResult.Success() : ServiceResult.FinishWithWarning(exception);

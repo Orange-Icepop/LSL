@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using LSL.Common.Models;
+using LSL.Common.Models.ServerConfigs;
 
 namespace LSL.Common.Validation;
 
@@ -96,64 +97,70 @@ public static class CheckService
         
     #region 服务器配置验证方法
         
-    public static ServiceResult<ServerConfig> VerifyServerConfig(int id, string path, IDictionary<string, string> config)
+    public static ServiceResult<IndexedServerConfig> VerifyServerConfig(int id, string path, IDictionary<string, string> config)
     {
-        if (id < 0) return ServiceResult.Fail<ServerConfig>(new ArgumentException($"Server id of {id} is not valid."));
-        var cache = ServerConfig.None;
+        if (id < 0) return ServiceResult.Fail<IndexedServerConfig>(new ArgumentException($"Server id of {id} is not valid."));
+        var cache = PathedServerConfig.Empty;
         var pResult = CheckComponents.ServerPath(path);
-        if (!pResult.Passed) return ServiceResult.Fail<ServerConfig>(new ValidationException($"Error validating server config with id {id} because of nonexistent server path."));
-        cache.ServerId = id;
+        if (!pResult.Passed) return ServiceResult.Fail<IndexedServerConfig>(new ValidationException($"Error validating server config with id {id} because of nonexistent server path."));
         cache.ServerPath = path;
         foreach (var item in s_serverConfigKeys)
         {
             if (!config.TryGetValue(item, out var value))
-                return ServiceResult.Fail<ServerConfig>(
+                return ServiceResult.Fail<IndexedServerConfig>(
                     new KeyNotFoundException($"key {item} not found in server with id {id}."));
             VerifyResult vResult;
             switch(item)
             {
+                //TODO:平滑过渡配置文件
+                case "serverName":
                 case "name":
                 {
                     vResult = CheckComponents.ServerName(value);
-                    cache.Name = value;
+                    cache.ServerName = value;
                     break;
                 }
+                case "usingJava":
                 case "using_java":
                 {
                     vResult = CheckComponents.JavaPath(value);
                     cache.UsingJava = value;
                     break;
                 }
+                case "coreName":
                 case "core_name":
                 {
                     vResult = VerifyResult.Success("core_name");
                     cache.CoreName = value;
                     break;
                 }
+                case "minMemory":
                 case "min_memory":
                 {
                     var tmp1 = CheckComponents.MinMem(value);
                     if (!tmp1.Passed) vResult = tmp1;
-                    else if (!uint.TryParse(value, out var minmem)) vResult = VerifyResult.Fail(item, "min_memory's value is not an unsigned integer.");
+                    else if (!uint.TryParse(value, out var minMem)) vResult = VerifyResult.Fail(item, "min_memory's value is not an unsigned integer.");
                     else
                     {
-                        cache.MinMemory = minmem;
+                        cache.MinMemory = minMem;
                         vResult = VerifyResult.Success("min_memory");
                     }
                     break;
                 }
+                case "maxMemory":
                 case "max_memory":
                 {
                     var tmp1 = CheckComponents.MaxMem(value);
                     if (!tmp1.Passed) vResult = tmp1;
-                    else if (!uint.TryParse(value, out var maxmem)) vResult = VerifyResult.Fail(item, "max_memory's value is not an unsigned integer.");
+                    else if (!uint.TryParse(value, out var maxMem)) vResult = VerifyResult.Fail(item, "max_memory's value is not an unsigned integer.");
                     else
                     {
-                        cache.MaxMemory = maxmem;
+                        cache.MaxMemory = maxMem;
                         vResult = VerifyResult.Success("max_memory");
                     }
                     break;
                 }
+                case "extJvm":
                 case "ext_jvm":
                 {
                     vResult = CheckComponents.ExtJvm(value);
@@ -168,10 +175,11 @@ public static class CheckService
                 }
             }
 
-            if (!vResult.Passed) return ServiceResult.Fail<ServerConfig>(
+            if (!vResult.Passed) return ServiceResult.Fail<IndexedServerConfig>(
                 new ValidationException($"Error validating server config with id {id} at key {vResult.Key}:\n{vResult.Reason}"));
         }
-        return ServiceResult.Success(cache);
+
+        return ServiceResult.Success(new IndexedServerConfig(id, cache));
     }
     #endregion
 }

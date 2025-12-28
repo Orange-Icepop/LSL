@@ -4,8 +4,10 @@ using System.IO;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia.Controls;
 using Avalonia.Threading;
 using LSL.Common.Models;
+using LSL.Common.Models.ServerConfigs;
 using LSL.Common.Validation;
 using LSL.Models;
 using LSL.Services.ConfigServices;
@@ -40,7 +42,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
                 ObservableCollection<string> fin = [];
                 foreach (var val in vals)
                 {
-                    fin.Add(val.Vendor + " " + val.Version + " (" + val.Path + ")");
+                    fin.Add($"{val.Vendor} {val.Version} ({val.Path})");
                 }
 
                 return fin;
@@ -127,6 +129,18 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             });
         }
     }
+    
+    #region 获取已有新增服务器信息
+
+    private async Task<PathedServerConfig> GetExistedServerConfigAsync(string path)
+    {
+        var res = PathedServerConfig.Empty;
+        if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return res;
+        var configFilePath = Path.Combine(path, "lslconfig.json");
+        if(!File.Exists(configFilePath)) return res;
+        
+    }
+    #endregion
 
     #region 新增服务器逻辑
     private async Task AddServerCore()
@@ -269,9 +283,9 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         }
     }
 
-    private void DeployConfig(ServerConfig config)
+    private void DeployConfig(IndexedServerConfig config)
     {
-        ServerName = config.Name;
+        ServerName = config.ServerName;
         CorePath = config.ServerPath;
         MinMem = config.MinMemory.ToString();
         MaxMem = config.MaxMemory.ToString();

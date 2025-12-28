@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.Reactive.Linq;
 using LSL.Common.Collections;
 using LSL.Common.Models;
+using LSL.Common.Models.ServerConfigs;
 using LSL.Common.Utilities;
 using ReactiveUI.Fody.Helpers;
 
@@ -42,12 +43,12 @@ public class MonitorViewModel : RegionalViewModelBase<MonitorViewModel>
                 CurrentRamMetrics.CollectionChanged += OnMemMetricsChanged;
                 CurrentRamValueMetrics.CollectionChanged += OnMemValueMetricsChanged;
             });
-        AppState.ServerIdChanged.Select(id => AppState.CurrentServerConfigs.TryGetValue(id, out var value) ? value : ServerConfig.None)
+        AppState.ServerIdChanged.Select(id => AppState.CurrentServerConfigs.TryGetValue(id, out var value) ? value : IndexedServerConfig.None)
             .Subscribe(sc =>
             {
                 CurrentRamMax = (long)sc.MaxMemory * 1024 * 1024;
             });
-        AppState.ServerConfigChanged.Select(dict => dict.TryGetValue(AppState.SelectedServerId, out var value) ? value : ServerConfig.None)
+        AppState.ServerConfigChanged.Select(dict => dict.TryGetValue(AppState.SelectedServerId, out var value) ? value : IndexedServerConfig.None)
             .Subscribe(sc =>
             {
                 CurrentRamMax = (long)sc.MaxMemory * 1024 * 1024;

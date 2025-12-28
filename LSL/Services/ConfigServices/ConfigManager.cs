@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using LSL.Common.Models;
+using LSL.Common.Models.ServerConfigs;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services.ConfigServices;
@@ -76,8 +77,8 @@ public class ConfigManager
     public Task<ServiceResult<FrozenDictionary<string, object>>> ConfirmMainConfig(IDictionary<string, object> conf) => _mcm.ConfirmConfig(conf);
     public Task<ServiceResult> ReadMainConfig() => _mcm.LoadConfig();
     // 服务器配置
-    public FrozenDictionary<int, ServerConfig> ServerConfigs => _scm.ServerConfigs;
-    public Task<ServerConfigReadResult> ReadServerConfig() => _scm.ReadServerConfig();
+    public FrozenDictionary<int, IndexedServerConfig> ServerConfigs => _scm.ServerConfigs;
+    public Task<ServerConfigList> ReadServerConfig() => _scm.ReadServerConfig();
 
     public Task<ServiceResult> RegisterServer(FormedServerConfig config) => _scm.RegisterServer(config.ServerName,
         config.JavaPath, config.CorePath, uint.Parse(config.MinMem), uint.Parse(config.MaxMem), config.ExtJvm);

@@ -1,11 +1,12 @@
 ﻿using System.Collections.Frozen;
+using LSL.Common.Models.ServerConfigs;
 
 namespace LSL.Common.Models;
 
-public record ServerConfigReadResult : ServiceResult<FrozenDictionary<int, ServerConfig>>
+public record ServerConfigList : ServiceResult<FrozenDictionary<int, IndexedServerConfig>>
 {
-    private ServerConfigReadResult(
-        FrozenDictionary<int, ServerConfig> configs, 
+    private ServerConfigList(
+        FrozenDictionary<int, IndexedServerConfig> configs, 
         ServiceResultType resultType = ServiceResultType.Success, 
         Exception? error = null, 
         IList<string>? notFoundServers = null, 
@@ -20,14 +21,14 @@ public record ServerConfigReadResult : ServiceResult<FrozenDictionary<int, Serve
     public IList<string> ConfigErrorServers { get; }
     
 
-    public static ServerConfigReadResult Success(FrozenDictionary<int, ServerConfig> configs) 
+    public static ServerConfigList Success(FrozenDictionary<int, IndexedServerConfig> configs) 
         => new(configs);
     
-    public static ServerConfigReadResult Fail(Exception error) 
-        => new(FrozenDictionary<int, ServerConfig>.Empty, ServiceResultType.Error, error);
+    public static ServerConfigList Fail(Exception error) 
+        => new(FrozenDictionary<int, IndexedServerConfig>.Empty, ServiceResultType.Error, error);
     
-    public static ServerConfigReadResult PartialError(
-        FrozenDictionary<int, ServerConfig> configs, 
+    public static ServerConfigList PartialError(
+        FrozenDictionary<int, IndexedServerConfig> configs, 
         IList<string> notFoundServers, 
         IList<string> configErrorServers) 
         => new(configs, ServiceResultType.FinishWithWarning, null, notFoundServers, configErrorServers);

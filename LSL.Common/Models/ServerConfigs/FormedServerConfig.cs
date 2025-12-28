@@ -1,4 +1,4 @@
-﻿namespace LSL.Common.Models;
+﻿namespace LSL.Common.Models.ServerConfigs;
 /// <summary>
 /// A record of unvalidated or unregistered server's config.
 /// </summary>

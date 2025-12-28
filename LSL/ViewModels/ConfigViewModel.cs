@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Threading;
 using LSL.Common.Models;
+using LSL.Common.Models.ServerConfigs;
 using LSL.Common.Validation;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -20,7 +21,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     public ConfigViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
     {
         JavaVersions = null!;
-        SelectedServerConfig = ServerConfig.None;
+        SelectedServerConfig = IndexedServerConfig.None;
         SelectedServerName = string.Empty;
         SelectedServerPath = string.Empty;
         AppState.WhenAnyValue(stateLayer => stateLayer.CurrentJavaDict)
@@ -209,29 +210,29 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         }
         else if (status.IsRunning)
         {
-            await AppState.InteractionUnits.ThrowError("无法删除服务器", $"指定的服务器{config.Name}正在运行，请先关闭服务器再删除。");
+            await AppState.InteractionUnits.ThrowError("无法删除服务器", $"指定的服务器{config.ServerName}正在运行，请先关闭服务器再删除。");
             return;
         }
 
         var result1 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
-            $"确认删除服务器{config.Name}吗？",
+            $"确认删除服务器{config.ServerName}吗？",
             "注意！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result1 == PopupResult.No) return;
         var result2 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
-            $"第二次确认，删除服务器{config.Name}吗？",
+            $"第二次确认，删除服务器{config.ServerName}吗？",
             "注意！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result2 == PopupResult.No) return;
         var result3 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
-            $"最后一次确认，你确定要删除服务器{config.Name}吗？",
+            $"最后一次确认，你确定要删除服务器{config.ServerName}吗？",
             "这是最后一次警告！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result3 == PopupResult.No) return;
         var deleteResult = AppState.InteractionUnits.SubmitServiceError(await Connector.DeleteServer(serverId));
         if (deleteResult.IsSuccess)
         {
-            AppState.InteractionUnits.Notify(1, null, $"服务器{config.Name}删除成功");
+            AppState.InteractionUnits.Notify(1, null, $"服务器{config.ServerName}删除成功");
         }
         else await deleteResult;
     }
@@ -246,23 +247,23 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     #region 服务器当前配置访问器
 
-    [Reactive] public ServerConfig SelectedServerConfig { get; private set; }
+    [Reactive] public IndexedServerConfig SelectedServerConfig { get; private set; }
     [Reactive] public string SelectedServerName { get; private set; }
     [Reactive] public string SelectedServerPath { get; private set; }
 
-    private void RaiseServerConfigChanged(int serverId, FrozenDictionary<int, ServerConfig> serverConfig)
+    private void RaiseServerConfigChanged(int serverId, FrozenDictionary<int, IndexedServerConfig> serverConfig)
     {
         if (serverConfig.TryGetValue(serverId, out var config))
         {
             SelectedServerConfig = config;
-            SelectedServerName = config.Name;
+            SelectedServerName = config.ServerName;
             SelectedServerPath = config.ServerPath;
         }
         else
         {
-            var cache = ServerConfig.None;
+            var cache = IndexedServerConfig.None;
             SelectedServerConfig = cache;
-            SelectedServerName = cache.Name;
+            SelectedServerName = cache.ServerName;
             SelectedServerPath = cache.ServerPath;
         }
     }

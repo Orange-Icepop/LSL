@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using LSL.Common.Collections;
 using LSL.Common.Models;
+using LSL.Common.Models.ServerConfigs;
 using LSL.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -18,7 +19,7 @@ public class AppStateLayer : ReactiveObject
     public ILoggerFactory LoggerFactory { get; }
     private ILogger<AppStateLayer> Logger { get; }
     public InteractionUnits InteractionUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
-    public IObservable<FrozenDictionary<int, ServerConfig>> ServerConfigChanged { get; private set; }
+    public IObservable<FrozenDictionary<int, IndexedServerConfig>> ServerConfigChanged { get; private set; }
     public IObservable<int> ServerIndexChanged { get; private set; }
     public IObservable<int> ServerIdChanged { get; private set; }
 
@@ -55,7 +56,7 @@ public class AppStateLayer : ReactiveObject
         // 配置文件更新的连带更新
         ServerConfigChanged.Select(s => new ObservableCollection<int>(s.Keys))
             .ToPropertyEx(this, x => x.ServerIDs, scheduler: RxApp.MainThreadScheduler);
-        ServerConfigChanged.Select(s => new ObservableCollection<string>(s.Values.Select(v => v.Name)))
+        ServerConfigChanged.Select(s => new ObservableCollection<string>(s.Values.Select(v => v.ServerName)))
             .ToPropertyEx(this, x => x.ServerNames, scheduler: RxApp.MainThreadScheduler);
         ServerConfigChanged.Subscribe(configs =>
         {
@@ -173,8 +174,8 @@ public class AppStateLayer : ReactiveObject
     public FrozenDictionary<string, object> CurrentConfigs { get; set; } = FrozenDictionary<string, object>.Empty;
 
     [Reactive]
-    public FrozenDictionary<int, ServerConfig> CurrentServerConfigs { get; set; } =
-        FrozenDictionary<int, ServerConfig>.Empty;
+    public FrozenDictionary<int, IndexedServerConfig> CurrentServerConfigs { get; set; } =
+        FrozenDictionary<int, IndexedServerConfig>.Empty;
 
     [Reactive]
     public FrozenDictionary<int, JavaInfo> CurrentJavaDict { get; set; } = FrozenDictionary<int, JavaInfo>.Empty;

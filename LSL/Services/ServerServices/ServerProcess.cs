@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using LSL.Common.Models;
+using LSL.Common.Models.ServerConfigs;
 
 namespace LSL.Services.ServerServices;
 
@@ -10,7 +11,7 @@ namespace LSL.Services.ServerServices;
     public partial class ServerProcess : IDisposable
     {
         public int Id { get; }
-        public ServerProcess(ServerConfig config)
+        public ServerProcess(IndexedServerConfig config)
         {
             Id = config.ServerId;
             var serverPath = config.ServerPath;

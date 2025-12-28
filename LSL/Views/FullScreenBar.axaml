@@ -9,7 +9,7 @@
              x:Class="LSL.Views.FullScreenBar">
 
 	<Grid RowDefinitions="*" ColumnDefinitions="Auto,Auto" Background="{DynamicResource OBlue}" Name="Bkg">
-		<controls:MyBarButton Icon="avares://LSL/Assets/Built-In-Icons/LArrow.png" Grid.Column="0" Width="30" Height="30" Margin="15,0,0,0" Command="{Binding FullViewBackCmd}"/>
+		<controls:MyBarButton Icon="{StaticResource IconLeftArrow}" Grid.Column="0" Width="30" Height="30" Margin="15,0,0,0" Command="{Binding FullViewBackCmd}"/>
 		<TextBlock Name="Title" 
 				   Text="{Binding BarViewModel.FullScreenTitle}" 
 				   FontSize="25" 

@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
+using LSL.Common.Models.ServerConfigs;
 using LSL.Common.Utilities;
 using LSL.Common.Validation;
 using Microsoft.Extensions.Logging;
@@ -20,12 +21,12 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 {
     public FrozenDictionary<int, string> MainServerConfig { get; private set; } = FrozenDictionary<int, string>.Empty;
 
-    public FrozenDictionary<int, ServerConfig> ServerConfigs { get; private set; } =
-        FrozenDictionary<int, ServerConfig>.Empty;
+    public FrozenDictionary<int, IndexedServerConfig> ServerConfigs { get; private set; } =
+        FrozenDictionary<int, IndexedServerConfig>.Empty;
 
     #region 读取各个服务器的LSL配置文件ReadServerConfig
 
-    public async Task<ServerConfigReadResult> ReadServerConfig()
+    public async Task<ServerConfigList> ReadServerConfig()
     {
         try
         {
@@ -36,7 +37,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             if (!indexRes.HasResult)
             {
                 logger.LogError(indexRes.Error, "Error reading index config file of servers at {MainPath}", mainPath);
-                return ServerConfigReadResult.Fail(indexRes.Error);
+                return ServerConfigList.Fail(indexRes.Error);
             }
 
             MainServerConfig = indexRes.Result;
@@ -45,7 +46,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             {
                 logger.LogError(detailRes.Error, "Error reading server config file of servers at {ServersFolder}",
                     ConfigPathProvider.ServersFolder);
-                return ServerConfigReadResult.Fail(detailRes.Error);
+                return ServerConfigList.Fail(detailRes.Error);
             }
 
             ServerConfigs = detailRes.Result;
@@ -59,12 +60,12 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             }
 
             logger.LogInformation("Finished reading server config.");
-            return ServerConfigReadResult.Success(detailRes.Result);
+            return ServerConfigList.Success(detailRes.Result);
         }
         catch (Exception e)
         {
             logger.LogError(e, "Error reading server config.");
-            return ServerConfigReadResult.Fail(e);
+            return ServerConfigList.Fail(e);
         }
     }
 
@@ -118,13 +119,13 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 逐个获取服务器各自的配置文件
 
-    private static async Task<ServerConfigReadResult> GetServerDetailsAsync(
+    private static async Task<ServerConfigList> GetServerDetailsAsync(
         IDictionary<int, string> mainConfigs)
     {
         List<string> notfoundServers = [];
         List<string> configErrorServers = [];
         // 读取各个服务器的LSL配置文件
-        Dictionary<int, ServerConfig> scCache = [];
+        Dictionary<int, IndexedServerConfig> scCache = [];
         foreach (var (key, targetDir) in mainConfigs)
         {
             var result = await GetSingleServerConfigAsync(key, targetDir);
@@ -155,20 +156,20 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         // 检查错误
         if (notfoundServers.Count > 0 || configErrorServers.Count > 0)
         {
-            return ServerConfigReadResult.PartialError(scCache.ToFrozenDictionary(), notfoundServers,
+            return ServerConfigList.PartialError(scCache.ToFrozenDictionary(), notfoundServers,
                 configErrorServers);
         }
 
-        return ServerConfigReadResult.Success(scCache.ToFrozenDictionary());
+        return ServerConfigList.Success(scCache.ToFrozenDictionary());
     }
 
-    public static async Task<ServerConfigParseResult> GetSingleServerConfigAsync(int key, string targetDir)
+    public static async Task<ServerConfigDeserializeResult> GetSingleServerConfigAsync(int key, string targetDir)
     {
         if (!Directory.Exists(targetDir))
-            return new ServerConfigParseResult(ServerConfigParseResultType.ServerNotFound);
+            return new ServerConfigDeserializeResult(ServerConfigParseResultType.ServerNotFound);
         string targetConfig = Path.Combine(targetDir, "lslconfig.json");
         if (!File.Exists(targetConfig))
-            return new ServerConfigParseResult(ServerConfigParseResultType.ConfigFileNotFound);
+            return new ServerConfigDeserializeResult(ServerConfigParseResultType.ConfigFileNotFound);
         string configFile;
         try
         {
@@ -176,23 +177,23 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         }
         catch (UnauthorizedAccessException)
         {
-            return new ServerConfigParseResult(ServerConfigParseResultType.NoReadAccess);
+            return new ServerConfigDeserializeResult(ServerConfigParseResultType.NoReadAccess);
         }
 
         if (string.IsNullOrWhiteSpace(configFile) || configFile == "{}")
-            return new ServerConfigParseResult(ServerConfigParseResultType.EmptyConfig);
+            return new ServerConfigDeserializeResult(ServerConfigParseResultType.EmptyConfig);
         try
         {
             var serverConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(configFile);
-            if (serverConfig is null) return new ServerConfigParseResult(ServerConfigParseResultType.Unparsable);
+            if (serverConfig is null) return new ServerConfigDeserializeResult(ServerConfigParseResultType.Unparsable);
             var vResult = CheckService.VerifyServerConfig(key, targetDir, serverConfig);
             if (!vResult.IsSuccess || vResult.Result is null)
-                return new ServerConfigParseResult(ServerConfigParseResultType.MissingKey);
-            return new ServerConfigParseResult(ServerConfigParseResultType.Success, vResult.Result);
+                return new ServerConfigDeserializeResult(ServerConfigParseResultType.MissingKey);
+            return new ServerConfigDeserializeResult(ServerConfigParseResultType.Success, vResult.Result);
         }
         catch (JsonException)
         {
-            return new ServerConfigParseResult(ServerConfigParseResultType.Unparsable);
+            return new ServerConfigDeserializeResult(ServerConfigParseResultType.Unparsable);
         }
     }
 
