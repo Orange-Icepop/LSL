@@ -59,7 +59,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     [Reactive] [ServerCorePathValidator] public string CorePath { get; set; }
     [Reactive] public string ExistedServerPath { get; private set; }
     [Reactive] [MinMemValidator] public string MinMem { get; set; }
-    [Reactive] [MaxMemValidator] public string MaxMem { get; set; }
+    [Reactive] [MaxMemValidator(nameof(MinMem))] public string MaxMem { get; set; }
     [Reactive] [JavaPathValidator] public string JavaPath { get; set; }
     [Reactive] [ExtJvmValidator] public string ExtJvm { get; set; }
     private int _selectedJavaIndex;

@@ -77,7 +77,7 @@ public static partial class CheckComponents
         };
     }
 
-    public static VerifyResult MaxMem(string? num, string minMem = "1")
+    public static VerifyResult MaxMem(string? num, string? minMem = "1")
     {
         if (string.IsNullOrEmpty(num)) return new VerifyResult("MaxMem", false, "最大内存不可为空");
         if (!IntRegex().IsMatch(num)) return new VerifyResult("MaxMem", false, "最小内存必须是正整数");
@@ -85,7 +85,7 @@ public static partial class CheckComponents
         if (num.Length > 7) return new VerifyResult("MaxMem", false, "最大内存不可大于2TB");
         var result = uint.Parse(num);
         if (result < 1) return new VerifyResult("MaxMem", false, "最大内存不可小于1MB");
-        if (result < uint.Parse(minMem)) return new VerifyResult("MaxMem", false, "最大内存不可小于最小内存");
+        if (uint.TryParse(minMem, out var minMemValue) && result < minMemValue) return new VerifyResult("MaxMem", false, "最大内存不可小于最小内存");
         if (result > 2097152) return new VerifyResult("MaxMem", false, "最大内存不可大于2TB");
         return new VerifyResult("MaxMem", true, null);
     }
