@@ -8,7 +8,7 @@
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="50"
              x:Class="LSL.Views.Bar">
     <Grid RowDefinitions="*" Background="{DynamicResource OBlue}" Name="Bkg">
-        <TextBlock Name="Title" Text="Lime Server Launcher" FontFamily="{StaticResource SmileySans}" FontSize="27"
+        <TextBlock x:Name="Title" Text="Lime Server Launcher" FontFamily="{StaticResource SmileySans}" FontSize="27"
                    Margin="15,0,0,0" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center" />
         <StackPanel x:Name="Navigation" Grid.Row="0" Grid.Column="0" Orientation="Horizontal" FlowDirection="LeftToRight"
                     HorizontalAlignment="Center"
