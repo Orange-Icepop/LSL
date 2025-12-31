@@ -69,14 +69,17 @@
                                       CommandParameter="https://github.com/serilog/serilog" />
                 </StackPanel>
             </controls:MyCard>
-            <controls:MyCard Text="开源字体使用声明">
+            <controls:MyCard Text="开源字体与图标使用声明">
                 <StackPanel Margin="25,40,23,15">
-                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/fonts/SmileySans.png" Title="SmileySans 得意黑"
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/FontsAndIcons/SmileySans.png" Title="SmileySans 得意黑"
                                       Info="v2.0.1, OFL-1.1" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/atelier-anchor/smiley-sans" />
-                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/fonts/MapleMono.png" Title="Maple Mono"
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/FontsAndIcons/MapleMono.png" Title="Maple Mono"
                                       Info="v7.5, OFL-1.1" Command="{Binding PublicCmd.OpenWebPageCmd}"
                                       CommandParameter="https://github.com/subframe7536/Maple-font" />
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/FontsAndIcons/mdi.png" Title="Material Design Icons"
+                                         Info="Apache 2.0" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                         CommandParameter="https://github.com/Templarian/MaterialDesign"/>
                 </StackPanel>
             </controls:MyCard>
         </StackPanel>
