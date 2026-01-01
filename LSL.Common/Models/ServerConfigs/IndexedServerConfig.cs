@@ -1,4 +1,5 @@
 ﻿using System.Collections.Frozen;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LSL.Common.Models.ServerConfigs;
 
@@ -13,10 +14,13 @@ public class IndexedServerConfig
     public uint MinMemory => PathedConfig.MinMemory;
     public uint MaxMemory => PathedConfig.MaxMemory;
     public string ExtJvm => PathedConfig.ExtJvm;
+    [MemberNotNullWhen(true, nameof(ForgeInfo))]
+    public bool IsForge => PathedConfig.IsForge;
+    public ForgeConfig? ForgeInfo => PathedConfig.ForgeInfo;
 
     public IndexedServerConfig(IndexedServerConfig config) // 深拷贝构造函数
         : this(config.ServerId, config.ServerPath, config.ServerName, config.UsingJava, config.CoreName,
-            config.MinMemory, config.MaxMemory, config.ExtJvm)
+            config.MinMemory, config.MaxMemory, config.ExtJvm, config.ForgeInfo)
     {
     }
 
@@ -28,6 +32,7 @@ public class IndexedServerConfig
     /// <param name="minMemory">The minimum JVM allocated RAM.</param>
     /// <param name="maxMemory">The maximum JVM allocated RAM.</param>
     /// <param name="extJvm">The extent JVM parameters.</param>
+    /// <param name="forgeInfo">Optional ForgeConfig instance recording the library and shim file of the forge server.</param>
     public IndexedServerConfig(int serverId,
         string serverPath,
         string serverName,
@@ -35,8 +40,9 @@ public class IndexedServerConfig
         string coreName,
         uint minMemory,
         uint maxMemory,
-        string extJvm) : this(serverId,
-        new PathedServerConfig(serverPath, serverName, usingJava, coreName, minMemory, maxMemory, extJvm))
+        string extJvm,
+        ForgeConfig? forgeInfo) : this(serverId,
+        new PathedServerConfig(serverPath, serverName, usingJava, coreName, minMemory, maxMemory, extJvm, forgeInfo))
     {
     }
 
@@ -49,7 +55,7 @@ public class IndexedServerConfig
     /// <summary>
     /// Returns a server info which will be recognized as not added.
     /// </summary>
-    public static IndexedServerConfig None => new(-1, "", "未添加服务器", "", "", 0, 0, "");
+    public static IndexedServerConfig None => new(-1, "", "未添加服务器", "", "", 0, 0, "", null);
 }
 
 public static class ServerConfigExtensions

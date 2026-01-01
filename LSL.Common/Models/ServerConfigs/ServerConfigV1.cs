@@ -91,7 +91,7 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         }
     }
 
-    public PathedServerConfig Standardize(string path)
+    public PathedServerConfig WrapPath(string path)
     {
         
     }

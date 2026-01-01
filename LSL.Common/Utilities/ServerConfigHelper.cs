@@ -24,23 +24,32 @@ public static class ServerConfigHelper
             return ServiceResult.Fail<PathedServerConfig>(new ArgumentException(
                 "Target path doesn't have an lslconfig.json file.",
                 nameof(path)));
-        return await DeserializeConfig(path, JsonDocument.Parse(await File.ReadAllTextAsync(confPath)).RootElement,
+        return DeserializeConfig(path, JsonDocument.Parse(await File.ReadAllTextAsync(confPath)).RootElement,
             ignoreWarnings);
     }
 
-    private static async Task<ServiceResult<PathedServerConfig>> DeserializeConfig(string path, JsonElement configRoot,
+    private static ServiceResult<PathedServerConfig> DeserializeConfig(string path, JsonElement configRoot,
         bool ignoreWarnings = false)
     {
         if (configRoot.TryGetProperty("version", out var version))
         {
-            // config v1
+            // config v1 (no version property)
             return ServerConfigV1.TryDeserialize(configRoot, ignoreWarnings, out var result)
-                ? ServiceResult.Success(result.Standardize(path))
+                ? ServiceResult.Success(result.WrapPath(path))
                 : ServiceResult.Fail<PathedServerConfig>(
                     new ServerConfigUnparsableException("Cannot parse the server config."));
         }
 
-        return ServiceResult.Fail<PathedServerConfig>(
-            new ServerConfigUnparsableException("Could not ensure the server config's version."));
+        return version.GetInt32() switch
+        {
+            2 =>
+                // config v2
+                ServerConfigV2.TryDeserialize(configRoot, ignoreWarnings, out var result)
+                    ? ServiceResult.Success(result.WrapPath(path))
+                    : ServiceResult.Fail<PathedServerConfig>(
+                        new ServerConfigUnparsableException("Cannot parse the server config.")),
+            _ => ServiceResult.Fail<PathedServerConfig>(
+                new ServerConfigUnparsableException("Could not ensure the server config's version."))
+        };
     }
 }
