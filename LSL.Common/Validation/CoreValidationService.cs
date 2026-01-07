@@ -1,4 +1,5 @@
 ﻿using ICSharpCode.SharpZipLib.Zip;
+using LSL.Common.Models.ServerConfigs;
 
 namespace LSL.Common.Validation;
 
@@ -7,71 +8,52 @@ namespace LSL.Common.Validation;
 /// </summary>
 public static class CoreValidationService
 {
-    public enum CoreType
-    {
-        Error,
-        Unknown,
-        Client,
-        ForgeInstaller,
-        FabricInstaller,
-        Forge,
-        Fabric,
-        Akarin,
-        Arclight,
-        CatServer,
-        CraftBukkit,
-        Leaves,
-        LightFall,
-        Mohist,
-        Paper,
-        Vanilla,
-        Velocity,
-    }
-    public static CoreType Validate(string? filePath, out string errorMessage)// 校验核心类型
+
+    public static ServerCoreType Validate(string? filePath, out string errorMessage)// 校验核心类型
     {
         errorMessage = "";
         if (string.IsNullOrEmpty(filePath))
         {
             errorMessage = "选定的路径为空";
-            return CoreType.Error;
+            return ServerCoreType.Error;
 
         }
         if (!File.Exists(filePath))
         {
             errorMessage = "选定的文件/路径不存在";
-            return CoreType.Error;
+            return ServerCoreType.Error;
         }
         var jarMainClass = GetMainClass(filePath);
-        if (jarMainClass == null) return CoreType.Unknown;
+        if (jarMainClass == null) return ServerCoreType.Unknown;
         else if (jarMainClass.StartsWith("Access denied") || jarMainClass.StartsWith("Error"))
         {
             errorMessage = jarMainClass;
-            return CoreType.Error;
+            return ServerCoreType.Error;
         }
         else
         {
             return jarMainClass switch
             {
-                "net.minecraft.server.MinecraftServer" => CoreType.Vanilla,
-                "net.minecraft.bundler.Main" => CoreType.Vanilla,
-                "net.minecraft.client.Main" => CoreType.Client,
-                "net.minecraftforge.installer.SimpleInstaller" => CoreType.ForgeInstaller,
-                "net.fabricmc.installer.Main" => CoreType.FabricInstaller,
-                "net.fabricmc.installer.ServerLauncher" => CoreType.Fabric,
-                "io.papermc.paperclip.Paperclip" => CoreType.Akarin,
-                "io.izzel.arclight.server.Launcher" => CoreType.Arclight,
-                "catserver.server.CatServerLaunch" => CoreType.CatServer,
-                "foxlaunch.FoxServerLauncher" => CoreType.CatServer,
-                "org.bukkit.craftbukkit.Main" => CoreType.CraftBukkit,
-                "org.bukkit.craftbukkit.bootstrap.Main" => CoreType.CraftBukkit,
-                "io.papermc.paperclip.Main" => CoreType.Paper,
-                "org.leavesmc.leavesclip.Main" => CoreType.Leaves,
-                "net.md_5.bungee.Bootstrap" => CoreType.LightFall,
-                "com.mohistmc.MohistMCStart" => CoreType.Mohist,
-                "com.mohistmc.MohistMC" => CoreType.Mohist,
-                "com.destroystokyo.paperclip.Paperclip" => CoreType.Paper,
-                "com.velocitypowered.proxy.Velocity" => CoreType.Velocity,
-                _ => CoreType.Unknown,
+                "net.minecraft.server.MinecraftServer" => ServerCoreType.Vanilla,
+                "net.minecraft.bundler.Main" => ServerCoreType.Vanilla,
+                "net.minecraft.client.Main" => ServerCoreType.Client,
+                "net.minecraftforge.installer.SimpleInstaller" => ServerCoreType.ForgeInstaller,
+                "net.fabricmc.installer.Main" => ServerCoreType.FabricInstaller,
+                "net.fabricmc.installer.ServerLauncher" => ServerCoreType.Fabric,
+                "io.papermc.paperclip.Paperclip" => ServerCoreType.Akarin,
+                "io.izzel.arclight.server.Launcher" => ServerCoreType.Arclight,
+                "catserver.server.CatServerLaunch" => ServerCoreType.CatServer,
+                "foxlaunch.FoxServerLauncher" => ServerCoreType.CatServer,
+                "org.bukkit.craftbukkit.Main" => ServerCoreType.CraftBukkit,
+                "org.bukkit.craftbukkit.bootstrap.Main" => ServerCoreType.CraftBukkit,
+                "io.papermc.paperclip.Main" => ServerCoreType.Paper,
+                "org.leavesmc.leavesclip.Main" => ServerCoreType.Leaves,
+                "net.md_5.bungee.Bootstrap" => ServerCoreType.LightFall,
+                "com.mohistmc.MohistMCStart" => ServerCoreType.Mohist,
+                "com.mohistmc.MohistMC" => ServerCoreType.Mohist,
+                "com.destroystokyo.paperclip.Paperclip" => ServerCoreType.Paper,
+                "com.velocitypowered.proxy.Velocity" => ServerCoreType.Velocity,
+                _ => ServerCoreType.Unknown,
             };
         }
     }
