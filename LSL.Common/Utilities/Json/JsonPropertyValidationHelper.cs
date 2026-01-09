@@ -19,6 +19,7 @@ public static class JsonPropertyValidationHelper
                 onFail?.Invoke($"Property {propertyName} is missing");
                 return;
             }
+
             if (!element.TryGetString(out var value))
             {
                 onFail?.Invoke($"Property {propertyName} is not a string");
@@ -42,6 +43,31 @@ public static class JsonPropertyValidationHelper
         };
     }
 
+    public static HandleJsonProperty BoolHandler(Action<bool>? onSuccess = null)
+    {
+        return (root, propertyName, onFail) =>
+        {
+            if (!root.TryGetProperty(propertyName, out var element))
+            {
+                onFail?.Invoke($"Property {propertyName} is missing");
+                return;
+            }
+
+            switch (element.ValueKind)
+            {
+                case JsonValueKind.True:
+                    onSuccess?.Invoke(true);
+                    return;
+                case JsonValueKind.False:
+                    onSuccess?.Invoke(false);
+                    return;
+                default:
+                    onFail?.Invoke($"Property {propertyName} is not a string");
+                    break;
+            }
+        };
+    }
+
     public static HandleJsonProperty UIntHandler(
         uint? minValue = null,
         uint? maxValue = null, Action<uint>? onSuccess = null)
@@ -53,6 +79,7 @@ public static class JsonPropertyValidationHelper
                 onFail?.Invoke($"Property {propertyName} is missing");
                 return;
             }
+
             if (element.ValueKind is not JsonValueKind.Number ||
                 !element.TryGetUInt32(out var value))
             {
@@ -84,6 +111,7 @@ public static class JsonPropertyValidationHelper
                 onFail?.Invoke($"Property {propertyName} is missing");
                 return;
             }
+
             if (!element.TryGetString(out var value))
             {
                 onFail?.Invoke($"Property {propertyName} is not a string");
@@ -100,7 +128,10 @@ public static class JsonPropertyValidationHelper
         };
     }
 
-    public static HandleJsonProperty FileHandler(Action<string>? onSuccess = null)
+    public static HandleJsonProperty FileHandler(Action<string>? onSuccess = null) =>
+        StringHandler(validator: s => File.Exists(s) ? null : $"Invalid file path {s}", onSuccess: onSuccess);
+
+    public static HandleJsonProperty EnumHandler<T>(Action<T>? onSuccess = null) where T : struct, Enum
     {
         return (root, propertyName, onFail) =>
         {
@@ -109,19 +140,20 @@ public static class JsonPropertyValidationHelper
                 onFail?.Invoke($"Property {propertyName} is missing");
                 return;
             }
+
             if (!element.TryGetString(out var value))
             {
                 onFail?.Invoke($"Property {propertyName} is not a string");
                 return;
             }
 
-            if (!File.Exists(value))
+            if (!Enum.TryParse<T>(value, out var enumValue))
             {
-                onFail?.Invoke("Invalid Java");
+                onFail?.Invoke("Invalid Enum type");
                 return;
             }
 
-            onSuccess?.Invoke(value);
+            onSuccess?.Invoke(enumValue);
         };
     }
 }

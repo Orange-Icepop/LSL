@@ -5,7 +5,7 @@ namespace LSL.Common.Models.ServerConfigs;
 
 public interface IServerConfig
 {
-    PathedServerConfig WrapPath(string path);
+    PathedServerConfig Standardize(string path);
     string Serialize();
 }
 

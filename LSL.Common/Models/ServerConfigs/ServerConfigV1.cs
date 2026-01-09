@@ -62,7 +62,7 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         return ServiceResult.Success(result);
     }
 
-    public PathedServerConfig WrapPath(string path) => new(path, Name, UsingJava, CoreName, MinMemory, MaxMemory, ExtJvm);
+    public PathedServerConfig Standardize(string path) => new(path, Name, UsingJava, CoreName, MinMemory, MaxMemory, ExtJvm);
 
     public string Serialize() => JsonSerializer.Serialize(this, SerializerOptions);
 }
