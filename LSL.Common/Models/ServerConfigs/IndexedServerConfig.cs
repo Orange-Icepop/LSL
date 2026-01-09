@@ -16,7 +16,7 @@ public class IndexedServerConfig
     public string ExtJvm => PathedConfig.ExtJvm;
     [MemberNotNullWhen(true, nameof(ForgeInfo))]
     public bool IsForge => PathedConfig.IsForge;
-    public ForgeConfig? ForgeInfo => PathedConfig.ForgeInfo;
+    public ForgeConfigV1? ForgeInfo => PathedConfig.ForgeInfo;
 
     public IndexedServerConfig(IndexedServerConfig config) // 深拷贝构造函数
         : this(config.ServerId, config.ServerPath, config.ServerName, config.UsingJava, config.CoreName,
@@ -41,7 +41,7 @@ public class IndexedServerConfig
         uint minMemory,
         uint maxMemory,
         string extJvm,
-        ForgeConfig? forgeInfo) : this(serverId,
+        ForgeConfigV1? forgeInfo) : this(serverId,
         new PathedServerConfig(serverPath, serverName, usingJava, coreName, minMemory, maxMemory, extJvm, forgeInfo))
     {
     }

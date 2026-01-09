@@ -56,7 +56,7 @@ public static class JsonPropertyValidationHelper
             if (element.ValueKind is not JsonValueKind.Number ||
                 !element.TryGetUInt32(out var value))
             {
-                onFail?.Invoke($"Property {propertyName} is not a number or is missing");
+                onFail?.Invoke($"Property {propertyName} is not a number");
                 return;
             }
 
@@ -86,13 +86,38 @@ public static class JsonPropertyValidationHelper
             }
             if (!element.TryGetString(out var value))
             {
-                onFail?.Invoke($"Property {propertyName} is not a string or is missing");
+                onFail?.Invoke($"Property {propertyName} is not a string");
                 return;
             }
 
-            if (CheckComponents.IsValidJava(value))
+            if (!CheckComponents.IsValidJava(value))
             {
-                onFail?.Invoke("Invalid Java.");
+                onFail?.Invoke("Invalid Java");
+                return;
+            }
+
+            onSuccess?.Invoke(value);
+        };
+    }
+
+    public static HandleJsonProperty FileHandler(Action<string>? onSuccess = null)
+    {
+        return (root, propertyName, onFail) =>
+        {
+            if (!root.TryGetProperty(propertyName, out var element))
+            {
+                onFail?.Invoke($"Property {propertyName} is missing");
+                return;
+            }
+            if (!element.TryGetString(out var value))
+            {
+                onFail?.Invoke($"Property {propertyName} is not a string");
+                return;
+            }
+
+            if (!File.Exists(value))
+            {
+                onFail?.Invoke("Invalid Java");
                 return;
             }
 

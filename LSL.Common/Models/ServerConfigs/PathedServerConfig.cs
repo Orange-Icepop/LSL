@@ -14,10 +14,10 @@ public class PathedServerConfig
     public string ExtJvm { get; set; }
     [MemberNotNullWhen(true, nameof(ForgeInfo))]
     public bool IsForge { get; set; }
-    public ForgeConfig? ForgeInfo { get; set; }
+    public ForgeConfigV1? ForgeInfo { get; set; }
 
     public PathedServerConfig(string serverPath, string serverName, string usingJava, string coreName, uint minMemory,
-        uint maxMemory, string extJvm, ForgeConfig? forgeInfo = null)
+        uint maxMemory, string extJvm, ForgeConfigV1? forgeInfo = null)
     {
         ServerPath = serverPath;
         ServerName = serverName;

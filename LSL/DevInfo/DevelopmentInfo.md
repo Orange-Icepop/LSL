@@ -58,7 +58,7 @@
  - [x] 为所有服务层方法外套try-catch
  - [x] 简化所有页面按钮的状态绑定
  - [x] 使用Geometry替代Bar按钮的图标以支持自动换色
- - [ ] 重写所有图标为Geometry
+ - [x] 重写所有图标为Geometry
  - [ ] 重写服务器管理逻辑
  - [ ] 将ReactiveUI.Fody换为ReactiveUI.SourceGenerators
  - [ ] 将ServiceResult重构为更接近rust的record struct Result<T>
