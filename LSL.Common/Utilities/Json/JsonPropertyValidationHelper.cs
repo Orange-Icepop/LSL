@@ -5,18 +5,29 @@ using LSL.Common.Validation;
 
 namespace LSL.Common.Utilities.Json;
 
-public delegate void HandleProperty<out T>(JsonElement element, string propertyName, Action<T>? onSuccess = null,
-    Action<string>? onFail = null);
+public delegate void HandleJsonProperty(JsonElement root, string propertyName, Action<string>? onFail = null);
 
 public static class JsonPropertyValidationHelper
 {
-    public static HandleProperty<string> StringHandler(Func<string, string?>? validator = null)
+    public static HandleJsonProperty StringHandler(Func<string, string?>? validator = null,
+        Action<string>? onSuccess = null, bool enableEmpty = false)
     {
-        return (element, propertyName, onSuccess, onFail) =>
+        return (root, propertyName, onFail) =>
         {
+            if (!root.TryGetProperty(propertyName, out var element))
+            {
+                onFail?.Invoke($"Property {propertyName} is missing");
+                return;
+            }
             if (!element.TryGetString(out var value))
             {
-                onFail?.Invoke($"Property {propertyName} is not a string or is missing");
+                onFail?.Invoke($"Property {propertyName} is not a string");
+                return;
+            }
+
+            if (!enableEmpty && string.IsNullOrWhiteSpace(value))
+            {
+                onFail?.Invoke($"Property {propertyName} is empty");
                 return;
             }
 
@@ -31,12 +42,17 @@ public static class JsonPropertyValidationHelper
         };
     }
 
-    public static HandleProperty<uint> UIntHandler(
+    public static HandleJsonProperty UIntHandler(
         uint? minValue = null,
-        uint? maxValue = null)
+        uint? maxValue = null, Action<uint>? onSuccess = null)
     {
-        return (element, propertyName, onSuccess, onFail) =>
+        return (root, propertyName, onFail) =>
         {
+            if (!root.TryGetProperty(propertyName, out var element))
+            {
+                onFail?.Invoke($"Property {propertyName} is missing");
+                return;
+            }
             if (element.ValueKind is not JsonValueKind.Number ||
                 !element.TryGetUInt32(out var value))
             {
@@ -59,10 +75,15 @@ public static class JsonPropertyValidationHelper
         };
     }
 
-    public static HandleProperty<string> JavaHandler()
+    public static HandleJsonProperty JavaHandler(Action<string>? onSuccess = null)
     {
-        return (element, propertyName, onSuccess, onFail) =>
+        return (root, propertyName, onFail) =>
         {
+            if (!root.TryGetProperty(propertyName, out var element))
+            {
+                onFail?.Invoke($"Property {propertyName} is missing");
+                return;
+            }
             if (!element.TryGetString(out var value))
             {
                 onFail?.Invoke($"Property {propertyName} is not a string or is missing");
@@ -71,7 +92,7 @@ public static class JsonPropertyValidationHelper
 
             if (CheckComponents.IsValidJava(value))
             {
-                onFail?.Invoke($"Invalid Java.");
+                onFail?.Invoke("Invalid Java.");
                 return;
             }
 
