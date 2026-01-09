@@ -8,7 +8,7 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
 {
     private ServerConfigV2()
     {
-        EnablePreLaunchProtection = ServerType == ServerCoreType.Mohist;
+        EnablePreLaunchProtection = ServerType != ServerCoreType.Mohist;
         IsForge = ServerType == ServerCoreType.Forge;
     }
 
@@ -26,10 +26,10 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
 
     [JsonIgnore]
     [MemberNotNullWhen(true, nameof(ForgeInfo))]
-    public bool IsForge { get; set; } = false;
+    private bool IsForge { get; set; } = false;
 
-    [JsonIgnore] public ForgeConfig? ForgeInfo { get; set; } = null;
-    public static bool TryDeserialize(JsonElement configRoot, bool ignoreWarnings, [NotNullWhen(true)] out ServerConfigV2? result)
+    public ForgeConfig? ForgeInfo { get; set; } = null;
+    public static ServiceResult<ServerConfigV2> Deserialize(JsonElement configRoot, bool ignoreWarnings)
     {
         
     }

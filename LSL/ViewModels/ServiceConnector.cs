@@ -103,7 +103,7 @@ public class ServiceConnector
             }
         }
         Dispatcher.UIThread.Invoke(() => _appState.CurrentJavaDict = _configManager.JavaConfigs);
-        return warning is null ? ServiceResult.Success(_configManager.JavaConfigs.Count) : ServiceResult.FinishWithWarning(_configManager.JavaConfigs.Count, warning);
+        return warning is null ? ServiceResult.Success(_configManager.JavaConfigs.Count) : ServiceResult.Warning(_configManager.JavaConfigs.Count, warning);
     }
 
     public async Task<ServiceResult> ReadServerConfig(bool readFile = false)
@@ -141,7 +141,7 @@ public class ServiceConnector
             cache.Add(-1, IndexedServerConfig.None);
         }
         await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = cache.ToFrozenDictionary());
-        return exception is null ? ServiceResult.Success() : ServiceResult.FinishWithWarning(exception);
+        return exception is null ? ServiceResult.Success() : ServiceResult.Warning(exception);
     }
 
     public Task<ServiceResult<FrozenDictionary<string, object>>> SaveConfig() =>

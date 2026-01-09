@@ -168,7 +168,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
                 list.AppendJoin(",", keysNeedToRepair);
                 logger.LogWarning("{}", list.ToString());
                 logger.LogInformation("Config.json loaded and repaired.");
-                return ServiceResult.FinishWithWarning(new Exception(list.ToString()));
+                return ServiceResult.Warning(new Exception(list.ToString()));
             }
             CurrentConfigs = cache.ToFrozenDictionary();
             logger.LogInformation("Config.json loaded.");

@@ -89,7 +89,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                 error.AppendLine();
                 error.Append("You may need to re-detect java to solve this problem.");
                 logger.LogWarning("{}", error.ToString());
-                return ServiceResult.FinishWithWarning(new JavaConfigReadResult(notFound, notJava), new Exception(error.ToString()));
+                return ServiceResult.Warning(new JavaConfigReadResult(notFound, notJava), new Exception(error.ToString()));
             }
             return ServiceResult.Success(new JavaConfigReadResult());
         }
