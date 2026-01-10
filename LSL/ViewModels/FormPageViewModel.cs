@@ -147,15 +147,15 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     {
         FormedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
         var vResult = ServiceConnector.ValidateNewServerConfig(serverInfo);
-        if (vResult.Item1 == 0)
+        if (vResult.IsError)
         {
-            if (vResult.Item2 is not null) await AppState.InteractionUnits.ThrowError("表单错误", vResult.Item2);
+            await AppState.InteractionUnits.ThrowError("表单错误", vResult.Error.Message);
             return;
         }
-        if (vResult is { Item1: -1, Item2: not null })
+        if (vResult.IsFinishedWithWarning)
         {
             var confirm =
-                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Item2));
+                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Error.Message));
             if (confirm == PopupResult.No) return;
         }
 
@@ -165,9 +165,14 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
                 await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
             if (confirm == PopupResult.No) return;
         }
-        var coreType = ServiceConnector.GetCoreType(serverInfo.CorePath);
+        var coreTypeResult = ServiceConnector.GetCoreType(serverInfo.CorePath);
+        if (!coreTypeResult.IsSuccess)
+        {
+            await AppState.InteractionUnits.ThrowError("无法获取服务器类型信息", coreTypeResult.Error.Message);
+            return;
+        }
         var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定添加此服务器吗？",
-            $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreType}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
+            $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreTypeResult.Result}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
             var success = AppState.InteractionUnits.SubmitServiceError(await Connector.AddServer(serverInfo));
@@ -188,9 +193,9 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         int id = AppState.SelectedServerId;
         FormedServerConfig info = new(ServerName, "", MinMem, MaxMem, JavaPath, ExtJvm);
         var vResult = ServiceConnector.ValidateNewServerConfig(info, true);
-        if (vResult.Item1 == 0)
+        if (vResult.IsError)
         {
-            if (vResult.Item2 is not null) await AppState.InteractionUnits.ThrowError("表单错误", vResult.Item2);
+            await AppState.InteractionUnits.ThrowError("表单错误", vResult.Error.Message);
             return;
         }
         if (int.Parse(info.MaxMem) < 512)
@@ -220,15 +225,15 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     {
         FormedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
         var vResult = ServiceConnector.ValidateNewServerConfig(serverInfo);
-        if (vResult.Item1 == 0)
+        if (vResult.IsError)
         {
-            if (vResult.Item2 is not null) await AppState.InteractionUnits.ThrowError("表单错误", vResult.Item2);
+            await AppState.InteractionUnits.ThrowError("表单错误", vResult.Error.Message);
             return;
         }
-        if (vResult is { Item1: -1, Item2: not null })
+        if (vResult.IsFinishedWithWarning)
         {
             var confirm =
-                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Item2));
+                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Error.Message));
             if (confirm == PopupResult.No) return;
         }
 
@@ -238,9 +243,14 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
                 await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
             if (confirm == PopupResult.No) return;
         }
-        var coreType = ServiceConnector.GetCoreType(serverInfo.CorePath);
+        var coreTypeResult = ServiceConnector.GetCoreType(serverInfo.CorePath);
+        if (!coreTypeResult.IsSuccess)
+        {
+            await AppState.InteractionUnits.ThrowError("无法获取服务器类型信息", coreTypeResult.Error.Message);
+            return;
+        }
         var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定添加此服务器吗？",
-            $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreType}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
+            $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreTypeResult.Result}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
             var success = AppState.InteractionUnits.SubmitServiceError(await Connector.AddExistedServer(serverInfo));

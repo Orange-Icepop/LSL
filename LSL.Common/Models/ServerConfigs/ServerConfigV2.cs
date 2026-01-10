@@ -1,8 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
+using LSL.Common.Utilities.Json;
 using Newtonsoft.Json;
 using static LSL.Common.Utilities.Json.JsonPropertyValidationHelper;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace LSL.Common.Models.ServerConfigs;
 
@@ -62,7 +64,5 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
     {
     }
 
-    public string Serialize()
-    {
-    }
+    public string Serialize() => JsonSerializer.Serialize(this, ConfigSerializerOptions.Default);
 }

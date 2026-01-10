@@ -62,7 +62,12 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         return ServiceResult.Success(result);
     }
 
-    public PathedServerConfig Standardize(string path) => new(path, Name, UsingJava, CoreName, MinMemory, MaxMemory, ExtJvm);
+    public PathedServerConfig Standardize(string path)
+    {
+        if (!Path.Exists(path)) throw new ArgumentException($"Path {path} does not exist", nameof(path));
+        var 
+        return new(path, Name, UsingJava, CoreName, MinMemory, MaxMemory, ExtJvm);
+    }
 
     public string Serialize() => JsonSerializer.Serialize(this, SerializerOptions);
 }

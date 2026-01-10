@@ -1,4 +1,5 @@
 ﻿using ICSharpCode.SharpZipLib.Zip;
+using LSL.Common.Models;
 using LSL.Common.Models.ServerConfigs;
 
 namespace LSL.Common.Validation;
@@ -9,53 +10,48 @@ namespace LSL.Common.Validation;
 public static class CoreValidationService
 {
 
-    public static ServerCoreType Validate(string? filePath, out string errorMessage)// 校验核心类型
+    public static ServiceResult<ServerCoreType> Validate(string? filePath)// 校验核心类型
     {
-        errorMessage = "";
         if (string.IsNullOrEmpty(filePath))
         {
-            errorMessage = "选定的路径为空";
-            return ServerCoreType.Error;
+            return ServiceResult.Fail<ServerCoreType>("选定的路径为空");
 
         }
         if (!File.Exists(filePath))
         {
-            errorMessage = "选定的文件/路径不存在";
-            return ServerCoreType.Error;
+            return ServiceResult.Fail<ServerCoreType>("选定的文件/路径不存在");
         }
         var jarMainClass = GetMainClass(filePath);
-        if (jarMainClass == null) return ServerCoreType.Unknown;
-        else if (jarMainClass.StartsWith("Access denied") || jarMainClass.StartsWith("Error"))
+        if (jarMainClass == null) return ServiceResult.Success(ServerCoreType.Unknown);
+        if (jarMainClass.StartsWith("Access denied") || jarMainClass.StartsWith("Error"))
         {
-            errorMessage = jarMainClass;
-            return ServerCoreType.Error;
+            return ServiceResult.Fail<ServerCoreType>(jarMainClass);
         }
-        else
+
+        var type = jarMainClass switch
         {
-            return jarMainClass switch
-            {
-                "net.minecraft.server.MinecraftServer" => ServerCoreType.Vanilla,
-                "net.minecraft.bundler.Main" => ServerCoreType.Vanilla,
-                "net.minecraft.client.Main" => ServerCoreType.Client,
-                "net.minecraftforge.installer.SimpleInstaller" => ServerCoreType.ForgeInstaller,
-                "net.fabricmc.installer.Main" => ServerCoreType.FabricInstaller,
-                "net.fabricmc.installer.ServerLauncher" => ServerCoreType.Fabric,
-                "io.papermc.paperclip.Paperclip" => ServerCoreType.Akarin,
-                "io.izzel.arclight.server.Launcher" => ServerCoreType.Arclight,
-                "catserver.server.CatServerLaunch" => ServerCoreType.CatServer,
-                "foxlaunch.FoxServerLauncher" => ServerCoreType.CatServer,
-                "org.bukkit.craftbukkit.Main" => ServerCoreType.CraftBukkit,
-                "org.bukkit.craftbukkit.bootstrap.Main" => ServerCoreType.CraftBukkit,
-                "io.papermc.paperclip.Main" => ServerCoreType.Paper,
-                "org.leavesmc.leavesclip.Main" => ServerCoreType.Leaves,
-                "net.md_5.bungee.Bootstrap" => ServerCoreType.LightFall,
-                "com.mohistmc.MohistMCStart" => ServerCoreType.Mohist,
-                "com.mohistmc.MohistMC" => ServerCoreType.Mohist,
-                "com.destroystokyo.paperclip.Paperclip" => ServerCoreType.Paper,
-                "com.velocitypowered.proxy.Velocity" => ServerCoreType.Velocity,
-                _ => ServerCoreType.Unknown,
-            };
-        }
+            "net.minecraft.server.MinecraftServer" => ServerCoreType.Vanilla,
+            "net.minecraft.bundler.Main" => ServerCoreType.Vanilla,
+            "net.minecraft.client.Main" => ServerCoreType.Client,
+            "net.minecraftforge.installer.SimpleInstaller" => ServerCoreType.ForgeInstaller,
+            "net.fabricmc.installer.Main" => ServerCoreType.FabricInstaller,
+            "net.fabricmc.installer.ServerLauncher" => ServerCoreType.Fabric,
+            "io.papermc.paperclip.Paperclip" => ServerCoreType.Akarin,
+            "io.izzel.arclight.server.Launcher" => ServerCoreType.Arclight,
+            "catserver.server.CatServerLaunch" => ServerCoreType.CatServer,
+            "foxlaunch.FoxServerLauncher" => ServerCoreType.CatServer,
+            "org.bukkit.craftbukkit.Main" => ServerCoreType.CraftBukkit,
+            "org.bukkit.craftbukkit.bootstrap.Main" => ServerCoreType.CraftBukkit,
+            "io.papermc.paperclip.Main" => ServerCoreType.Paper,
+            "org.leavesmc.leavesclip.Main" => ServerCoreType.Leaves,
+            "net.md_5.bungee.Bootstrap" => ServerCoreType.LightFall,
+            "com.mohistmc.MohistMCStart" => ServerCoreType.Mohist,
+            "com.mohistmc.MohistMC" => ServerCoreType.Mohist,
+            "com.destroystokyo.paperclip.Paperclip" => ServerCoreType.Paper,
+            "com.velocitypowered.proxy.Velocity" => ServerCoreType.Velocity,
+            _ => ServerCoreType.Unknown,
+        };
+        return ServiceResult.Success(type);
     }
     // the following code is taken from https://github.com/Orange-Icepop/JavaMainClassFinder
     public static string? GetMainClass(string jarFilePath)

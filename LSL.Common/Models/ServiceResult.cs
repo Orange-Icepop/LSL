@@ -71,6 +71,7 @@ public record ServiceResult : IServiceResult
     public static ServiceResult Fail(Exception error) => new(ServiceResultType.Error, error);
     public static ServiceResult Fail(string error) => new(ServiceResultType.Error, new Exception(error));
     public static ServiceResult Warning(Exception error) => new(ServiceResultType.FinishWithWarning, error);
+    public static ServiceResult Warning(string error) => new(ServiceResultType.FinishWithWarning, new Exception(error));
     
     public static ServiceResult<T> Success<T>(T result) => new (ServiceResultType.Success, result, null);
     public static ServiceResult<T> Fail<T>(Exception error) => new(ServiceResultType.Error, default, error);

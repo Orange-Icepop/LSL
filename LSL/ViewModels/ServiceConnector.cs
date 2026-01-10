@@ -375,43 +375,37 @@ public class ServiceConnector
 
     #region 服务器添加、修改与删除
 
-    public static (int, string?) ValidateNewServerConfig(FormedServerConfig config, bool skipCorePathCheck = false)
+    public static ServiceResult ValidateNewServerConfig(FormedServerConfig config, bool skipCorePathCheck = false)
     {
         var checkResult = CheckService.VerifyFormedServerConfig(config, skipCorePathCheck);
-        string errorInfo = "";
-        foreach (var item in checkResult)
+        StringBuilder errorInfo = new ();
+        foreach (var item in checkResult.Where(item => !item.Passed))
         {
-            if (!item.Passed)
-            {
-                errorInfo += $"{item.Reason}\n";
-            }
+            errorInfo.AppendLine(item.Reason);
         }
 
-        if (!string.IsNullOrEmpty(errorInfo))
+        if (errorInfo.Length > 0)
         {
-            return (0, errorInfo);
+            return ServiceResult.Fail(errorInfo.ToString());
         }
 
-        if (skipCorePathCheck) return (1, null); // 不检查核心，直接返回
-        var coreResult = CoreValidationService.Validate(config.CorePath, out var problem);
-        return coreResult switch
+        if (skipCorePathCheck) return ServiceResult.Success(); // 不检查核心，直接返回
+        var coreResult = CoreValidationService.Validate(config.CorePath);
+        if (coreResult.IsError) return ServiceResult.Fail(coreResult.Error);
+        return coreResult.Result switch
         {
-            ServerCoreType.Error => (0, "验证核心文件时发生错误。\n" + problem),
-            ServerCoreType.ForgeInstaller => (0,
+            ServerCoreType.ForgeInstaller => ServiceResult.Fail(
                 "您选择的文件是一个Forge安装器，而不是一个Minecraft服务端核心文件。LSL暂不支持Forge服务器的添加与启动。"),
-            ServerCoreType.FabricInstaller => (0,
+            ServerCoreType.FabricInstaller => ServiceResult.Fail(
                 "您选择的文件是一个Fabric安装器，而不是一个Minecraft服务端核心文件。请下载Fabric官方服务器jar文件，而不是安装器。"),
-            ServerCoreType.Unknown => (-1,
+            ServerCoreType.Unknown => ServiceResult.Warning(
                 "LSL无法确认您选择的文件是否为Minecraft服务端核心文件。\n这可能是由于LSL没有收集足够的关于服务器核心的辨识信息造成的。如果这是确实一个Minecraft服务端核心并且具有一定的知名度，请您前往LSL的仓库（https://github.com/Orange-Icepop/LSL）提交相关Issue。\n您可以直接点击确认绕过校验，但是LSL及其开发团队不为因此造成的后果作担保。"),
-            ServerCoreType.Client => (0, "您选择的文件是一个Minecraft客户端核心文件，而不是一个服务端核心文件。"),
-            _ => (1, null)
+            ServerCoreType.Client => ServiceResult.Fail("您选择的文件是一个Minecraft客户端核心文件，而不是一个服务端核心文件。"),
+            _ => ServiceResult.Success()
         };
     }
 
-    public static string GetCoreType(string? corePath)
-    {
-        return CoreValidationService.Validate(corePath, out _).ToString();
-    }
+    public static ServiceResult<ServerCoreType> GetCoreType(string? corePath) => CoreValidationService.Validate(corePath);
 
     public async Task<ServiceResult> AddServer(FormedServerConfig config)
     {

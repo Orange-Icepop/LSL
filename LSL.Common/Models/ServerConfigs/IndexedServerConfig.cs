@@ -14,13 +14,18 @@ public class IndexedServerConfig
     public uint MinMemory => PathedConfig.MinMemory;
     public uint MaxMemory => PathedConfig.MaxMemory;
     public string ExtJvm => PathedConfig.ExtJvm;
+    public bool EnablePreLaunchProtection => PathedConfig.EnablePreLaunchProtection;
+    public ServerCoreType ServerType => PathedConfig.ServerType;
+
     [MemberNotNullWhen(true, nameof(ForgeInfo))]
     public bool IsForge => PathedConfig.IsForge;
+
     public ForgeConfigV1? ForgeInfo => PathedConfig.ForgeInfo;
 
     public IndexedServerConfig(IndexedServerConfig config) // 深拷贝构造函数
         : this(config.ServerId, config.ServerPath, config.ServerName, config.UsingJava, config.CoreName,
-            config.MinMemory, config.MaxMemory, config.ExtJvm, config.ForgeInfo)
+            config.MinMemory, config.MaxMemory, config.ExtJvm, config.EnablePreLaunchProtection, config.ServerType,
+            config.ForgeInfo)
     {
     }
 
@@ -32,7 +37,9 @@ public class IndexedServerConfig
     /// <param name="minMemory">The minimum JVM allocated RAM.</param>
     /// <param name="maxMemory">The maximum JVM allocated RAM.</param>
     /// <param name="extJvm">The extent JVM parameters.</param>
-    /// <param name="forgeInfo">Optional ForgeConfig instance recording the library and shim file of the forge server.</param>
+    /// <param name="serverType">The type of the server.</param>
+    /// <param name="enablePreLaunchProtection">Disable the operation before the server's complete start. May lock permanently in some types of server such as Mohist.</param>
+    /// <param name="forgeInfo">Optional ForgeConfig instance recording the library of the forge server.</param>
     public IndexedServerConfig(int serverId,
         string serverPath,
         string serverName,
@@ -41,8 +48,11 @@ public class IndexedServerConfig
         uint minMemory,
         uint maxMemory,
         string extJvm,
+        bool enablePreLaunchProtection,
+        ServerCoreType serverType,
         ForgeConfigV1? forgeInfo) : this(serverId,
-        new PathedServerConfig(serverPath, serverName, usingJava, coreName, minMemory, maxMemory, extJvm, forgeInfo))
+        new PathedServerConfig(serverPath, serverName, usingJava, coreName, minMemory, maxMemory, extJvm,
+            enablePreLaunchProtection, serverType, forgeInfo))
     {
     }
 
@@ -55,7 +65,8 @@ public class IndexedServerConfig
     /// <summary>
     /// Returns a server info which will be recognized as not added.
     /// </summary>
-    public static IndexedServerConfig None => new(-1, "", "未添加服务器", "", "", 0, 0, "", null);
+    public static IndexedServerConfig None =>
+        new(-1, "", "未添加服务器", "", "", 0, 0, "", false, ServerCoreType.Unknown, null);
 }
 
 public static class ServerConfigExtensions
