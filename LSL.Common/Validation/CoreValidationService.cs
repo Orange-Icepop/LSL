@@ -1,4 +1,5 @@
-﻿using ICSharpCode.SharpZipLib.Zip;
+﻿using System.Text;
+using ICSharpCode.SharpZipLib.Zip;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfigs;
 
@@ -9,7 +10,6 @@ namespace LSL.Common.Validation;
 /// </summary>
 public static class CoreValidationService
 {
-
     public static ServiceResult<ServerCoreType> Validate(string? filePath)// 校验核心类型
     {
         if (string.IsNullOrEmpty(filePath))
@@ -21,14 +21,13 @@ public static class CoreValidationService
         {
             return ServiceResult.Fail<ServerCoreType>("选定的文件/路径不存在");
         }
-        var jarMainClass = GetMainClass(filePath);
-        if (jarMainClass == null) return ServiceResult.Success(ServerCoreType.Unknown);
-        if (jarMainClass.StartsWith("Access denied") || jarMainClass.StartsWith("Error"))
+        var jarMainClassResult = GetMainClass(filePath);
+        if (jarMainClassResult.IsError)
         {
-            return ServiceResult.Fail<ServerCoreType>(jarMainClass);
+            return ServiceResult.Fail<ServerCoreType>(jarMainClassResult.Error);
         }
 
-        var type = jarMainClass switch
+        var type = jarMainClassResult.Result switch
         {
             "net.minecraft.server.MinecraftServer" => ServerCoreType.Vanilla,
             "net.minecraft.bundler.Main" => ServerCoreType.Vanilla,
@@ -53,40 +52,39 @@ public static class CoreValidationService
         };
         return ServiceResult.Success(type);
     }
-    // the following code is taken from https://github.com/Orange-Icepop/JavaMainClassFinder
-    public static string? GetMainClass(string jarFilePath)
+    // the following code is taken and modified from https://github.com/Orange-Icepop/JavaMainClassFinder
+    public static ServiceResult<string> GetMainClass(string jarFilePath)
     {
         try
         {
-            using var stream = new FileStream(jarFilePath, FileMode.Open);
+            using var stream = new FileStream(jarFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                bufferSize: 4096, useAsync: false);
             using var zipFile = new ZipFile(stream);
             foreach (ZipEntry entry in zipFile)
             {
                 if (entry.IsDirectory) continue;
-                if (entry.Name != "META-INF/MANIFEST.MF") continue; // 对于较新版本的MC，MANIFEST.MF中应当包含Main-Class字段
+                if (entry.Name != "META-INF/MANIFEST.MF") continue;
                 using var fStream = zipFile.GetInputStream(entry);
-                if (fStream is null) return null;
-                using var reader = new StreamReader(fStream);
+                if (fStream is null) return ServiceResult.Fail<string>("Unable to read MANIFEST.MF");
+                using var reader = new StreamReader(fStream, Encoding.UTF8);
                 var manifestContent = reader.ReadToEnd();
-                return FindMainClassLine(manifestContent);
+                var mc = FindMainClassLine(manifestContent);
+                if (mc is null) return ServiceResult.Fail<string>("Cannot find Main-Class property in MANIFEST.MF");
             }
 
-            return null;
+            return ServiceResult.Fail<string>("Cannot find MANIFEST.MF");
         }
         catch (UnauthorizedAccessException ex)
         {
-            Console.WriteLine("Access denied: " + ex.Message);
-            return "Access denied: " + ex.Message;
+            return ServiceResult.Fail<string>("Access denied: " + ex.Message);
         }
         catch (IOException ex)
         {
-            Console.WriteLine("IO error: " + ex.Message);
-            return "Error reading file: " + ex.Message;
+            return ServiceResult.Fail<string>("Error reading file: " + ex.Message);
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error reading jar file: " + ex.Message);
-            return "Error reading jar file: " + ex.Message;
+            return ServiceResult.Fail<string>("Error reading jar file: " + ex.Message);
         }
     }
 
