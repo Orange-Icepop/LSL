@@ -375,7 +375,7 @@ public class ServiceConnector
 
     #region 服务器添加、修改与删除
 
-    public static ServiceResult ValidateNewServerConfig(FormedServerConfig config, bool skipCorePathCheck = false)
+    public static async Task<ServiceResult> ValidateNewServerConfig(FormedServerConfig config, bool skipCorePathCheck = false)
     {
         var checkResult = CheckService.VerifyFormedServerConfig(config, skipCorePathCheck);
         StringBuilder errorInfo = new ();
@@ -390,7 +390,7 @@ public class ServiceConnector
         }
 
         if (skipCorePathCheck) return ServiceResult.Success(); // 不检查核心，直接返回
-        var coreResult = CoreValidationService.Validate(config.CorePath);
+        var coreResult = await CoreTypeHelper.GetCoreType(config.CorePath);
         if (coreResult.IsError) return ServiceResult.Fail(coreResult.Error);
         return coreResult.Result switch
         {
@@ -405,7 +405,7 @@ public class ServiceConnector
         };
     }
 
-    public static ServiceResult<ServerCoreType> GetCoreType(string? corePath) => CoreValidationService.Validate(corePath);
+    public static Task<ServiceResult<ServerCoreType>> GetCoreType(string? corePath) => CoreTypeHelper.GetCoreType(corePath);
 
     public async Task<ServiceResult> AddServer(FormedServerConfig config)
     {

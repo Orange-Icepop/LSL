@@ -146,7 +146,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     private async Task AddServerCore()
     {
         FormedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
-        var vResult = ServiceConnector.ValidateNewServerConfig(serverInfo);
+        var vResult = await ServiceConnector.ValidateNewServerConfig(serverInfo);
         if (vResult.IsError)
         {
             await AppState.InteractionUnits.ThrowError("表单错误", vResult.Error.Message);
@@ -165,7 +165,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
                 await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
             if (confirm == PopupResult.No) return;
         }
-        var coreTypeResult = ServiceConnector.GetCoreType(serverInfo.CorePath);
+        var coreTypeResult = await ServiceConnector.GetCoreType(serverInfo.CorePath);
         if (!coreTypeResult.IsSuccess)
         {
             await AppState.InteractionUnits.ThrowError("无法获取服务器类型信息", coreTypeResult.Error.Message);
@@ -192,7 +192,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     {
         int id = AppState.SelectedServerId;
         FormedServerConfig info = new(ServerName, "", MinMem, MaxMem, JavaPath, ExtJvm);
-        var vResult = ServiceConnector.ValidateNewServerConfig(info, true);
+        var vResult = await ServiceConnector.ValidateNewServerConfig(info, true);
         if (vResult.IsError)
         {
             await AppState.InteractionUnits.ThrowError("表单错误", vResult.Error.Message);
@@ -224,7 +224,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     private async Task AddServerFolder()
     {
         FormedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
-        var vResult = ServiceConnector.ValidateNewServerConfig(serverInfo);
+        var vResult = await ServiceConnector.ValidateNewServerConfig(serverInfo);
         if (vResult.IsError)
         {
             await AppState.InteractionUnits.ThrowError("表单错误", vResult.Error.Message);
@@ -243,7 +243,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
                 await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
             if (confirm == PopupResult.No) return;
         }
-        var coreTypeResult = ServiceConnector.GetCoreType(serverInfo.CorePath);
+        var coreTypeResult = await ServiceConnector.GetCoreType(serverInfo.CorePath);
         if (!coreTypeResult.IsSuccess)
         {
             await AppState.InteractionUnits.ThrowError("无法获取服务器类型信息", coreTypeResult.Error.Message);
