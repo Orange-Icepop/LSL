@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using LSL.Common.Utilities;
 using static LSL.Common.Utilities.Json.JsonPropertyValidationHelper;
 
 namespace LSL.Common.Models.ServerConfigs;
@@ -38,36 +39,35 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) }
     };
 
-    public static ServiceResult<ServerConfigV1> Deserialize(JsonElement configRoot, bool ignoreWarnings)
+    public static ServiceResult<ServerConfigV1> Deserialize(JsonElement configRoot)
     {
         var result = new ServerConfigV1();
         List<string> warnings = [];
         Action<string> onError = s => warnings.Add(s);
+        bool coreDetectable = true;
+        StringHandler(onSuccess: s => result.CoreName = s).Invoke(configRoot, "core_name", _ => coreDetectable = false);
+        if (!coreDetectable) return ServiceResult.Fail<ServerConfigV1>("core_name is missing");
         
-        StringHandler(onSuccess: s => result.Name = s).Invoke(configRoot, "name", onError);
+        StringHandler(onSuccess: s => result.Name = s).Invoke(configRoot, "name", s =>
+        {
+            result.Name = "Nameless Server";
+            warnings.Add(s);
+        });
         JavaHandler(onSuccess: s => result.UsingJava = s).Invoke(configRoot, "using_java", onError);
-        StringHandler(onSuccess: s => result.CoreName = s).Invoke(configRoot, "core_name", onError);
         UIntHandler(onSuccess: u => result.MinMemory = u ).Invoke(configRoot, "min_memory", onError);
         UIntHandler(onSuccess: u => result.MaxMemory = u ).Invoke(configRoot, "max_memory", onError);
         StringHandler(onSuccess: s => result.ExtJvm = s, enableEmpty:true).Invoke(configRoot, "ext_jvm", _ => result.ExtJvm = "-Dlog4j2.formatMsgNoLookups=true");
 
         if (result.MinMemory > result.MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
-        
+
         if (warnings.Count > 0)
-            return ignoreWarnings
-                ? ServiceResult.Warning(result,
-                    new StringBuilder().AppendJoin('\n', warnings).ToString())
-                : ServiceResult.Fail<ServerConfigV1>(
-                    new StringBuilder().AppendJoin('\n', warnings).ToString());
+            return ServiceResult.Warning(result,
+                new StringBuilder().AppendJoin('\n', warnings).ToString());
         return ServiceResult.Success(result);
     }
 
-    public PathedServerConfig Standardize(string path)
-    {
-        if (!Path.Exists(path)) throw new ArgumentException($"Path {path} does not exist", nameof(path));
-        var 
-        return new(path, Name, UsingJava, CoreName, MinMemory, MaxMemory, ExtJvm);
-    }
+    public PathedServerConfig Standardize(string path) => new(path, Name, UsingJava, CoreName, MinMemory, MaxMemory,
+        ExtJvm.Split(' '), true, ServerCoreType.Error, null);
 
     public string Serialize() => JsonSerializer.Serialize(this, SerializerOptions);
 }

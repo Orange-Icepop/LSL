@@ -33,8 +33,7 @@ public static partial class CheckComponents
     {
         if (!IsValidPath(javaPath)) return false;
         if (!File.Exists(javaPath)) return false;
-        if (JavaFinder.GetJavaInfo(javaPath) == null) return false;
-        return true;
+        return JavaFinder.GetJavaInfo(javaPath) is not null;
     }
 
     #endregion
@@ -90,17 +89,13 @@ public static partial class CheckComponents
         return new VerifyResult("MaxMem", true, null);
     }
 
-    public static VerifyResult ExtJvm(string? num)
+    public static VerifyResult ExtJvm(string? arg)
     {
-        if (string.IsNullOrEmpty(num)) return new VerifyResult("ExtJvm", true, null);
-        var group = num.Split(' ');
-        foreach (var item in group)
-        {
-            if (item.StartsWith('-') && !item.StartsWith("--") && !item.EndsWith('-')) continue;
-            return new VerifyResult("ExtJvm", false, "扩展参数格式错误");
-        }
-
-        return new VerifyResult("ExtJvm", true, null);
+        if (string.IsNullOrEmpty(arg)) return new VerifyResult("ExtJvm", true, null);
+        var group = arg.Split(' ');
+        return group.Any(item => !item.StartsWith('-') || item.StartsWith("--") || item.EndsWith('-'))
+            ? new VerifyResult("ExtJvm", false, "扩展参数格式错误")
+            : new VerifyResult("ExtJvm", true, null);
     }
 
     #endregion

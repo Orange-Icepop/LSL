@@ -96,9 +96,43 @@ public static class JsonPropertyValidationHelper
             if (value > maxValue)
             {
                 onFail?.Invoke($"Value must be at most {maxValue.Value}");
+                return;
             }
 
             onSuccess?.Invoke(value);
+        };
+    }
+
+    public static HandleJsonProperty StringArrayHandler(Action<string[]>? onSuccess = null, bool ignoreWrongType = true,
+        bool ignoreEmpty = false)
+    {
+        return (root, propertyName, onFail) =>
+        {
+            if (!root.TryGetProperty(propertyName, out var element))
+            {
+                onFail?.Invoke($"Property {propertyName} is missing");
+                return;
+            }
+            if (element.ValueKind is not JsonValueKind.Array)
+            {
+                onFail?.Invoke($"Property {propertyName} is not a Array.");
+                return;
+            }
+            List<string> result = [];
+            foreach (var item in element.EnumerateArray())
+            {
+                if (item.TryGetNullableString(out var value))
+                {
+                    if (ignoreEmpty && string.IsNullOrWhiteSpace(value)) continue;
+                    result.Add(value ?? string.Empty);
+                }
+                else if (!ignoreWrongType)
+                {
+                    onFail?.Invoke($"Property {propertyName} has non-string element");
+                    return;
+                }
+            }
+            onSuccess?.Invoke(result.ToArray());
         };
     }
 

@@ -3,17 +3,17 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LSL.Common.Models.ServerConfigs;
 
-public class IndexedServerConfig
+public class IndexedServerConfig(int serverId, PathedServerConfig pathedConfig)
 {
-    public PathedServerConfig PathedConfig { get; private set; }
-    public int ServerId { get; set; }
+    public PathedServerConfig PathedConfig { get; private set; } = pathedConfig;
+    public int ServerId { get; set; } = serverId;
     public string ServerPath => PathedConfig.ServerPath;
     public string ServerName => PathedConfig.ServerName;
     public string UsingJava => PathedConfig.UsingJava;
     public string CoreName => PathedConfig.CoreName;
     public uint MinMemory => PathedConfig.MinMemory;
     public uint MaxMemory => PathedConfig.MaxMemory;
-    public string ExtJvm => PathedConfig.ExtJvm;
+    public List<string> ExtJvm => PathedConfig.ExtJvm;
     public bool EnablePreLaunchProtection => PathedConfig.EnablePreLaunchProtection;
     public ServerCoreType ServerType => PathedConfig.ServerType;
 
@@ -24,7 +24,7 @@ public class IndexedServerConfig
 
     public IndexedServerConfig(IndexedServerConfig config) // 深拷贝构造函数
         : this(config.ServerId, config.ServerPath, config.ServerName, config.UsingJava, config.CoreName,
-            config.MinMemory, config.MaxMemory, config.ExtJvm, config.EnablePreLaunchProtection, config.ServerType,
+            config.MinMemory, config.MaxMemory, config.ExtJvm.ToArray(), config.EnablePreLaunchProtection, config.ServerType,
             config.ForgeInfo)
     {
     }
@@ -47,7 +47,7 @@ public class IndexedServerConfig
         string coreName,
         uint minMemory,
         uint maxMemory,
-        string extJvm,
+        string[] extJvm,
         bool enablePreLaunchProtection,
         ServerCoreType serverType,
         ForgeConfigV1? forgeInfo) : this(serverId,
@@ -56,17 +56,11 @@ public class IndexedServerConfig
     {
     }
 
-    public IndexedServerConfig(int serverId, PathedServerConfig pathedConfig)
-    {
-        ServerId = serverId;
-        PathedConfig = pathedConfig;
-    }
-
     /// <summary>
     /// Returns a server info which will be recognized as not added.
     /// </summary>
     public static IndexedServerConfig None =>
-        new(-1, "", "未添加服务器", "", "", 0, 0, "", false, ServerCoreType.Unknown, null);
+        new(-1, "", "未添加服务器", "", "", 0, 0, [], false, ServerCoreType.Unknown, null);
 }
 
 public static class ServerConfigExtensions

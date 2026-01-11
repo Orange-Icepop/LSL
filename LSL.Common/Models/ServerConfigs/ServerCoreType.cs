@@ -22,3 +22,16 @@ public enum ServerCoreType
     Vanilla,
     Velocity,
 }
+
+public static class ServerCoreTypeExtensions
+{
+    public static string Explain(this ServerCoreType coreType)
+    {
+        return coreType switch
+        {
+            ServerCoreType.Forge => "Forge (>=1.13)",
+            ServerCoreType.OldForge => "Forge (<=1.13)",
+            _ => coreType.ToString()
+        };
+    }
+}

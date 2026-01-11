@@ -18,4 +18,20 @@ public static class JsonElementExtensions
             return false;
         }
     }
+
+    public static bool TryGetNullableString(this JsonElement property, out string? value)
+    {
+        switch (property.ValueKind)
+        {
+            case JsonValueKind.String:
+                value = property.GetString();
+                return value is not null;
+            case JsonValueKind.Null:
+                value = null;
+                return true;
+            default:
+                value = null;
+                return false;
+        }
+    }
 }

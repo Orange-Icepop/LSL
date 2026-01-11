@@ -9,12 +9,12 @@ public static class ForgeConfigHelper
     /// Find the library argument of the specified forge server.
     /// </summary>
     /// <param name="serverDir">The path of the forge server.</param>
-    /// <returns>Pair (windowsArguments,unixArguments).</returns>
-    public static ServiceResult<(string, string)> GetForgeConfig(string? serverDir)
+    /// <returns>Pair (unixArguments,windowsArguments).</returns>
+    public static async Task<ServiceResult<(string unixArguments, string windowsArguments)>> GetForgeConfig(string? serverDir)
     {
         if (string.IsNullOrWhiteSpace(serverDir) || !Directory.Exists(serverDir))
-            return ServiceResult.Fail<(string, string)>("Server directory doesn't exist.");
-        var tryArgs = FindLibraryArgsWithScript(Path.Combine(serverDir, "run.bat"), Path.Combine(serverDir, "run.sh"));
+            return ServiceResult.Fail<(string, string)>(new DirectoryNotFoundException("Server directory doesn't exist."));
+        var tryArgs = await FindLibraryArgsWithScript(Path.Combine(serverDir, "run.bat"), Path.Combine(serverDir, "run.sh"));
         return tryArgs.IsSuccess ? tryArgs : FindLibraryArgsWithContrast(serverDir);
     }
 
@@ -23,16 +23,16 @@ public static class ForgeConfigHelper
     /// </summary>
     /// <param name="winScriptPath">The path of the run.bat file.</param>
     /// <param name="unixScriptPath">The path of the run.sh file.</param>
-    /// <returns>Pair (windowsArguments,unixArguments).</returns>
-    private static ServiceResult<(string, string)> FindLibraryArgsWithScript(string winScriptPath, string unixScriptPath)
+    /// <returns>Pair (unixArguments,windowsArguments).</returns>
+    private static async Task<ServiceResult<(string unixArguments, string windowsArguments)>> FindLibraryArgsWithScript(string unixScriptPath, string winScriptPath)
     {
         string? winArgs = null, unixArgs = null;
-        if (!string.IsNullOrWhiteSpace(winScriptPath) && File.Exists(winScriptPath)) winArgs = FindLibraryArgsPath(
-            File.ReadAllLines(winScriptPath));
         if (!string.IsNullOrWhiteSpace(unixScriptPath) && File.Exists(unixScriptPath)) winArgs = FindLibraryArgsPath(
-            File.ReadAllLines(unixScriptPath));
-        if (winArgs is not null && unixArgs is null) return ServiceResult.Success((winArgs, winArgs.Replace("win_args.txt", "unix_args.txt")));
-        if (winArgs is null && unixArgs is not null) return ServiceResult.Success((unixArgs.Replace("unix_args.txt", "win_args.txt"), unixArgs));
+            await File.ReadAllLinesAsync(unixScriptPath));
+        if (!string.IsNullOrWhiteSpace(winScriptPath) && File.Exists(winScriptPath)) winArgs = FindLibraryArgsPath(
+            await File.ReadAllLinesAsync(winScriptPath));
+        if (unixArgs is null && winArgs is not null) return ServiceResult.Success((winArgs.Replace("win_args.txt", "unix_args.txt"), winArgs));
+        if (unixArgs is not null && winArgs is null) return ServiceResult.Success((unixArgs, unixArgs.Replace("unix_args.txt", "win_args.txt")));
         return ServiceResult.Fail<(string,string)>("Cannot find any of the forge libraries through scripts.");
     }
 
@@ -40,10 +40,11 @@ public static class ForgeConfigHelper
     /// Find the library argument of the specified forge server using the so-observed contract of where these arguments are.
     /// </summary>
     /// <param name="serverPath">The path of the forge server.</param>
-    /// <returns>Pair (windowsArguments,unixArguments).</returns>
-    private static ServiceResult<(string, string)> FindLibraryArgsWithContrast(string serverPath)
+    /// <returns>Pair (unixArguments,windowsArguments).</returns>
+    private static ServiceResult<(string unixArguments, string windowsArguments)> FindLibraryArgsWithContrast(string serverPath)
     {
-        if (string.IsNullOrWhiteSpace(serverPath) || !File.Exists(serverPath)) return ServiceResult.Fail<(string, string)>("Server directory doesn't exist.");
+        if (string.IsNullOrWhiteSpace(serverPath) || !File.Exists(serverPath)) return ServiceResult.Fail<(string, string)>(
+            new DirectoryNotFoundException("Server directory doesn't exist."));
         var dir = Path.Combine(serverPath, "libraries/net/minecraftforge/forge");
         if (!Directory.Exists(dir)) return ServiceResult.Fail<(string, string)>("Server forge directory doesn't exist.");
         var subDirs = Directory.GetDirectories(dir);
@@ -51,8 +52,8 @@ public static class ForgeConfigHelper
         var subDir = Path.GetDirectoryName(subDirs[0]);
         return string.IsNullOrWhiteSpace(subDir)
             ? ServiceResult.Fail<(string, string)>("Cannot determine the directory of which library arguments existed")
-            : ServiceResult.Success(($"libraries/net/minecraftforge/forge/{subDir}/win_args.txt",
-                $"libraries/net/minecraftforge/forge/{subDir}/unix_args.txt"));
+            : ServiceResult.Success(($"libraries/net/minecraftforge/forge/{subDir}/unix_args.txt",
+                $"libraries/net/minecraftforge/forge/{subDir}/win_args.txt"));
     }
 
     /// <summary>

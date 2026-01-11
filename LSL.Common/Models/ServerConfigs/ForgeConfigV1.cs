@@ -34,4 +34,7 @@ public class ForgeConfigV1
         if (hasWinLibrary && hasUnixLibrary) return ServiceResult.Success(result);
         return ServiceResult.Fail<ForgeConfigV1>("Neither win_args.txt nor unix_args.txt is set");
     }
+
+    public static ForgeConfigV1 FromTuple((string unix, string win) tuple) => new()
+        { UnixLibraryArgsPath = tuple.unix, WinLibraryArgsPath = tuple.win };
 }

@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Frozen;
+﻿using System.Collections.Frozen;
 using System.Text;
 using ICSharpCode.SharpZipLib.Zip;
 using LSL.Common.Models;
@@ -14,8 +13,8 @@ public static class CoreTypeHelper
 {
     public static async Task<ServiceResult<ServerCoreType>> GetCoreType(string? filePath) // 校验核心类型
     {
-        if (string.IsNullOrEmpty(filePath)) return ServiceResult.Fail<ServerCoreType>("选定的路径为空");
-        if (!File.Exists(filePath)) return ServiceResult.Fail<ServerCoreType>("选定的文件/路径不存在");
+        if (string.IsNullOrEmpty(filePath)) return ServiceResult.Fail<ServerCoreType>(new ArgumentNullException(nameof(filePath)));
+        if (!File.Exists(filePath)) return ServiceResult.Fail<ServerCoreType>(new FileNotFoundException($"Cannot find core file {filePath}"));
 
         var jarMainClassResult = await GetMainClass(filePath).ConfigureAwait(false);
         if (jarMainClassResult.IsError) return ServiceResult.Fail<ServerCoreType>(jarMainClassResult.Error);
@@ -23,7 +22,7 @@ public static class CoreTypeHelper
     }
 
     // the following code is taken and modified from https://github.com/Orange-Icepop/JavaMainClassFinder
-    public static async Task<ServiceResult<string>> GetMainClass(string jarFilePath)
+    private static async Task<ServiceResult<string>> GetMainClass(string jarFilePath)
     {
         try
         {
@@ -55,7 +54,7 @@ public static class CoreTypeHelper
         }
     }
 
-    public static string? FindMainClassLine(string manifestContent)
+    private static string? FindMainClassLine(string manifestContent)
     {
         var lines = manifestContent.Split(["\r\n", "\r", "\n"], StringSplitOptions.None);
         return (from line in lines where line.StartsWith("Main-Class:") select line["Main-Class:".Length..].Trim())

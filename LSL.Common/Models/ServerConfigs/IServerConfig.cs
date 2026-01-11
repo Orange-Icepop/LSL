@@ -11,5 +11,5 @@ public interface IServerConfig
 
 public interface IServerConfig<TConfig> : IServerConfig where TConfig : IServerConfig<TConfig>
 {
-    static abstract ServiceResult<TConfig> Deserialize(JsonElement configRoot, bool ignoreWarnings);
+    static abstract ServiceResult<TConfig> Deserialize(JsonElement configRoot);
 }
