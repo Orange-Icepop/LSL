@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LSL.Common.Utilities;
-using static LSL.Common.Utilities.Json.JsonPropertyValidationHelper;
+using static LSL.Common.Extensions.JsonPropertyExtensions;
 
 namespace LSL.Common.Models.ServerConfigs;
 
@@ -45,20 +45,38 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         List<string> warnings = [];
         Action<string> onError = s => warnings.Add(s);
         bool coreDetectable = true;
-        StringHandler(onSuccess: s => result.CoreName = s).Invoke(configRoot, "core_name", _ => coreDetectable = false);
+        configRoot.ParseStringProperty("core_name",
+            onSuccess: s => result.CoreName = s,
+            onFail: _ => coreDetectable = false);
         if (!coreDetectable) return ServiceResult.Fail<ServerConfigV1>("core_name is missing");
-        
-        StringHandler(onSuccess: s => result.Name = s).Invoke(configRoot, "name", s =>
-        {
-            result.Name = "Nameless Server";
-            warnings.Add(s);
-        });
-        JavaHandler(onSuccess: s => result.UsingJava = s).Invoke(configRoot, "using_java", onError);
-        UIntHandler(onSuccess: u => result.MinMemory = u ).Invoke(configRoot, "min_memory", onError);
-        UIntHandler(onSuccess: u => result.MaxMemory = u ).Invoke(configRoot, "max_memory", onError);
-        StringHandler(onSuccess: s => result.ExtJvm = s, enableEmpty:true).Invoke(configRoot, "ext_jvm", _ => result.ExtJvm = "-Dlog4j2.formatMsgNoLookups=true");
 
-        if (result.MinMemory > result.MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
+        configRoot.ParseStringProperty("name",
+            onSuccess: s => result.Name = s,
+            onFail: s =>
+            {
+                result.Name = "Nameless Server";
+                warnings.Add(s);
+            });
+
+        configRoot.ParseJavaProperty("using_java",
+            onSuccess: s => result.UsingJava = s,
+            onFail: onError);
+
+        configRoot.ParseUIntProperty("min_memory",
+            onSuccess: u => result.MinMemory = u,
+            onFail: onError);
+
+        configRoot.ParseUIntProperty("max_memory",
+            onSuccess: u => result.MaxMemory = u,
+            onFail: onError);
+
+        configRoot.ParseStringProperty("ext_jvm",
+            onSuccess: s => result.ExtJvm = s,
+            onFail: _ => result.ExtJvm = "-Dlog4j2.formatMsgNoLookups=true",
+            enableEmpty: true);
+
+        if (result.MinMemory > result.MaxMemory)
+            warnings.Add("Minimum memory shouldn't be greater than maximum memory");
 
         if (warnings.Count > 0)
             return ServiceResult.Warning(result,

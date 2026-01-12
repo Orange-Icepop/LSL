@@ -1,4 +1,5 @@
 using System.Text.Json;
+using LSL.Common.Extensions;
 using LSL.Common.Utilities.Json;
 
 namespace LSL.Common.Models.ServerConfigs;
@@ -15,10 +16,8 @@ public class ForgeConfigV1
         var result = new ForgeConfigV1();
         bool hasUnixLibrary = true;
         bool hasWinLibrary = true;
-        JsonPropertyValidationHelper.FileHandler(onSuccess: s => result.UnixLibraryArgsPath = s)
-            .Invoke(configRoot, "unixLibraryPath", _ => hasUnixLibrary = false);
-        JsonPropertyValidationHelper.FileHandler(onSuccess: s => result.WinLibraryArgsPath = s)
-            .Invoke(configRoot, "winLibraryPath", _ => hasWinLibrary = false);
+        configRoot.ParseFileProperty("unixLibraryPath", s => result.UnixLibraryArgsPath = s,_ => hasUnixLibrary = false);
+        configRoot.ParseFileProperty("winLibraryPath", s => result.WinLibraryArgsPath = s, _ => hasWinLibrary = false);
         if (!hasUnixLibrary && hasWinLibrary)
         {
             result.UnixLibraryArgsPath = result.WinLibraryArgsPath.Replace("win_args.txt", "unix_args.txt");

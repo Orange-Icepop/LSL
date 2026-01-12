@@ -123,7 +123,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         IDictionary<int, string> mainConfigs)
     {
         List<string> notfoundServers = [];
-        List<string> configErrorServers = [];
+        List<string> configWarningServers = [];
         // 读取各个服务器的LSL配置文件
         Dictionary<int, IndexedServerConfig> scCache = [];
         foreach (var (key, targetDir) in mainConfigs)
@@ -142,7 +142,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 case ServerConfigParseResultType.MissingKey:
                 case ServerConfigParseResultType.ConfigFileNotFound:
                 {
-                    configErrorServers.Add(targetDir);
+                    configWarningServers.Add(targetDir);
                     break;
                 }
                 case ServerConfigParseResultType.Success:
@@ -154,10 +154,10 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         }
 
         // 检查错误
-        if (notfoundServers.Count > 0 || configErrorServers.Count > 0)
+        if (notfoundServers.Count > 0 || configWarningServers.Count > 0)
         {
             return ServerConfigList.PartialError(scCache.ToFrozenDictionary(), notfoundServers,
-                configErrorServers);
+                configWarningServers);
         }
 
         return ServerConfigList.Success(scCache.ToFrozenDictionary());

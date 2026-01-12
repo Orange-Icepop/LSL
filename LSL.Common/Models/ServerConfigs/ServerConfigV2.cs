@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using LSL.Common.Utilities.Json;
 using Newtonsoft.Json;
-using static LSL.Common.Utilities.Json.JsonPropertyValidationHelper;
+using static LSL.Common.Extensions.JsonPropertyExtensions;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace LSL.Common.Models.ServerConfigs;
@@ -39,17 +39,39 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
         List<string> warnings = [];
         Action<string> onError = s => warnings.Add(s);
         bool coreDetectable = true;
-        StringHandler(onSuccess: s => result.CoreName = s).Invoke(configRoot, "coreName", _ => coreDetectable = false);
+        configRoot.ParseStringProperty("coreName", 
+            onSuccess: s => result.CoreName = s, 
+            onFail: _ => coreDetectable = false);
         if (!coreDetectable) return ServiceResult.Fail<ServerConfigV2>("coreName is missing");
-        
-        StringHandler(onSuccess: s => result.Name = s).Invoke(configRoot, "name", onError);
-        JavaHandler(onSuccess: s => result.UsingJava = s).Invoke(configRoot, "usingJava", onError);
-        UIntHandler(onSuccess: u => result.MinMemory = u ).Invoke(configRoot, "minMemory", onError);
-        UIntHandler(onSuccess: u => result.MaxMemory = u ).Invoke(configRoot, "maxMemory", onError);
-        StringArrayHandler(onSuccess: s => result.ExtJvm = s, ignoreEmpty:true).Invoke(configRoot, "extJvm", _ => result.ExtJvm =
-            ["-Dlog4j2.formatMsgNoLookups=true"]);
-        EnumHandler<ServerCoreType>(onSuccess: t => result.ServerType = t).Invoke(configRoot, "serverType");
-        BoolHandler(onSuccess: b => result.EnablePreLaunchProtection = b).Invoke(configRoot, "enablePreLaunchProtection", _ => result.EnablePreLaunchProtection = result.ServerType is not ServerCoreType.Mohist);
+
+        configRoot.ParseStringProperty("name",
+            onSuccess: s => result.Name = s,
+            onFail: onError);
+
+        configRoot.ParseJavaProperty("usingJava",
+            onSuccess: s => result.UsingJava = s,
+            onFail: onError);
+
+        configRoot.ParseUIntProperty("minMemory",
+            onSuccess: u => result.MinMemory = u,
+            onFail: onError);
+
+        configRoot.ParseUIntProperty("maxMemory",
+            onSuccess: u => result.MaxMemory = u,
+            onFail: onError);
+
+        configRoot.ParseStringArrayProperty("extJvm",
+            onSuccess: s => result.ExtJvm = s,
+            onFail: _ => result.ExtJvm = ["-Dlog4j2.formatMsgNoLookups=true"],
+            ignoreEmpty: true);
+
+        configRoot.ParseEnumProperty<ServerCoreType>("serverType",
+            onSuccess: t => result.ServerType = t,
+            onFail: _ => { });
+
+        configRoot.ParseBoolProperty("enablePreLaunchProtection",
+            onSuccess: b => result.EnablePreLaunchProtection = b,
+            onFail: _ => result.EnablePreLaunchProtection = result.ServerType is not ServerCoreType.Mohist);
         if(configRoot.TryGetProperty("forgeInfo", out var forgeInfo)) result.ForgeInfo = ForgeConfigV1.Deserialize(forgeInfo).Result;
 
         if (warnings.Count > 0)
