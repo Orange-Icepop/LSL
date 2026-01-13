@@ -11,7 +11,7 @@ namespace LSL.Common.Utilities;
 /// </summary>
 public static class CoreTypeHelper
 {
-    public static async Task<ServiceResult<ServerCoreType>> GetCoreType(string? filePath) // 校验核心类型
+    public static async Task<ServiceResult<ServerCoreType>> GetCoreType(string? filePath)
     {
         if (string.IsNullOrEmpty(filePath)) return ServiceResult.Fail<ServerCoreType>(new ArgumentNullException(nameof(filePath)));
         if (!File.Exists(filePath)) return ServiceResult.Fail<ServerCoreType>(new FileNotFoundException($"Cannot find core file {filePath}"));

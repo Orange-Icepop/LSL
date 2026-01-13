@@ -9,61 +9,72 @@ namespace LSL.Common.Models.ServerConfigs;
 public class PathedServerConfig(
     string serverPath,
     string serverName,
+    ServerCoreType serverType,
+    CommonCoreConfigV1? commonInfo,
+    ForgeCoreConfigV1? forgeInfo,
     string usingJava,
-    string coreName,
     uint minMemory,
     uint maxMemory,
     string[] extJvm,
-    bool enablePreLaunchProtection,
-    ServerCoreType serverType,
-    ForgeConfigV1? forgeInfo)
+    bool enablePreLaunchProtection)
 {
     public string ServerPath { get; set; } = serverPath;
     public string ServerName { get; set; } = serverName;
+    public ServerCoreType ServerType { get; set; } = ServerCoreType.Error;
+    
+    [MemberNotNullWhen(true, nameof(ForgeCoreInfo))]
+    public bool IsForge => ServerType is ServerCoreType.Forge;
+    
+    public CommonCoreConfigV1? CommonCoreInfo { get; set; } = null;
+    public ForgeCoreConfigV1? ForgeCoreInfo { get; set; } = null;
     public string UsingJava { get; set; } = usingJava;
-    public string CoreName { get; set; } = coreName;
     public uint MinMemory { get; set; } = minMemory;
     public uint MaxMemory { get; set; } = maxMemory;
     public List<string> ExtJvm { get; set; } = [..extJvm];
     public bool EnablePreLaunchProtection { get; set; } = enablePreLaunchProtection;
-    public ServerCoreType ServerType { get; set; } = serverType;
-
-    [MemberNotNullWhen(true, nameof(ForgeInfo))]
-    public bool IsForge => ServerType == ServerCoreType.Forge;
-    public ForgeConfigV1? ForgeInfo { get; set; } = forgeInfo;
 
     public static PathedServerConfig Empty =>
-        new(string.Empty, string.Empty, string.Empty, string.Empty, 1024, 4096, [], true,
-            ServerCoreType.Unknown, null);
+        new(string.Empty, string.Empty, ServerCoreType.Unknown, null, null, string.Empty, 1024, 4096, [], true);
 
     public IndexedServerConfig AsIndexed(int serverId) => new(serverId, this);
 
-    public async Task<ServiceResult> FixAsync()
+    public async Task<ServiceResult> CheckAndFixAsync()
     {
-        if (!Path.Exists(ServerPath)) return ServiceResult.Fail(new DirectoryNotFoundException($"Server {ServerPath} does not exist"));
-        List<string> warnings = [];
-        if (MinMemory > MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
-        if (!CheckComponents.IsValidJava(UsingJava)) warnings.Add("The configured Java is not valid");
-        warnings.AddRange(from arg in ExtJvm where !CheckComponents.ExtJvm(arg).Passed select $"Invalid extra JVM argument {arg}");
-        if (ServerType == ServerCoreType.Error)
+        for(int tries = 0; tries < 3; tries++)
         {
-            var coreTypeResult = await CoreTypeHelper.GetCoreType(Path.Combine(ServerPath, CoreName));
-            if (coreTypeResult.IsError) return ServiceResult.Fail(coreTypeResult.Error);
-            if (coreTypeResult.Result == ServerCoreType.ForgeInstaller)
+            if (!Path.Exists(ServerPath)) return ServiceResult.Fail(new DirectoryNotFoundException($"Server {ServerPath} does not exist"));
+            List<string> warnings = [];
+            if (MinMemory > MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
+            if (!CheckComponents.IsValidJava(UsingJava)) warnings.Add("The configured Java is not valid");
+            warnings.AddRange(from arg in ExtJvm where !CheckComponents.ExtJvm(arg).Passed select $"Invalid extra JVM argument {arg}");
+            if (ServerType is ServerCoreType.Forge or ServerCoreType.ForgeInstaller or ServerCoreType.ForgeShim)
             {
-                if (ForgeInfo != null) ServerType = ServerCoreType.Forge;
-                else
+                if (ForgeCoreInfo is null || !File.Exists(ForgeCoreInfo.WinLibraryArgsPath) || !File.Exists(ForgeCoreInfo.UnixLibraryArgsPath))
                 {
-                    var forgeDetectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
-                    if (forgeDetectResult.IsError) return ServiceResult.Fail(forgeDetectResult.Error);
-                    ServerType = ServerCoreType.Forge;
-                    ForgeInfo = ForgeConfigV1.FromTuple(forgeDetectResult.Result);
+                    var detectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
+                    if (detectResult.IsError) return ServiceResult.Fail("Cannot get the correct core info of the forge server");
+                    ForgeCoreInfo = ForgeCoreConfigV1.FromTuple(detectResult.Result);
                 }
             }
-            else ServerType = coreTypeResult.Result;
-        }
+            else if (ServerType == ServerCoreType.Error)
+            {
+                if (CommonCoreInfo is not null && File.Exists(CommonCoreInfo.JarName))
+                {
+                    var detectResult = await CoreTypeHelper.GetCoreType(CommonCoreInfo.JarName);
+                    if (detectResult.IsError) return ServiceResult.Fail("Cannot get the core type");
+                    ServerType = detectResult.Result;
+                    continue;
+                }
 
-        if (warnings.Count > 0) return ServiceResult.Warning(new StringBuilder().AppendJoin('\n', warnings).ToString());
-        return ServiceResult.Success();
+                if (ForgeCoreInfo is not null && File.Exists(ForgeCoreInfo.WinLibraryArgsPath) && File.Exists(ForgeCoreInfo.UnixLibraryArgsPath))
+                {
+                    ServerType = ServerCoreType.Forge;
+                }
+                else return ServiceResult.Fail("Neither core file nor forge arguments is valid");
+            }
+            if (warnings.Count > 0) return ServiceResult.Warning(new StringBuilder().AppendJoin('\n', warnings).ToString());
+            return ServiceResult.Success();
+        }
+        return ServiceResult.Fail("Failed to check server configuration after multiple attempts");
     }
 }

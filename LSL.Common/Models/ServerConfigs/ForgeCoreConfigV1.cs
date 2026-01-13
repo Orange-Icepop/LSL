@@ -4,16 +4,16 @@ using LSL.Common.Utilities.Json;
 
 namespace LSL.Common.Models.ServerConfigs;
 
-public class ForgeConfigV1
+public class ForgeCoreConfigV1
 {
     public int ConfigVersion { get; } = 1;
     public string UnixLibraryArgsPath { get; set; } = string.Empty;
     public string WinLibraryArgsPath { get; set; } = string.Empty;
 
 
-    public static ServiceResult<ForgeConfigV1> Deserialize(JsonElement configRoot)
+    public static ServiceResult<ForgeCoreConfigV1> Deserialize(JsonElement configRoot)
     {
-        var result = new ForgeConfigV1();
+        var result = new ForgeCoreConfigV1();
         bool hasUnixLibrary = true;
         bool hasWinLibrary = true;
         configRoot.ParseFileProperty("unixLibraryPath", s => result.UnixLibraryArgsPath = s,_ => hasUnixLibrary = false);
@@ -31,9 +31,9 @@ public class ForgeConfigV1
         }
 
         if (hasWinLibrary && hasUnixLibrary) return ServiceResult.Success(result);
-        return ServiceResult.Fail<ForgeConfigV1>("Neither win_args.txt nor unix_args.txt is set");
+        return ServiceResult.Fail<ForgeCoreConfigV1>("Neither win_args.txt nor unix_args.txt is set");
     }
 
-    public static ForgeConfigV1 FromTuple((string unix, string win) tuple) => new()
+    public static ForgeCoreConfigV1 FromTuple((string unix, string win) tuple) => new()
         { UnixLibraryArgsPath = tuple.unix, WinLibraryArgsPath = tuple.win };
 }

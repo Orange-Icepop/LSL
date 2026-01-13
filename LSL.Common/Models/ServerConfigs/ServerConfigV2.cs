@@ -17,37 +17,37 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
 
     public int ConfigVersion { get; } = 2;
     public string Name { get; set; } = string.Empty;
-    public string UsingJava { get; set; } = string.Empty;
-    public string CoreName { get; set; } = string.Empty;
-    public uint MinMemory { get; set; } = 1024;
-    public uint MaxMemory { get; set; } = 4096;
-    public string[] ExtJvm { get; set; } = [];
-
-    public bool EnablePreLaunchProtection { get; set; } = true;
-
     public ServerCoreType ServerType { get; set; } = ServerCoreType.Error;
 
     [JsonIgnore]
-    [MemberNotNullWhen(true, nameof(ForgeInfo))]
+    [MemberNotNullWhen(true, nameof(ForgeCoreInfo))]
     private bool IsForge => ServerType is ServerCoreType.Forge;
-
-    public ForgeConfigV1? ForgeInfo { get; set; } = null;
+    
+    public CommonCoreConfigV1? CommonCoreInfo { get; set; } = null;
+    public ForgeCoreConfigV1? ForgeCoreInfo { get; set; } = null;
+    public string UsingJava { get; set; } = string.Empty;
+    public uint MinMemory { get; set; } = 1024;
+    public uint MaxMemory { get; set; } = 4096;
+    public string[] ExtJvm { get; set; } = [];
+    public bool EnablePreLaunchProtection { get; set; } = true;
 
     public static ServiceResult<ServerConfigV2> Deserialize(JsonElement configRoot)
     {
         var result = new ServerConfigV2();
         List<string> warnings = [];
         Action<string> onError = s => warnings.Add(s);
-        bool coreDetectable = true;
-        configRoot.ParseStringProperty("coreName", 
-            onSuccess: s => result.CoreName = s, 
-            onFail: _ => coreDetectable = false);
-        if (!coreDetectable) return ServiceResult.Fail<ServerConfigV2>("coreName is missing");
 
         configRoot.ParseStringProperty("name",
             onSuccess: s => result.Name = s,
             onFail: onError);
-
+        
+        configRoot.ParseEnumProperty<ServerCoreType>("serverType",
+            onSuccess: t => result.ServerType = t,
+            onFail: null);
+        
+        if(configRoot.TryGetProperty("commonCoreInfo", out var coreInfo)) result.CommonCoreInfo = CommonCoreConfigV1.Deserialize(coreInfo).Result;
+        if(configRoot.TryGetProperty("forgeCoreInfo", out var forgeInfo)) result.ForgeCoreInfo = ForgeCoreConfigV1.Deserialize(forgeInfo).Result;
+        
         configRoot.ParseJavaProperty("usingJava",
             onSuccess: s => result.UsingJava = s,
             onFail: onError);
@@ -65,14 +65,9 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
             onFail: _ => result.ExtJvm = ["-Dlog4j2.formatMsgNoLookups=true"],
             ignoreEmpty: true);
 
-        configRoot.ParseEnumProperty<ServerCoreType>("serverType",
-            onSuccess: t => result.ServerType = t,
-            onFail: _ => { });
-
         configRoot.ParseBoolProperty("enablePreLaunchProtection",
             onSuccess: b => result.EnablePreLaunchProtection = b,
             onFail: _ => result.EnablePreLaunchProtection = result.ServerType is not ServerCoreType.Mohist);
-        if(configRoot.TryGetProperty("forgeInfo", out var forgeInfo)) result.ForgeInfo = ForgeConfigV1.Deserialize(forgeInfo).Result;
 
         if (warnings.Count > 0)
             return ServiceResult.Warning(result,
@@ -80,7 +75,7 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
         return ServiceResult.Success(result);
     }
 
-    public PathedServerConfig Standardize(string path) => new(path, Name, UsingJava, CoreName, MinMemory, MaxMemory, ExtJvm, EnablePreLaunchProtection, ServerType, ForgeInfo);
+    public PathedServerConfig Standardize(string path) => new(path, Name, ServerType, CommonCoreInfo, ForgeCoreInfo, UsingJava, MinMemory, MaxMemory, ExtJvm, EnablePreLaunchProtection);
 
     public string Serialize() => JsonSerializer.Serialize(this, ConfigSerializerOptions.Default);
 }
