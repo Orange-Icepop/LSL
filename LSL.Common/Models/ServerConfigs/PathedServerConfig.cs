@@ -56,7 +56,7 @@ public class PathedServerConfig(
                     ForgeCoreInfo = ForgeCoreConfigV1.FromTuple(detectResult.Result);
                 }
             }
-            else if (ServerType == ServerCoreType.Error)
+            else if (ServerType is ServerCoreType.Error)
             {
                 if (CommonCoreInfo is not null && File.Exists(CommonCoreInfo.JarName))
                 {
@@ -72,8 +72,9 @@ public class PathedServerConfig(
                 }
                 else return ServiceResult.Fail("Neither core file nor forge arguments is valid");
             }
-            if (warnings.Count > 0) return ServiceResult.Warning(new StringBuilder().AppendJoin('\n', warnings).ToString());
-            return ServiceResult.Success();
+            else if (CommonCoreInfo is null || !File.Exists(CommonCoreInfo.JarName))
+                return ServiceResult.Fail("The jar info of the server is invalid");
+            return warnings.Count > 0 ? ServiceResult.Warning(new StringBuilder().AppendJoin('\n', warnings).ToString()) : ServiceResult.Success();
         }
         return ServiceResult.Fail("Failed to check server configuration after multiple attempts");
     }
