@@ -33,7 +33,7 @@ public record ServiceResult<T> : IServiceResult
     [MemberNotNullWhen(false, nameof(Result))]
     public bool IsError => ResultType == ServiceResultType.Error;
     [MemberNotNullWhen(true, nameof(Error))]
-    [MemberNotNullWhen(true, nameof(Result))]
+    [MemberNotNullWhen(false, nameof(Result))]
     public bool HasError => ResultType != ServiceResultType.Success;
     [MemberNotNullWhen(true, nameof(Result))]
     [MemberNotNullWhen(false, nameof(Error))]

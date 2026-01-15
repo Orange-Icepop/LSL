@@ -7,35 +7,24 @@ using LSL.Common.Models.ServerConfigs;
 
 namespace LSL.Services.ServerServices;
 
-    // 服务器进程类ServerProcess
+    /// <summary>
+    /// The process instance of an LSL hosted Minecraft server.
+    /// </summary>
     public partial class ServerProcess : IDisposable
     {
-        public int Id { get; }
-        public ServerProcess(IndexedServerConfig config)
+        public static ServiceResult<ServerProcess> Create(IndexedServerConfig config)
         {
-            Id = config.ServerId;
-            var serverPath = config.ServerPath;
-            var corePath = Path.Combine(serverPath, config.CoreName);
-            var javaPath = config.UsingJava;
-            var minMem = config.MinMemory.ToString();
-            var maxMem = config.MaxMemory.ToString();
-            var arguments = $"-server -Xms{minMem}M -Xmx{maxMem}M -jar {corePath} nogui";
-            _allocatedMemoryBytes = ((long)config.MaxMemory) * 1024 * 1024;
-            StartInfo = new ProcessStartInfo()// 提供服务器信息
-            {
-                FileName = javaPath,
-                Arguments = arguments,
-                WorkingDirectory = serverPath,
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                StandardInputEncoding = null,
-                StandardOutputEncoding = null,
-                StandardErrorEncoding = null// 神奇的是，把这三个设置为null就能解决乱码问题
-            };
+            var startInfoResult = config.PathedConfig.GetStartInfo();
+            if (startInfoResult.IsError) return ServiceResult.Fail<ServerProcess>(startInfoResult.Error);
+            return ServiceResult.Success(new ServerProcess(config.ServerId, (long)config.MaxMemory * 1024 * 1024, startInfoResult.Result));
         }
+        private ServerProcess(int id, long allocatedMemoryBytes, ProcessStartInfo startInfo)
+        {
+            Id = id;
+            _allocatedMemoryBytes = allocatedMemoryBytes;
+            StartInfo = startInfo;
+        }
+        public int Id { get; }
         private Process? SProcess { get; set; }
         private readonly long _allocatedMemoryBytes;
         private ProcessStartInfo StartInfo { get; }
@@ -56,7 +45,7 @@ namespace LSL.Services.ServerServices;
         #endregion
 
         # region 状态获取
-        public event EventHandler<(bool, bool)>? StatusEventHandler;// IsRunning, IsOnline
+        public event EventHandler<(bool IsRunning, bool IsOnline)>? StatusEventHandler;// IsRunning, IsOnline
         private bool _isOnline;
         public bool IsOnline
         {
@@ -188,7 +177,6 @@ namespace LSL.Services.ServerServices;
         [GeneratedRegex(@"^\[.*\]:\s*Stopping\sthe\sserver")]
         private static partial Regex GetExitRegex();
         [GeneratedRegex(@"^\[.*\]:\s*\<(?<player>.*)\>\s*(?<message>.*)")]
-        
         private static partial Regex GetMessageRegex();
         private static readonly Regex s_getDone = GetDoneRegex();
         private static readonly Regex s_getExit = GetExitRegex();

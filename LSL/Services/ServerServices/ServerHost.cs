@@ -63,7 +63,7 @@ public class ServerHost : IServerHost, IDisposable
         _logger.LogInformation("Starting server with id {id}...", serverId);
         if (GetServer(serverId) is not null)
         {
-            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器已经在运行中。", OutputChannelType.LSLError));
+            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 警告]: 服务器已经在运行中。", OutputChannelType.LSLError));
             _logger.LogError("Server with id {id} is already running. Not running another instance.", serverId);
             return false;
         }
@@ -72,7 +72,14 @@ public class ServerHost : IServerHost, IDisposable
             _logger.LogError("Server with id {id} not found in configuration. That's weird! It should have been checked!", serverId);
             return false; 
         }
-        var process = new ServerProcess(config);
+        var processResult = ServerProcess.Create(config);
+        if (processResult.HasError)
+        {
+            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, $"[LSL 错误]: {processResult.Error.Message}", OutputChannelType.LSLError));
+            _logger.LogError("Server with id {id} failed to run: {error}.", serverId, processResult.Error.Message);
+            return false;
+        }
+        var process = processResult.Result;
         process.StatusEventHandler += (_, args) => EventBus.Instance.Fire<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
         // 启动服务器
         try

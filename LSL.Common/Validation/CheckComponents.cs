@@ -91,11 +91,11 @@ public static partial class CheckComponents
 
     public static VerifyResult ExtJvm(string? arg)
     {
-        if (string.IsNullOrEmpty(arg)) return new VerifyResult("ExtJvm", true, null);
+        if (string.IsNullOrEmpty(arg)) return new VerifyResult("ExtraJvmArgs", true, null);
         var group = arg.Split(' ');
         return group.Any(item => !item.StartsWith('-') || item.StartsWith("--") || item.EndsWith('-'))
-            ? new VerifyResult("ExtJvm", false, "扩展参数格式错误")
-            : new VerifyResult("ExtJvm", true, null);
+            ? new VerifyResult("ExtraJvmArgs", false, "扩展参数格式错误")
+            : new VerifyResult("ExtraJvmArgs", true, null);
     }
 
     #endregion

@@ -124,7 +124,7 @@ public static class CheckService
                 case "using_java":
                 {
                     vResult = CheckComponents.JavaPath(value);
-                    cache.UsingJava = value;
+                    cache.JavaPath = value;
                     break;
                 }
                 case "coreName":
@@ -164,7 +164,7 @@ public static class CheckService
                 case "ext_jvm":
                 {
                     vResult = CheckComponents.ExtJvm(value);
-                    cache.ExtJvm = value;
+                    cache.ExtraJvmArgs = value;
                     break;
                 }
                 default:

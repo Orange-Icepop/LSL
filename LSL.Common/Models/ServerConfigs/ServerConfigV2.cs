@@ -25,10 +25,10 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
     
     public CommonCoreConfigV1? CommonCoreInfo { get; set; } = null;
     public ForgeCoreConfigV1? ForgeCoreInfo { get; set; } = null;
-    public string UsingJava { get; set; } = string.Empty;
+    public string JavaPath { get; set; } = string.Empty;
     public uint MinMemory { get; set; } = 1024;
     public uint MaxMemory { get; set; } = 4096;
-    public string[] ExtJvm { get; set; } = [];
+    public string[] ExtraJvmArgs { get; set; } = [];
     public bool EnablePreLaunchProtection { get; set; } = true;
 
     public static ServiceResult<ServerConfigV2> Deserialize(JsonElement configRoot)
@@ -48,8 +48,8 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
         if(configRoot.TryGetProperty("commonCoreInfo", out var coreInfo)) result.CommonCoreInfo = CommonCoreConfigV1.Deserialize(coreInfo).Result;
         if(configRoot.TryGetProperty("forgeCoreInfo", out var forgeInfo)) result.ForgeCoreInfo = ForgeCoreConfigV1.Deserialize(forgeInfo).Result;
         
-        configRoot.ParseJavaProperty("usingJava",
-            onSuccess: s => result.UsingJava = s,
+        configRoot.ParseJavaProperty("javaPath",
+            onSuccess: s => result.JavaPath = s,
             onFail: onError);
 
         configRoot.ParseUIntProperty("minMemory",
@@ -60,9 +60,9 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
             onSuccess: u => result.MaxMemory = u,
             onFail: onError);
 
-        configRoot.ParseStringArrayProperty("extJvm",
-            onSuccess: s => result.ExtJvm = s,
-            onFail: _ => result.ExtJvm = ["-Dlog4j2.formatMsgNoLookups=true"],
+        configRoot.ParseStringArrayProperty("extraJvmArgs",
+            onSuccess: s => result.ExtraJvmArgs = s,
+            onFail: _ => result.ExtraJvmArgs = ["-Dlog4j2.formatMsgNoLookups=true"],
             ignoreEmpty: true);
 
         configRoot.ParseBoolProperty("enablePreLaunchProtection",
@@ -75,7 +75,7 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
         return ServiceResult.Success(result);
     }
 
-    public PathedServerConfig Standardize(string path) => new(path, Name, ServerType, CommonCoreInfo, ForgeCoreInfo, UsingJava, MinMemory, MaxMemory, ExtJvm, EnablePreLaunchProtection);
+    public PathedServerConfig Standardize(string path) => new(path, Name, ServerType, CommonCoreInfo, ForgeCoreInfo, JavaPath, MinMemory, MaxMemory, ExtraJvmArgs, EnablePreLaunchProtection);
 
     public string Serialize() => JsonSerializer.Serialize(this, ConfigSerializerOptions.Default);
 }

@@ -16,10 +16,10 @@ public class IndexedServerConfig(int serverId, PathedServerConfig pathedConfig)
 
     public CommonCoreConfigV1? CommonCoreInfo => PathedConfig.CommonCoreInfo;
     public ForgeCoreConfigV1? ForgeCoreInfo => PathedConfig.ForgeCoreInfo;
-    public string UsingJava => PathedConfig.UsingJava;
+    public string UsingJava => PathedConfig.JavaPath;
     public uint MinMemory => PathedConfig.MinMemory;
     public uint MaxMemory => PathedConfig.MaxMemory;
-    public List<string> ExtJvm => PathedConfig.ExtJvm;
+    public List<string> ExtJvm => PathedConfig.ExtraJvmArgs;
     public bool EnablePreLaunchProtection => PathedConfig.EnablePreLaunchProtection;
 
     public IndexedServerConfig(IndexedServerConfig config) // 深拷贝构造函数
