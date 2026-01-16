@@ -41,7 +41,7 @@ public class InteractionUnits(ILogger<InteractionUnits> logger) : ViewModelBase(
         var level = result.ResultType switch
         {
             ServiceResultType.Error => PopupType.ErrorConfirm,
-            ServiceResultType.FinishWithWarning => PopupType.WarningConfirm,
+            ServiceResultType.Warning => PopupType.WarningConfirm,
             _ => PopupType.ErrorConfirm
         };
         await PopupInteraction.Handle(new InvokePopupArgs(level, "服务错误", fin));
@@ -66,7 +66,7 @@ public class InteractionUnits(ILogger<InteractionUnits> logger) : ViewModelBase(
         public static ServiceResultCommitWrapper<T> Commit<T>(Func<Task> taskFactory, ServiceResult<T> result, bool suppressWarning = false) => new(taskFactory, result, suppressWarning);
         private ServiceResultCommitWrapper(Func<Task> taskFactoryIfHasError, ServiceResult result, bool suppressWarning = false)
         {
-            _lazyTask = new Lazy<Task>(result.IsSuccess || (suppressWarning && result.IsFinishedWithWarning)
+            _lazyTask = new Lazy<Task>(result.IsSuccess || (suppressWarning && result.IsWarning)
                 ? () => Task.CompletedTask
                 : taskFactoryIfHasError);
             IsSuccess = !result.IsError;
@@ -78,7 +78,7 @@ public class InteractionUnits(ILogger<InteractionUnits> logger) : ViewModelBase(
         private readonly Lazy<Task> _lazyTask;
         internal ServiceResultCommitWrapper(Func<Task> taskFactoryIfHasError, ServiceResult<T> result, bool suppressWarning = false)
         {
-            _lazyTask = new Lazy<Task>(result.IsSuccess || (suppressWarning && result.IsFinishedWithWarning)
+            _lazyTask = new Lazy<Task>(result.IsSuccess || (suppressWarning && result.IsWarning)
                 ? () => Task.CompletedTask
                 : taskFactoryIfHasError);
             IsSuccess = !result.IsError;

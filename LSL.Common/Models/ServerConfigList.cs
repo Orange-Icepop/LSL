@@ -31,5 +31,5 @@ public record ServerConfigList : ServiceResult<FrozenDictionary<int, IndexedServ
         FrozenDictionary<int, IndexedServerConfig> configs, 
         IList<string> notFoundServers, 
         IList<string> configErrorServers) 
-        => new(configs, ServiceResultType.FinishWithWarning, null, notFoundServers, configErrorServers);
+        => new(configs, ServiceResultType.Warning, null, notFoundServers, configErrorServers);
 }

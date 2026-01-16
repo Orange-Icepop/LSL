@@ -10,7 +10,7 @@ public interface IServiceResult
     [MemberNotNullWhen(false, nameof(Error))]
     bool IsSuccess => ResultType == ServiceResultType.Success;
     [MemberNotNullWhen(true, nameof(Error))]
-    bool IsFinishedWithWarning => ResultType == ServiceResultType.FinishWithWarning;
+    bool IsWarning => ResultType == ServiceResultType.Warning;
     [MemberNotNullWhen(true, nameof(Error))]
     bool IsError => ResultType == ServiceResultType.Error;
     [MemberNotNullWhen(true, nameof(Error))]
@@ -28,7 +28,7 @@ public record ServiceResult<T> : IServiceResult
     public bool IsSuccess => ResultType == ServiceResultType.Success;
     [MemberNotNullWhen(true, nameof(Result))]
     [MemberNotNullWhen(true, nameof(Error))]
-    public bool IsFinishedWithWarning => ResultType == ServiceResultType.FinishWithWarning;
+    public bool IsWarning => ResultType == ServiceResultType.Warning;
     [MemberNotNullWhen(true, nameof(Error))]
     [MemberNotNullWhen(false, nameof(Result))]
     public bool IsError => ResultType == ServiceResultType.Error;
@@ -59,7 +59,7 @@ public record ServiceResult : IServiceResult
     [MemberNotNullWhen(false, nameof(Error))]
     public bool IsSuccess => ResultType == ServiceResultType.Success;
     [MemberNotNullWhen(true, nameof(Error))]
-    public bool IsFinishedWithWarning => ResultType == ServiceResultType.FinishWithWarning;
+    public bool IsWarning => ResultType == ServiceResultType.Warning;
     [MemberNotNullWhen(true, nameof(Error))]
     public bool IsError => ResultType == ServiceResultType.Error;
     [MemberNotNullWhen(true, nameof(Error))]
@@ -72,21 +72,21 @@ public record ServiceResult : IServiceResult
     public static ServiceResult Success() => new (ServiceResultType.Success, null);
     public static ServiceResult Fail(Exception error) => new(ServiceResultType.Error, error);
     public static ServiceResult Fail(string error) => new(ServiceResultType.Error, new Exception(error));
-    public static ServiceResult Warning(Exception error) => new(ServiceResultType.FinishWithWarning, error);
-    public static ServiceResult Warning(string error) => new(ServiceResultType.FinishWithWarning, new Exception(error));
+    public static ServiceResult Warning(Exception error) => new(ServiceResultType.Warning, error);
+    public static ServiceResult Warning(string error) => new(ServiceResultType.Warning, new Exception(error));
     
     public static ServiceResult<T> Success<T>(T result) => new (ServiceResultType.Success, result, null);
     public static ServiceResult<T> Fail<T>(Exception error) => new(ServiceResultType.Error, default, error);
     public static ServiceResult<T> Fail<T>(string error) => new(ServiceResultType.Error, default, new Exception(error));
     public static ServiceResult<T> Fail<T>(T? fallbackResult, Exception error) => new(ServiceResultType.Error, fallbackResult, error);
-    public static ServiceResult<T> Warning<T>(T result, Exception error) => new(ServiceResultType.FinishWithWarning, result, error);
-    public static ServiceResult<T> Warning<T>(T result, string error) => new(ServiceResultType.FinishWithWarning, result,
+    public static ServiceResult<T> Warning<T>(T result, Exception error) => new(ServiceResultType.Warning, result, error);
+    public static ServiceResult<T> Warning<T>(T result, string error) => new(ServiceResultType.Warning, result,
         new Exception(error));
 }
 
 public enum ServiceResultType
 {
     Success,
+    Warning,
     Error,
-    FinishWithWarning,
 }

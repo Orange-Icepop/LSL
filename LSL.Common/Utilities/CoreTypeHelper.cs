@@ -17,8 +17,9 @@ public static class CoreTypeHelper
         if (!File.Exists(filePath)) return ServiceResult.Fail<ServerCoreType>(new FileNotFoundException($"Cannot find core file {filePath}"));
 
         var jarMainClassResult = await GetMainClass(filePath).ConfigureAwait(false);
-        if (jarMainClassResult.IsError) return ServiceResult.Fail<ServerCoreType>(jarMainClassResult.Error);
-        return ServiceResult.Success(s_coreTypeMap.GetValueOrDefault(jarMainClassResult.Result, ServerCoreType.Unknown));
+        return jarMainClassResult.IsError
+            ? ServiceResult.Fail<ServerCoreType>(jarMainClassResult.Error)
+            : ServiceResult.Success(s_coreTypeMap.GetValueOrDefault(jarMainClassResult.Result, ServerCoreType.Unknown));
     }
 
     // the following code is taken and modified from https://github.com/Orange-Icepop/JavaMainClassFinder

@@ -75,9 +75,6 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
             onFail: _ => result.ExtJvm = "-Dlog4j2.formatMsgNoLookups=true",
             enableEmpty: true);
 
-        if (result.MinMemory > result.MaxMemory)
-            warnings.Add("Minimum memory shouldn't be greater than maximum memory");
-
         if (warnings.Count > 0)
             return ServiceResult.Warning(result,
                 new StringBuilder().AppendJoin('\n', warnings).ToString());

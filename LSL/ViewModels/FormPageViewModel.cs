@@ -152,7 +152,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             await AppState.InteractionUnits.ThrowError("表单错误", vResult.Error.Message);
             return;
         }
-        if (vResult.IsFinishedWithWarning)
+        if (vResult.IsWarning)
         {
             var confirm =
                 await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Error.Message));
@@ -230,7 +230,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             await AppState.InteractionUnits.ThrowError("表单错误", vResult.Error.Message);
             return;
         }
-        if (vResult.IsFinishedWithWarning)
+        if (vResult.IsWarning)
         {
             var confirm =
                 await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Error.Message));

@@ -113,7 +113,7 @@ public class ServiceConnector
         {
             var res = await _configManager.ReadServerConfig();
             if (res.IsError) return ServiceResult.Fail(res.Error);
-            else if (res.IsFinishedWithWarning)
+            else if (res.IsWarning)
             {
                 var error = new StringBuilder("在读取服务器配置时出现了一些非致命错误:");
                 if (res.NotFoundServers.Count > 0)
@@ -302,7 +302,7 @@ public class ServiceConnector
             {
                 for (int i = uc.Count - 1; i >= 0; i--)
                 {
-                    if (uc[i].PlayerName == args.PlayerName)
+                    if (uc[i].PlayerName == args.PlayerName)//TODO:将uc转换为字典，提高搜索效率
                     {
                         uc.RemoveAt(i);
                         break;

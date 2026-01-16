@@ -50,7 +50,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             }
 
             ServerConfigs = detailRes.Result;
-            if (detailRes.IsFinishedWithWarning)
+            if (detailRes.IsWarning)
             {
                 logger.LogWarning(
                     "Some servers failed to load.\nServer not found: {NotfoundServers}\nconfig errors(file nonexist, no permission or bad format): {ConfigErrorServers}",

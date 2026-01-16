@@ -39,12 +39,12 @@ public class PathedServerConfig(
 
     public IndexedServerConfig AsIndexed(int serverId) => new(serverId, this);
 
-    public async Task<ServiceResult> CheckAndFixAsync()
+    public async Task<ServiceResult<PathedServerConfig>> CheckAndFixAsync()
     {
         for (int tries = 0; tries < 3; tries++)
         {
             if (!Path.Exists(ServerPath))
-                return ServiceResult.Fail(new DirectoryNotFoundException($"Server {ServerPath} does not exist"));
+                return ServiceResult.Fail<PathedServerConfig>(new DirectoryNotFoundException($"Server {ServerPath} does not exist"));
             List<string> warnings = [];
             if (MinMemory > MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
             if (!CheckComponents.IsValidJava(JavaPath)) warnings.Add("The configured Java is not valid");
@@ -60,7 +60,7 @@ public class PathedServerConfig(
                     {
                         var detectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
                         if (detectResult.IsError)
-                            return ServiceResult.Fail("Cannot get the correct core info of the forge server");
+                            return ServiceResult.Fail<PathedServerConfig>("Cannot get the correct core info of the forge server");
                         ForgeCoreInfo = ForgeCoreConfigV1.FromTuple(detectResult.Result);
                     }
 
@@ -69,7 +69,7 @@ public class PathedServerConfig(
                 case ServerCoreType.Error when CommonCoreInfo is not null && File.Exists(CommonCoreInfo.JarName):
                 {
                     var detectResult = await CoreTypeHelper.GetCoreType(CommonCoreInfo.JarName);
-                    if (detectResult.IsError) return ServiceResult.Fail("Cannot get the core type");
+                    if (detectResult.IsError) return ServiceResult.Fail<PathedServerConfig>("Cannot get the core type");
                     ServerType = detectResult.Result;
                     continue;
                 }
@@ -79,21 +79,21 @@ public class PathedServerConfig(
                     ServerType = ServerCoreType.Forge;
                     break;
                 case ServerCoreType.Error:
-                    return ServiceResult.Fail("Neither core file nor forge arguments is valid");
+                    return ServiceResult.Fail<PathedServerConfig>("Neither core file nor forge arguments is valid");
                 default:
                 {
                     if (CommonCoreInfo is null || !File.Exists(CommonCoreInfo.JarName))
-                        return ServiceResult.Fail("The jar info of the server is invalid");
+                        return ServiceResult.Fail<PathedServerConfig>("The jar info of the server is invalid");
                     break;
                 }
             }
 
             return warnings.Count > 0
-                ? ServiceResult.Warning(new StringBuilder().AppendJoin('\n', warnings).ToString())
-                : ServiceResult.Success();
+                ? ServiceResult.Warning(this, new StringBuilder().AppendJoin('\n', warnings).ToString())
+                : ServiceResult.Success(this);
         }
 
-        return ServiceResult.Fail("Failed to check server configuration after multiple attempts");
+        return ServiceResult.Fail<PathedServerConfig>("Failed to check server configuration after multiple attempts");
     }
 
     public ServiceResult<ProcessStartInfo> GetStartInfo()
