@@ -32,8 +32,8 @@
                     <SelectableTextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.ServerId}"/>
                     <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.MinMemory}"/>
                     <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.MaxMemory}"/>
-                    <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.UsingJava}"/>
-                    <SelectableTextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.ExtJvm}"/>
+                    <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.JavaPath}"/>
+                    <SelectableTextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.ExtraJvmArgs}"/>
                 </Grid>
             </controls:MyCard>
             <controls:MyCard Text="配置操作">

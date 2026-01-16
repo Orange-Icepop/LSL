@@ -113,24 +113,23 @@ public class ServiceConnector
         {
             var res = await _configManager.ReadServerConfig();
             if (res.IsError) return ServiceResult.Fail(res.Error);
-            else if (res.IsWarning)
+            if (res.IsWarning)
             {
-                var error = new StringBuilder("在读取服务器配置时出现了一些非致命错误:");
-                if (res.NotFoundServers.Count > 0)
+                var error = new StringBuilder("在读取服务器配置时出现了一些问题:");
+                if (!string.IsNullOrEmpty(res.ErrorMessages))
                 {
                     error.AppendLine()
-                        .AppendLine($"有{res.NotFoundServers.Count}个已注册的服务器不存在：")
-                        .AppendJoin('\n', res.NotFoundServers);
+                        .AppendLine("以下服务器由于不可修复的错误而没有被读取：")
+                        .AppendLine(res.ErrorMessages);
                 }
 
-                if (res.ConfigErrorServers.Count > 0)
+                if (!string.IsNullOrEmpty(res.WarningMessages))
                 {
                     error.AppendLine()
-                        .AppendLine($"有{res.ConfigErrorServers.Count}个服务器的配置文件不存在、没有读取权限或格式不正确：")
-                        .AppendJoin('\n', res.ConfigErrorServers);
+                        .AppendLine("以下服务器存在一定问题，需要您手动修复：")
+                        .AppendLine(res.WarningMessages);
                 }
                 error.AppendLine();
-                error.Append("这些服务器将不会被读取。你可以通过重新添加服务器来解决这个问题。");
                 exception = new FileNotFoundException(error.ToString());
             }
         }
@@ -212,7 +211,7 @@ public class ServiceConnector
     {
         if (!_configManager.ServerConfigs.TryGetValue(serverId, out var config))
             return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
-        else if (!File.Exists(config.UsingJava)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
+        else if (!File.Exists(config.JavaPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
         else
         {
             string configPath = Path.Combine(config.ServerPath, config.CoreName);

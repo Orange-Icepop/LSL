@@ -16,15 +16,15 @@ public class IndexedServerConfig(int serverId, PathedServerConfig pathedConfig)
 
     public CommonCoreConfigV1? CommonCoreInfo => PathedConfig.CommonCoreInfo;
     public ForgeCoreConfigV1? ForgeCoreInfo => PathedConfig.ForgeCoreInfo;
-    public string UsingJava => PathedConfig.JavaPath;
+    public string JavaPath => PathedConfig.JavaPath;
     public uint MinMemory => PathedConfig.MinMemory;
     public uint MaxMemory => PathedConfig.MaxMemory;
-    public List<string> ExtJvm => PathedConfig.ExtraJvmArgs;
+    public List<string> ExtraJvmArgs => PathedConfig.ExtraJvmArgs;
     public bool EnablePreLaunchProtection => PathedConfig.EnablePreLaunchProtection;
 
     public IndexedServerConfig(IndexedServerConfig config) // 深拷贝构造函数
-        : this(config.ServerId, config.ServerPath, config.ServerName, config.ServerType, config.CommonCoreInfo, config.ForgeCoreInfo, config.UsingJava,
-            config.MinMemory, config.MaxMemory, config.ExtJvm.ToArray(), config.EnablePreLaunchProtection)
+        : this(config.ServerId, config.ServerPath, config.ServerName, config.ServerType, config.CommonCoreInfo, config.ForgeCoreInfo, config.JavaPath,
+            config.MinMemory, config.MaxMemory, config.ExtraJvmArgs.ToArray(), config.EnablePreLaunchProtection)
     {
     }
 

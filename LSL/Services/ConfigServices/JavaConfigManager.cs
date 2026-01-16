@@ -14,7 +14,7 @@ namespace LSL.Services.ConfigServices;
 /// <summary>
 /// The config manager of LSL's saved java information.
 /// </summary>
-/// <param name="logger">An ILogger that logs logs. （拜托，想个更好的双关语吧（彼得帕克音））</param> 
+/// <param name="logger">An ILogger that logs logs.</param> 
 public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关服务
 {
     public FrozenDictionary<int, JavaInfo> JavaDict { get; private set; } = FrozenDictionary<int, JavaInfo>.Empty; // 目前读取的Java列表

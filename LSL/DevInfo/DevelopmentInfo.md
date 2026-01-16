@@ -62,6 +62,8 @@
  - [ ] 重写服务器管理逻辑
  - [ ] 将ReactiveUI.Fody换为ReactiveUI.SourceGenerators
  - [ ] 将ServiceResult重构为更接近rust的record struct Result<T>
+ - [ ] 将ServerHost的报告链转换为IObservable
+ - [ ] 移除Newtonsoft.Json
 
 ### 主题与美化
  - [ ] 重新设计界面，使之更现代化

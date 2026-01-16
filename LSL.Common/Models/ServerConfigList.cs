@@ -1,35 +1,34 @@
-﻿using System.Collections.Frozen;
-using LSL.Common.Models.ServerConfigs;
+﻿using LSL.Common.Models.ServerConfigs;
 
 namespace LSL.Common.Models;
 
-public record ServerConfigList : ServiceResult<FrozenDictionary<int, IndexedServerConfig>>
+public record ServerConfigList : ServiceResult<IDictionary<int, IndexedServerConfig>>
 {
     private ServerConfigList(
-        FrozenDictionary<int, IndexedServerConfig> configs, 
+        IDictionary<int, IndexedServerConfig>? configs, 
         ServiceResultType resultType = ServiceResultType.Success, 
         Exception? error = null, 
-        IList<string>? notFoundServers = null, 
-        IList<string>? configErrorServers = null)
+        string? errors = null, 
+        string? warnings = null)
         : base(resultType, configs, error)
     {
-        NotFoundServers = notFoundServers ?? [];
-        ConfigErrorServers = configErrorServers ?? [];
+        ErrorMessages = errors ?? string.Empty;
+        WarningMessages = warnings ?? string.Empty;
     }
 
-    public IList<string> NotFoundServers { get; }
-    public IList<string> ConfigErrorServers { get; }
+    public string ErrorMessages { get; }
+    public string WarningMessages { get; }
     
 
-    public static ServerConfigList Success(FrozenDictionary<int, IndexedServerConfig> configs) 
+    public static ServerConfigList Success(IDictionary<int, IndexedServerConfig> configs) 
         => new(configs);
     
     public static ServerConfigList Fail(Exception error) 
-        => new(FrozenDictionary<int, IndexedServerConfig>.Empty, ServiceResultType.Error, error);
+        => new(null, ServiceResultType.Error, error);
     
     public static ServerConfigList PartialError(
-        FrozenDictionary<int, IndexedServerConfig> configs, 
-        IList<string> notFoundServers, 
-        IList<string> configErrorServers) 
-        => new(configs, ServiceResultType.Warning, null, notFoundServers, configErrorServers);
+        IDictionary<int, IndexedServerConfig> configs, 
+        string errors, 
+        string warnings) 
+        => new(configs, ServiceResultType.Warning, null, errors, warnings);
 }

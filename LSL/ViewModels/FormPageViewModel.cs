@@ -4,7 +4,6 @@ using System.IO;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Avalonia.Controls;
 using Avalonia.Threading;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfigs;
@@ -300,8 +299,8 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         MinMem = config.MinMemory.ToString();
         MaxMem = config.MaxMemory.ToString();
         ExistedServerPath = string.Empty;
-        JavaPath = config.UsingJava;
-        ExtJvm = config.ExtJvm;
+        JavaPath = config.JavaPath;
+        ExtJvm = config.ExtraJvmArgs;
     }
     #endregion
 }

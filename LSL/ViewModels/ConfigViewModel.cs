@@ -49,10 +49,10 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
             if (res1.IsError) throw res1.Error;
             var res2 = await Connector.ReadServerConfig(true);
             if (res2.IsError) throw res2.Error;
-            else await AppState.InteractionUnits.SubmitServiceError(res2);
+            await AppState.InteractionUnits.SubmitServiceError(res2);
             var res3 = await Connector.ReadJavaConfig(true);
             if (res3.IsError) throw res3.Error;
-            else await AppState.InteractionUnits.SubmitServiceError(res3);
+            await AppState.InteractionUnits.SubmitServiceError(res3);
             return true;
         }
         catch (Exception e)
