@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using LSL.Common.Exceptions;
+using LSL.Common.Extensions;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfigs;
 
@@ -52,8 +53,8 @@ public static class ServerConfigHelper
         if (fResult.IsWarning || dResult.IsWarning)
         {
             var warning = new StringBuilder();
-            if (dResult.IsWarning) warning.AppendLine(dResult.Error.Message);
-            if (fResult.IsWarning) warning.AppendLine(fResult.Error.Message);
+            warning.AppendLineIfNotNullOrEmpty(dResult.Error?.Message);
+            warning.AppendLineIfNotNullOrEmpty(fResult.Error?.Message);
             return ServiceResult.Warning(fResult.Result, warning.ToString());
         }
         return ServiceResult.Success(fResult.Result);
