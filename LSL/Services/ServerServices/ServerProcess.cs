@@ -44,7 +44,7 @@ namespace LSL.Services.ServerServices;
         #endregion
 
         # region 状态获取
-        public event EventHandler<(bool IsRunning, bool IsOnline)>? StatusEventHandler;// IsRunning, IsOnline
+        public event EventHandler<(bool IsRunning, bool IsOnline)>? StatusEventHandler;
         private bool _isOnline;
         public bool IsOnline
         {

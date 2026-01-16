@@ -35,8 +35,7 @@ public static class CoreTypeHelper
             await using var fStream = zipFile.GetInputStream(entry);
             if (fStream is null) return ServiceResult.Fail<string>("Unable to read MANIFEST.MF");
             using var reader = new StreamReader(fStream, Encoding.UTF8);
-            var manifestContent = await reader.ReadToEndAsync().ConfigureAwait(false);
-            var mc = FindMainClassLine(manifestContent);
+            var mc = await FindMainClassLine(reader);
             return mc is null
                 ? ServiceResult.Fail<string>("Cannot find Main-Class property in MANIFEST.MF")
                 : ServiceResult.Success(mc);
@@ -55,13 +54,18 @@ public static class CoreTypeHelper
         }
     }
 
-    private static string? FindMainClassLine(string manifestContent)
+    private static async Task<string?> FindMainClassLine(StreamReader reader)
     {
-        var lines = manifestContent.Split(["\r\n", "\r", "\n"], StringSplitOptions.None);
-        return (from line in lines where line.StartsWith("Main-Class:") select line["Main-Class:".Length..].Trim())
-            .FirstOrDefault();
+        while (await reader.ReadLineAsync().ConfigureAwait(false) is { } line)
+        {
+            if (line.StartsWith("Main-Class:"))
+            {
+                return line["Main-Class:".Length..].Trim();
+            }
+        }
+        return null;
     }
-
+    
     private static readonly FrozenDictionary<string, ServerCoreType> s_coreTypeMap =
         new Dictionary<string, ServerCoreType>()
         {

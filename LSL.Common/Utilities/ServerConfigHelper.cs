@@ -31,7 +31,8 @@ public static class ServerConfigHelper
 
     private static async Task<ServiceResult<PathedServerConfig>> ExplainConfigAsync(string path, JsonElement configRoot)
     {
-        if (!configRoot.TryGetProperty("version", out var version)) return await DeserializeConfigAsync<ServerConfigV1>(path, configRoot);
+        if (!configRoot.TryGetProperty("version", out var version))
+            return await DeserializeConfigAsync<ServerConfigV1>(path, configRoot);
 
         return version.GetInt32() switch
         {
@@ -42,7 +43,8 @@ public static class ServerConfigHelper
         };
     }
 
-    private static async Task<ServiceResult<PathedServerConfig>> DeserializeConfigAsync<T>(string path, JsonElement configRoot) where T : IServerConfig<T>
+    private static async Task<ServiceResult<PathedServerConfig>> DeserializeConfigAsync<T>(string path,
+        JsonElement configRoot) where T : IServerConfig<T>
     {
         var dResult = T.Deserialize(configRoot);
         if (dResult.IsError) return ServiceResult.Fail<PathedServerConfig>(dResult.Error);
@@ -51,12 +53,11 @@ public static class ServerConfigHelper
             return ServiceResult.Fail<PathedServerConfig>(
                 new ServerConfigUnparsableException("Cannot parse the server config.", fResult.Error));
         if (fResult.IsWarning || dResult.IsWarning)
-        {
-            var warning = new StringBuilder();
-            warning.AppendLineIfNotNullOrEmpty(dResult.Error?.Message);
-            warning.AppendLineIfNotNullOrEmpty(fResult.Error?.Message);
-            return ServiceResult.Warning(fResult.Result, warning.ToString());
-        }
+            return ServiceResult.Warning(fResult.Result,
+                new StringBuilder()
+                    .AppendLineIfNotNullOrEmpty(dResult.Error?.Message)
+                    .AppendLineIfNotNullOrEmpty(fResult.Error?.Message)
+                    .ToString());
         return ServiceResult.Success(fResult.Result);
     }
 }
