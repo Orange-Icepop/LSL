@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using LSL.Common.DTOs;
 using LSL.Services.ConfigServices;
 using Microsoft.Extensions.Logging;
@@ -51,10 +52,8 @@ public class ServerHost : IServerHost, IDisposable
     #endregion
 
     #region 获取服务器进程实例GetServer(int serverId)
-    private ServerProcess? GetServer(int serverId)
-    {
-        return _runningServers.TryGetValue(serverId, out var process) ? process : null;
-    }
+    private ServerProcess? GetServer(int serverId) => _runningServers.GetValueOrDefault(serverId);
+
     #endregion
 
     #region 启动服务器RunServer(int serverId)
