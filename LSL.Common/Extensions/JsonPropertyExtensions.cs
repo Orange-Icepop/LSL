@@ -1,38 +1,52 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using LSL.Common.Validation;
 
 namespace LSL.Common.Extensions;
 
 public static class JsonPropertyExtensions
 {
-    public static void ParseStringProperty(this JsonElement root, string propertyName,
+    private static string ChangeCase(this string value, JsonKnownNamingPolicy policy)
+    {
+        return policy switch
+        {
+            JsonKnownNamingPolicy.CamelCase => JsonNamingPolicy.CamelCase.ConvertName(value),
+            JsonKnownNamingPolicy.SnakeCaseLower => JsonNamingPolicy.SnakeCaseLower.ConvertName(value),
+            JsonKnownNamingPolicy.SnakeCaseUpper => JsonNamingPolicy.SnakeCaseUpper.ConvertName(value),
+            JsonKnownNamingPolicy.KebabCaseLower => JsonNamingPolicy.KebabCaseLower.ConvertName(value),
+            JsonKnownNamingPolicy.KebabCaseUpper => JsonNamingPolicy.KebabCaseUpper.ConvertName(value),
+            _ => value
+        };
+    }
+    public static void ParseStringProperty(this JsonElement root, string propertyParsedName,
         Action<string>? onSuccess = null,
         Action<string>? onFail = null,
         Func<string, string?>? validator = null,
-        bool enableEmpty = false)
+        bool enableEmpty = false,
+        JsonKnownNamingPolicy keyNamingPolicy = JsonKnownNamingPolicy.CamelCase)
     {
-        if (!root.TryGetProperty(propertyName, out var element))
+        if (!root.TryGetProperty(propertyParsedName, out var element))
         {
-            onFail?.Invoke($"Property {propertyName} is missing");
+            onFail?.Invoke($"Property {propertyParsedName} is missing");
             return;
         }
 
         if (!element.TryGetString(out var value))
         {
-            onFail?.Invoke($"Property {propertyName} is not a string");
+            onFail?.Invoke($"Property {propertyParsedName} is not a string");
             return;
         }
 
         if (!enableEmpty && string.IsNullOrWhiteSpace(value))
         {
-            onFail?.Invoke($"Property {propertyName} is empty");
+            onFail?.Invoke($"Property {propertyParsedName} is empty");
             return;
         }
 
         var validateEx = validator?.Invoke(value);
         if (validateEx != null)
         {
-            onFail?.Invoke($"Property {propertyName} validation failed: {validateEx}");
+            onFail?.Invoke($"Property {propertyParsedName} validation failed: {validateEx}");
             return;
         }
 
@@ -41,8 +55,10 @@ public static class JsonPropertyExtensions
 
     public static void ParseBoolProperty(this JsonElement root, string propertyName,
         Action<bool>? onSuccess = null,
-        Action<string>? onFail = null)
+        Action<string>? onFail = null,
+        JsonKnownNamingPolicy keyNamingPolicy = JsonKnownNamingPolicy.CamelCase)
     {
+        propertyName = propertyName.ChangeCase(keyNamingPolicy);
         if (!root.TryGetProperty(propertyName, out var element))
         {
             onFail?.Invoke($"Property {propertyName} is missing");
@@ -67,8 +83,10 @@ public static class JsonPropertyExtensions
         Action<uint>? onSuccess = null,
         Action<string>? onFail = null,
         uint? minValue = null,
-        uint? maxValue = null)
+        uint? maxValue = null,
+        JsonKnownNamingPolicy keyNamingPolicy = JsonKnownNamingPolicy.CamelCase)
     {
+        propertyName = propertyName.ChangeCase(keyNamingPolicy);
         if (!root.TryGetProperty(propertyName, out var element))
         {
             onFail?.Invoke($"Property {propertyName} is missing");
@@ -82,13 +100,49 @@ public static class JsonPropertyExtensions
             return;
         }
 
-        if (minValue.HasValue && value < minValue.Value)
+        if (value < minValue)
         {
             onFail?.Invoke($"Value must be at least {minValue.Value}");
             return;
         }
 
-        if (maxValue.HasValue && value > maxValue.Value)
+        if (value > maxValue)
+        {
+            onFail?.Invoke($"Value must be at most {maxValue.Value}");
+            return;
+        }
+
+        onSuccess?.Invoke(value);
+    }
+    
+    public static void ParseULongProperty(this JsonElement root, string propertyName,
+        Action<ulong>? onSuccess = null,
+        Action<string>? onFail = null,
+        ulong? minValue = null,
+        ulong? maxValue = null,
+        JsonKnownNamingPolicy keyNamingPolicy = JsonKnownNamingPolicy.CamelCase)
+    {
+        propertyName = propertyName.ChangeCase(keyNamingPolicy);
+        if (!root.TryGetProperty(propertyName, out var element))
+        {
+            onFail?.Invoke($"Property {propertyName} is missing");
+            return;
+        }
+
+        if (element.ValueKind is not JsonValueKind.Number ||
+            !element.TryGetUInt64(out var value))
+        {
+            onFail?.Invoke($"Property {propertyName} is not a number");
+            return;
+        }
+
+        if (value < minValue)
+        {
+            onFail?.Invoke($"Value must be at least {minValue.Value}");
+            return;
+        }
+
+        if (value > maxValue)
         {
             onFail?.Invoke($"Value must be at most {maxValue.Value}");
             return;
@@ -101,8 +155,10 @@ public static class JsonPropertyExtensions
         Action<string[]>? onSuccess = null,
         Action<string>? onFail = null,
         bool ignoreWrongType = true,
-        bool ignoreEmpty = false)
+        bool ignoreEmpty = false,
+        JsonKnownNamingPolicy keyNamingPolicy = JsonKnownNamingPolicy.CamelCase)
     {
+        propertyName = propertyName.ChangeCase(keyNamingPolicy);
         if (!root.TryGetProperty(propertyName, out var element))
         {
             onFail?.Invoke($"Property {propertyName} is missing");
@@ -135,8 +191,10 @@ public static class JsonPropertyExtensions
 
     public static void ParseJavaProperty(this JsonElement root, string propertyName,
         Action<string>? onSuccess = null,
-        Action<string>? onFail = null)
+        Action<string>? onFail = null,
+        JsonKnownNamingPolicy keyNamingPolicy = JsonKnownNamingPolicy.CamelCase)
     {
+        propertyName = propertyName.ChangeCase(keyNamingPolicy);
         if (!root.TryGetProperty(propertyName, out var element))
         {
             onFail?.Invoke($"Property {propertyName} is missing");
@@ -160,14 +218,17 @@ public static class JsonPropertyExtensions
 
     public static void ParseFileProperty(this JsonElement root, string propertyName,
         Action<string>? onSuccess = null,
-        Action<string>? onFail = null) =>
+        Action<string>? onFail = null,
+        JsonKnownNamingPolicy keyNamingPolicy = JsonKnownNamingPolicy.CamelCase) =>
         root.ParseStringProperty(propertyName, onSuccess, onFail,
-            validator: s => File.Exists(s) ? null : $"Invalid file path {s}");
+            validator: s => File.Exists(s) ? null : $"Invalid file path {s}", keyNamingPolicy: keyNamingPolicy);
 
     public static void ParseEnumProperty<T>(this JsonElement root, string propertyName,
         Action<T>? onSuccess = null,
-        Action<string>? onFail = null) where T : struct, Enum
+        Action<string>? onFail = null,
+        JsonKnownNamingPolicy keyNamingPolicy = JsonKnownNamingPolicy.CamelCase) where T : struct, Enum
     {
+        propertyName = propertyName.ChangeCase(keyNamingPolicy);
         if (!root.TryGetProperty(propertyName, out var element))
         {
             onFail?.Invoke($"Property {propertyName} is missing");

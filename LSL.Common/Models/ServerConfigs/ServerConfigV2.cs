@@ -70,10 +70,9 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
             onSuccess: b => result.EnablePreLaunchProtection = b,
             onFail: _ => result.EnablePreLaunchProtection = result.ServerType is not ServerCoreType.Mohist);
 
-        if (warnings.Count > 0)
-            return ServiceResult.Warning(result,
-                    new StringBuilder().AppendJoin('\n', warnings).ToString());
-        return ServiceResult.Success(result);
+        return warnings.Count != 0
+            ? ServiceResult.Warning(result, new StringBuilder().AppendJoin('\n', warnings).ToString())
+            : ServiceResult.Success(result);
     }
 
     public PathedServerConfig Standardize(string path) => new(path, Name, ServerType, CommonCoreInfo, ForgeCoreInfo, JavaPath, MinMemory, MaxMemory, ExtraJvmArgs, EnablePreLaunchProtection);

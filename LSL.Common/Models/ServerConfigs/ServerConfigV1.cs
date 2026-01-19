@@ -46,40 +46,45 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         List<string> warnings = [];
         Action<string> onError = s => warnings.Add(s);
         bool coreDetectable = true;
-        configRoot.ParseStringProperty("core_name",
-            onSuccess: s => result.CoreName = s,
-            onFail: _ => coreDetectable = false);
+        configRoot.ParseStringProperty(nameof(CoreName),
+            s => result.CoreName = s,
+            _ => coreDetectable = false,
+            keyNamingPolicy: JsonKnownNamingPolicy.SnakeCaseLower);
         if (!coreDetectable) return ServiceResult.Fail<ServerConfigV1>("core_name is missing");
 
-        configRoot.ParseStringProperty("name",
-            onSuccess: s => result.Name = s,
-            onFail: s =>
+        configRoot.ParseStringProperty(nameof(Name),
+            s => result.Name = s,
+            s =>
             {
                 result.Name = "Nameless Server";
                 warnings.Add(s);
-            });
+            },
+            keyNamingPolicy: JsonKnownNamingPolicy.SnakeCaseLower);
 
-        configRoot.ParseJavaProperty("using_java",
-            onSuccess: s => result.UsingJava = s,
-            onFail: onError);
+        configRoot.ParseJavaProperty(nameof(UsingJava),
+            s => result.UsingJava = s,
+            onError,
+            keyNamingPolicy: JsonKnownNamingPolicy.SnakeCaseLower);
 
-        configRoot.ParseUIntProperty("min_memory",
-            onSuccess: u => result.MinMemory = u,
-            onFail: onError);
+        configRoot.ParseUIntProperty(nameof(MinMemory),
+            u => result.MinMemory = u,
+            onError,
+            keyNamingPolicy: JsonKnownNamingPolicy.SnakeCaseLower);
 
-        configRoot.ParseUIntProperty("max_memory",
-            onSuccess: u => result.MaxMemory = u,
-            onFail: onError);
+        configRoot.ParseUIntProperty(nameof(MaxMemory),
+            u => result.MaxMemory = u,
+            onError,
+            keyNamingPolicy: JsonKnownNamingPolicy.SnakeCaseLower);
 
-        configRoot.ParseStringProperty("ext_jvm",
-            onSuccess: s => result.ExtJvm = s,
-            onFail: _ => result.ExtJvm = "-Dlog4j2.formatMsgNoLookups=true",
-            enableEmpty: true);
+        configRoot.ParseStringProperty(nameof(ExtJvm),
+            s => result.ExtJvm = s,
+            _ => result.ExtJvm = "-Dlog4j2.formatMsgNoLookups=true",
+            enableEmpty: true,
+            keyNamingPolicy: JsonKnownNamingPolicy.SnakeCaseLower);
 
-        if (warnings.Count > 0)
-            return ServiceResult.Warning(result,
-                new StringBuilder().AppendJoin('\n', warnings).ToString());
-        return ServiceResult.Success(result);
+        return warnings.Count != 0
+            ? ServiceResult.Warning(result, new StringBuilder().AppendJoin('\n', warnings).ToString())
+            : ServiceResult.Success(result);
     }
 
     public PathedServerConfig Standardize(string path) => new(path, Name, ServerCoreType.Error,
