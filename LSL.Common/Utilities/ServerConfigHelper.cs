@@ -31,11 +31,16 @@ public static class ServerConfigHelper
 
     private static async Task<ServiceResult<PathedServerConfig>> ExplainConfigAsync(string path, JsonElement configRoot)
     {
-        if (!configRoot.TryGetProperty("version", out var version))
+        if (!configRoot.TryGetProperty("configVersion", out var version))
             return await DeserializeConfigAsync<ServerConfigV1>(path, configRoot);
+
+        if (version.ValueKind != JsonValueKind.Number)
+            return ServiceResult.Fail<PathedServerConfig>(
+                new JsonException("The configVersion property of this server config is not a number."));
 
         return version.GetInt32() switch
         {
+            1 => await DeserializeConfigAsync<ServerConfigV1>(path, configRoot),
             2 => // config v2
                 await DeserializeConfigAsync<ServerConfigV2>(path, configRoot),
             _ => ServiceResult.Fail<PathedServerConfig>(

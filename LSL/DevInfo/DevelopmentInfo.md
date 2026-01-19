@@ -5,8 +5,14 @@
 ### 重写整个配置文件系统
 
  - [ ] 全面改用System.Text.Json
- - [ ] 对最旧版本的配置文件进行类化归档
+ - [x] 对最旧版本的配置文件进行类化归档
  - [ ] 完成配置文件的版本化重写
+
+#### 具体工作
+
+- [x] 配置文件版本化
+- [ ] 添加PathedServerConfig.Check()方法，替代CheckService用于启动前验证
+- [ ] 重写ServerConfigManager，使其换用System.Text.Json
 
 ## SubProject
 
@@ -59,11 +65,9 @@
  - [x] 简化所有页面按钮的状态绑定
  - [x] 使用Geometry替代Bar按钮的图标以支持自动换色
  - [x] 重写所有图标为Geometry
- - [ ] 重写服务器管理逻辑
  - [ ] 将ReactiveUI.Fody换为ReactiveUI.SourceGenerators
  - [ ] 将ServiceResult重构为更接近rust的record struct Result<T>
  - [ ] 将ServerHost的报告链转换为IObservable
- - [ ] 移除Newtonsoft.Json
 
 ### 主题与美化
  - [ ] 重新设计界面，使之更现代化

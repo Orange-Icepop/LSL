@@ -1,8 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using LSL.Common.Utilities.Json;
-using Newtonsoft.Json;
 using static LSL.Common.Extensions.JsonPropertyExtensions;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -15,7 +15,8 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
         EnablePreLaunchProtection = ServerType is not ServerCoreType.Mohist;
     }
 
-    public int ConfigVersion { get; } = 2;
+    [JsonInclude]
+    public int ConfigVersion => 2;
     public string Name { get; set; } = string.Empty;
     public ServerCoreType ServerType { get; set; } = ServerCoreType.Error;
 

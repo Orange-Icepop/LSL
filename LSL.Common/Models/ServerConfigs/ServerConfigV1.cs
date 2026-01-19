@@ -7,6 +7,8 @@ namespace LSL.Common.Models.ServerConfigs;
 
 public class ServerConfigV1 : IServerConfig<ServerConfigV1>
 {
+    private ServerConfigV1() { }
+    public int ConfigVersion => 1;
     public string Name { get; set; } = string.Empty;
     public string UsingJava { get; set; } = string.Empty;
     public string CoreName { get; set; } = string.Empty;
