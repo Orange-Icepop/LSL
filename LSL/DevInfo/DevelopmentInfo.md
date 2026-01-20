@@ -14,6 +14,7 @@
 - [ ] 重写ServerConfigManager
 - [ ] 重写MainConfigManager
 - [ ] 重写JavaConfigManager
+- [ ] 修改EditServer方法，使其直接使用FormedServerConfig
 
 ## SubProject
 

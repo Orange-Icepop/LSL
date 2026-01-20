@@ -6,7 +6,7 @@ namespace LSL.Common.Utilities.Json;
 
 public static class ConfigSerializerOptions
 {
-    public static readonly JsonSerializerSettings Default = new()
+    public static readonly JsonSerializerSettings DefaultOptions = new()
     {
         Formatting = Formatting.Indented,
         DateFormatHandling = DateFormatHandling.IsoDateFormat,

@@ -4,14 +4,15 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
-using System.Xml;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfigs;
 using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using static LSL.Common.Utilities.Json.ConfigSerializerOptions;
+using Formatting = System.Xml.Formatting;
 
 namespace LSL.Services.ConfigServices;
 
@@ -102,7 +103,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
         try
         {
-            var configs = JsonSerializer.Deserialize<Dictionary<int, string>>(mainFile);
+            var configs = JsonConvert.DeserializeObject<Dictionary<int, string>>(mainFile, DefaultOptions);
             return configs is null
                 ? throw new JsonException("The Main Server Config file cannot be converted.")
                 : ServiceResult.Success(configs);
@@ -190,7 +191,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 max_memory = maxMem,
                 ext_jvm = extJvm
             };
-            string serializedConfig = JsonSerializer.Serialize(initialConfig, );
+            string serializedConfig = JsonConvert.SerializeObject(initialConfig, DefaultOptions);
             await File.WriteAllTextAsync(addedConfigPath, serializedConfig); // 写入服务器文件夹内的配置文件
             // 创建Eula文件
             if (!mcm.CurrentConfigs.TryGetValue("auto_eula", out var rawEula) ||

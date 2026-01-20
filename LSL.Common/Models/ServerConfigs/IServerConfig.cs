@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace LSL.Common.Models.ServerConfigs;
 
 public interface IServerConfig

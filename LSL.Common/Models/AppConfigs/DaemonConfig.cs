@@ -1,11 +1,10 @@
 ﻿using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using LSL.Common.Extensions;
+using LSL.Common.Utilities.Json;
+using Newtonsoft.Json;
 
 namespace LSL.Common.Models.AppConfigs;
 
-public record DaemonConfig : IConfig<DaemonConfig>
+public class DaemonConfig : IConfig<DaemonConfig>
 {
     public bool WebPanelAutoStart { get; set; } = false;
     public uint DownloadThreads { get; set; } = 4;
@@ -18,22 +17,21 @@ public record DaemonConfig : IConfig<DaemonConfig>
 
     public ServiceResult Validate()
     {
-        
+        if (DownloadThreads > 256) return ServiceResult.Fail("DownloadThreads must be under 256");
+        return ServiceResult.Success();
     }
 
-    public static ServiceResult<DaemonConfig> Deserialize(JsonElement configRoot)
+    public static ServiceResult<DaemonConfig> Deserialize(string json)
     {
-        var result = new DaemonConfig();
-        List<string> errors = [];
-        Action<string> onError = error => errors.Add(error);
-        configRoot.ParseBoolProperty(nameof(WebPanelAutoStart), b => result.WebPanelAutoStart = b, onError);
-        configRoot.ParseUIntProperty(nameof(DownloadThreads), b => result.DownloadThreads = b, onError);
-        configRoot.ParseULongProperty(nameof(DownloadLimitKBytes), b => result.DownloadLimitKBytes = b, onError);
-        configRoot.ParseBoolProperty(nameof(EndServerOnClose), b => result.EndServerOnClose = b, onError);
-        configRoot.ParseBoolProperty(nameof(AllowPanelShutdownDaemon), b => result.AllowPanelShutdownDaemon = b, onError);
-        configRoot.ParseBoolProperty(nameof(AllowPanelEditDaemonConfig), b => result.AllowPanelEditDaemonConfig = b, onError);
-        return errors.Count != 0
-            ? ServiceResult.Warning(result, new StringBuilder().AppendJoin('\n', errors).ToString())
-            : ServiceResult.Success(result);
+        var result = JsonConvert.DeserializeObject<DaemonConfig>(json, ConfigSerializerOptions.DefaultOptions);
+        if (result is null)
+            return ServiceResult.Fail<DaemonConfig>("The daemon config is not parsable");
+        List<string> warnings = [];
+        if (result.DownloadThreads > 256)
+        {
+            result.DownloadThreads = 256;
+            warnings.Add("DownloadThreads must be under 256");
+        }
+        return warnings.Count > 0 ? ServiceResult.Warning(result, new StringBuilder().AppendJoin('\n', warnings).ToString()) : ServiceResult.Success(result);
     }
 }
