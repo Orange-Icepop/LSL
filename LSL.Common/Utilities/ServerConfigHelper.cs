@@ -14,14 +14,14 @@ public static class ServerConfigHelper
     /// </summary>
     /// <param name="path">The server's directory</param>
     /// <returns></returns>
-    public static async Task<ServiceResult<PathedServerConfig>> ReadSingleConfigAsync(string path)
+    public static async Task<ServiceResult<LocatedServerConfig>> ReadSingleConfigAsync(string path)
     {
         if (!Directory.Exists(path))
-            return ServiceResult.Fail<PathedServerConfig>(new ArgumentException("Target path doesn't exist.",
+            return ServiceResult.Fail<LocatedServerConfig>(new ArgumentException("Target path doesn't exist.",
                 nameof(path)));
         var confPath = Path.Combine(path, "lslconfig.json");
         if (!File.Exists(confPath))
-            return ServiceResult.Fail<PathedServerConfig>(new ArgumentException(
+            return ServiceResult.Fail<LocatedServerConfig>(new ArgumentException(
                 "Target path doesn't have an lslconfig.json file.",
                 nameof(path)));
         await using var stream = File.OpenRead(confPath);
@@ -29,13 +29,13 @@ public static class ServerConfigHelper
         return await ExplainConfigAsync(path, doc.RootElement);
     }
 
-    private static async Task<ServiceResult<PathedServerConfig>> ExplainConfigAsync(string path, JsonElement configRoot)
+    private static async Task<ServiceResult<LocatedServerConfig>> ExplainConfigAsync(string path, JsonElement configRoot)
     {
         if (!configRoot.TryGetProperty("configVersion", out var version))
             return await DeserializeConfigAsync<ServerConfigV1>(path, configRoot);
 
         if (version.ValueKind != JsonValueKind.Number)
-            return ServiceResult.Fail<PathedServerConfig>(
+            return ServiceResult.Fail<LocatedServerConfig>(
                 new JsonException("The configVersion property of this server config is not a number."));
 
         return version.GetInt32() switch
@@ -43,19 +43,19 @@ public static class ServerConfigHelper
             1 => await DeserializeConfigAsync<ServerConfigV1>(path, configRoot),
             2 => // config v2
                 await DeserializeConfigAsync<ServerConfigV2>(path, configRoot),
-            _ => ServiceResult.Fail<PathedServerConfig>(
+            _ => ServiceResult.Fail<LocatedServerConfig>(
                 new ServerConfigUnparsableException("Could not ensure the server config's version."))
         };
     }
 
-    private static async Task<ServiceResult<PathedServerConfig>> DeserializeConfigAsync<T>(string path,
+    private static async Task<ServiceResult<LocatedServerConfig>> DeserializeConfigAsync<T>(string path,
         JsonElement configRoot) where T : IServerConfig<T>
     {
         var dResult = T.Deserialize(configRoot);
-        if (dResult.IsError) return ServiceResult.Fail<PathedServerConfig>(dResult.Error);
+        if (dResult.IsError) return ServiceResult.Fail<LocatedServerConfig>(dResult.Error);
         var fResult = await dResult.Result.Standardize(path).CheckAndFixAsync();
         if (fResult.IsError)
-            return ServiceResult.Fail<PathedServerConfig>(
+            return ServiceResult.Fail<LocatedServerConfig>(
                 new ServerConfigUnparsableException("Cannot parse the server config.", fResult.Error));
         if (fResult.IsWarning || dResult.IsWarning)
             return ServiceResult.Warning(fResult.Result,

@@ -6,9 +6,9 @@ using LSL.Common.Validation;
 
 namespace LSL.Common.Models.ServerConfigs;
 
-public class PathedServerConfig
+public class LocatedServerConfig
 {
-    internal PathedServerConfig(string serverPath,
+    internal LocatedServerConfig(string serverPath,
         string serverName,
         ServerCoreType serverType,
         CommonCoreConfigV1? commonInfo,
@@ -46,12 +46,12 @@ public class PathedServerConfig
     public List<string> ExtraJvmArgs { get; set; }
     public bool EnablePreLaunchProtection { get; set; }
 
-    public static PathedServerConfig Empty =>
+    public static LocatedServerConfig Empty =>
         new(string.Empty, string.Empty, ServerCoreType.Unknown, null, null, string.Empty, 1024, 4096, [], true);
 
     public IndexedServerConfig AsIndexed(int serverId) => new(serverId, this);
 
-    public static Task<ServiceResult<PathedServerConfig>> CreateAsync(string serverPath,
+    public static Task<ServiceResult<LocatedServerConfig>> CreateAsync(string serverPath,
         string? serverName,
         ServerCoreType? serverType,
         CommonCoreConfigV1? commonInfo,
@@ -63,20 +63,20 @@ public class PathedServerConfig
         bool? enablePreLaunchProtection)
     {
         if (string.IsNullOrEmpty(serverName))
-            return Task.FromResult(ServiceResult.Fail<PathedServerConfig>("This server doesn't have a name"));
-        if (minMemory is null) return Task.FromResult(ServiceResult.Fail<PathedServerConfig>("Minimum memory is missing"));
-        if (maxMemory is null) return Task.FromResult(ServiceResult.Fail<PathedServerConfig>("Maximum memory is missing"));
-        return new PathedServerConfig(serverPath, serverName, serverType ?? ServerCoreType.Error, commonInfo, forgeInfo,
+            return Task.FromResult(ServiceResult.Fail<LocatedServerConfig>("This server doesn't have a name"));
+        if (minMemory is null) return Task.FromResult(ServiceResult.Fail<LocatedServerConfig>("Minimum memory is missing"));
+        if (maxMemory is null) return Task.FromResult(ServiceResult.Fail<LocatedServerConfig>("Maximum memory is missing"));
+        return new LocatedServerConfig(serverPath, serverName, serverType ?? ServerCoreType.Error, commonInfo, forgeInfo,
             javaPath ?? string.Empty, minMemory.Value, maxMemory.Value, extJvm ?? [],
             enablePreLaunchProtection ?? true).CheckAndFixAsync();
     }
     
-    public async Task<ServiceResult<PathedServerConfig>> CheckAndFixAsync()
+    public async Task<ServiceResult<LocatedServerConfig>> CheckAndFixAsync()
     {
         for (int tries = 0; tries < 3; tries++)
         {
             if (!Path.Exists(ServerPath))
-                return ServiceResult.Fail<PathedServerConfig>(new DirectoryNotFoundException($"Server {ServerPath} does not exist"));
+                return ServiceResult.Fail<LocatedServerConfig>(new DirectoryNotFoundException($"Server {ServerPath} does not exist"));
             List<string> warnings = [];
             if (MinMemory > MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
             if (!CheckComponents.IsValidJava(JavaPath)) warnings.Add("The configured Java is not valid");
@@ -92,7 +92,7 @@ public class PathedServerConfig
                     {
                         var detectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
                         if (detectResult.IsError)
-                            return ServiceResult.Fail<PathedServerConfig>("Cannot get the correct core info of the forge server");
+                            return ServiceResult.Fail<LocatedServerConfig>("Cannot get the correct core info of the forge server");
                         ForgeCoreInfo = ForgeCoreConfigV1.FromTuple(detectResult.Result);
                     }
 
@@ -101,7 +101,7 @@ public class PathedServerConfig
                 case ServerCoreType.Error when CommonCoreInfo is not null && File.Exists(CommonCoreInfo.JarName):
                 {
                     var detectResult = await CoreTypeHelper.GetCoreType(CommonCoreInfo.JarName);
-                    if (detectResult.IsError) return ServiceResult.Fail<PathedServerConfig>("Cannot get the core type");
+                    if (detectResult.IsError) return ServiceResult.Fail<LocatedServerConfig>("Cannot get the core type");
                     ServerType = detectResult.Result;
                     continue;
                 }
@@ -111,11 +111,11 @@ public class PathedServerConfig
                     ServerType = ServerCoreType.Forge;
                     break;
                 case ServerCoreType.Error:
-                    return ServiceResult.Fail<PathedServerConfig>("Neither core file nor forge arguments is valid");
+                    return ServiceResult.Fail<LocatedServerConfig>("Neither core file nor forge arguments is valid");
                 default:
                 {
                     if (CommonCoreInfo is null || !File.Exists(CommonCoreInfo.JarName))
-                        return ServiceResult.Fail<PathedServerConfig>("The jar info of the server is invalid");
+                        return ServiceResult.Fail<LocatedServerConfig>("The jar info of the server is invalid");
                     break;
                 }
             }
@@ -125,7 +125,7 @@ public class PathedServerConfig
                 : ServiceResult.Success(this);
         }
 
-        return ServiceResult.Fail<PathedServerConfig>("Failed to check server configuration after multiple attempts");
+        return ServiceResult.Fail<LocatedServerConfig>("Failed to check server configuration after multiple attempts");
     }
 
     public ServiceResult<ProcessStartInfo> GetStartInfo()

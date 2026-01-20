@@ -5,7 +5,7 @@ namespace LSL.Common.Models.ServerConfigs;
 public interface IServerConfig
 {
     public int ConfigVersion { get; }
-    public Task<ServiceResult<PathedServerConfig>> StandardizeAsync(string path);
+    public Task<ServiceResult<LocatedServerConfig>> StandardizeAsync(string path);
     public string Serialize();
 }
 

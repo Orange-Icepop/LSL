@@ -44,7 +44,7 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
     public static ServerConfigV1 Deserialize(string json) =>
         JsonConvert.DeserializeObject<ServerConfigV1>(json, s_serializerOptions) ?? new ServerConfigV1();
 
-    public Task<ServiceResult<PathedServerConfig>> StandardizeAsync(string path) => PathedServerConfig.CreateAsync(path, Name, ServerCoreType.Error,
+    public Task<ServiceResult<LocatedServerConfig>> StandardizeAsync(string path) => LocatedServerConfig.CreateAsync(path, Name, ServerCoreType.Error,
         new CommonCoreConfigV1 { JarName = CoreName ?? string.Empty }, null, UsingJava, MinMemory, MaxMemory,
         ExtJvm?.Split(' '), true);
 

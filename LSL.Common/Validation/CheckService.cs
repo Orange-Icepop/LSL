@@ -100,7 +100,7 @@ public static class CheckService
     public static ServiceResult<IndexedServerConfig> VerifyServerConfig(int id, string path, IDictionary<string, string> config)
     {
         if (id < 0) return ServiceResult.Fail<IndexedServerConfig>(new ArgumentException($"Server id of {id} is not valid."));
-        var cache = PathedServerConfig.Empty;
+        var cache = LocatedServerConfig.Empty;
         var pResult = CheckComponents.ServerPath(path);
         if (!pResult.Passed) return ServiceResult.Fail<IndexedServerConfig>(new ValidationException($"Error validating server config with id {id} because of nonexistent server path."));
         cache.ServerPath = path;

@@ -25,7 +25,7 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
     public static ServerConfigV2 Deserialize(string json) =>
         JsonConvert.DeserializeObject<ServerConfigV2>(json, ConfigSerializerOptions.Default) ?? new ServerConfigV2();
 
-    public Task<ServiceResult<PathedServerConfig>> StandardizeAsync(string path) => PathedServerConfig.CreateAsync(path,
+    public Task<ServiceResult<LocatedServerConfig>> StandardizeAsync(string path) => LocatedServerConfig.CreateAsync(path,
         Name, ServerType, CommonCoreInfo, ForgeCoreInfo, JavaPath, MinMemory, MaxMemory, ExtraJvmArgs,
         EnablePreLaunchProtection);
 

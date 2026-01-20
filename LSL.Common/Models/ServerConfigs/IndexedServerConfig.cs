@@ -3,24 +3,24 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LSL.Common.Models.ServerConfigs;
 
-public class IndexedServerConfig(int serverId, PathedServerConfig pathedConfig)
+public class IndexedServerConfig(int serverId, LocatedServerConfig locatedConfig)
 {
-    public PathedServerConfig PathedConfig { get; private set; } = pathedConfig;
+    public LocatedServerConfig LocatedConfig { get; private set; } = locatedConfig;
     public int ServerId { get; set; } = serverId;
-    public string ServerPath => PathedConfig.ServerPath;
-    public string ServerName => PathedConfig.ServerName;
-    public ServerCoreType ServerType => PathedConfig.ServerType;
+    public string ServerPath => LocatedConfig.ServerPath;
+    public string ServerName => LocatedConfig.ServerName;
+    public ServerCoreType ServerType => LocatedConfig.ServerType;
 
     [MemberNotNullWhen(true, nameof(ForgeCoreInfo))]
-    public bool IsForge => PathedConfig.IsForge;
+    public bool IsForge => LocatedConfig.IsForge;
 
-    public CommonCoreConfigV1? CommonCoreInfo => PathedConfig.CommonCoreInfo;
-    public ForgeCoreConfigV1? ForgeCoreInfo => PathedConfig.ForgeCoreInfo;
-    public string JavaPath => PathedConfig.JavaPath;
-    public uint MinMemory => PathedConfig.MinMemory;
-    public uint MaxMemory => PathedConfig.MaxMemory;
-    public List<string> ExtraJvmArgs => PathedConfig.ExtraJvmArgs;
-    public bool EnablePreLaunchProtection => PathedConfig.EnablePreLaunchProtection;
+    public CommonCoreConfigV1? CommonCoreInfo => LocatedConfig.CommonCoreInfo;
+    public ForgeCoreConfigV1? ForgeCoreInfo => LocatedConfig.ForgeCoreInfo;
+    public string JavaPath => LocatedConfig.JavaPath;
+    public uint MinMemory => LocatedConfig.MinMemory;
+    public uint MaxMemory => LocatedConfig.MaxMemory;
+    public List<string> ExtraJvmArgs => LocatedConfig.ExtraJvmArgs;
+    public bool EnablePreLaunchProtection => LocatedConfig.EnablePreLaunchProtection;
 
     public IndexedServerConfig(IndexedServerConfig config) // 深拷贝构造函数
         : this(config.ServerId, config.ServerPath, config.ServerName, config.ServerType, config.CommonCoreInfo, config.ForgeCoreInfo, config.JavaPath,
@@ -50,7 +50,7 @@ public class IndexedServerConfig(int serverId, PathedServerConfig pathedConfig)
         uint maxMemory,
         string[] extJvm,
         bool enablePreLaunchProtection) : this(serverId,
-        new PathedServerConfig(serverPath, serverName, serverType, commonInfo, forgeInfo, usingJava, minMemory,
+        new LocatedServerConfig(serverPath, serverName, serverType, commonInfo, forgeInfo, usingJava, minMemory,
             maxMemory, extJvm, enablePreLaunchProtection))
     {
     }

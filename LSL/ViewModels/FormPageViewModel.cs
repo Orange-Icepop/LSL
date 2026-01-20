@@ -131,9 +131,9 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     
     #region 获取已有新增服务器信息
 
-    private async Task<PathedServerConfig> GetExistedServerConfigAsync(string path)
+    private async Task<LocatedServerConfig> GetExistedServerConfigAsync(string path)
     {
-        var res = PathedServerConfig.Empty;
+        var res = LocatedServerConfig.Empty;
         if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return res;
         var configFilePath = Path.Combine(path, "lslconfig.json");
         if(!File.Exists(configFilePath)) return res;

@@ -14,7 +14,7 @@ namespace LSL.Services.ServerServices;
     {
         public static ServiceResult<ServerProcess> Create(IndexedServerConfig config)
         {
-            var startInfoResult = config.PathedConfig.GetStartInfo();
+            var startInfoResult = config.LocatedConfig.GetStartInfo();
             return startInfoResult.IsError ? ServiceResult.Fail<ServerProcess>(startInfoResult.Error) : ServiceResult.Success(new ServerProcess(config.ServerId, (long)config.MaxMemory * 1024 * 1024, startInfoResult.Result));
         }
         private ServerProcess(int id, long allocatedMemoryBytes, ProcessStartInfo startInfo)
