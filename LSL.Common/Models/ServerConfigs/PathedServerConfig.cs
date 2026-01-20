@@ -51,7 +51,7 @@ public class PathedServerConfig
 
     public IndexedServerConfig AsIndexed(int serverId) => new(serverId, this);
 
-    public static async Task<ServiceResult<PathedServerConfig>> CreateAsync(string? serverPath,
+    public static Task<ServiceResult<PathedServerConfig>> CreateAsync(string serverPath,
         string? serverName,
         ServerCoreType? serverType,
         CommonCoreConfigV1? commonInfo,
@@ -62,7 +62,13 @@ public class PathedServerConfig
         string[]? extJvm,
         bool? enablePreLaunchProtection)
     {
-        
+        if (string.IsNullOrEmpty(serverName))
+            return Task.FromResult(ServiceResult.Fail<PathedServerConfig>("This server doesn't have a name"));
+        if (minMemory is null) return Task.FromResult(ServiceResult.Fail<PathedServerConfig>("Minimum memory is missing"));
+        if (maxMemory is null) return Task.FromResult(ServiceResult.Fail<PathedServerConfig>("Maximum memory is missing"));
+        return new PathedServerConfig(serverPath, serverName, serverType ?? ServerCoreType.Error, commonInfo, forgeInfo,
+            javaPath ?? string.Empty, minMemory.Value, maxMemory.Value, extJvm ?? [],
+            enablePreLaunchProtection ?? true).CheckAndFixAsync();
     }
     
     public async Task<ServiceResult<PathedServerConfig>> CheckAndFixAsync()
@@ -185,6 +191,6 @@ public class PathedServerConfig
             }
         }
         
-        return ServiceResult.Fail<ProcessStartInfo>("Server configuration is not valid");
+        return ServiceResult.Fail<ProcessStartInfo>("Server configuration is not valid to create a Minecraft server process");
     }
 }

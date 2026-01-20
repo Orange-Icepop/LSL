@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 using LSL.Common.Models;
 using LSL.Common.Utilities;
 
@@ -11,7 +12,7 @@ public static partial class CheckComponents
 {
     #region 校验文件名-路径-合法Java
 
-    public static bool IsValidFileName(string? fileName) //校验文件名
+    public static bool IsValidFileName([NotNullWhen(true)]string? fileName) //校验文件名
     {
         if (string.IsNullOrWhiteSpace(fileName)) return false;
         // 获取文件名中无效的字符
@@ -21,7 +22,7 @@ public static partial class CheckComponents
         return !fileName.Any(c => invalidChars.Contains(c));
     }
 
-    public static bool IsValidPath(string? path) //校验路径
+    public static bool IsValidPath([NotNullWhen(true)]string? path) //校验路径
     {
         if (string.IsNullOrWhiteSpace(path)) return false;
         // 获取路径中无效的字符
@@ -29,7 +30,7 @@ public static partial class CheckComponents
         return !path.Any(c => invalidChars.Contains(c));
     }
 
-    public static bool IsValidJava(string? javaPath) //校验Java路径并确认可执行
+    public static bool IsValidJava([NotNullWhen(true)]string? javaPath) //校验Java路径并确认可执行
     {
         if (!IsValidPath(javaPath)) return false;
         if (!File.Exists(javaPath)) return false;
