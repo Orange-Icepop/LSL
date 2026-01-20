@@ -6,38 +6,65 @@ using LSL.Common.Validation;
 
 namespace LSL.Common.Models.ServerConfigs;
 
-public class PathedServerConfig(
-    string serverPath,
-    string serverName,
-    ServerCoreType serverType,
-    CommonCoreConfigV1? commonInfo,
-    ForgeCoreConfigV1? forgeInfo,
-    string javaPath,
-    uint minMemory,
-    uint maxMemory,
-    string[] extJvm,
-    bool enablePreLaunchProtection)
+public class PathedServerConfig
 {
-    public string ServerPath { get; set; } = serverPath;
-    public string ServerName { get; set; } = serverName;
-    public ServerCoreType ServerType { get; set; } = serverType;
+    internal PathedServerConfig(string serverPath,
+        string serverName,
+        ServerCoreType serverType,
+        CommonCoreConfigV1? commonInfo,
+        ForgeCoreConfigV1? forgeInfo,
+        string javaPath,
+        uint minMemory,
+        uint maxMemory,
+        string[] extJvm,
+        bool enablePreLaunchProtection)
+    {
+        ServerPath = serverPath;
+        ServerName = serverName;
+        ServerType = serverType;
+        CommonCoreInfo = commonInfo;
+        ForgeCoreInfo = forgeInfo;
+        JavaPath = javaPath;
+        MinMemory = minMemory;
+        MaxMemory = maxMemory;
+        ExtraJvmArgs = [..extJvm];
+        EnablePreLaunchProtection = enablePreLaunchProtection;
+    }
+
+    public string ServerPath { get; set; }
+    public string ServerName { get; set; }
+    public ServerCoreType ServerType { get; set; }
 
     [MemberNotNullWhen(true, nameof(ForgeCoreInfo))]
     public bool IsForge => ServerType is ServerCoreType.Forge;
 
-    public CommonCoreConfigV1? CommonCoreInfo { get; set; } = commonInfo;
-    public ForgeCoreConfigV1? ForgeCoreInfo { get; set; } = forgeInfo;
-    public string JavaPath { get; set; } = javaPath;
-    public uint MinMemory { get; set; } = minMemory;
-    public uint MaxMemory { get; set; } = maxMemory;
-    public List<string> ExtraJvmArgs { get; set; } = [..extJvm];
-    public bool EnablePreLaunchProtection { get; set; } = enablePreLaunchProtection;
+    public CommonCoreConfigV1? CommonCoreInfo { get; set; }
+    public ForgeCoreConfigV1? ForgeCoreInfo { get; set; }
+    public string JavaPath { get; set; }
+    public uint MinMemory { get; set; }
+    public uint MaxMemory { get; set; }
+    public List<string> ExtraJvmArgs { get; set; }
+    public bool EnablePreLaunchProtection { get; set; }
 
     public static PathedServerConfig Empty =>
         new(string.Empty, string.Empty, ServerCoreType.Unknown, null, null, string.Empty, 1024, 4096, [], true);
 
     public IndexedServerConfig AsIndexed(int serverId) => new(serverId, this);
 
+    public static async Task<ServiceResult<PathedServerConfig>> CreateAsync(string? serverPath,
+        string? serverName,
+        ServerCoreType? serverType,
+        CommonCoreConfigV1? commonInfo,
+        ForgeCoreConfigV1? forgeInfo,
+        string? javaPath,
+        uint? minMemory,
+        uint? maxMemory,
+        string[]? extJvm,
+        bool? enablePreLaunchProtection)
+    {
+        
+    }
+    
     public async Task<ServiceResult<PathedServerConfig>> CheckAndFixAsync()
     {
         for (int tries = 0; tries < 3; tries++)

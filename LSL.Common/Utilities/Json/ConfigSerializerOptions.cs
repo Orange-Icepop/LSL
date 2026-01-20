@@ -1,18 +1,23 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 namespace LSL.Common.Utilities.Json;
 
 public static class ConfigSerializerOptions
 {
-    public static readonly JsonSerializerOptions Default = new()
+    public static readonly JsonSerializerSettings Default = new()
     {
-        AllowTrailingCommas = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.Never,
-        UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip,
-        NumberHandling = JsonNumberHandling.AllowReadingFromString,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+        Formatting = Formatting.Indented,
+        DateFormatHandling = DateFormatHandling.IsoDateFormat,
+        DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+        DateParseHandling = DateParseHandling.DateTimeOffset,
+        FloatParseHandling = FloatParseHandling.Double,
+        ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+        NullValueHandling = NullValueHandling.Include,
+        MissingMemberHandling = MissingMemberHandling.Ignore,
+        ContractResolver = new CamelCasePropertyNamesContractResolver(),
+        Error = (_, args) => args.ErrorContext.Handled = true,
+        Converters = { new StringEnumConverter(new CamelCaseNamingStrategy()) }
     };
 }

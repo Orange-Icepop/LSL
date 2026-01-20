@@ -4,7 +4,6 @@
 
 ### 重写整个配置文件系统
 
- - [ ] 全面改用System.Text.Json
  - [x] 对最旧版本的配置文件进行类化归档
  - [ ] 完成配置文件的版本化重写
 
@@ -12,7 +11,9 @@
 
 - [x] 配置文件版本化
 - [ ] 添加PathedServerConfig.Check()方法，替代CheckService用于启动前验证
-- [ ] 重写ServerConfigManager，使其换用System.Text.Json
+- [ ] 重写ServerConfigManager
+- [ ] 重写MainConfigManager
+- [ ] 重写JavaConfigManager
 
 ## SubProject
 

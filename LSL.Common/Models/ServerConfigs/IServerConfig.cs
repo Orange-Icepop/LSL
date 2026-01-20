@@ -5,11 +5,11 @@ namespace LSL.Common.Models.ServerConfigs;
 public interface IServerConfig
 {
     public int ConfigVersion { get; }
-    public PathedServerConfig Standardize(string path);
+    public Task<ServiceResult<PathedServerConfig>> StandardizeAsync(string path);
     public string Serialize();
 }
 
-public interface IServerConfig<TConfig> : IServerConfig where TConfig : IServerConfig<TConfig>
+public interface IServerConfig<out TConfig> : IServerConfig where TConfig : IServerConfig<TConfig>
 {
-    public static abstract ServiceResult<TConfig> Deserialize(JsonElement configRoot);
+    public static abstract TConfig Deserialize(string json);
 }
