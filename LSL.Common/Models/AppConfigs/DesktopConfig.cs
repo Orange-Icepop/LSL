@@ -1,6 +1,9 @@
-﻿namespace LSL.Common.Models.AppConfigs;
+﻿using LSL.Common.Utilities.Json;
+using Newtonsoft.Json;
 
-public record DesktopConfig : IConfig<DesktopConfig>
+namespace LSL.Common.Models.AppConfigs;
+
+public class DesktopConfig : IConfig<DesktopConfig>
 {
     // system
     public bool EnableTray { get; set; } = true;
@@ -19,6 +22,24 @@ public record DesktopConfig : IConfig<DesktopConfig>
     // about
     public bool AutoCheckUpdate { get; set; } = true;
     public bool BetaUpdate { get; set; } = false;
+    [JsonIgnore]
+    public string ConfigFileName => "DesktopConfig.json";
+
+    public ServiceResult Validate()
+    {
+        if (DownloadThreads > 256) return ServiceResult.Fail("DownloadThreads must be at most 256");
+        return ServiceResult.Success();
+    }
+
+    public static ServiceResult<DesktopConfig> Deserialize(string json)
+    {
+        var result = JsonConvert.DeserializeObject<DesktopConfig>(json, ConfigSerializerOptions.DefaultOptions);
+        if (result is null)
+            return ServiceResult.Fail<DesktopConfig>("The daemon config is not parsable");
+        var validationResult = result.Validate();
+        return validationResult.IsSuccess ? ServiceResult.Success(result) : ServiceResult.Warning(result, validationResult.Error);
+    }
+
 }
 
 public enum BackgroundStretchOption

@@ -1,6 +1,6 @@
 ﻿namespace LSL.Common.Models.AppConfigs;
 
-public record WebConfig : IConfig<WebConfig>
+public class WebConfig : IConfig<WebConfig>
 {
     // Site
     public uint PanelPort { get; set; } = 25000;

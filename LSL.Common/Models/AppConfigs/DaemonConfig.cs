@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using LSL.Common.Utilities.Json;
+using LSL.Common.Validation;
 using Newtonsoft.Json;
 
 namespace LSL.Common.Models.AppConfigs;
@@ -17,7 +18,7 @@ public class DaemonConfig : IConfig<DaemonConfig>
 
     public ServiceResult Validate()
     {
-        if (DownloadThreads > 256) return ServiceResult.Fail("DownloadThreads must be under 256");
+        if (DownloadThreads > 256) return ServiceResult.Fail("DownloadThreads must be at most 256");
         return ServiceResult.Success();
     }
 
@@ -26,12 +27,7 @@ public class DaemonConfig : IConfig<DaemonConfig>
         var result = JsonConvert.DeserializeObject<DaemonConfig>(json, ConfigSerializerOptions.DefaultOptions);
         if (result is null)
             return ServiceResult.Fail<DaemonConfig>("The daemon config is not parsable");
-        List<string> warnings = [];
-        if (result.DownloadThreads > 256)
-        {
-            result.DownloadThreads = 256;
-            warnings.Add("DownloadThreads must be under 256");
-        }
-        return warnings.Count > 0 ? ServiceResult.Warning(result, new StringBuilder().AppendJoin('\n', warnings).ToString()) : ServiceResult.Success(result);
+        var validationResult = result.Validate();
+        return validationResult.IsSuccess ? ServiceResult.Success(result) : ServiceResult.Warning(result, validationResult.Error);
     }
 }
