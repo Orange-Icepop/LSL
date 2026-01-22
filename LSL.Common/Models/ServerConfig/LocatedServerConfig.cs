@@ -4,7 +4,7 @@ using System.Text;
 using LSL.Common.Utilities;
 using LSL.Common.Validation;
 
-namespace LSL.Common.Models.ServerConfigs;
+namespace LSL.Common.Models.ServerConfig;
 
 public class LocatedServerConfig
 {
@@ -16,7 +16,7 @@ public class LocatedServerConfig
         string javaPath,
         uint minMemory,
         uint maxMemory,
-        string[] extJvm,
+        List<string> extJvm,
         bool enablePreLaunchProtection)
     {
         ServerPath = serverPath;
@@ -27,7 +27,7 @@ public class LocatedServerConfig
         JavaPath = javaPath;
         MinMemory = minMemory;
         MaxMemory = maxMemory;
-        ExtraJvmArgs = [..extJvm];
+        ExtraJvmArgs = extJvm;
         EnablePreLaunchProtection = enablePreLaunchProtection;
     }
 
@@ -59,7 +59,7 @@ public class LocatedServerConfig
         string? javaPath,
         uint? minMemory,
         uint? maxMemory,
-        string[]? extJvm,
+        List<string>? extJvm,
         bool? enablePreLaunchProtection)
     {
         if (string.IsNullOrEmpty(serverName))

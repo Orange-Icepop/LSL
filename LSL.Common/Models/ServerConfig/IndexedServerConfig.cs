@@ -1,7 +1,7 @@
 ﻿using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 
-namespace LSL.Common.Models.ServerConfigs;
+namespace LSL.Common.Models.ServerConfig;
 
 public class IndexedServerConfig(int serverId, LocatedServerConfig locatedConfig)
 {
@@ -24,7 +24,7 @@ public class IndexedServerConfig(int serverId, LocatedServerConfig locatedConfig
 
     public IndexedServerConfig(IndexedServerConfig config) // 深拷贝构造函数
         : this(config.ServerId, config.ServerPath, config.ServerName, config.ServerType, config.CommonCoreInfo, config.ForgeCoreInfo, config.JavaPath,
-            config.MinMemory, config.MaxMemory, config.ExtraJvmArgs.ToArray(), config.EnablePreLaunchProtection)
+            config.MinMemory, config.MaxMemory, config.ExtraJvmArgs, config.EnablePreLaunchProtection)
     {
     }
 
@@ -48,7 +48,7 @@ public class IndexedServerConfig(int serverId, LocatedServerConfig locatedConfig
         string usingJava,
         uint minMemory,
         uint maxMemory,
-        string[] extJvm,
+        List<string> extJvm,
         bool enablePreLaunchProtection) : this(serverId,
         new LocatedServerConfig(serverPath, serverName, serverType, commonInfo, forgeInfo, usingJava, minMemory,
             maxMemory, extJvm, enablePreLaunchProtection))

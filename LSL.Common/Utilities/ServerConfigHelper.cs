@@ -3,7 +3,7 @@ using System.Text.Json;
 using LSL.Common.Exceptions;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
-using LSL.Common.Models.ServerConfigs;
+using LSL.Common.Models.ServerConfig;
 
 namespace LSL.Common.Utilities;
 

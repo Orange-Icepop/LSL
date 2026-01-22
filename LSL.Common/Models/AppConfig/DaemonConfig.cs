@@ -1,9 +1,7 @@
-﻿using System.Text;
-using LSL.Common.Utilities;
-using LSL.Common.Validation;
-using Newtonsoft.Json;
+﻿using System.Runtime.Serialization;
+using Tomlyn;
 
-namespace LSL.Common.Models.AppConfigs;
+namespace LSL.Common.Models.AppConfig;
 
 public class DaemonConfig : IConfig<DaemonConfig>
 {
@@ -13,8 +11,7 @@ public class DaemonConfig : IConfig<DaemonConfig>
     public bool EndServerOnClose { get; set; } = true;
     public bool AllowPanelShutdownDaemon { get; set; } = false;
     public bool AllowPanelEditDaemonConfig { get; set; } = false;
-    [JsonIgnore]
-    public string ConfigFileName => "DaemonConfig.json";
+    [IgnoreDataMember] public static string ConfigFileName => "DaemonConfig.toml";
 
     public ServiceResult Validate()
     {
@@ -22,11 +19,10 @@ public class DaemonConfig : IConfig<DaemonConfig>
         return ServiceResult.Success();
     }
 
-    public static ServiceResult<DaemonConfig> Deserialize(string json)
+    public static ServiceResult<DaemonConfig> Deserialize(string content)
     {
-        var result = JsonConvert.DeserializeObject<DaemonConfig>(json, NsJsonOptions.DefaultOptions);
-        if (result is null)
-            return ServiceResult.Fail<DaemonConfig>("The daemon config is not parsable");
+        if (!Toml.TryToModel<DaemonConfig>(content, out var result, out var error))
+            return ServiceResult.Fail<DaemonConfig>($"The daemon config is not parsable:\n{error}");
         var validationResult = result.Validate();
         return validationResult.IsSuccess ? ServiceResult.Success(result) : ServiceResult.Warning(result, validationResult.Error);
     }

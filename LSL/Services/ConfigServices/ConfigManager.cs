@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using LSL.Common.Models;
-using LSL.Common.Models.ServerConfigs;
+using LSL.Common.Models.ServerConfig;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services.ConfigServices;

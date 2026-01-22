@@ -1,4 +1,4 @@
-namespace LSL.Common.Models.ServerConfigs;
+namespace LSL.Common.Models.ServerConfig;
 
 public interface IServerConfig
 {
@@ -9,5 +9,5 @@ public interface IServerConfig
 
 public interface IServerConfig<out TConfig> : IServerConfig where TConfig : IServerConfig<TConfig>
 {
-    public static abstract TConfig Deserialize(string json);
+    public static abstract TConfig Deserialize(string content);
 }

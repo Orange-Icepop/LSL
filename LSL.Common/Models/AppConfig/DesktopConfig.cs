@@ -1,9 +1,9 @@
-﻿using System.Text;
-using LSL.Common.Utilities;
+﻿using System.Runtime.Serialization;
+using System.Text;
 using LSL.Common.Validation;
-using Newtonsoft.Json;
+using Tomlyn;
 
-namespace LSL.Common.Models.AppConfigs;
+namespace LSL.Common.Models.AppConfig;
 
 public class DesktopConfig : IConfig<DesktopConfig>
 {
@@ -12,7 +12,7 @@ public class DesktopConfig : IConfig<DesktopConfig>
     public bool EnableDaemonKeepRunning { get; set; } = true;
     // server setup
     public bool AutoEula { get; set; } = true;
-    public string[] UniversalJvmPrefix { get; set; } = [];
+    public List<string> UniversalJvmPrefix { get; set; } = [];
     // styles
     public string ThemeColor { get; set; } = string.Empty;
     public string BackgroundColor { get; set; } = string.Empty;
@@ -24,8 +24,7 @@ public class DesktopConfig : IConfig<DesktopConfig>
     // about
     public bool AutoCheckUpdate { get; set; } = true;
     public bool BetaUpdate { get; set; } = false;
-    [JsonIgnore]
-    public static string ConfigFileName => "DesktopConfig.json";
+    [IgnoreDataMember] public static string ConfigFileName => "DesktopConfig.toml";
 
     public ServiceResult Validate()
     {
@@ -48,11 +47,10 @@ public class DesktopConfig : IConfig<DesktopConfig>
         return errors.Count != 0 ? ServiceResult.Fail(new StringBuilder().AppendJoin('\n', errors).ToString()) : ServiceResult.Success();
     }
 
-    public static ServiceResult<DesktopConfig> Deserialize(string json)
+    public static ServiceResult<DesktopConfig> Deserialize(string content)
     {
-        var result = JsonConvert.DeserializeObject<DesktopConfig>(json, NsJsonOptions.DefaultOptions);
-        if (result is null)
-            return ServiceResult.Fail<DesktopConfig>("The daemon config is not parsable");
+        if (!Toml.TryToModel<DesktopConfig>(content, out var result, out var error))
+            return ServiceResult.Fail<DesktopConfig>($"The desktop config is not parsable:\n{error}");
         var validationResult = result.Validate();
         return validationResult.IsSuccess ? ServiceResult.Success(result) : ServiceResult.Warning(result, validationResult.Error);
     }

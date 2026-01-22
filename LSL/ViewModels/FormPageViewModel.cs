@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
 using LSL.Common.Models;
-using LSL.Common.Models.ServerConfigs;
+using LSL.Common.Models.ServerConfig;
 using LSL.Common.Validation;
 using LSL.Models;
 using LSL.Services.ConfigServices;

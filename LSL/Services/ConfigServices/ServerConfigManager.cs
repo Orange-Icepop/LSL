@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
-using LSL.Common.Models.ServerConfigs;
+using LSL.Common.Models.ServerConfig;
 using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;

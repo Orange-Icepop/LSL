@@ -1,5 +1,5 @@
-using LSL.Common.Models.AppConfigs;
-using LSL.Common.Models.ServerConfigs;
+using LSL.Common.Models.AppConfig;
+using LSL.Common.Models.ServerConfig;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;

@@ -1,8 +1,8 @@
 using LSL.Common.Utilities;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
-namespace LSL.Common.Models.ServerConfigs;
+namespace LSL.Common.Models.ServerConfig;
+
 
 public class ServerConfigV1 : IServerConfig<ServerConfigV1>
 {
@@ -33,7 +33,7 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
 
     public Task<ServiceResult<LocatedServerConfig>> StandardizeAsync(string path) => LocatedServerConfig.CreateAsync(path, Name, ServerCoreType.Error,
         new CommonCoreConfigV1 { JarName = CoreName ?? string.Empty }, null, UsingJava, MinMemory, MaxMemory,
-        ExtJvm?.Split(' '), true);
+        [..ExtJvm?.Split(' ') ?? []], true);
 
     public string Serialize() => JsonConvert.SerializeObject(this, NsJsonOptions.SnakeCaseOptions);
 }

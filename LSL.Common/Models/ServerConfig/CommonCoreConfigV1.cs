@@ -1,4 +1,4 @@
-namespace LSL.Common.Models.ServerConfigs;
+namespace LSL.Common.Models.ServerConfig;
 
 public class CommonCoreConfigV1
 {

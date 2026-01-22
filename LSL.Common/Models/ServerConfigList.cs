@@ -1,4 +1,4 @@
-﻿using LSL.Common.Models.ServerConfigs;
+﻿using LSL.Common.Models.ServerConfig;
 
 namespace LSL.Common.Models;
 

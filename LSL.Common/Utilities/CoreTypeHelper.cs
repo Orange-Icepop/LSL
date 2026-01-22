@@ -2,7 +2,7 @@
 using System.Text;
 using ICSharpCode.SharpZipLib.Zip;
 using LSL.Common.Models;
-using LSL.Common.Models.ServerConfigs;
+using LSL.Common.Models.ServerConfig;
 
 namespace LSL.Common.Utilities;
 

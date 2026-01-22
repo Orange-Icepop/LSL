@@ -93,6 +93,7 @@
 		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.1" />
 		<PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.119.1" />
 		<PackageReference Include="Svg.Controls.Skia.Avalonia" Version="11.3.6.2" />
+		<PackageReference Include="Tomlyn.Signed" Version="0.19.0" />
 	</ItemGroup>
 
 	<ItemGroup>

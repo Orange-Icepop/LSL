@@ -15,7 +15,7 @@ using Avalonia.Threading;
 using LSL.Common.Collections;
 using LSL.Common.DTOs;
 using LSL.Common.Models;
-using LSL.Common.Models.ServerConfigs;
+using LSL.Common.Models.ServerConfig;
 using LSL.Common.Utilities;
 using LSL.Common.Validation;
 using LSL.Models;
