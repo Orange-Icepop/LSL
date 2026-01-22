@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using LSL.Common.Utilities.Json;
+using LSL.Common.Utilities;
 using LSL.Common.Validation;
 using Newtonsoft.Json;
 
@@ -24,7 +24,7 @@ public class DaemonConfig : IConfig<DaemonConfig>
 
     public static ServiceResult<DaemonConfig> Deserialize(string json)
     {
-        var result = JsonConvert.DeserializeObject<DaemonConfig>(json, ConfigSerializerOptions.DefaultOptions);
+        var result = JsonConvert.DeserializeObject<DaemonConfig>(json, NsJsonOptions.DefaultOptions);
         if (result is null)
             return ServiceResult.Fail<DaemonConfig>("The daemon config is not parsable");
         var validationResult = result.Validate();

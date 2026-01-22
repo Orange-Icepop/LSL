@@ -11,7 +11,7 @@ using LSL.Common.Models.ServerConfigs;
 using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using static LSL.Common.Utilities.Json.ConfigSerializerOptions;
+using static LSL.Common.Utilities.NsJsonOptions;
 using Formatting = System.Xml.Formatting;
 
 namespace LSL.Services.ConfigServices;

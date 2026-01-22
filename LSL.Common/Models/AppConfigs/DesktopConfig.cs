@@ -1,4 +1,6 @@
-﻿using LSL.Common.Utilities.Json;
+﻿using System.Text;
+using LSL.Common.Utilities;
+using LSL.Common.Validation;
 using Newtonsoft.Json;
 
 namespace LSL.Common.Models.AppConfigs;
@@ -23,17 +25,32 @@ public class DesktopConfig : IConfig<DesktopConfig>
     public bool AutoCheckUpdate { get; set; } = true;
     public bool BetaUpdate { get; set; } = false;
     [JsonIgnore]
-    public string ConfigFileName => "DesktopConfig.json";
+    public static string ConfigFileName => "DesktopConfig.json";
 
     public ServiceResult Validate()
     {
-        if (DownloadThreads > 256) return ServiceResult.Fail("DownloadThreads must be at most 256");
-        return ServiceResult.Success();
+        List<string> errors = [];
+        if (!ThemeColor.IsValidRgbHex())
+        {
+            errors.Add("Theme color is invalid");
+            ThemeColor = string.Empty;
+        }
+        if (!BackgroundColor.IsValidRgbHex())
+        {
+            errors.Add("Theme color is invalid");
+            BackgroundColor = string.Empty;
+        }
+        if (!BackgroundOpacity.IsInRange(0.0, 1.0))
+        {
+            errors.Add("Background opacity is invalid");
+            BackgroundOpacity = 1.0;
+        }
+        return errors.Count != 0 ? ServiceResult.Fail(new StringBuilder().AppendJoin('\n', errors).ToString()) : ServiceResult.Success();
     }
 
     public static ServiceResult<DesktopConfig> Deserialize(string json)
     {
-        var result = JsonConvert.DeserializeObject<DesktopConfig>(json, ConfigSerializerOptions.DefaultOptions);
+        var result = JsonConvert.DeserializeObject<DesktopConfig>(json, NsJsonOptions.DefaultOptions);
         if (result is null)
             return ServiceResult.Fail<DesktopConfig>("The daemon config is not parsable");
         var validationResult = result.Validate();

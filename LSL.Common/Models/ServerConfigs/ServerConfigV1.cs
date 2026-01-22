@@ -1,3 +1,4 @@
+using LSL.Common.Utilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -27,25 +28,12 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         ExtJvm = extJvm
     };
 
-    [JsonIgnore] private static readonly JsonSerializerSettings s_serializerOptions = new()
-    {
-        Formatting = Formatting.Indented,
-        ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-        NullValueHandling = NullValueHandling.Include,
-        MissingMemberHandling = MissingMemberHandling.Ignore,
-        ContractResolver = new DefaultContractResolver()
-        {
-            NamingStrategy = new SnakeCaseNamingStrategy()
-        },
-        Error = (_, args) => args.ErrorContext.Handled = true,
-    };
-
     public static ServerConfigV1 Deserialize(string json) =>
-        JsonConvert.DeserializeObject<ServerConfigV1>(json, s_serializerOptions) ?? new ServerConfigV1();
+        JsonConvert.DeserializeObject<ServerConfigV1>(json, NsJsonOptions.SnakeCaseOptions) ?? new ServerConfigV1();
 
     public Task<ServiceResult<LocatedServerConfig>> StandardizeAsync(string path) => LocatedServerConfig.CreateAsync(path, Name, ServerCoreType.Error,
         new CommonCoreConfigV1 { JarName = CoreName ?? string.Empty }, null, UsingJava, MinMemory, MaxMemory,
         ExtJvm?.Split(' '), true);
 
-    public string Serialize() => JsonConvert.SerializeObject(this, s_serializerOptions);
+    public string Serialize() => JsonConvert.SerializeObject(this, NsJsonOptions.SnakeCaseOptions);
 }

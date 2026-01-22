@@ -1,4 +1,4 @@
-using LSL.Common.Utilities.Json;
+using LSL.Common.Utilities;
 using Newtonsoft.Json;
 
 namespace LSL.Common.Models.ServerConfigs;
@@ -23,11 +23,11 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
     public bool? EnablePreLaunchProtection { get; set; }
 
     public static ServerConfigV2 Deserialize(string json) =>
-        JsonConvert.DeserializeObject<ServerConfigV2>(json, ConfigSerializerOptions.DefaultOptions) ?? new ServerConfigV2();
+        JsonConvert.DeserializeObject<ServerConfigV2>(json, NsJsonOptions.DefaultOptions) ?? new ServerConfigV2();
 
     public Task<ServiceResult<LocatedServerConfig>> StandardizeAsync(string path) => LocatedServerConfig.CreateAsync(path,
         Name, ServerType, CommonCoreInfo, ForgeCoreInfo, JavaPath, MinMemory, MaxMemory, ExtraJvmArgs,
         EnablePreLaunchProtection);
 
-    public string Serialize() => JsonConvert.SerializeObject(this, ConfigSerializerOptions.DefaultOptions);
+    public string Serialize() => JsonConvert.SerializeObject(this, NsJsonOptions.DefaultOptions);
 }
