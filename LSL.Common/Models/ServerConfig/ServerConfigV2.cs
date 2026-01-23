@@ -22,8 +22,12 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
     public List<string>? ExtraJvmArgs { get; set; }
     public bool? EnablePreLaunchProtection { get; set; }
 
-    public static ServerConfigV2 Deserialize(string content) =>
-        Toml.TryToModel<ServerConfigV2>(content, out var config, out var error) ? config : new ServerConfigV2();
+    public static ServiceResult<ServerConfigV2> Deserialize(string content)
+    {
+        return Toml.TryToModel<ServerConfigV2>(content, out var config, out var error)
+            ? ServiceResult.Success(config)
+            : ServiceResult.Fail<ServerConfigV2>(error.ToString());
+    }
 
     public Task<ServiceResult<LocatedServerConfig>> StandardizeAsync(string path) => LocatedServerConfig.CreateAsync(path,
         Name, ServerType, CommonCoreInfo, ForgeCoreInfo, JavaPath, MinMemory, MaxMemory, ExtraJvmArgs,

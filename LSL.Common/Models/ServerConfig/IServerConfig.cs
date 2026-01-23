@@ -7,7 +7,7 @@ public interface IServerConfig
     public string Serialize();
 }
 
-public interface IServerConfig<out TConfig> : IServerConfig where TConfig : IServerConfig<TConfig>
+public interface IServerConfig<TConfig> : IServerConfig where TConfig : IServerConfig<TConfig>
 {
-    public static abstract TConfig Deserialize(string content);
+    public static abstract ServiceResult<TConfig> Deserialize(string content);
 }
