@@ -9,8 +9,6 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
     {
         EnablePreLaunchProtection = ServerType is not ServerCoreType.Mohist;
     }
-    
-    public int ConfigVersion => 2;
     public string? Name { get; set; } = string.Empty;
     public ServerCoreType? ServerType { get; set; } = ServerCoreType.Error;
     
@@ -34,4 +32,6 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
         EnablePreLaunchProtection);
 
     public string Serialize() => Toml.FromModel(this);
+    
+    public static string ConfigFileName => "lsl-config-v2.toml";
 }

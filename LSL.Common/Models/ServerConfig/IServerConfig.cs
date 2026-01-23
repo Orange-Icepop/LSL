@@ -2,7 +2,7 @@ namespace LSL.Common.Models.ServerConfig;
 
 public interface IServerConfig
 {
-    public int ConfigVersion { get; }
+    public static abstract string ConfigFileName { get; }
     public Task<ServiceResult<LocatedServerConfig>> StandardizeAsync(string path);
     public string Serialize();
 }
