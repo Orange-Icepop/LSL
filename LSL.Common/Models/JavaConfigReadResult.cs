@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
 
 namespace LSL.Common.Models;
-[ImmutableObject(true)]
-public class JavaConfigReadResult
+
+public record JavaConfigReadResult
 {
     public IEnumerable<string> NotFound { get; }
     public IEnumerable<string> NotJava { get; }

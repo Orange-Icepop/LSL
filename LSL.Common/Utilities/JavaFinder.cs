@@ -1,44 +1,44 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using LSL.Common.Models;
+using LSL.Common.Options;
 
 namespace LSL.Common.Utilities;
 
 public static class JavaFinder
 {
-    public static async Task<List<JavaInfo>> GetInstalledJavaInfosAsync()// 异步获取已安装的Java信息-总方法
+    public static Task<List<JavaInfo>> GetInstalledJavaInfosAsync()// 异步获取已安装的Java信息-总方法
     {
-        var javaInfos = new List<JavaInfo>();
-
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            await Task.Run(() => GetWindowsJavaInfos(javaInfos));
+            return GetWindowsJavaInfos();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            await Task.Run(() => GetLinuxJavaInfos(javaInfos));
+            return GetLinuxJavaInfos();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            await Task.Run(() => GetMacOSJavaInfos(javaInfos));
+            return GetMacOSJavaInfos();
         }
-
-        return javaInfos;
+        throw new PlatformNotSupportedException();
     }
 
-    private static void GetWindowsJavaInfos(List<JavaInfo> javaInfos)// 获取Windows系统中的Java信息
+    private static async Task<List<JavaInfo>> GetWindowsJavaInfos()// 获取Windows系统中的Java信息
     {
+        ConcurrentBag<JavaInfo> javaInfos = [];
         var pathEnv = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);// 获取系统环境变量中的Path
         if (pathEnv is null) throw new Exception("Environment variable path not found");
         string[] pathParts = pathEnv.Split(Path.PathSeparator);
 
-        foreach (var pathPart in pathParts)
+        await Parallel.ForEachAsync(pathParts, ConcurrencyOptions.ConcurrencyLimit, async (pathPart, _) =>
         {
             string javaPath = Path.Combine(pathPart, "java.exe");
             string javawPath = Path.Combine(pathPart, "javaw.exe");
             if (File.Exists(javaPath))
             {
-                var javaInfo = GetJavaInfo(javaPath);
+                var javaInfo = await GetJavaInfo(javaPath);
                 if (javaInfo != null)
                 {
                     javaInfos.Add(javaInfo);
@@ -46,72 +46,80 @@ public static class JavaFinder
             }
             else if (File.Exists(javawPath))
             {
-                var javaInfo = GetJavaInfo(javawPath);
+                var javaInfo = await GetJavaInfo(javawPath);
                 if (javaInfo != null)
                 {
                     javaInfos.Add(javaInfo);
                 }
             }
-        }
+        });
+        return javaInfos.ToList();
     }
 
-    private static void GetLinuxJavaInfos(List<JavaInfo> javaInfos)// 获取Linux系统中的Java信息
+    private static async Task<List<JavaInfo>> GetLinuxJavaInfos()// 获取Linux系统中的Java信息
     {
+        ConcurrentBag<JavaInfo> javaInfos = [];
         string[] jvmDirs = ["/usr/lib/jvm", "/usr/lib32/jvm", "/usr/lib64/jvm"];// 利用Java虚拟机目录查找
 
         foreach (var jvmDir in jvmDirs)
         {
             if (!Directory.Exists(jvmDir)) continue;
-            foreach (var subdir in Directory.GetDirectories(jvmDir))
-            {
-                // 查找java可执行文件
-                string javaPath = Path.Combine(subdir, "bin", "java");
-                if (File.Exists(javaPath))
+            await Parallel.ForEachAsync(Directory.GetDirectories(jvmDir), ConcurrencyOptions.ConcurrencyLimit,
+                async (subDir, _) =>
                 {
-                    var javaInfo = GetJavaInfo(javaPath);
-                    if (javaInfo != null)
+                    // 查找java可执行文件
+                    string javaPath = Path.Combine(subDir, "bin", "java");
+                    if (File.Exists(javaPath))
                     {
-                        javaInfos.Add(javaInfo);
+                        var javaInfo = await GetJavaInfo(javaPath);
+                        if (javaInfo != null)
+                        {
+                            javaInfos.Add(javaInfo);
+                        }
                     }
-                }
-            }
+                });
         }
-
+        /*
         // 查找通过包管理器安装的Java
         var whichResult = ExecuteCommand("which", "java");
         if (!string.IsNullOrEmpty(whichResult))
         {
-            var javaInfo = GetJavaInfo(whichResult.Trim());
+            var javaInfo = await GetJavaInfo(whichResult.Trim());
             if (javaInfo != null)
             {
                 javaInfos.Add(javaInfo);
             }
-        }
+        }*/
+        return javaInfos.ToList();
     }
 
-    private static void GetMacOSJavaInfos(List<JavaInfo> javaInfos)// 获取MacOS系统中的Java信息
+    private static async Task<List<JavaInfo>> GetMacOSJavaInfos()// 获取MacOS系统中的Java信息
     {
+        ConcurrentBag<JavaInfo> javaInfos = [];
         const string jvmDir = "/Library/Java/JavaVirtualMachines";// 利用Java虚拟机目录查找
 
         if (Directory.Exists(jvmDir))
         {
-            foreach (var subdir in Directory.GetDirectories(jvmDir))
-            {
-                // 查找java可执行文件
-                string javaPath = Path.Combine(subdir, "Contents", "Home", "bin", "java");
-                if (File.Exists(javaPath))
+            await Parallel.ForEachAsync(Directory.GetDirectories(jvmDir), ConcurrencyOptions.ConcurrencyLimit,
+                async (subDir, _) =>
                 {
-                    var javaInfo = GetJavaInfo(javaPath);
-                    if (javaInfo != null)
+                    // 查找java可执行文件
+                    string javaPath = Path.Combine(subDir, "Contents", "Home", "bin", "java");
+                    if (File.Exists(javaPath))
                     {
-                        javaInfos.Add(javaInfo);
+                        var javaInfo = await GetJavaInfo(javaPath);
+                        if (javaInfo != null)
+                        {
+                            javaInfos.Add(javaInfo);
+                        }
                     }
-                }
-            }
+                });
         }
+
+        return javaInfos.ToList();
     }
 
-    public static JavaInfo? GetJavaInfo(string javaPath)// 使用java -version获取Java信息
+    public static async Task<JavaInfo?> GetJavaInfo(string javaPath)// 使用java -version获取Java信息
     {
         try
         {
@@ -129,8 +137,8 @@ public static class JavaFinder
             };
 
             process.Start();
-            string output = process.StandardError.ReadToEnd();
-            process.WaitForExit();
+            string output = await process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
 
             if (!string.IsNullOrEmpty(output))
             {
@@ -183,16 +191,16 @@ public static class JavaFinder
                     }
                     if (vendor == "Oracle" && version.StartsWith("1."))
                     {
-                        version = version.Substring(2);
+                        version = version[2..];
                     }
                     // get architecture
                     string architectureLine = lines[2];
                     var architecture = architectureLine.Contains("64-Bit") ? "64-Bit" : "32-Bit";
                     return new JavaInfo(javaPath, version, vendor, architecture);
                 }
-                else return null;
             }
-            else return null;
+
+            return null;
         }
         catch (Exception)
         {

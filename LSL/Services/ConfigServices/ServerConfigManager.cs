@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfig;
+using LSL.Common.Options;
 using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -119,8 +120,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     #endregion
 
     #region 逐个获取服务器各自的配置文件
-
-    private static readonly ParallelOptions s_concurrencyLimit = new() { MaxDegreeOfParallelism = Environment.ProcessorCount };
+    
     private static async Task<ServerConfigList> GetServerDetailsAsync(
         IDictionary<int, string> mainConfigs)
     {
@@ -128,7 +128,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         ConcurrentBag<string> warnings = [];
         // 读取各个服务器的LSL配置文件
         ConcurrentDictionary<int, IndexedServerConfig> scCache = [];
-        await Parallel.ForEachAsync(mainConfigs, s_concurrencyLimit, async (pair, _) => 
+        await Parallel.ForEachAsync(mainConfigs, ConcurrencyOptions.ConcurrencyLimit, async (pair, _) => 
         {
             var result = await GetSingleServerConfigAsync(pair.Key, pair.Value);
             if (result.IsError) errors.Add($"{pair.Value}: {result.Error.Message}");

@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia.Input;
 using LSL.Common.Models;
+using LSL.Common.Options;
 using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace LSL.Services.ConfigServices;
 /// <summary>
@@ -20,83 +24,47 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
     public FrozenDictionary<int, JavaInfo> JavaDict { get; private set; } = FrozenDictionary<int, JavaInfo>.Empty; // 目前读取的Java列表
 
     #region 读取Java列表
-    public async Task<ServiceResult<JavaConfigReadResult>> ReadJavaConfig()
+    public async Task<ServiceResult<Dictionary<int, JavaInfo>>> ReadJavaConfig()
+    {
+        var res = await (await ReadConfig()).Then(async dict =>
+        {
+            ConcurrentBag<string> errors = [];
+            await Parallel.ForEachAsync(dict, ConcurrencyOptions.ConcurrencyLimit, async (kvp, _) =>
+            {
+                if (!await kvp.Value.Validate()) errors.Add(kvp.Value.Path);
+            });
+            return errors.IsEmpty
+                ? ServiceResult.Success(dict)
+                : ServiceResult.Warning(dict, new StringBuilder().AppendJoin('\n', errors).ToString());
+        });
+        if (res.IsError) logger.LogError(res.Error, "Something went wrong while reading java config.");
+        else if (res.IsWarning) logger.LogWarning("Some javas are invalid when reading java config:{error}", res.Error.ToString());
+        return res;
+    }
+
+    private static async Task<ServiceResult<Dictionary<int, JavaInfo>>> ReadConfig()
     {
         try
         {
-            logger.LogInformation("Start reading JavaConfig...");
-            // read
             var file = await File.ReadAllTextAsync(ConfigPathProvider.JavaListPath);
-            var jsonObj = JObject.Parse(file);
+            var strDict = JsonSerializer.Deserialize<Dictionary<string, JavaInfo>>(file) ??
+                          new Dictionary<string, JavaInfo>();
             Dictionary<int, JavaInfo> tmpDict = [];
-            foreach (var item in jsonObj.Properties()) //遍历配置文件中的所有Java
+            List<string> error = [];
+            foreach (var kvp in strDict)
             {
-                var versionObject = item.Value["Version"];
-                var pathObject = item.Value["Path"];
-                var vendorObject = item.Value["Vendor"];
-                var archObject = item.Value["Architecture"];
-                if (versionObject is null ||
-                    pathObject is null ||
-                    vendorObject is null ||
-                    archObject is null ||
-                    versionObject.Type != JTokenType.String ||
-                    pathObject.Type != JTokenType.String ||
-                    vendorObject.Type != JTokenType.String ||
-                    archObject.Type != JTokenType.String) continue;
-                var res = new JavaInfo(pathObject.ToString(), versionObject.ToString(), vendorObject.ToString(),
-                    archObject.ToString());
-                tmpDict.Add(int.Parse(item.Name), res);
+                if (!int.TryParse(kvp.Key, out var id)) error.Add(kvp.Key);
+                else tmpDict.Add(id, kvp.Value);
             }
 
-            // validate
-            List<string> notFound = [];
-            List<string> notJava = [];
-            foreach (var item in tmpDict)
-            {
-                var path = item.Value.Path;
-                if (!File.Exists(path))
-                {
-                    notFound.Add(path);
-                    tmpDict.Remove(item.Key, out _);
-                    continue;
-                }
-
-                if (JavaFinder.GetJavaInfo(path) is null)
-                {
-                    notJava.Add(path);
-                    tmpDict.Remove(item.Key, out _);
-                }
-            }
-
-            // end
-            JavaDict = tmpDict.ToFrozenDictionary();
-            logger.LogDebug("Read JavaConfig complete, Parsing...");
-            if (notFound.Count > 0 || notJava.Count > 0)
-            {
-                var error = new StringBuilder("Some nonfatal error occured when reading java config:");
-                error.AppendLine();
-                if (notFound.Count > 0)
-                {
-                    error.AppendLine("The following items cannot be found:");
-                    error.AppendJoin('\n', notFound);
-                }
-
-                if (notJava.Count > 0)
-                {
-                    error.AppendLine("The following items are not an executable java file:");
-                    error.AppendJoin('\n', notJava);
-                }
-                error.AppendLine();
-                error.Append("You may need to re-detect java to solve this problem.");
-                logger.LogWarning("{}", error.ToString());
-                return ServiceResult.Warning(new JavaConfigReadResult(notFound, notJava), new Exception(error.ToString()));
-            }
-            return ServiceResult.Success(new JavaConfigReadResult());
+            return error.Count > 0
+                ? ServiceResult.Warning(tmpDict,
+                    new StringBuilder("Keys ").AppendJoin(',', error).Append(" are not valid").ToString())
+                : ServiceResult.Success(tmpDict);
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            logger.LogError(ex, "An error occured when reading java config.");
-            return ServiceResult.Fail<JavaConfigReadResult>(ex);
+            return ServiceResult.Fail<Dictionary<int, JavaInfo>>(e);
         }
     }
 
@@ -110,7 +78,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
         {
             if (!File.Exists(ConfigPathProvider.JavaListPath))
             {
-                await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "{}");
+                await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "");
             }
 
             logger.LogInformation("Start detecting Java...");

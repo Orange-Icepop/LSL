@@ -11,9 +11,9 @@ public static class ConfigPathProvider
 
     public static readonly string ConfigFilePath = Path.Combine(LSLFolder, "Config.json");
 
-    public static readonly string ServerConfigPath = Path.Combine(LSLFolder, "ServersConfig.json");
+    public static readonly string ServerConfigPath = Path.Combine(LSLFolder, "ServersConfig.toml");
 
-    public static readonly string JavaListPath = Path.Combine(LSLFolder, "JavaList.json");
+    public static readonly string JavaListPath = Path.Combine(LSLFolder, "JavaList.toml");
 
     public static readonly string ServersFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Servers");
 
