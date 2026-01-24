@@ -81,7 +81,7 @@ public class ConfigManager(
         config.ServerName, config.JavaPath, config.CorePath, uint.Parse(config.MinMem), uint.Parse(config.MaxMem), config.ExtJvm);
     // Java配置
     public FrozenDictionary<int, JavaInfo> JavaConfigs => jcm.JavaDict;
-    public Task<ServiceResult<JavaConfigReadResult>> ReadJavaConfig() => jcm.ReadJavaConfig();
+    public Task<ServiceResult<Dictionary<int, JavaInfo>>> ReadJavaConfig(bool writeBack = false) => jcm.ReadJavaConfig(writeBack);
     public Task<ServiceResult> DetectJavaAsync() => jcm.DetectJavaAsync();
 
     #endregion

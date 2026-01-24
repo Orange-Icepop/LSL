@@ -3,16 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Avalonia.Input;
 using LSL.Common.Models;
 using LSL.Common.Options;
 using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace LSL.Services.ConfigServices;
 /// <summary>
@@ -24,9 +21,10 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
     public FrozenDictionary<int, JavaInfo> JavaDict { get; private set; } = FrozenDictionary<int, JavaInfo>.Empty; // 目前读取的Java列表
 
     #region 读取Java列表
-    public async Task<ServiceResult<Dictionary<int, JavaInfo>>> ReadJavaConfig()
+    public async Task<ServiceResult<Dictionary<int, JavaInfo>>> ReadJavaConfig(bool writeBack = false)
     {
-        var res = await ReadConfig().BindAsync(async dict =>
+        var res = await ReadConfig()//先读配置文件
+            .BindAsync(async dict =>// 验证
         {
             ConcurrentBag<string> errors = [];
             await Parallel.ForEachAsync(dict, ConcurrencyOptions.ConcurrencyLimit, async (kvp, _) =>
@@ -37,8 +35,18 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                 ? ServiceResult.Success(dict)
                 : ServiceResult.Warning(dict, new StringBuilder().AppendJoin('\n', errors).ToString());
         });
-        if (res.IsError) logger.LogError(res.Error, "Something went wrong while reading java config.");
-        else if (res.IsWarning) logger.LogWarning("Some javas are invalid when reading java config:{error}", res.Error.ToString());
+        if (res.IsError)
+        {
+            logger.LogError(res.Error, "Something went wrong while reading java config.");
+            return res;
+        }
+
+        if (res.IsWarning) logger.LogWarning("Some javas are invalid when reading java config:{error}", res.Error.ToString());
+        if (writeBack)
+        {
+            await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, JsonSerializer.Serialize(res.Result, SnakeJsonOptions.Default.DictionaryInt32JavaInfo));
+        }
+        logger.LogInformation("Read Java config completed.");
         return res;
     }
 
@@ -47,7 +55,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
         try
         {
             var file = await File.ReadAllTextAsync(ConfigPathProvider.JavaListPath);
-            var strDict = JsonSerializer.Deserialize<Dictionary<string, JavaInfo>>(file) ??
+            var strDict = JsonSerializer.Deserialize(file, SnakeJsonOptions.Default.DictionaryStringJavaInfo) ??
                           new Dictionary<string, JavaInfo>();
             Dictionary<int, JavaInfo> tmpDict = [];
             List<string> error = [];
@@ -85,7 +93,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             List<JavaInfo> javaList;
             try
             {
-                javaList = await Task.Run(JavaFinder.GetInstalledJavaInfosAsync); //调用JavaFinder查找JAVA
+                javaList = await Task.Run(JavaFinder.GetInstalledJavaInfosAsync); //调用JavaFinder查找Java
             }
             catch (Exception e)
             {
@@ -103,7 +111,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             }
 
             await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath,
-                JsonConvert.SerializeObject(javaDict, Formatting.Indented)); //写入配置文件
+                JsonSerializer.Serialize(javaDict, SnakeJsonOptions.Default.DictionaryInt32JavaInfo)); //写入配置文件
             logger.LogInformation("Java detection completed, found {count} javas.", javaDict.Count);
             return ServiceResult.Success();
         }

@@ -1,5 +1,5 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using LSL.Common.Options;
 
 namespace LSL.Common.Models.ServerConfig;
 
@@ -28,22 +28,12 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         ExtJvm = extJvm
     };
 
-    private static readonly JsonSerializerOptions s_snakeCaseOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        PropertyNameCaseInsensitive = true,
-        UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip,
-        ReadCommentHandling = JsonCommentHandling.Skip,
-        AllowTrailingCommas = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.Never
-    };
-
     public static ServiceResult<ServerConfigV1> Deserialize(string json)
     {
         var result = new ServerConfigV1();
         try
         {
-            result = JsonSerializer.Deserialize<ServerConfigV1>(json, s_snakeCaseOptions) ?? result;
+            result = JsonSerializer.Deserialize(json, SnakeJsonOptions.Default.ServerConfigV1) ?? result;
         }
         catch (JsonException e)
         {
@@ -56,5 +46,5 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         new CommonCoreConfigV1 { JarName = CoreName ?? string.Empty }, null, UsingJava, MinMemory, MaxMemory,
         [..ExtJvm?.Split(' ') ?? []], true);
 
-    public string Serialize() => JsonSerializer.Serialize(this, s_snakeCaseOptions);
+    public string Serialize() => JsonSerializer.Serialize(this, SnakeJsonOptions.Default.ServerConfigV1);
 }

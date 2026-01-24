@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-namespace LSL.Common.Models;
+﻿namespace LSL.Common.Models;
 
 public record JavaConfigReadResult
 {
