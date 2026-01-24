@@ -20,7 +20,7 @@ public static class ServerConfigHelper
         var confPath = Path.Combine(path, "lsl-configs", ServerConfigV2.ConfigFileName);
         if (File.Exists(confPath))
             return await ServerConfigV2.Deserialize(await File.ReadAllTextAsync(confPath))
-                .Then(async config => await config.StandardizeAsync(path));
+                .BindAsync(async config => await config.StandardizeAsync(path));
         
         
         
@@ -31,7 +31,7 @@ public static class ServerConfigHelper
         confPath = Path.Combine(path, "lslconfig.json");
         if (File.Exists(confPath))
             return await ServerConfigV1.Deserialize(await File.ReadAllTextAsync(confPath))
-                .Then(async config => await config.StandardizeAsync(path));
+                .BindAsync(async config => await config.StandardizeAsync(path));
         return ServiceResult.Fail<LocatedServerConfig>(new ArgumentException(
             "Target path doesn't contain any server config file of LSL",
             nameof(path)));

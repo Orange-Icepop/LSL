@@ -46,39 +46,6 @@ public record ServiceResult<T> : IServiceResult
         Result = result;
         Error = error;
     }
-    public ServiceResult<TContinue> Then<TContinue>(Func<T, ServiceResult<TContinue>> continuation)
-    {
-        if (this.IsError) return ServiceResult.Fail<TContinue>(Error);
-    
-        if (this.IsWarning)
-        {
-            var nextResult = continuation(Result);
-            
-            if (nextResult.IsSuccess) return ServiceResult.Warning(nextResult.Result, Error);
-            if (nextResult.IsWarning) return ServiceResult.Warning(nextResult.Result, new AggregateException(Error, nextResult.Error));
-            return ServiceResult.Fail<TContinue>(new AggregateException(Error, nextResult.Error));
-        }
-        
-        return continuation(Result);
-    }
-
-    public async Task<ServiceResult<TContinue>> Then<TContinue>(
-        Func<T, Task<ServiceResult<TContinue>>> continuation)
-    {
-        if (this.IsError) return ServiceResult.Fail<TContinue>(Error);
-    
-        if (this.IsWarning)
-        {
-            var nextResult = await continuation(Result);
-            
-            if (nextResult.IsSuccess) return ServiceResult.Warning(nextResult.Result, Error);
-            if (nextResult.IsWarning) return ServiceResult.Warning(nextResult.Result, new AggregateException(Error, nextResult.Error));
-            return ServiceResult.Fail<TContinue>(new AggregateException(Error, nextResult.Error));
-        }
-        
-        return await continuation(Result);
-
-    }
 }
 
 public record ServiceResult : IServiceResult

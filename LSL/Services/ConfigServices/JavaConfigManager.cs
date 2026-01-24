@@ -26,7 +26,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
     #region 读取Java列表
     public async Task<ServiceResult<Dictionary<int, JavaInfo>>> ReadJavaConfig()
     {
-        var res = await (await ReadConfig()).Then(async dict =>
+        var res = await ReadConfig().BindAsync(async dict =>
         {
             ConcurrentBag<string> errors = [];
             await Parallel.ForEachAsync(dict, ConcurrencyOptions.ConcurrencyLimit, async (kvp, _) =>
