@@ -2,6 +2,7 @@
 using System.IO;
 
 namespace LSL.Services.ConfigServices;
+
 /// <summary> The static class to provide paths for logic config processing. </summary>
 public static class ConfigPathProvider
 {

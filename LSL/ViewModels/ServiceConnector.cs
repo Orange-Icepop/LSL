@@ -8,12 +8,14 @@ using System.Linq;
 using System.Net.Http;
 using System.Reactive.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using LSL.Common.Collections;
 using LSL.Common.DTOs;
+using LSL.Common.Extensions;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Utilities;
@@ -23,7 +25,6 @@ using LSL.Services;
 using LSL.Services.ConfigServices;
 using LSL.Services.ServerServices;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace LSL.ViewModels;
 
@@ -541,20 +542,22 @@ public class ServiceConnector
                         $"Error getting update API(code {result.StatusCode})\n{result.Message}");
             }
 
-            var jsonObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(result.Message) ??
+            var jsonDocument = JsonDocument.Parse(result.Message) ??
                        throw new FormatException("Update API Response can't be serialized as dictionary.");
-            var remoteVerString = jsonObj["tag_name"].ToString() ??
-                                  throw new NullReferenceException(
-                                      "API Response doesn't contain required key tag_name.");
+            string? remoteVerString = null;
+            jsonDocument.RootElement.ParseStringProperty("tag_name", s => remoteVerString = s,
+                _ => throw new NullReferenceException(
+                    "API Response doesn't contain required string property tag_name."));
+            if (remoteVerString == null) throw new NullReferenceException("API Response doesn't contain required string property tag_name.");
             var remoteVer = remoteVerString.TrimStart('v');
             var needUpdate = AlgoServices.IsGreaterVersion(DesktopConstant.Version, remoteVer);
             _logger.LogInformation("Got remote version update. Local:{LocalVer}, remote:{RemoteVer}.", DesktopConstant.Version,
                 remoteVer);
             if (needUpdate)
             {
-                var updateMessage = jsonObj["body"].ToString() ??
-                                    throw new NullReferenceException(
-                                        "API Response doesn't contain required key body.");
+                string? updateMessage = null;
+                jsonDocument.RootElement.ParseStringProperty("body", s => updateMessage = s, _ => throw new NullReferenceException("API Response doesn't contain string property body."));
+                if(updateMessage is null) throw new NullReferenceException("API Response doesn't contain string property body.");
                 updateMessage = updateMessage.Replace(@"\r\n", "\n").Replace(@"\n", "\n");
                 var message =
                     $"LSL已经推出了新版本：{remoteVerString}。可前往https://github.com/Orange-Icepop/LSL/releases下载。\n{updateMessage}";

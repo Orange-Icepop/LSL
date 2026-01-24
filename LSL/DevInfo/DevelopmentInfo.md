@@ -10,7 +10,7 @@
 #### 具体工作
 
 - [x] 配置文件版本化
-- [ ] 添加PathedServerConfig.Check()方法，替代CheckService用于启动前验证
+- [ ] 添加LocatedServerConfig.Check()方法，替代CheckService用于启动前验证
 - [ ] 重写ServerConfigManager
 - [ ] 重写MainConfigManager
 - [ ] 重写JavaConfigManager

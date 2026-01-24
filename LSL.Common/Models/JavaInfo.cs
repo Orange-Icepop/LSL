@@ -1,5 +1,4 @@
-﻿
-using LSL.Common.Utilities;
+﻿using LSL.Common.Utilities;
 
 namespace LSL.Common.Models;
 

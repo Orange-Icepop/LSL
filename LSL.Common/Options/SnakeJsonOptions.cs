@@ -7,8 +7,12 @@ namespace LSL.Common.Options;
 [JsonSerializable(typeof(JavaInfo))]
 [JsonSerializable(typeof(Dictionary<int, JavaInfo>))]
 [JsonSerializable(typeof(Dictionary<string, JavaInfo>))]
+[JsonSerializable(typeof(Dictionary<int, string>))]
 [JsonSerializable(typeof(ServerConfigV1))]
-[JsonSourceGenerationOptions(WriteIndented = true, AllowTrailingCommas = true, PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
+[JsonSourceGenerationOptions(WriteIndented = true, AllowTrailingCommas = true,
+    PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower, 
+    UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip,
+    DefaultIgnoreCondition = JsonIgnoreCondition.Always)]
 public partial class SnakeJsonOptions : JsonSerializerContext
 {
 }

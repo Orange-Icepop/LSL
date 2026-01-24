@@ -4,6 +4,7 @@ using LSL.Common.Validation;
 
 namespace LSL.Common.Extensions;
 
+[Obsolete]
 public static class JsonPropertyExtensions
 {
     private static string ChangeCase(this string value, JsonKnownNamingPolicy policy)

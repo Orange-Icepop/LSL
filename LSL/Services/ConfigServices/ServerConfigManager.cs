@@ -4,6 +4,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
@@ -11,9 +12,6 @@ using LSL.Common.Models.ServerConfig;
 using LSL.Common.Options;
 using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using static LSL.Common.Utilities.NsJsonOptions;
-using Formatting = System.Xml.Formatting;
 
 namespace LSL.Services.ConfigServices;
 
@@ -80,9 +78,8 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     {
         if (!File.Exists(path))
         {
-            var ex = new FileNotFoundException($"Server main config at {path} not found.");
-            logger.LogError(ex, "Server main config at {path} not found.", path);
-            return ServiceResult.Fail<Dictionary<int, string>>(ex);
+            logger.LogError("Server main config at {path} not found.", path);
+            return ServiceResult.Fail<Dictionary<int, string>>(new FileNotFoundException($"Server main config at {path} not found."));
         }
 
         string mainFile;
@@ -92,8 +89,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         }
         catch (UnauthorizedAccessException ex)
         {
-            return ServiceResult.Fail<Dictionary<int, string>>(
-                new UnauthorizedAccessException($"Current user have no permission to read file {path}.", ex));
+            return ServiceResult.Fail<Dictionary<int, string>>(ex);
         }
 
         if (string.IsNullOrWhiteSpace(mainFile) || mainFile == "{}")
@@ -104,7 +100,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
         try
         {
-            var configs = JsonConvert.DeserializeObject<Dictionary<int, string>>(mainFile, DefaultOptions);
+            var configs = JsonSerializer.Deserialize(mainFile, SnakeJsonOptions.Default.DictionaryInt32String);
             return configs is null
                 ? throw new JsonException("The Main Server Config file cannot be converted.")
                 : ServiceResult.Success(configs);
@@ -191,7 +187,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 max_memory = maxMem,
                 ext_jvm = extJvm
             };
-            string serializedConfig = JsonConvert.SerializeObject(initialConfig, DefaultOptions);
+            string serializedConfig = JsonSerializer.Serialize(initialConfig, DefaultOptions);
             await File.WriteAllTextAsync(addedConfigPath, serializedConfig); // 写入服务器文件夹内的配置文件
             // 创建Eula文件
             if (!mcm.CurrentConfigs.TryGetValue("auto_eula", out var rawEula) ||

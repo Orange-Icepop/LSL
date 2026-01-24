@@ -3,6 +3,7 @@ using System.Text.Json;
 
 namespace LSL.Common.Extensions;
 
+[Obsolete]
 public static class JsonElementExtensions
 {
     public static bool TryGetString(this JsonElement property, [NotNullWhen(true)]out string? value)

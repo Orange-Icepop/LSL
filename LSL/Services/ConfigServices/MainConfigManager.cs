@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using LSL.Common.Models;
 using LSL.Common.Validation;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace LSL.Services.ConfigServices;
 /// <summary>
