@@ -232,7 +232,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         var deleteResult = AppState.InteractionUnits.SubmitServiceError(await Connector.DeleteServer(serverId));
         if (deleteResult.IsSuccess)
         {
-            AppState.InteractionUnits.Notify(1, null, $"服务器{config.ServerName}删除成功");
+            AppState.InteractionUnits.Notify(NotifyType.Success, null, $"服务器{config.ServerName}删除成功");
         }
         else await deleteResult;
     }

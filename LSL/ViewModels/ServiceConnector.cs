@@ -179,7 +179,7 @@ public class ServiceConnector
         if (confirm == PopupResult.Yes)
         {
             _daemonHost.StopServer(serverId);
-            _appState.InteractionUnits.Notify(0, "正在关闭服务器", "请稍作等待");
+            _appState.InteractionUnits.Notify(NotifyType.Info, "正在关闭服务器", "请稍作等待");
         }
     }
 
@@ -539,8 +539,8 @@ public class ServiceConnector
         }
         else
         {
-            _appState.InteractionUnits.NotifyInteraction.Handle(new NotifyArgs(0, "版本检查完成",
-                $"当前版本已经为最新：v{DesktopConstant.Version}"));
+            _appState.InteractionUnits.Notify(NotifyType.Success, "版本检查完成",
+                $"当前版本已经为最新：v{DesktopConstant.Version}");
         }
     }
 

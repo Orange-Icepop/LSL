@@ -177,7 +177,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             var success = AppState.InteractionUnits.SubmitServiceError(await Connector.AddServer(serverInfo));
             if (success.IsSuccess)
             {
-                AppState.InteractionUnits.Notify(1, null, "服务器配置成功！");
+                AppState.InteractionUnits.Notify(NotifyType.Success, null, "服务器配置成功！");
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
             }
             else await success;
@@ -210,7 +210,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             var success = AppState.InteractionUnits.SubmitServiceError(await Connector.EditServer(id, info));
             if (success.IsSuccess)
             {
-                AppState.InteractionUnits.Notify(1, null, "服务器配置修改成功！");
+                AppState.InteractionUnits.Notify(NotifyType.Success, null, "服务器配置修改成功！");
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
             }
             else await success;
@@ -255,7 +255,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             var success = AppState.InteractionUnits.SubmitServiceError(await Connector.AddExistedServer(serverInfo));
             if (success.IsSuccess)
             {
-                AppState.InteractionUnits.Notify(1, null, "服务器配置成功！");
+                AppState.InteractionUnits.Notify(NotifyType.Success, null, "服务器配置成功！");
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
             }
             else await success;

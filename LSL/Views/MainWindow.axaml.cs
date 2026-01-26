@@ -85,25 +85,25 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
         NotificationType type;
         switch (args.Type)
         {
-            case 0:
+            case NotifyType.Info:
                 {
                     type = NotificationType.Information;
                     title ??= "消息";
                     break;
                 }
-            case 1:
+            case NotifyType.Success:
                 {
                     type = NotificationType.Success;
                     title ??= "成功";
                     break;
                 }
-            case 2:
+            case NotifyType.Warning:
                 {
                     type = NotificationType.Warning;
                     title ??= "警告";
                     break;
                 }
-            case 3:
+            case NotifyType.Error:
                 {
                     type = NotificationType.Error;
                     title ??= "错误";
@@ -125,7 +125,7 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
     };
     private async Task OpenFileOperation(IInteractionContext<FilePickerType, string> context)
     {
-        // 启动异步操作以打开对话框。
+        // 启动异步操作以打开对话框
         var files = await this.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "打开Minecraft核心文件",

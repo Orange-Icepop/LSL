@@ -5,7 +5,7 @@ namespace LSL.ViewModels;
 
 #region MessageBus事件类
 
-public record NotifyArgs(int Type, string? Title, string? Message); // 通知条事件
+public record NotifyArgs(NotifyType Type, string? Title, string? Message); // 通知条事件
 public enum NotifyType
 {
     Info,

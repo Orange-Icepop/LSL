@@ -23,12 +23,12 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         OpenFileCmd = ReactiveCommand.CreateFromTask<string>(OpenExplorer);
         SearchJava = ReactiveCommand.CreateFromTask(async () =>
         {
-            await Dispatcher.UIThread.InvokeAsync(() => AppState.InteractionUnits.Notify(0, "正在搜索Java", "请耐心等待......"));
+            await Dispatcher.UIThread.InvokeAsync(() => AppState.InteractionUnits.Notify(NotifyType.Info, "正在搜索Java", "请耐心等待......"));
             var success = AppState.InteractionUnits.SubmitServiceError(await Connector.FindJava());
             if (success.IsSuccess)
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
-                    AppState.InteractionUnits.Notify(1, "Java搜索完成！", $"搜索到了{success.Result}个Java"));
+                    AppState.InteractionUnits.Notify(NotifyType.Success, "Java搜索完成！", $"搜索到了{success.Result}个Java"));
             }
             else await success;
         }); // 搜索Java命令-实现
@@ -44,7 +44,7 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         var result = XPlatformOperationHelper.OpenWebBrowser(url);
         if (result.IsSuccess)
         {
-            AppState.InteractionUnits.Notify(1, "成功打开了网页！", url);
+            AppState.InteractionUnits.Notify(NotifyType.Success, "成功打开了网页！", url);
             Logger.LogInformation("Successfully opened web page {url}.", url);
         }
         else if (result.Error is ArgumentException ae)

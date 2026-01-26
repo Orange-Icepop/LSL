@@ -95,14 +95,14 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
     {
         MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
         var success = Connector.StartServer(AppState.SelectedServerId);
-        if (success) AppState.InteractionUnits.Notify(0, "服务器正在启动", "请稍候等待服务器启动完毕");
-        else AppState.InteractionUnits.Notify(0, "服务器启动失败", "配置检查不通过，请检查配置是否存在错误");
+        if (success) AppState.InteractionUnits.Notify(NotifyType.Info, "服务器正在启动", "请稍候等待服务器启动完毕");
+        else AppState.InteractionUnits.Notify(NotifyType.Error, "服务器启动失败", "配置检查不通过，请检查配置是否存在错误");
     }
     public void SendCommandToServer()//发送命令方法
     {
         if (string.IsNullOrEmpty(InputText))
         {
-            AppState.InteractionUnits.Notify(0, "输入为空", "请输入要发送的命令");
+            AppState.InteractionUnits.Notify(NotifyType.Error, "输入为空", "请输入要发送的命令");
             return;
         }
         Connector.SendCommandToServer(AppState.SelectedServerId, InputText);

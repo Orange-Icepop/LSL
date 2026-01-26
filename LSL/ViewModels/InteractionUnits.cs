@@ -47,12 +47,12 @@ public class InteractionUnits(ILogger<InteractionUnits> logger) : ViewModelBase(
         await PopupInteraction.Handle(new InvokePopupArgs(level, "服务错误", fin));
     }
 
-    public void Notify(int type, string? title, string? message)
+    public void Notify(NotifyType type, string? title, string? message)
     {
         NotifyInteraction.Handle(new NotifyArgs(type, title, message)).Subscribe();
     }
 
-    public async Task WaitNotify(int type, string? title, string? message) =>
+    public async Task WaitNotify(NotifyType type, string? title, string? message) =>
         await NotifyInteraction.Handle(new NotifyArgs(type, title, message));
 
     public class ServiceResultCommitWrapper
