@@ -14,4 +14,10 @@
       <PackageReference Include="Tomlyn.Signed" Version="0.19.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.Http">
+        <HintPath>..\..\..\.nuget\packages\microsoft.extensions.http\9.0.9\lib\net8.0\Microsoft.Extensions.Http.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

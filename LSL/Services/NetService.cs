@@ -12,19 +12,19 @@ namespace LSL.Services;
 
 public class NetService
 {
-    private readonly IHttpClientFactory _factory;
+    public readonly IHttpClientFactory Factory;
     private readonly ILogger<NetService> _logger;
     private const int BufferSize = 8192;
     public NetService(IHttpClientFactory factory, ILogger<NetService> logger)
     {
-        _factory = factory;
+        Factory = factory;
         _logger = logger;
     }
 
     #region 异步下载请求
     public async Task<ServiceResult> GetFileAsync(string url, string dir, IProgress<double>? progress, CancellationToken token = new()) 
     {
-        using var client = _factory.CreateClient();
+        using var client = Factory.CreateClient();
         string? path = null;
         var fileExists = false;
         try
@@ -86,8 +86,7 @@ public class NetService
     {
         _logger.LogInformation("Start getting API: {URL}", url);
         if (string.IsNullOrWhiteSpace(url)) return new ApiResult(0, "The requested URL is empty.");
-        using var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd($"LSL/{DesktopConstant.Version}");
+        using var client = Factory.CreateClient("LSL");
         try
         {
             using var response =

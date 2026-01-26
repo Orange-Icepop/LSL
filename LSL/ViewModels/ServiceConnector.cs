@@ -516,73 +516,31 @@ public class ServiceConnector
 
     public async Task CheckForUpdates()
     {
-        try
+        var result = await UpdateHelper.QueryLatest(_webHost.Factory);
+        if (!result.IsSuccess)
         {
-            if (!_appState.CurrentConfigs.TryGetValue("beta_update", out var betaUpdateObj))
-            {
-                throw new KeyNotFoundException("Config key beta_update not found.");
-            }
-
-            if (!bool.TryParse(betaUpdateObj.ToString(), out var betaUpdate))
-            {
-                throw new FormatException("Config beta_update are not valid boolean.");
-            }
-
-            Dispatcher.UIThread.Post(() => _appState.InteractionUnits.Notify(0, "更新检查", "开始检查LSL更新......"));
-            string url = betaUpdate
-                ? "https://api.orllow.cn/lsl/latest/prerelease"
-                : "https://api.orllow.cn/lsl/latest/stable";
-            var result = await _webHost.ApiGet(url);
-            switch (result.StatusCode)
-            {
-                case 0:
-                    throw new HttpRequestException("Cannot connect to the server.");
-                case < 200 or >= 300:
-                    throw new HttpRequestException(
-                        $"Error getting update API(code {result.StatusCode})\n{result.Message}");
-            }
-
-            var jsonDocument = JsonDocument.Parse(result.Message) ??
-                       throw new FormatException("Update API Response can't be serialized as dictionary.");
-            string? remoteVerString = null;
-            jsonDocument.RootElement.ParseStringProperty("tag_name", s => remoteVerString = s,
-                _ => throw new NullReferenceException(
-                    "API Response doesn't contain required string property tag_name."));
-            if (remoteVerString == null) throw new NullReferenceException("API Response doesn't contain required string property tag_name.");
-            var remoteVer = remoteVerString.TrimStart('v');
-            var needUpdate = AlgoServices.IsGreaterVersion(DesktopConstant.Version, remoteVer);
-            _logger.LogInformation("Got remote version update. Local:{LocalVer}, remote:{RemoteVer}.", DesktopConstant.Version,
-                remoteVer);
-            if (needUpdate)
-            {
-                string? updateMessage = null;
-                jsonDocument.RootElement.ParseStringProperty("body", s => updateMessage = s, _ => throw new NullReferenceException("API Response doesn't contain string property body."));
-                if(updateMessage is null) throw new NullReferenceException("API Response doesn't contain string property body.");
-                updateMessage = updateMessage.Replace(@"\r\n", "\n").Replace(@"\n", "\n");
-                var message =
-                    $"LSL已经推出了新版本：{remoteVerString}。可前往https://github.com/Orange-Icepop/LSL/releases下载。\n{updateMessage}";
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    _appState.InteractionUnits.PopupInteraction
-                        .Handle(new InvokePopupArgs(PopupType.InfoConfirm, "LSL更新提示", message))
-                        .Subscribe();
-                });
-            }
-            else
-                Dispatcher.UIThread.Post(() =>
-                    _appState.InteractionUnits.Notify(1, "更新检查完毕", $"当前LSL版本已为最新：{DesktopConstant.Version}"));
-
-            _logger.LogInformation("Check for updates completed.");
+            await _appState.InteractionUnits.ThrowError("检查更新时出错", $"检查更新时出现以下错误：\n{result.Error}");
+            return;
         }
-        catch (Exception ex)
+
+        var isGreater = result.Result.IsNewerVersion(DesktopConstant.Version);
+        if (!isGreater.IsSuccess)
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, "更新检查出错",
-                        $"LSL在检查更新时出现了问题。\n{ex.Message}"))
-                    .Subscribe();
-            });
-            _logger.LogError(ex, "An error occured when checking for LSL updates.");
+            await _appState.InteractionUnits.ThrowError("检查更新时出错", "无法比较当前软件版本与远程软件版本的大小差异。这是一个开发错误，请向作者反馈。");
+            return;
+        }
+
+        if (isGreater.Result)
+        {
+            var confirm = await _appState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
+                PopupType.InfoYesNo,
+                "LSL 版本更新", $"LSL 有新版本 {result.Result.TagName} 已经发布。\n{result.Result.FormatBody().Body}\n是否前往更新？"));
+            if (confirm == PopupResult.Yes) await _appState.Commands.OpenWebPage(result.Result.HtmlUrl);
+        }
+        else
+        {
+            _appState.InteractionUnits.NotifyInteraction.Handle(new NotifyArgs(0, "版本检查完成",
+                $"当前版本已经为最新：v{DesktopConstant.Version}"));
         }
     }
 

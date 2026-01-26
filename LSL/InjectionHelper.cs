@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using LSL.Common.Extensions;
 using LSL.Services;
 using LSL.Services.ConfigServices;
 using LSL.Services.ServerServices;
@@ -42,7 +43,10 @@ public static class InjectionHelper
 
     public static void AddNetworking(this IServiceCollection collection)
     {
-        collection.AddHttpClient(nameof(NetService))
+        collection.AddHttpClient("LSL", client =>
+            {
+                client.ResetUserAgent($"LSL/{DesktopConstant.Version}");
+            })
             .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
             {
                 PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),

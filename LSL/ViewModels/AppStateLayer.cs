@@ -19,13 +19,15 @@ public class AppStateLayer : ReactiveObject
     public ILoggerFactory LoggerFactory { get; }
     private ILogger<AppStateLayer> Logger { get; }
     public InteractionUnits InteractionUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
+    public PublicCommand Commands { get; }
     public IObservable<FrozenDictionary<int, IndexedServerConfig>> ServerConfigChanged { get; private set; }
     public IObservable<int> ServerIndexChanged { get; private set; }
     public IObservable<int> ServerIdChanged { get; private set; }
 
-    public AppStateLayer(InteractionUnits interUnit, ILoggerFactory loggerFactory)
+    public AppStateLayer(InteractionUnits interUnit, PublicCommand commands, ILoggerFactory loggerFactory)
     {
         InteractionUnits = interUnit;
+        Commands = commands;
         LoggerFactory = loggerFactory;
         Logger = LoggerFactory.CreateLogger<AppStateLayer>();
         CurrentBarState = BarState.Common;

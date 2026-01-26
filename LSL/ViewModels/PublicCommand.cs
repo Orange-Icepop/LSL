@@ -2,10 +2,12 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
+using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
@@ -17,7 +19,7 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
 {
     public PublicCommand(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
     {
-        OpenWebPageCmd = ReactiveCommand.CreateFromTask<string>(OpenWebPage);// 打开网页命令-实现
+        OpenWebPageCmd = ReactiveCommand.CreateFromTask<string>(OpenWebPage); // 打开网页命令-实现
         OpenFileCmd = ReactiveCommand.CreateFromTask<string>(OpenExplorer);
         SearchJava = ReactiveCommand.CreateFromTask(async () =>
         {
@@ -29,59 +31,45 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
                     AppState.InteractionUnits.Notify(1, "Java搜索完成！", $"搜索到了{success.Result}个Java"));
             }
             else await success;
-        });// 搜索Java命令-实现
+        }); // 搜索Java命令-实现
         CheckUpdateCmd = ReactiveCommand.CreateFromTask(serveCon.CheckForUpdates);
     }
 
     #region 打开网页命令
+
     public ICommand OpenWebPageCmd { get; }
-    private async Task OpenWebPage(string url)
+
+    public async Task OpenWebPage(string url)
     {
-        try
+        var result = XPlatformOperationHelper.OpenWebBrowser(url);
+        if (result.IsSuccess)
         {
-            ArgumentNullException.ThrowIfNull(url);
-            if (!Regex.IsMatch(url, "^https?://")) throw new ArgumentException("URL格式错误");
-            if (OperatingSystem.IsWindows())
-                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-            else if (OperatingSystem.IsLinux())
-                Process.Start("xdg-open", url); // xdg-utils dependency required
-            else if (OperatingSystem.IsMacOS())
-                Process.Start("open", url);
             AppState.InteractionUnits.Notify(1, "成功打开了网页！", url);
             Logger.LogInformation("Successfully opened web page {url}.", url);
         }
-        catch (ArgumentException ae)
+        else if (result.Error is ArgumentException ae)
         {
             Logger.LogError(ae, "Error opening webpage {url} because of invalid URL format.", url);
             await AppState.InteractionUnits.ThrowError("打开网页失败", $"URL格式不正确：{url}");
         }
-        catch (Win32Exception noBrowser)
+        else
         {
-            if (noBrowser.ErrorCode == -2147467259)
-            {
-                await AppState.InteractionUnits.ThrowError("打开网页失败",
-                    $"LSL未能成功打开网页{url}，请检查您的系统是否设置了默认浏览器。\n错误内容：{noBrowser.Message}");
-                Logger.LogError(noBrowser, "Error opening webpage {url} because no default web browser is set.",
-                    url);
-            }
-        }
-        catch (Exception ex)
-        {
-            var logMsg = OperatingSystem.IsLinux()
-                ? "Please install xdg-utils to open webpage."
-                : "Please check MacOS's default web browser configuration.";
-            Logger.LogError(ex, "Error opening webpage {url}.\n{logMsg}", url, logMsg);
-            var uiMsg = OperatingSystem.IsLinux()
+            Logger.LogError(result.Error, "Error opening webpage {url}.", url);
+            var uiMsg = new StringBuilder($"无法打开URL: {url}");
+            uiMsg.AppendLine(OperatingSystem.IsLinux()
                 ? "请确保安装了 xdg-utils 并且设置了默认浏览器以使用打开浏览器网址的功能。"
-                : "在此MacOS系统上似乎无法正常打开网页，请检查默认浏览器设置。";
-            await AppState.InteractionUnits.ThrowError("打开网页失败", uiMsg + ex.Message);
+                : "在此系统上似乎无法正常打开网页，请检查默认浏览器设置。");
+            uiMsg.AppendLine(result.Error.ToString());
+            await AppState.InteractionUnits.ThrowError("打开网页失败", uiMsg.ToString());
         }
     }
 
     #endregion
-        
+
     #region 打开文件（夹）命令
+
     public ICommand OpenFileCmd { get; }
+
     private async Task OpenExplorer(string url)
     {
         try
@@ -134,7 +122,9 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         else if (OperatingSystem.IsMacOS())
             Process.Start("open", ["-R", url]);
     }
+
     #endregion
+
     public ICommand CheckUpdateCmd { get; }
 
     public ICommand SearchJava { get; }

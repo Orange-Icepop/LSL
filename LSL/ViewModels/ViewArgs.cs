@@ -6,7 +6,13 @@ namespace LSL.ViewModels;
 #region MessageBus事件类
 
 public record NotifyArgs(int Type, string? Title, string? Message); // 通知条事件
-// 0消息，1成功，2警告，3错误
+public enum NotifyType
+{
+    Info,
+    Success,
+    Warning,
+    Error,
+}
 
 public record InvokePopupArgs(PopupType PType, string PTitle, string PContent);
 public enum PopupType
