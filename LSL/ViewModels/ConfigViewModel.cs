@@ -49,10 +49,10 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
             if (res1.IsError) throw res1.Error;
             var res2 = await Connector.ReadServerConfig(true);
             if (res2.IsError) throw res2.Error;
-            await AppState.InteractionUnits.SubmitServiceError(res2);
+            await AppState.Coordinator.SubmitServiceError(res2);
             var res3 = await Connector.ReadJavaConfig(true);
             if (res3.IsError) throw res3.Error;
-            await AppState.InteractionUnits.SubmitServiceError(res3);
+            await AppState.Coordinator.SubmitServiceError(res3);
             return true;
         }
         catch (Exception e)
@@ -168,7 +168,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         }
         else
         {
-            await AppState.InteractionUnits.SubmitServiceError(success);
+            await AppState.Coordinator.SubmitServiceError(success);
             return false;
         }
     }
@@ -182,7 +182,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     public async Task ConfirmConfigAsync()
     {
         var res = await Connector.SaveConfig();
-        await AppState.InteractionUnits.SubmitServiceError(res);
+        await AppState.Coordinator.SubmitServiceError(res);
         AppState.CurrentConfigs = _cachedConfig.ToFrozenDictionary();
     }
 
@@ -198,41 +198,41 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         int serverId = AppState.SelectedServerId;
         if (serverId < 0)
         {
-            await AppState.InteractionUnits.ThrowError("选定的服务器不存在", "你没有添加过服务器。该服务器是LSL提供的占位符，不支持删除。");
+            await AppState.Coordinator.ThrowError("选定的服务器不存在", "你没有添加过服务器。该服务器是LSL提供的占位符，不支持删除。");
             return;
         }
 
         if (!AppState.ServerStatuses.TryGetValue(serverId, out var status) ||
             !AppState.CurrentServerConfigs.TryGetValue(serverId, out var config))
         {
-            await AppState.InteractionUnits.ThrowError("无法删除服务器", "指定的服务器不存在。");
+            await AppState.Coordinator.ThrowError("无法删除服务器", "指定的服务器不存在。");
             return;
         }
         else if (status.IsRunning)
         {
-            await AppState.InteractionUnits.ThrowError("无法删除服务器", $"指定的服务器{config.ServerName}正在运行，请先关闭服务器再删除。");
+            await AppState.Coordinator.ThrowError("无法删除服务器", $"指定的服务器{config.ServerName}正在运行，请先关闭服务器再删除。");
             return;
         }
 
-        var result1 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
+        var result1 = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
             $"确认删除服务器{config.ServerName}吗？",
             "注意！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result1 == PopupResult.No) return;
-        var result2 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
+        var result2 = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
             $"第二次确认，删除服务器{config.ServerName}吗？",
             "注意！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result2 == PopupResult.No) return;
-        var result3 = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(
+        var result3 = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
             $"最后一次确认，你确定要删除服务器{config.ServerName}吗？",
             "这是最后一次警告！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result3 == PopupResult.No) return;
-        var deleteResult = AppState.InteractionUnits.SubmitServiceError(await Connector.DeleteServer(serverId));
+        var deleteResult = AppState.Coordinator.SubmitServiceError(await Connector.DeleteServer(serverId));
         if (deleteResult.IsSuccess)
         {
-            AppState.InteractionUnits.Notify(NotifyType.Success, null, $"服务器{config.ServerName}删除成功");
+            AppState.Coordinator.Notify(NotifyType.Success, null, $"服务器{config.ServerName}删除成功");
         }
         else await deleteResult;
     }

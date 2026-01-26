@@ -89,18 +89,18 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
 
     private async Task SelectCore()
     {
-        string result = await AppState.InteractionUnits.FilePickerInteraction.Handle(FilePickerType.CoreFile);
+        string result = await AppState.Coordinator.FilePickerInteraction.Handle(FilePickerType.CoreFile);
         await Dispatcher.UIThread.InvokeAsync(() => { CorePath = result; });
     }
 
     private async Task SelectExistedServerCore()
     {
-        string result = await AppState.InteractionUnits.FilePickerInteraction.Handle(FilePickerType.CoreFile);
+        string result = await AppState.Coordinator.FilePickerInteraction.Handle(FilePickerType.CoreFile);
         var parent = Directory.GetParent(result);
         if (parent is null)
         {
             Logger.LogError("Error getting the parent folder info of an existing server's core:{result}", result);
-            await AppState.InteractionUnits.ThrowError("解析服务器根目录时发生错误", $"无法获取到指定服务器核心的根目录:{result}");
+            await AppState.Coordinator.ThrowError("解析服务器根目录时发生错误", $"无法获取到指定服务器核心的根目录:{result}");
             return;
         }
 
@@ -148,36 +148,36 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         var vResult = await ServiceConnector.ValidateNewServerConfig(serverInfo);
         if (vResult.IsError)
         {
-            await AppState.InteractionUnits.ThrowError("表单错误", vResult.Error.Message);
+            await AppState.Coordinator.ThrowError("表单错误", vResult.Error.Message);
             return;
         }
         if (vResult.IsWarning)
         {
             var confirm =
-                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Error.Message));
+                await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Error.Message));
             if (confirm == PopupResult.No) return;
         }
 
         if (int.Parse(serverInfo.MaxMem) < 512)
         {
             var confirm =
-                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
+                await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
             if (confirm == PopupResult.No) return;
         }
         var coreTypeResult = await ServiceConnector.GetCoreType(serverInfo.CorePath);
         if (!coreTypeResult.IsSuccess)
         {
-            await AppState.InteractionUnits.ThrowError("无法获取服务器类型信息", coreTypeResult.Error.Message);
+            await AppState.Coordinator.ThrowError("无法获取服务器类型信息", coreTypeResult.Error.Message);
             return;
         }
-        var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定添加此服务器吗？",
+        var confirmResult = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定添加此服务器吗？",
             $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreTypeResult.Result.Explain()}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = AppState.InteractionUnits.SubmitServiceError(await Connector.AddServer(serverInfo));
+            var success = AppState.Coordinator.SubmitServiceError(await Connector.AddServer(serverInfo));
             if (success.IsSuccess)
             {
-                AppState.InteractionUnits.Notify(NotifyType.Success, null, "服务器配置成功！");
+                AppState.Coordinator.Notify(NotifyType.Success, null, "服务器配置成功！");
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
             }
             else await success;
@@ -194,23 +194,23 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         var vResult = await ServiceConnector.ValidateNewServerConfig(info, true);
         if (vResult.IsError)
         {
-            await AppState.InteractionUnits.ThrowError("表单错误", vResult.Error.Message);
+            await AppState.Coordinator.ThrowError("表单错误", vResult.Error.Message);
             return;
         }
         if (int.Parse(info.MaxMem) < 512)
         {
             var confirm =
-                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
+                await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
             if (confirm == PopupResult.No) return;
         }
-        var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定修改此服务器吗？",
+        var confirmResult = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定修改此服务器吗？",
             $"服务器信息：\n服务器路径：{info.CorePath}\n名称：{info.ServerName}\nJava路径：{info.JavaPath}\n内存范围：{info.MinMem}MB ~ {info.MaxMem}MB\n附加JVM参数：{info.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = AppState.InteractionUnits.SubmitServiceError(await Connector.EditServer(id, info));
+            var success = AppState.Coordinator.SubmitServiceError(await Connector.EditServer(id, info));
             if (success.IsSuccess)
             {
-                AppState.InteractionUnits.Notify(NotifyType.Success, null, "服务器配置修改成功！");
+                AppState.Coordinator.Notify(NotifyType.Success, null, "服务器配置修改成功！");
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
             }
             else await success;
@@ -226,36 +226,36 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         var vResult = await ServiceConnector.ValidateNewServerConfig(serverInfo);
         if (vResult.IsError)
         {
-            await AppState.InteractionUnits.ThrowError("表单错误", vResult.Error.Message);
+            await AppState.Coordinator.ThrowError("表单错误", vResult.Error.Message);
             return;
         }
         if (vResult.IsWarning)
         {
             var confirm =
-                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Error.Message));
+                await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "未知的Minecraft核心文件", vResult.Error.Message));
             if (confirm == PopupResult.No) return;
         }
 
         if (int.Parse(serverInfo.MaxMem) < 512)
         {
             var confirm =
-                await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
+                await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足", "您为该服务器分配的最大内存大小不足512M，这可能会导致服务器运行时的严重卡顿（尤其是在服务器人数较多的情况下）甚至崩溃。\n建议分配至少2048MB（即2GB）内存。确定要继续吗？"));
             if (confirm == PopupResult.No) return;
         }
         var coreTypeResult = await ServiceConnector.GetCoreType(serverInfo.CorePath);
         if (!coreTypeResult.IsSuccess)
         {
-            await AppState.InteractionUnits.ThrowError("无法获取服务器类型信息", coreTypeResult.Error.Message);
+            await AppState.Coordinator.ThrowError("无法获取服务器类型信息", coreTypeResult.Error.Message);
             return;
         }
-        var confirmResult = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定添加此服务器吗？",
+        var confirmResult = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "确定添加此服务器吗？",
             $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreTypeResult.Result}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = AppState.InteractionUnits.SubmitServiceError(await Connector.AddExistedServer(serverInfo));
+            var success = AppState.Coordinator.SubmitServiceError(await Connector.AddExistedServer(serverInfo));
             if (success.IsSuccess)
             {
-                AppState.InteractionUnits.Notify(NotifyType.Success, null, "服务器配置成功！");
+                AppState.Coordinator.Notify(NotifyType.Success, null, "服务器配置成功！");
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
             }
             else await success;

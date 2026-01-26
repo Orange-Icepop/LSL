@@ -75,7 +75,7 @@ public static class InjectionHelper
 
     public static void AddStartUp(this IServiceCollection collection)
     {
-        collection.AddSingleton<InteractionUnits>();
+        collection.AddSingleton<DialogCoordinator>();
         collection.AddSingleton<DialogViewModel>();
         collection.AddSingleton<AppStateLayer>();
         collection.AddSingleton<InitializationViewModel>();

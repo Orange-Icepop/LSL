@@ -22,7 +22,7 @@ public partial class ShellViewModel : ViewModelBase
     public PublicCommand PublicCmd { get; }
         
     // 弹窗交互，这玩意儿和上面的东西没关系
-    public InteractionUnits InteractionSocket { get; }
+    public DialogCoordinator Coordinator { get; }
 
     public ShellViewModel(
         AppStateLayer appState,
@@ -35,7 +35,7 @@ public partial class ShellViewModel : ViewModelBase
         ServerViewModel serverVM,
         FormPageViewModel formViewModel,
         PublicCommand publicCommand,
-        InteractionUnits ita
+        DialogCoordinator coordinator
     ) : base(appState.LoggerFactory.CreateLogger<ShellViewModel>())
     {
         AppState = appState;
@@ -48,7 +48,7 @@ public partial class ShellViewModel : ViewModelBase
         ServerVM = serverVM;
         FormViewModel = formViewModel;
         PublicCmd = publicCommand;
-        InteractionSocket = ita;
+        Coordinator = coordinator;
 
         // 视图命令
         LeftViewCmd = ReactiveCommand.CreateFromTask<string>(async param => await NavigateLeftView(param));
@@ -81,7 +81,7 @@ public partial class ShellViewModel : ViewModelBase
                 onError: ex =>
                 {
                     Logger.LogError(ex, "An error occured while processing window exit operation.");
-                    InteractionSocket.PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, "窗口退出处理错误", $"LSL在处理退出操作时出现了错误。\n{ex}"));
+                    Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, "窗口退出处理错误", $"LSL在处理退出操作时出现了错误。\n{ex}"));
                 }
             );
     }
@@ -118,7 +118,7 @@ public partial class ShellViewModel : ViewModelBase
         }
         else if (AppState.RunningServerCount > 0)
         {
-            var res = await AppState.InteractionUnits.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNoCancel,
+            var res = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNoCancel,
                 "是否要关闭所有服务器？",
                 "你正在尝试关闭LSL，但是有服务器正在运行。\n点击是将立刻关闭所有服务器；\n点击否将让这些服务器进程在后台运行，并且LSL不再管理它们；\n点击取消以取消关闭LSL的操作。"));
             switch (res)

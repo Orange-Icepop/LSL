@@ -11,10 +11,10 @@ using ReactiveUI;
 
 namespace LSL.ViewModels;
 
-public class InteractionUnits(ILogger<InteractionUnits> logger) : ViewModelBase(logger)
+public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBase(logger)
 {
     public Interaction<InvokePopupArgs, PopupResult> PopupInteraction { get; } = new();
-    public Interaction<NotifyArgs, Unit> NotifyInteraction { get; } = new(); // 0消息，1成功，2警告，3错误
+    public Interaction<NotifyArgs, Unit> NotifyInteraction { get; } = new();
     public Interaction<FilePickerType, string> FilePickerInteraction { get; } = new();
 
     public Task<PopupResult> ThrowError(string title, string message)

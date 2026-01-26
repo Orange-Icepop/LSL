@@ -23,12 +23,12 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         OpenFileCmd = ReactiveCommand.CreateFromTask<string>(OpenExplorer);
         SearchJava = ReactiveCommand.CreateFromTask(async () =>
         {
-            await Dispatcher.UIThread.InvokeAsync(() => AppState.InteractionUnits.Notify(NotifyType.Info, "正在搜索Java", "请耐心等待......"));
-            var success = AppState.InteractionUnits.SubmitServiceError(await Connector.FindJava());
+            await Dispatcher.UIThread.InvokeAsync(() => AppState.Coordinator.Notify(NotifyType.Info, "正在搜索Java", "请耐心等待......"));
+            var success = AppState.Coordinator.SubmitServiceError(await Connector.FindJava());
             if (success.IsSuccess)
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
-                    AppState.InteractionUnits.Notify(NotifyType.Success, "Java搜索完成！", $"搜索到了{success.Result}个Java"));
+                    AppState.Coordinator.Notify(NotifyType.Success, "Java搜索完成！", $"搜索到了{success.Result}个Java"));
             }
             else await success;
         }); // 搜索Java命令-实现
@@ -44,13 +44,13 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         var result = XPlatformOperationHelper.OpenWebBrowser(url);
         if (result.IsSuccess)
         {
-            AppState.InteractionUnits.Notify(NotifyType.Success, "成功打开了网页！", url);
+            AppState.Coordinator.Notify(NotifyType.Success, "成功打开了网页！", url);
             Logger.LogInformation("Successfully opened web page {url}.", url);
         }
         else if (result.Error is ArgumentException ae)
         {
             Logger.LogError(ae, "Error opening webpage {url} because of invalid URL format.", url);
-            await AppState.InteractionUnits.ThrowError("打开网页失败", $"URL格式不正确：{url}");
+            await AppState.Coordinator.ThrowError("打开网页失败", $"URL格式不正确：{url}");
         }
         else
         {
@@ -60,7 +60,7 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
                 ? "请确保安装了 xdg-utils 并且设置了默认浏览器以使用打开浏览器网址的功能。"
                 : "在此系统上似乎无法正常打开网页，请检查默认浏览器设置。");
             uiMsg.AppendLine(result.Error.ToString());
-            await AppState.InteractionUnits.ThrowError("打开网页失败", uiMsg.ToString());
+            await AppState.Coordinator.ThrowError("打开网页失败", uiMsg.ToString());
         }
     }
 
@@ -87,17 +87,17 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         catch (ArgumentException ae)
         {
             Logger.LogError(ae, "File or directory not found when trying to open file explorer.");
-            await AppState.InteractionUnits.ThrowError("打开文件失败", $"不存在位于{url}的文件或目录。");
+            await AppState.Coordinator.ThrowError("打开文件失败", $"不存在位于{url}的文件或目录。");
         }
         catch (DirectoryNotFoundException dnfe)
         {
             Logger.LogError(dnfe, "Parent directory not found when trying to open file explorer.");
-            await AppState.InteractionUnits.ThrowError("打开文件失败", $"无法获取位于{url}的文件的父目录。");
+            await AppState.Coordinator.ThrowError("打开文件失败", $"无法获取位于{url}的文件的父目录。");
         }
         catch (Exception e)
         {
             Logger.LogError(e, "Error executing open explorer task.");
-            await AppState.InteractionUnits.ThrowError("打开文件失败", $"在文件资源管理器中打开{url}时出现以下报错：\n{e.Message}");
+            await AppState.Coordinator.ThrowError("打开文件失败", $"在文件资源管理器中打开{url}时出现以下报错：\n{e.Message}");
         }
     }
 

@@ -18,7 +18,7 @@ namespace LSL.ViewModels;
 
 public class DialogViewModel : ViewModelBase
 {
-    public DialogViewModel(ILogger<DialogViewModel> logger, InteractionUnits interactionUnits) : base(logger)
+    public DialogViewModel(ILogger<DialogViewModel> logger, DialogCoordinator dialogCoordinator) : base(logger)
     {
         _popupConfigs = new Dictionary<PopupType, ButtonsConfig>
         {
@@ -72,7 +72,7 @@ public class DialogViewModel : ViewModelBase
         Buttons = new StackPanel();
         BorderColor = new SolidColorBrush(Color.Parse("#019eff"));
         _ = Task.Run((() => HandlePopup(_popupCts.Token)));
-        interactionUnits.PopupInteraction.RegisterHandler(AddPopupTask);
+        dialogCoordinator.PopupInteraction.RegisterHandler(AddPopupTask);
     }
 
     [Reactive] public string Title { get; private set; }
