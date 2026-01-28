@@ -34,4 +34,32 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
     public string Serialize() => Toml.FromModel(this);
     
     public static string ConfigFileName => "lsl-config-v2.toml";
+        
+    public static bool Exists(string path) => File.Exists(Path.Combine(path, ConfigFileName));
+    
+    public async Task<ServiceResult> WriteToFileAsync(string path)
+    {
+        try
+        {
+            await File.WriteAllTextAsync(Path.Combine(path, ConfigFileName), Serialize());
+            return ServiceResult.Success();
+        }
+        catch (Exception e)
+        {
+            return ServiceResult.Fail(e);
+        }
+    }
+
+    public static async Task<ServiceResult<LocatedServerConfig>> ReadFromFileAsync(string path)
+    {
+        try
+        {
+            var context = await File.ReadAllTextAsync(Path.Combine(path, ConfigFileName));
+            return await Deserialize(context).BindAsync(config => config.StandardizeAsync(path));
+        }
+        catch (Exception e)
+        {
+            return ServiceResult.Fail<LocatedServerConfig>(e);
+        }
+    }
 }

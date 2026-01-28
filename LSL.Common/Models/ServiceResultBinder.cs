@@ -1,6 +1,6 @@
 namespace LSL.Common.Models;
 
-public static class ServiceResultExtensions
+public static class ServiceResultBinder
 {
     public static async Task<ServiceResult<TResult>> BindAsync<T, TResult>(
         this ServiceResult<T> result,

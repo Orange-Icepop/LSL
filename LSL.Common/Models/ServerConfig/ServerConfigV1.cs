@@ -35,7 +35,7 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         {
             result = JsonSerializer.Deserialize(json, SnakeJsonOptions.Default.ServerConfigV1) ?? result;
         }
-        catch (JsonException e)
+        catch (Exception e)
         {
             return ServiceResult.Fail<ServerConfigV1>(e);
         }
@@ -47,4 +47,32 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         [..ExtJvm?.Split(' ') ?? []], true);
 
     public string Serialize() => JsonSerializer.Serialize(this, SnakeJsonOptions.Default.ServerConfigV1);
+    
+    public static bool Exists(string path) => File.Exists(Path.Combine(path, ConfigFileName));
+    
+    public async Task<ServiceResult> WriteToFileAsync(string path)
+    {
+        try
+        {
+            await File.WriteAllTextAsync(Path.Combine(path, ConfigFileName), Serialize());
+            return ServiceResult.Success();
+        }
+        catch (Exception e)
+        {
+            return ServiceResult.Fail(e);
+        }
+    }
+
+    public static async Task<ServiceResult<LocatedServerConfig>> ReadFromFileAsync(string path)
+    {
+        try
+        {
+            var context = await File.ReadAllTextAsync(Path.Combine(path, ConfigFileName));
+            return await Deserialize(context).BindAsync(config => config.StandardizeAsync(path));
+        }
+        catch (Exception e)
+        {
+            return ServiceResult.Fail<LocatedServerConfig>(e);
+        }
+    }
 }

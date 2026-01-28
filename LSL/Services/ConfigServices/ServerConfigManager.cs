@@ -117,8 +117,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 逐个获取服务器各自的配置文件
     
-    private static async Task<ServerConfigList> GetServerDetailsAsync(
-        IDictionary<int, string> mainConfigs)
+    private static async Task<ServerConfigList> GetServerDetailsAsync(IDictionary<int, string> mainConfigs)
     {
         ConcurrentBag<string> errors = [];
         ConcurrentBag<string> warnings = [];
@@ -145,12 +144,10 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         return ServerConfigList.Success(scCache);
     }
 
-    public static async Task<ServiceResult<IndexedServerConfig>> GetSingleServerConfigAsync(int id, string targetDir)
+    public static Task<ServiceResult<IndexedServerConfig>> GetSingleServerConfigAsync(int id, string targetDir)
     {
-        var pathedConfigResult = await ServerConfigHelper.ReadSingleConfigAsync(targetDir);
-        if (pathedConfigResult.IsError) return ServiceResult.Fail<IndexedServerConfig>(pathedConfigResult.Error);
-        if (pathedConfigResult.IsWarning) return ServiceResult.Warning(pathedConfigResult.Result.AsIndexed(id), pathedConfigResult.Error);
-        return ServiceResult.Success(pathedConfigResult.Result.AsIndexed(id));
+        return ServerConfigHelper.ReadSingleConfigAsync(targetDir, true)
+            .BindAsync(config => Task.FromResult(ServiceResult.Success(config.AsIndexed(id))));
     }
 
     #endregion

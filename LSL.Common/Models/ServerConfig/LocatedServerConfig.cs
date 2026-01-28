@@ -75,14 +75,8 @@ public class LocatedServerConfig
     {
         for (int tries = 0; tries < 3; tries++)
         {
-            if (!Path.Exists(ServerPath))
-                return ServiceResult.Fail<LocatedServerConfig>(new DirectoryNotFoundException($"Server {ServerPath} does not exist"));
-            List<string> warnings = [];
-            if (MinMemory > MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
-            if (!CheckComponents.IsValidJava(JavaPath)) warnings.Add("The configured Java is not valid");
-            warnings.AddRange(from arg in ExtraJvmArgs
-                where !CheckComponents.ExtJvm(arg).Passed
-                select $"Invalid extra JVM argument {arg}");
+            var validationResult = Validate();
+            if (validationResult.IsError) return ServiceResult.Fail<LocatedServerConfig>(validationResult.Error);
             switch (ServerType)
             {
                 case ServerCoreType.Forge or ServerCoreType.ForgeInstaller or ServerCoreType.ForgeShim:
@@ -119,13 +113,23 @@ public class LocatedServerConfig
                     break;
                 }
             }
-
-            return warnings.Count > 0
-                ? ServiceResult.Warning(this, new StringBuilder().AppendJoin('\n', warnings).ToString())
-                : ServiceResult.Success(this);
+            return ServiceResult.Success(this);
         }
 
         return ServiceResult.Fail<LocatedServerConfig>("Failed to check server configuration after multiple attempts");
+    }
+
+    public ServiceResult Validate()
+    {
+        List<string> warnings = [];
+        if (!Path.Exists(ServerPath)) warnings.Add($"Server {ServerPath} does not exist");
+        if (MinMemory > MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
+        if (!CheckComponents.IsValidJava(JavaPath)) warnings.Add("The configured Java is not valid");
+        warnings.AddRange(from arg in ExtraJvmArgs
+            where !CheckComponents.ExtJvm(arg).Passed
+            select $"Invalid extra JVM argument {arg}");
+        if (warnings.Count != 0) return ServiceResult.Fail(new StringBuilder().AppendJoin('\n', warnings).ToString());
+        return ServiceResult.Success();
     }
 
     public ServiceResult<ProcessStartInfo> GetStartInfo()

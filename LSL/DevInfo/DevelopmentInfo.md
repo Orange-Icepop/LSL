@@ -9,12 +9,13 @@
 
 #### 具体工作
 
-- [x] 配置文件版本化
-- [ ] 添加LocatedServerConfig.Check()方法，替代CheckService用于启动前验证
-- [ ] 重写ServerConfigManager
-- [ ] 重写MainConfigManager
-- [ ] 重写JavaConfigManager
-- [ ] 修改EditServer方法，使其直接使用FormedServerConfig
+ - [x] 配置文件版本化
+ - [ ] 添加LocatedServerConfig.Check()方法，替代CheckService用于启动前验证
+ - [ ] 重写ServerConfigManager
+ - [ ] 重写MainConfigManager
+ - [x] 重写JavaConfigManager
+ - [ ] 修改EditServer方法，使其直接使用FormedServerConfig
+ - [ ] 重写更新检查逻辑（缺：配置文件重写）
 
 ## SubProject
 
