@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using LSL.Common.Models;
 using LSL.Common.Options;
 
-namespace LSL.Common.Utilities;
+namespace LSL.Common.Utilities.Minecraft;
 
 public static class JavaFinder
 {

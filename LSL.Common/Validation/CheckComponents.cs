@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using LSL.Common.Models;
-using LSL.Common.Utilities;
+using LSL.Common.Utilities.Minecraft;
 
 namespace LSL.Common.Validation;
 

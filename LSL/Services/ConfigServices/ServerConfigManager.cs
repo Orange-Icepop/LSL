@@ -6,11 +6,11 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using LSL.Common.Extensions;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Options;
-using LSL.Common.Utilities;
+using LSL.Common.Utilities.FileSystem;
+using LSL.Common.Utilities.Minecraft;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services.ConfigServices;
@@ -156,9 +156,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 注册服务器方法RegisterServer
 
-    public async Task<ServiceResult> RegisterServer(string serverName, string usingJava, string corePath, uint minMem,
-        uint maxMem,
-        string extJvm)
+    public async Task<ServiceResult> RegisterServer(LocatedServerConfig config)
     {
         try
         {
@@ -317,7 +315,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             {
                 await DirectoryExtensions.CopyDirectoryAsync(originalServerDir, addedServerPath,
                     DirectoryCopyMode.CopyContentsOnly, FileOverwriteMode.Overwrite,
-                    fileNameProgress: progress); // 复制核心文件到服务器文件夹内
+                    fileInProgress: progress); // 复制核心文件到服务器文件夹内
             }
 
             // 初始化服务器配置文件

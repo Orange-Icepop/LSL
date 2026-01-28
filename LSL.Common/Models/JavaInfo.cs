@@ -1,4 +1,4 @@
-﻿using LSL.Common.Utilities;
+﻿using LSL.Common.Utilities.Minecraft;
 
 namespace LSL.Common.Models;
 

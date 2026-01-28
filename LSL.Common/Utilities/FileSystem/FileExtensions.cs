@@ -1,4 +1,4 @@
-﻿namespace LSL.Common.Extensions;
+﻿namespace LSL.Common.Utilities.FileSystem;
 
 public enum FileOverwriteMode
 {
@@ -17,10 +17,29 @@ public static class FileExtensions
         CancellationToken cancellationToken = default)
     {
         // 参数验证
+        if (bufferSize <= 0) throw new ArgumentOutOfRangeException(nameof(bufferSize));
         if (string.IsNullOrWhiteSpace(sourcePath))
             throw new ArgumentException("Invalid source file path", nameof(sourcePath));
         if (string.IsNullOrWhiteSpace(destinationPath))
             throw new ArgumentException("Invalid destination file path", nameof(destinationPath));
+        
+        // 处理符号链接
+        if (File.GetAttributes(sourcePath).HasFlag(FileAttributes.ReparsePoint))
+        {
+            var target = File.ResolveLinkTarget(sourcePath, false);
+            if (target is null) return;
+            switch (target)
+            {
+                case FileInfo fileInfo:
+                    File.CreateSymbolicLink(destinationPath, fileInfo.FullName);
+                    break;
+                case DirectoryInfo directoryInfo:
+                    Directory.CreateSymbolicLink(destinationPath, directoryInfo.FullName);
+                    break;
+            }
+            progress?.Report(0);
+            return;
+        }
 
         // 检查源文件是否存在
         if (Directory.Exists(sourcePath)) throw new ArgumentException("The source is a directory, not a file", nameof(sourcePath));
@@ -34,7 +53,7 @@ public static class FileExtensions
             switch (overwrite)
             {
                 case FileOverwriteMode.Overwrite:
-                    File.Delete(destinationPath); // 同步删除
+                    File.Delete(destinationPath);
                     break;
                 case FileOverwriteMode.Throw:
                     throw new IOException("Target file exists but overwrite disabled");
@@ -81,23 +100,6 @@ public static class FileExtensions
             await destination.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
             totalBytesRead += bytesRead;
             progress?.Report(totalBytesRead);
-        }
-    }
-    
-    public static async Task DeleteFileAsync(string filePath, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await Task.Run(() => File.Delete(filePath), cancellationToken);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Remove readonly attribute
-            await Task.Run(() =>
-            {
-                File.SetAttributes(filePath, FileAttributes.Normal);
-                File.Delete(filePath);
-            }, cancellationToken);
         }
     }
 }

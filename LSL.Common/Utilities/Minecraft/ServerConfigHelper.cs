@@ -1,7 +1,7 @@
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfig;
 
-namespace LSL.Common.Utilities;
+namespace LSL.Common.Utilities.Minecraft;
 
 public static class ServerConfigHelper
 {

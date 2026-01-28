@@ -1,6 +1,6 @@
 ﻿using ICSharpCode.SharpZipLib.Zip;
 
-namespace LSL.Common.Utilities;
+namespace LSL.Common.Utilities.FileSystem;
 
 public static class ZipHelper
 {

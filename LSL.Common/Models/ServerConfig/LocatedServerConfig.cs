@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using LSL.Common.Utilities;
+using LSL.Common.Utilities.Minecraft;
 using LSL.Common.Validation;
 
 namespace LSL.Common.Models.ServerConfig;

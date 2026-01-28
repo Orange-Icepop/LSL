@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using LSL.Common.Models;
 using LSL.Common.Options;
-using LSL.Common.Utilities;
+using LSL.Common.Utilities.Minecraft;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services.ConfigServices;

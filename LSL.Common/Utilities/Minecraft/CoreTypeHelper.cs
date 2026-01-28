@@ -4,7 +4,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfig;
 
-namespace LSL.Common.Utilities;
+namespace LSL.Common.Utilities.Minecraft;
 
 /// <summary>
 /// The specified validator for recognizing different types of server core.
