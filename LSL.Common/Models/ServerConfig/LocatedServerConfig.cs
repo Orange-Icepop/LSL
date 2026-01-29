@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using LSL.Common.Utilities.Minecraft;
 using LSL.Common.Validation;
@@ -34,10 +33,6 @@ public class LocatedServerConfig
     public string ServerPath { get; set; }
     public string ServerName { get; set; }
     public ServerCoreType ServerType { get; set; }
-
-    [MemberNotNullWhen(true, nameof(ForgeCoreInfo))]
-    public bool IsForge => ServerType is ServerCoreType.Forge;
-
     public CommonCoreConfigV1? CommonCoreInfo { get; set; }
     public ForgeCoreConfigV1? ForgeCoreInfo { get; set; }
     public string JavaPath { get; set; }
@@ -87,7 +82,7 @@ public class LocatedServerConfig
                         var detectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
                         if (detectResult.IsError)
                             return ServiceResult.Fail<LocatedServerConfig>("Cannot get the correct core info of the forge server");
-                        ForgeCoreInfo = ForgeCoreConfigV1.FromTuple(detectResult.Result);
+                        ForgeCoreInfo = detectResult.Result;
                     }
 
                     break;

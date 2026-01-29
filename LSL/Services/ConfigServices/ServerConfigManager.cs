@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -155,7 +156,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     // 注册与删除服务器均不会立刻更新字典
 
     #region 注册服务器方法RegisterServer
-
+    
     public async Task<ServiceResult> RegisterServer(LocatedServerConfig config)
     {
         try
@@ -288,11 +289,72 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     }
 
     #endregion
+    
+    #region 添加裸核服务器方法AddServerUsingCore
+
+    public async Task<ServiceResult> AddServerUsingCore(LocatedServerConfig config, string corePath, bool installForge = false, IProgress<string>? progress = null)
+    {
+        config.ServerPath = Path.Combine(ConfigPathProvider.ServersFolder, config.ServerName);
+        try
+        {
+            Directory.CreateDirectory(config.ServerPath);
+            var coreFile = new FileInfo(corePath);
+            if (!coreFile.Exists) return ServiceResult.Fail(new FileNotFoundException($"File {corePath} not found"));
+            progress?.Report("Start copying core file");
+            await FileExtensions.CopyFileAsync(corePath, Path.Combine(config.ServerPath, coreFile.Name), FileOverwriteMode.Overwrite);
+            progress?.Report("Core file copied");
+        }
+        catch (Exception e)
+        {
+            try
+            {
+                await DirectoryExtensions.DeleteDirectoryAsync(config.ServerPath);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult.Fail(ex);
+            }
+            return ServiceResult.Fail(e);
+        }
+
+        try
+        {
+            if (config.ServerType is ServerCoreType.ForgeInstaller && installForge)
+            {
+                var installResult = await ForgeInstaller.InstallForge(
+                    Path.Combine(config.ServerPath, Path.GetFileName(config.ServerPath)), config.JavaPath, progress);
+                if (installResult.IsError) return ServiceResult.Fail(installResult.Error);
+                var findResult = await ForgeConfigHelper.GetForgeConfig(config.ServerPath);
+                if (findResult.IsError)
+                {
+                    var dirInfo = new DirectoryInfo(config.ServerPath);
+                    var enumerations = dirInfo.EnumerateFiles("*universal.jar");
+                    var fileInfos = enumerations as FileInfo[] ?? enumerations.ToArray();
+                    if (fileInfos.Length > 1)
+                        return ServiceResult.Warning(
+                            "Installation finished, but cannot ensure which is your Forge server jar file. Please re-add the server via \"Add server folder\".");// TODO:本地化
+                    config.CommonCoreInfo = new CommonCoreConfigV1() { JarName = fileInfos.First().Name };
+                    config.ServerType = ServerCoreType.OldForge;
+                }
+                else
+                {
+                    config.ForgeCoreInfo = findResult.Result;
+                    config.ServerType = ServerCoreType.Forge;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            return ServiceResult.Fail(e);
+        }
+
+        return await RegisterServer(config);
+    }
+    #endregion
 
     #region 添加已有服务器方法AddExistedServer
 
-    public async Task<ServiceResult> AddExistedServer(string serverName, string usingJava, string corePath, uint minMem,
-        uint maxMem, string extJvm, IProgress<string>? progress = null)
+    public async Task<ServiceResult> AddExistedServer(LocatedServerConfig config, IProgress<string>? progress = null)
     {
         try
         {
@@ -313,9 +375,9 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             if (Directory.GetParent(originalServerDir)?.FullName !=
                 Path.GetFullPath(ConfigPathProvider.ServerConfigPath))
             {
-                await DirectoryExtensions.CopyDirectoryAsync(originalServerDir, addedServerPath,
+                await DirectoryExtensions.CopyDirectoryAsync(originalServerDir, addedServerPath, true, true,
                     DirectoryCopyMode.CopyContentsOnly, FileOverwriteMode.Overwrite,
-                    fileInProgress: progress); // 复制核心文件到服务器文件夹内
+                    fileInProgress: progress); // 复制原文件到新服务器文件夹内
             }
 
             // 初始化服务器配置文件

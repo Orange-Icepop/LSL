@@ -61,6 +61,11 @@ public static class FileExtensions
                     return;
             }
         }
+        // 确保目标文件夹存在
+        Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ??
+                                  throw new ArgumentException("Destination file is the root directory",
+                                      nameof(destinationPath)));
+        
         // 使用异步文件流复制
         await using var sourceStream = new FileStream(
             sourcePath,

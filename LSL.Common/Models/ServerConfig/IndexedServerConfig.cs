@@ -1,5 +1,4 @@
 ﻿using System.Collections.Frozen;
-using System.Diagnostics.CodeAnalysis;
 
 namespace LSL.Common.Models.ServerConfig;
 
@@ -10,9 +9,6 @@ public class IndexedServerConfig(int serverId, LocatedServerConfig locatedConfig
     public string ServerPath => LocatedConfig.ServerPath;
     public string ServerName => LocatedConfig.ServerName;
     public ServerCoreType ServerType => LocatedConfig.ServerType;
-
-    [MemberNotNullWhen(true, nameof(ForgeCoreInfo))]
-    public bool IsForge => LocatedConfig.IsForge;
 
     public CommonCoreConfigV1? CommonCoreInfo => LocatedConfig.CommonCoreInfo;
     public ForgeCoreConfigV1? ForgeCoreInfo => LocatedConfig.ForgeCoreInfo;
