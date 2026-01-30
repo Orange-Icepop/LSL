@@ -207,13 +207,12 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             $"服务器信息：\n服务器路径：{info.CorePath}\n名称：{info.ServerName}\nJava路径：{info.JavaPath}\n内存范围：{info.MinMem}MB ~ {info.MaxMem}MB\n附加JVM参数：{info.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = AppState.Coordinator.SubmitServiceError(await Connector.EditServer(id, info));
+            var success = await AppState.Coordinator.SubmitServiceError(await Connector.EditServer(id, info));
             if (success.IsSuccess)
             {
                 AppState.Coordinator.Notify(NotifyType.Success, null, "服务器配置修改成功！");
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
             }
-            else await success;
         }
 
     }

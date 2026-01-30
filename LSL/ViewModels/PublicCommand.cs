@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -22,13 +23,12 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         SearchJava = ReactiveCommand.CreateFromTask(async () =>
         {
             await Dispatcher.UIThread.InvokeAsync(() => AppState.Coordinator.Notify(NotifyType.Info, "正在搜索Java", "请耐心等待......"));
-            var success = AppState.Coordinator.SubmitServiceError(await Connector.FindJava());
+            var success = await AppState.Coordinator.SubmitServiceError(await Connector.FindJava());
             if (success.IsSuccess)
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
-                    AppState.Coordinator.Notify(NotifyType.Success, "Java搜索完成！", $"搜索到了{success.Result}个Java"));
+                    AppState.Coordinator.Notify(NotifyType.Success, "Java搜索完成！", $"搜索到了{success.Value}个Java"));
             }
-            else await success;
         }); // 搜索Java命令-实现
         CheckUpdateCmd = ReactiveCommand.CreateFromTask(serveCon.CheckForUpdates);
     }

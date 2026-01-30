@@ -19,74 +19,38 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
     public Interaction<NotifyArgs, Unit> NotifyInteraction { get; } = new();
     public Interaction<FilePickerType, string> FilePickerInteraction { get; } = new();
 
-    public Task<PopupResult> ThrowError(string title, string message)
+    public IObservable<PopupResult> ThrowError(string title, string message)
     {
-        return PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, title, message)).ToTask();
+        return PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, title, message));
     }
 
     public Task<Result<T>> SubmitServiceError<T>(Result<T> result, bool suppressWarning = false)
     {
-        return result.TapAsync(res => ShowServiceError(res), result);
+        return suppressWarning
+            ? result.HandleAsync(null, null, exception => ShowServiceError(ResultType.Error, exception))
+            : result.HandleAsync(null, (_, exception) => ShowServiceError(ResultType.Warning, exception),
+                exception => ShowServiceError(ResultType.Error, exception));
     }
 
-    private async Task ShowServiceError<T>(Result<T> result)
+    private async Task ShowServiceError(ResultType type, Exception error)
     {
-        string fin;
-        if (result.Error is not null) fin = result.Error.ToString();
-        else return;
-
-        var level = result.Kind switch
+        PopupType level;
+        switch (type)
         {
-            ResultType.Error => PopupType.ErrorConfirm,
-            ResultType.Warning => PopupType.WarningConfirm,
-            _ => PopupType.ErrorConfirm
-        };
-        await PopupInteraction.Handle(new InvokePopupArgs(level, "服务错误", fin));
+            case ResultType.Error:
+                level = PopupType.ErrorConfirm;
+                break;
+            case ResultType.Warning:
+                level = PopupType.WarningConfirm;
+                break;
+            default:
+                return;
+        }
+        await PopupInteraction.Handle(new InvokePopupArgs(level, "服务错误", error.ToString()));
     }
 
-    public void Notify(NotifyType type, string? title, string? message)
-    {
-        NotifyInteraction.Handle(new NotifyArgs(type, title, message)).Subscribe();
-    }
+    public void Notify(NotifyType type, string? title, string? message) => NotifyInteraction.Handle(new NotifyArgs(type, title, message)).Subscribe();
 
     public async Task WaitNotify(NotifyType type, string? title, string? message) =>
         await NotifyInteraction.Handle(new NotifyArgs(type, title, message));
-
-    public class ServiceResultCommitWrapper
-    {
-        private readonly Lazy<Task>
-            _lazyTask;
-        private Task Task => _lazyTask.Value;
-        public TaskAwaiter GetAwaiter() => Task.GetAwaiter();
-        public bool IsSuccess { get; }
-        public static ServiceResultCommitWrapper Commit(Func<Task> taskFactory, Result result, bool suppressWarning = false) => new(taskFactory, result, suppressWarning);
-        public static ServiceResultCommitWrapper<T> Commit<T>(Func<Task> taskFactory, Result<T> result, bool suppressWarning = false) => new(taskFactory, result, suppressWarning);
-        private ServiceResultCommitWrapper(Func<Task> taskFactoryIfHasError, Result result, bool suppressWarning = false)
-        {
-            _lazyTask = new Lazy<Task>(result.IsSuccess || (suppressWarning && result.IsWarning)
-                ? () => Task.CompletedTask
-                : taskFactoryIfHasError);
-            IsSuccess = !result.IsFailed;
-        }
-    }
-
-    public class ServiceResultCommitWrapper<T>
-    {
-        private readonly Lazy<Task> _lazyTask;
-        internal ServiceResultCommitWrapper(Func<Task> taskFactoryIfHasError, Result<T> result, bool suppressWarning = false)
-        {
-            _lazyTask = new Lazy<Task>(result.IsSuccess || (suppressWarning && result.IsWarning)
-                ? () => Task.CompletedTask
-                : taskFactoryIfHasError);
-            IsSuccess = !result.IsFailed;
-            Result = result.Value;
-        }
-
-        private Task Task => _lazyTask.Value;
-        public TaskAwaiter GetAwaiter() => Task.GetAwaiter();
-
-        [MemberNotNullWhen(true, nameof(Result))]
-        public bool IsSuccess { get; }
-        public T? Result { get; }
-    }
 }
