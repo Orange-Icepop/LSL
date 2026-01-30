@@ -82,6 +82,10 @@ public record ServiceResult : IServiceResult
     public static ServiceResult<T> Warning<T>(T result, Exception error) => new(ServiceResultType.Warning, result, error);
     public static ServiceResult<T> Warning<T>(T result, string error) => new(ServiceResultType.Warning, result,
         new Exception(error));
+    public void Unwrap()
+    {
+        if (HasError) throw Error;
+    }
 }
 
 public enum ServiceResultType

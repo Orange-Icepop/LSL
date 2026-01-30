@@ -55,7 +55,7 @@ public partial class ShellViewModel
             case "DownloadsLeft":
                 gps = GeneralPageState.Downloads;
                 if (!dislink)
-                    rps = RightPageState.AddServer;//TODO
+                    rps = RightPageState.AddServer;//TODO:开发完全之后换到下载核心页面
                 break;
             case "SettingsLeft":
                 gps = GeneralPageState.Settings;

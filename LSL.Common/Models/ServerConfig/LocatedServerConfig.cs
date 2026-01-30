@@ -44,8 +44,27 @@ public class LocatedServerConfig
     public static LocatedServerConfig Empty =>
         new(string.Empty, string.Empty, ServerCoreType.Unknown, null, null, string.Empty, 1024, 4096, [], true);
 
+    #region 创建与转换
     public IndexedServerConfig AsIndexed(int serverId) => new(serverId, this);
 
+    public ServiceResult<ServerConfigV2> ToLatestConfig()
+    {
+        var validationResult = Validate();
+        if (validationResult.IsError) return ServiceResult.Fail<ServerConfigV2>(validationResult.Error);
+        return ServiceResult.Success(new ServerConfigV2
+        {
+            Name = ServerName,
+            ServerType = ServerType,
+            CommonCoreInfo = CommonCoreInfo,
+            ForgeCoreInfo = ForgeCoreInfo,
+            JavaPath = JavaPath,
+            MinMemory = MinMemory,
+            MaxMemory = MaxMemory,
+            ExtraJvmArgs = ExtraJvmArgs,
+            EnablePreLaunchProtection = EnablePreLaunchProtection
+        });
+    }
+    
     public static Task<ServiceResult<LocatedServerConfig>> CreateAsync(string serverPath,
         string? serverName,
         ServerCoreType? serverType,
@@ -65,7 +84,13 @@ public class LocatedServerConfig
             javaPath ?? string.Empty, minMemory.Value, maxMemory.Value, extJvm ?? [],
             enablePreLaunchProtection ?? true).CheckAndFixAsync();
     }
+
+    public LocatedServerConfig Clone() => new(ServerPath, ServerName, ServerType, CommonCoreInfo, ForgeCoreInfo,
+        JavaPath, MinMemory, MaxMemory, ExtraJvmArgs, EnablePreLaunchProtection);
+
+    #endregion
     
+    #region 检查与修复
     public async Task<ServiceResult<LocatedServerConfig>> CheckAndFixAsync()
     {
         for (int tries = 0; tries < 3; tries++)
@@ -126,7 +151,9 @@ public class LocatedServerConfig
         if (warnings.Count != 0) return ServiceResult.Fail(new StringBuilder().AppendJoin('\n', warnings).ToString());
         return ServiceResult.Success();
     }
+    #endregion
 
+    #region 获取启动信息
     public ServiceResult<ProcessStartInfo> GetStartInfo()
     {
         if (!CheckComponents.IsValidJava(JavaPath))
@@ -192,4 +219,5 @@ public class LocatedServerConfig
         
         return ServiceResult.Fail<ProcessStartInfo>("Server configuration is not valid to create a Minecraft server process");
     }
+    #endregion
 }
