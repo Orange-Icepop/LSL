@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using LSL.Common.Models;
+using LSL.Common.Models.Minecraft;
 using LSL.Common.Options;
 
 namespace LSL.Common.Utilities.Minecraft;

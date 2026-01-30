@@ -1,6 +1,6 @@
 ﻿using LSL.Common.Models.ServerConfig;
 
-namespace LSL.Common.Models;
+namespace LSL.Common.Models.Minecraft;
 
 public record ServerConfigList : ServiceResult<IDictionary<int, IndexedServerConfig>>
 {

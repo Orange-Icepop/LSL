@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Threading;
 using LSL.Common.Models;
+using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Validation;
 using Microsoft.Extensions.Logging;

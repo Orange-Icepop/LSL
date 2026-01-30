@@ -1,7 +1,7 @@
 ﻿using LSL.Common.Collections;
 using LSL.Common.DTOs;
 
-namespace LSL.Common.Models;
+namespace LSL.Common.Models.Minecraft;
 
 /// <summary>
 /// A wrapper of a server's historic metrics record.

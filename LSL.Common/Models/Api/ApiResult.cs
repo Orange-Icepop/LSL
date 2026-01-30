@@ -1,4 +1,4 @@
-﻿namespace LSL.Common.Models;
+﻿namespace LSL.Common.Models.Api;
 
 public record ApiResult(int StatusCode, string Message = "")
 {

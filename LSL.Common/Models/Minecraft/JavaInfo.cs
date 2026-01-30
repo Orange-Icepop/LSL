@@ -1,6 +1,6 @@
 ﻿using LSL.Common.Utilities.Minecraft;
 
-namespace LSL.Common.Models;
+namespace LSL.Common.Models.Minecraft;
 
 /// <summary>
 /// Contains a java executable file's information.

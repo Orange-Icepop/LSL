@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using LSL.Common.Models;
+using LSL.Common.Models.Api;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services;

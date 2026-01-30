@@ -1,4 +1,4 @@
-﻿namespace LSL.Common.Models;
+﻿namespace LSL.Common.Models.Minecraft;
 
 public record JavaConfigReadResult
 {
