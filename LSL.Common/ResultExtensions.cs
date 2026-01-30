@@ -8,7 +8,7 @@ public static class ResultBinder
         this Result<T> result,
         Func<T, Result<TResult>> binder)
     {
-        if (result.IsError) return Result.Fail<TResult>(result.Error!);
+        if (result.IsFailed) return Result.Fail<TResult>(result.Error!);
 
         if (result.IsWarning)
         {
@@ -27,7 +27,7 @@ public static class ResultBinder
         this Result<T> result,
         Func<T, Result> binder)
     {
-        if (result.IsError) return Result.Fail(result.Error);
+        if (result.IsFailed) return Result.Fail(result.Error);
 
         if (result.IsWarning)
         {
@@ -45,7 +45,7 @@ public static class ResultBinder
         this Result<T> result,
         Func<T, Task<Result<TResult>>> binder)
     {
-        if (result.IsError) return Result.Fail<TResult>(result.Error);
+        if (result.IsFailed) return Result.Fail<TResult>(result.Error);
 
         if (result.IsWarning)
         {
@@ -64,7 +64,7 @@ public static class ResultBinder
         this Result<T> result,
         Func<T, Task<Result>> binder)
     {
-        if (result.IsError) return Result.Fail(result.Error);
+        if (result.IsFailed) return Result.Fail(result.Error);
 
         if (result.IsWarning)
         {
@@ -184,13 +184,38 @@ public static class ResultUnwrapper
 {
     public static Result<T> Unwrap<T>(this Result<T> result, bool ignoreWarning = true)
     {
-        if (result.IsError || result.IsWarning && !ignoreWarning) throw result.Error;
+        if (result.IsFailed || result.IsWarning && !ignoreWarning) throw result.Error;
         return result;
     }
 
     public static async Task<Result<T>> Unwrap<T>(this Task<Result<T>> result, bool ignoreWarning = true)
     {
         return (await result).Unwrap(ignoreWarning);
+    }
+}
+
+#endregion
+
+#region Handle
+
+public static class ResultHandle
+{
+    public static Result<T> Handle<T>(this Result<T> result, Action<T>? onSuccess, Action<T, Exception>? onWarning,
+        Action<Exception>? onFailure)
+    {
+        if (result.IsSuccess) onSuccess?.Invoke(result.Value);
+        else if (result.IsWarning) onWarning?.Invoke(result.Value, result.Error);
+        else onFailure?.Invoke(result.Error);
+        return result;
+    }
+
+    public static async Task<Result<T>> HandleAsync<T>(this Result<T> result, Func<T, Task>? onSuccess,
+        Func<T, Exception, Task>? onWarning, Func<Exception, Task>? onFailure)
+    {
+        if (result.IsSuccess && onSuccess is not null) await onSuccess(result.Value);
+        else if (result.IsWarning && onWarning is not null) await onWarning(result.Value, result.Error);
+        else if (result.IsFailed && onFailure is not null) await onFailure(result.Error);
+        return result;
     }
 }
 

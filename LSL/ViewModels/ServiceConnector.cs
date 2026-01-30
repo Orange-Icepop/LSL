@@ -64,7 +64,7 @@ public class ServiceConnector
         if (readFile)
         {
             var res = await _configManager.ReadMainConfig();
-            if (res.IsError) return res;
+            if (res.IsFailed) return res;
         }
 
         await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentConfigs = _configManager.MainConfigs);
@@ -112,7 +112,7 @@ public class ServiceConnector
         if (readFile)
         {
             var res = await _configManager.ReadServerConfig();
-            if (res.IsError) return Result.Fail(res.Error);
+            if (res.IsFailed) return Result.Fail(res.Error);
             if (res.IsWarning)
             {
                 var error = new StringBuilder("在读取服务器配置时出现了一些问题:");
@@ -149,7 +149,7 @@ public class ServiceConnector
     public async Task<Result<int>> FindJava()
     {
         var detectResult = await _configManager.DetectJavaAsync();
-        if(detectResult.IsError) return Result.Fail<int>(detectResult.Error);
+        if(detectResult.IsFailed) return Result.Fail<int>(detectResult.Error);
         return await ReadJavaConfig(true);
     }
 
@@ -390,7 +390,7 @@ public class ServiceConnector
 
         if (skipCorePathCheck) return Result.Success(); // 不检查核心，直接返回
         var coreResult = await CoreTypeHelper.GetCoreType(config.CorePath);
-        if (coreResult.IsError) return Result.Fail(coreResult.Error);
+        if (coreResult.IsFailed) return Result.Fail(coreResult.Error);
         return coreResult.Value switch
         {
             ServerCoreType.ForgeInstaller => Result.Fail(

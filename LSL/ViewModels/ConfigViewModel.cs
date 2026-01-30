@@ -47,12 +47,12 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         try
         {
             var res1 = await Connector.ReadMainConfig(true);
-            if (res1.IsError) throw res1.Error;
+            if (res1.IsFailed) throw res1.Error;
             var res2 = await Connector.ReadServerConfig(true);
-            if (res2.IsError) throw res2.Error;
+            if (res2.IsFailed) throw res2.Error;
             await AppState.Coordinator.SubmitServiceError(res2);
             var res3 = await Connector.ReadJavaConfig(true);
-            if (res3.IsError) throw res3.Error;
+            if (res3.IsFailed) throw res3.Error;
             await AppState.Coordinator.SubmitServiceError(res3);
             return true;
         }

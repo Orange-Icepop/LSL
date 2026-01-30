@@ -24,9 +24,9 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
         return PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, title, message)).ToTask();
     }
 
-    public ServiceResultCommitWrapper<T> SubmitServiceError<T>(Result<T> result, bool suppressWarning = false)
+    public Task<Result<T>> SubmitServiceError<T>(Result<T> result, bool suppressWarning = false)
     {
-        return ServiceResultCommitWrapper.Commit(() => ShowServiceError(result), result);
+        return result.TapAsync(res => ShowServiceError(res), result);
     }
 
     private async Task ShowServiceError<T>(Result<T> result)
@@ -66,7 +66,7 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
             _lazyTask = new Lazy<Task>(result.IsSuccess || (suppressWarning && result.IsWarning)
                 ? () => Task.CompletedTask
                 : taskFactoryIfHasError);
-            IsSuccess = !result.IsError;
+            IsSuccess = !result.IsFailed;
         }
     }
 
@@ -78,7 +78,7 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
             _lazyTask = new Lazy<Task>(result.IsSuccess || (suppressWarning && result.IsWarning)
                 ? () => Task.CompletedTask
                 : taskFactoryIfHasError);
-            IsSuccess = !result.IsError;
+            IsSuccess = !result.IsFailed;
             Result = result.Value;
         }
 

@@ -146,7 +146,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     {
         FormedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
         var vResult = await ServiceConnector.ValidateNewServerConfig(serverInfo);
-        if (vResult.IsError)
+        if (vResult.IsFailed)
         {
             await AppState.Coordinator.ThrowError("表单错误", vResult.Error.Message);
             return;
@@ -192,7 +192,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         int id = AppState.SelectedServerId;
         FormedServerConfig info = new(ServerName, "", MinMem, MaxMem, JavaPath, ExtJvm);
         var vResult = await ServiceConnector.ValidateNewServerConfig(info, true);
-        if (vResult.IsError)
+        if (vResult.IsFailed)
         {
             await AppState.Coordinator.ThrowError("表单错误", vResult.Error.Message);
             return;
@@ -224,7 +224,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     {
         FormedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
         var vResult = await ServiceConnector.ValidateNewServerConfig(serverInfo);
-        if (vResult.IsError)
+        if (vResult.IsFailed)
         {
             await AppState.Coordinator.ThrowError("表单错误", vResult.Error.Message);
             return;

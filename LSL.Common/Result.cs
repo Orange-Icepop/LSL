@@ -30,7 +30,7 @@ public record Result<T>
     public bool IsWarning => Kind is ResultType.Warning;
     [MemberNotNullWhen(true, nameof(Error))]
     [MemberNotNullWhen(false, nameof(Value))]
-    public bool IsError => Kind is ResultType.Error;
+    public bool IsFailed => Kind is ResultType.Error;
     [MemberNotNullWhen(true, nameof(Error))]
     [MemberNotNullWhen(false, nameof(Value))]
     public bool HasError => Kind is not ResultType.Success;

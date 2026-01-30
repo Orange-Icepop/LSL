@@ -40,7 +40,7 @@ public class InitializationViewModel : ViewModelBase
         Logger.LogInformation("===== Starting App =====");
         var configMgr = provider.GetRequiredService<ConfigManager>(); 
         var res = await configMgr.Initialize();
-        if (res.IsError)
+        if (res.IsFailed)
         {
             Logger.LogCritical(res.Error, "Config initialization failed.");
             throw new Exception("Config initialization failed.", res.Error);

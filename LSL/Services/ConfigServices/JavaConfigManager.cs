@@ -37,7 +37,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                 ? Result.Success(dict)
                 : Result.Warning(dict, new StringBuilder().AppendJoin('\n', errors).ToString());
         });
-        if (res.IsError)
+        if (res.IsFailed)
         {
             logger.LogError(res.Error, "Something went wrong while reading java config.");
             return res;

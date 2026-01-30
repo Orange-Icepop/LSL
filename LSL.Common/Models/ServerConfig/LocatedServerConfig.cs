@@ -50,7 +50,7 @@ public class LocatedServerConfig
     public Result<ServerConfigV2> ToLatestConfig()
     {
         var validationResult = Validate();
-        if (validationResult.IsError) return Result.Fail<ServerConfigV2>(validationResult.Error);
+        if (validationResult.IsFailed) return Result.Fail<ServerConfigV2>(validationResult.Error);
         return Result.Success(new ServerConfigV2
         {
             Name = ServerName,
@@ -96,7 +96,7 @@ public class LocatedServerConfig
         for (int tries = 0; tries < 3; tries++)
         {
             var validationResult = Validate();
-            if (validationResult.IsError) return Result.Fail<LocatedServerConfig>(validationResult.Error);
+            if (validationResult.IsFailed) return Result.Fail<LocatedServerConfig>(validationResult.Error);
             switch (ServerType)
             {
                 case ServerCoreType.Forge or ServerCoreType.ForgeInstaller or ServerCoreType.ForgeShim:
@@ -105,7 +105,7 @@ public class LocatedServerConfig
                         !File.Exists(ForgeCoreInfo.UnixLibraryArgsPath))
                     {
                         var detectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
-                        if (detectResult.IsError)
+                        if (detectResult.IsFailed)
                             return Result.Fail<LocatedServerConfig>("Cannot get the correct core info of the forge server");
                         ForgeCoreInfo = detectResult.Value;
                     }
@@ -115,7 +115,7 @@ public class LocatedServerConfig
                 case ServerCoreType.Error when CommonCoreInfo is not null && File.Exists(CommonCoreInfo.JarName):
                 {
                     var detectResult = await CoreTypeHelper.GetCoreType(CommonCoreInfo.JarName);
-                    if (detectResult.IsError) return Result.Fail<LocatedServerConfig>("Cannot get the core type");
+                    if (detectResult.IsFailed) return Result.Fail<LocatedServerConfig>("Cannot get the core type");
                     ServerType = detectResult.Value;
                     continue;
                 }

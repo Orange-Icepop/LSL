@@ -17,7 +17,7 @@ public static class CoreTypeHelper
         if (!File.Exists(filePath)) return Result.Fail<ServerCoreType>(new FileNotFoundException($"Cannot find core file {filePath}"));
 
         var jarMainClassResult = await GetMainClass(filePath).ConfigureAwait(false);
-        return jarMainClassResult.IsError
+        return jarMainClassResult.IsFailed
             ? Result.Fail<ServerCoreType>(jarMainClassResult.Error)
             : Result.Success(s_coreTypeMap.GetValueOrDefault(jarMainClassResult.Value, ServerCoreType.Unknown));
     }
