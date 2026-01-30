@@ -2,7 +2,7 @@
 
 namespace LSL.Common.Models.Minecraft;
 
-public record ServerConfigList : ServiceResult<IDictionary<int, IndexedServerConfig>>
+public record ServerConfigList : Result<IDictionary<int, IndexedServerConfig>>
 {
     private ServerConfigList(
         IDictionary<int, IndexedServerConfig>? configs, 

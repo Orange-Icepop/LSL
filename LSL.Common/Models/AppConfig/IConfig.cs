@@ -10,6 +10,6 @@ public interface IConfig
 
 public interface IConfig<TConfig> : IConfig where TConfig : IConfig<TConfig>
 {
-    public ServiceResult Validate();
-    public static abstract ServiceResult<TConfig> Deserialize(string content);
+    public Result Validate();
+    public static abstract Result<TConfig> Deserialize(string content);
 }

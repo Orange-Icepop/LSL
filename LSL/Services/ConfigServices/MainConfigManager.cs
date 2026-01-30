@@ -71,7 +71,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
     #region 集体修改配置方法 ConfirmConfig(Dictionary<string, object> confs)
 
-    public async Task<ServiceResult<FrozenDictionary<string, object>>> ConfirmConfig(IDictionary<string, object> configs)
+    public async Task<Result<FrozenDictionary<string, object>>> ConfirmConfig(IDictionary<string, object> configs)
     {
         try
         {
@@ -87,12 +87,12 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
             await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath,
                 JsonConvert.SerializeObject(fin, Formatting.Indented));
             logger.LogInformation("New LSL main config is written.");
-            return ServiceResult.Success(fin.ToFrozenDictionary());
+            return Result.Success(fin.ToFrozenDictionary());
         }
         catch (Exception e)
         {
             logger.LogError(e, "An error occured while writing new main config.");
-            return ServiceResult.Fail<FrozenDictionary<string, object>>(e);
+            return Result.Fail<FrozenDictionary<string, object>>(e);
         }
     }
 
@@ -103,7 +103,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
     // 当前配置字典
     public FrozenDictionary<string, object> CurrentConfigs { get; private set; } = FrozenDictionary<string, object>.Empty;
 
-    public async Task<ServiceResult> LoadConfig()
+    public async Task<Result> LoadConfig()
     {
         try
         {
@@ -116,17 +116,17 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
             catch (FileNotFoundException ex)
             {
                 logger.LogError(ex, "LSL main config file not found.");
-                return ServiceResult.Fail(ex);
+                return Result.Fail(ex);
             }
             catch (JsonReaderException ex)
             {
                 logger.LogError(ex, "LSL main config file is not parsable.");
-                return ServiceResult.Fail(ex);
+                return Result.Fail(ex);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "An error occured while reading main config file.");
-                return ServiceResult.Fail(ex);
+                return Result.Fail(ex);
             }
 
             Dictionary<string, object> cache = [];
@@ -147,7 +147,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
                     {
                         var msg = new KeyNotFoundException($"No such key found in default config:{key}");
                         logger.LogError(msg, "");
-                        return ServiceResult.Fail(msg);
+                        return Result.Fail(msg);
                     }
 
                     cache.Add(key, defaultConfig);
@@ -167,29 +167,29 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
                 list.AppendJoin(",", keysNeedToRepair);
                 logger.LogWarning("{}", list.ToString());
                 logger.LogInformation("Config.json loaded and repaired.");
-                return ServiceResult.Warning(new Exception(list.ToString()));
+                return Result.Warning(new Exception(list.ToString()));
             }
             CurrentConfigs = cache.ToFrozenDictionary();
             logger.LogInformation("Config.json loaded.");
-            return ServiceResult.Success();
+            return Result.Success();
 
         }
         catch (Exception e)
         {
             logger.LogError(e, "An error occured while loading main config.");
-            return ServiceResult.Fail(e);
+            return Result.Fail(e);
         }
     }
 
     #endregion
 
     #region 初始化
-    internal static async Task<ServiceResult> InitAsync()
+    internal static async Task<Result> InitAsync()
     {
         // 将初始配置字典序列化成JSON字符串并写入文件  
         string configString = JsonConvert.SerializeObject(s_defaultConfigs, Formatting.Indented);
         await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, configString);
-        return ServiceResult.Success();
+        return Result.Success();
     }
 
     #endregion

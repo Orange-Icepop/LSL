@@ -21,20 +21,20 @@ public class ConfigManager(
     ILogger<ConfigManager> logger)
 {
     #region 初始化配置文件
-    public async Task<ServiceResult> Initialize()
+    public async Task<Result> Initialize()
     {
         // 检查权限
         if (!ConfigPathProvider.HasReadWriteAccess(ConfigPathProvider.LSLFolder))
         {
             var error = new UnauthorizedAccessException($"LSL does not have write access to config folder:{ConfigPathProvider.LSLFolder}");
             logger.LogCritical(error, "");
-            return ServiceResult.Fail(error);
+            return Result.Fail(error);
         }
         if (!ConfigPathProvider.HasReadWriteAccess(ConfigPathProvider.ServersFolder))
         {
             var error = new UnauthorizedAccessException($"LSL does not have write access to the servers folder:{ConfigPathProvider.ServersFolder}");
             logger.LogCritical(error, "");
-            return ServiceResult.Fail(error);
+            return Result.Fail(error);
         }
         // 确保LSL文件夹存在  
         Directory.CreateDirectory(ConfigPathProvider.LSLFolder);
@@ -58,7 +58,7 @@ public class ConfigManager(
             await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "{}");
             logger.LogInformation("JavaList.json initialized.");
         }
-        return ServiceResult.Success();
+        return Result.Success();
     }
 
     #endregion
@@ -66,25 +66,25 @@ public class ConfigManager(
     #region 配置文件代理操作
     // 主配置文件
     public FrozenDictionary<string, object> MainConfigs => mcm.CurrentConfigs;
-    public Task<ServiceResult<FrozenDictionary<string, object>>> ConfirmMainConfig(IDictionary<string, object> conf) => mcm.ConfirmConfig(conf);
-    public Task<ServiceResult> ReadMainConfig() => mcm.LoadConfig();
+    public Task<Result<FrozenDictionary<string, object>>> ConfirmMainConfig(IDictionary<string, object> conf) => mcm.ConfirmConfig(conf);
+    public Task<Result> ReadMainConfig() => mcm.LoadConfig();
     // 服务器配置
     public FrozenDictionary<int, IndexedServerConfig> ServerConfigs => scm.ServerConfigs;
     public Task<ServerConfigList> ReadServerConfig() => scm.ReadServerConfig();
 
-    public Task<ServiceResult> RegisterServer(FormedServerConfig config) => scm.RegisterServer(config.ServerName,
+    public Task<Result> RegisterServer(FormedServerConfig config) => scm.RegisterServer(config.ServerName,
         config.JavaPath, config.CorePath, uint.Parse(config.MinMem), uint.Parse(config.MaxMem), config.ExtJvm);
-    public Task<ServiceResult> EditServer(int id, FormedServerConfig config) => scm.EditServer(id, config.ServerName, config.JavaPath, 
+    public Task<Result> EditServer(int id, FormedServerConfig config) => scm.EditServer(id, config.ServerName, config.JavaPath, 
         uint.Parse(config.MinMem),
         uint.Parse(config.MaxMem), config.ExtJvm);
-    public Task<ServiceResult> DeleteServer(int id) => scm.DeleteServer(id);
+    public Task<Result> DeleteServer(int id) => scm.DeleteServer(id);
 
-    public async Task<ServiceResult> AddExistedServer(FormedServerConfig config) => await scm.AddExistedServer(
+    public async Task<Result> AddExistedServer(FormedServerConfig config) => await scm.AddExistedServer(
         config.ServerName, config.JavaPath, config.CorePath, uint.Parse(config.MinMem), uint.Parse(config.MaxMem), config.ExtJvm);
     // Java配置
     public FrozenDictionary<int, JavaInfo> JavaConfigs => jcm.JavaDict;
-    public Task<ServiceResult<Dictionary<int, JavaInfo>>> ReadJavaConfig(bool writeBack = false) => jcm.ReadJavaConfig(writeBack);
-    public Task<ServiceResult> DetectJavaAsync() => jcm.DetectJavaAsync();
+    public Task<Result<Dictionary<int, JavaInfo>>> ReadJavaConfig(bool writeBack = false) => jcm.ReadJavaConfig(writeBack);
+    public Task<Result> DetectJavaAsync() => jcm.DetectJavaAsync();
 
     #endregion
 }

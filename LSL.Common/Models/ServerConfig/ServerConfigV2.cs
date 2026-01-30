@@ -20,14 +20,14 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
     public List<string>? ExtraJvmArgs { get; set; }
     public bool? EnablePreLaunchProtection { get; set; }
 
-    public static ServiceResult<ServerConfigV2> Deserialize(string content)
+    public static Result<ServerConfigV2> Deserialize(string content)
     {
         return Toml.TryToModel<ServerConfigV2>(content, out var config, out var error)
-            ? ServiceResult.Success(config)
-            : ServiceResult.Fail<ServerConfigV2>(error.ToString());
+            ? Result.Success(config)
+            : Result.Fail<ServerConfigV2>(error.ToString());
     }
 
-    public Task<ServiceResult<LocatedServerConfig>> StandardizeAsync(string path) => LocatedServerConfig.CreateAsync(path,
+    public Task<Result<LocatedServerConfig>> StandardizeAsync(string path) => LocatedServerConfig.CreateAsync(path,
         Name, ServerType, CommonCoreInfo, ForgeCoreInfo, JavaPath, MinMemory, MaxMemory, ExtraJvmArgs,
         EnablePreLaunchProtection);
 
@@ -37,20 +37,20 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
         
     public static bool Exists(string path) => File.Exists(Path.Combine(path, ConfigFileName));
     
-    public async Task<ServiceResult> WriteToFileAsync(string path)
+    public async Task<Result> WriteToFileAsync(string path)
     {
         try
         {
             await File.WriteAllTextAsync(Path.Combine(path, ConfigFileName), Serialize());
-            return ServiceResult.Success();
+            return Result.Success();
         }
         catch (Exception e)
         {
-            return ServiceResult.Fail(e);
+            return Result.Fail(e);
         }
     }
 
-    public static async Task<ServiceResult<LocatedServerConfig>> ReadFromFileAsync(string path)
+    public static async Task<Result<LocatedServerConfig>> ReadFromFileAsync(string path)
     {
         try
         {
@@ -59,7 +59,7 @@ public class ServerConfigV2 : IServerConfig<ServerConfigV2>
         }
         catch (Exception e)
         {
-            return ServiceResult.Fail<LocatedServerConfig>(e);
+            return Result.Fail<LocatedServerConfig>(e);
         }
     }
 }

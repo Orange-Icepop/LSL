@@ -24,17 +24,12 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
         return PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, title, message)).ToTask();
     }
 
-    public ServiceResultCommitWrapper SubmitServiceError(ServiceResult result, bool suppressWarning = false)
+    public ServiceResultCommitWrapper<T> SubmitServiceError<T>(Result<T> result, bool suppressWarning = false)
     {
         return ServiceResultCommitWrapper.Commit(() => ShowServiceError(result), result);
     }
 
-    public ServiceResultCommitWrapper<T> SubmitServiceError<T>(ServiceResult<T> result, bool suppressWarning = false)
-    {
-        return ServiceResultCommitWrapper.Commit(() => ShowServiceError(result), result);
-    }
-
-    private async Task ShowServiceError<T>(ServiceResult<T> result)
+    private async Task ShowServiceError<T>(Result<T> result)
     {
         string fin;
         if (result.Error is not null) fin = result.Error.ToString();
@@ -64,9 +59,9 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
         private Task Task => _lazyTask.Value;
         public TaskAwaiter GetAwaiter() => Task.GetAwaiter();
         public bool IsSuccess { get; }
-        public static ServiceResultCommitWrapper Commit(Func<Task> taskFactory, ServiceResult result, bool suppressWarning = false) => new(taskFactory, result, suppressWarning);
-        public static ServiceResultCommitWrapper<T> Commit<T>(Func<Task> taskFactory, ServiceResult<T> result, bool suppressWarning = false) => new(taskFactory, result, suppressWarning);
-        private ServiceResultCommitWrapper(Func<Task> taskFactoryIfHasError, ServiceResult result, bool suppressWarning = false)
+        public static ServiceResultCommitWrapper Commit(Func<Task> taskFactory, Result result, bool suppressWarning = false) => new(taskFactory, result, suppressWarning);
+        public static ServiceResultCommitWrapper<T> Commit<T>(Func<Task> taskFactory, Result<T> result, bool suppressWarning = false) => new(taskFactory, result, suppressWarning);
+        private ServiceResultCommitWrapper(Func<Task> taskFactoryIfHasError, Result result, bool suppressWarning = false)
         {
             _lazyTask = new Lazy<Task>(result.IsSuccess || (suppressWarning && result.IsWarning)
                 ? () => Task.CompletedTask
@@ -78,7 +73,7 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
     public class ServiceResultCommitWrapper<T>
     {
         private readonly Lazy<Task> _lazyTask;
-        internal ServiceResultCommitWrapper(Func<Task> taskFactoryIfHasError, ServiceResult<T> result, bool suppressWarning = false)
+        internal ServiceResultCommitWrapper(Func<Task> taskFactoryIfHasError, Result<T> result, bool suppressWarning = false)
         {
             _lazyTask = new Lazy<Task>(result.IsSuccess || (suppressWarning && result.IsWarning)
                 ? () => Task.CompletedTask

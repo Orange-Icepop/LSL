@@ -25,7 +25,7 @@ public class WebConfig : IConfig<WebConfig>
     public double SiteBackgroundOpacity { get; set; } = 1;
     [IgnoreDataMember] public static string ConfigFileName => "WebConfig.toml";
 
-    public ServiceResult Validate()
+    public Result Validate()
     {
         List<string> errors = [];
         if (!PanelPort.IsInRange<uint>(1, 65535)) errors.Add("PanelPort must be in range of [1,65535]");
@@ -36,15 +36,15 @@ public class WebConfig : IConfig<WebConfig>
         if (!SiteBackgroundColor.IsValidRgbHex()) errors.Add("SiteThemeColor is invalid");
         if (!SiteBackgroundOpacity.IsInRange(0, 1)) errors.Add("SiteBackgroundOpacity must be in range of [0,1]");
         return errors.Count != 0
-            ? ServiceResult.Fail(new StringBuilder().AppendJoin("\n", errors).ToString())
-            : ServiceResult.Success();
+            ? Result.Fail(new StringBuilder().AppendJoin("\n", errors).ToString())
+            : Result.Success();
     }
 
-    public static ServiceResult<WebConfig> Deserialize(string content)
+    public static Result<WebConfig> Deserialize(string content)
     { 
         if (!Toml.TryToModel<WebConfig>(content, out var result, out var error))
-            return ServiceResult.Fail<WebConfig>($"The web panel config is not parsable:\n{error}");
+            return Result.Fail<WebConfig>($"The web panel config is not parsable:\n{error}");
         var validationResult = result.Validate();
-        return validationResult.IsSuccess ? ServiceResult.Success(result) : ServiceResult.Warning(result, validationResult.Error);
+        return validationResult.IsSuccess ? Result.Success(result) : Result.Warning(result, validationResult.Error);
     }
 }

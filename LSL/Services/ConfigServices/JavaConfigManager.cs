@@ -23,7 +23,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
     public FrozenDictionary<int, JavaInfo> JavaDict { get; private set; } = FrozenDictionary<int, JavaInfo>.Empty; // 目前读取的Java列表
 
     #region 读取Java列表
-    public async Task<ServiceResult<Dictionary<int, JavaInfo>>> ReadJavaConfig(bool writeBack = false)
+    public async Task<Result<Dictionary<int, JavaInfo>>> ReadJavaConfig(bool writeBack = false)
     {
         var res = await ReadConfig()//先读配置文件
             .BindAsync(async dict =>// 验证
@@ -34,8 +34,8 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                 if (!await kvp.Value.Validate()) errors.Add(kvp.Value.Path);
             });
             return errors.IsEmpty
-                ? ServiceResult.Success(dict)
-                : ServiceResult.Warning(dict, new StringBuilder().AppendJoin('\n', errors).ToString());
+                ? Result.Success(dict)
+                : Result.Warning(dict, new StringBuilder().AppendJoin('\n', errors).ToString());
         });
         if (res.IsError)
         {
@@ -52,7 +52,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
         return res;
     }
 
-    private static async Task<ServiceResult<Dictionary<int, JavaInfo>>> ReadConfig()
+    private static async Task<Result<Dictionary<int, JavaInfo>>> ReadConfig()
     {
         try
         {
@@ -68,13 +68,13 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             }
 
             return error.Count > 0
-                ? ServiceResult.Warning(tmpDict,
+                ? Result.Warning(tmpDict,
                     new StringBuilder("Keys ").AppendJoin(',', error).Append(" are not valid").ToString())
-                : ServiceResult.Success(tmpDict);
+                : Result.Success(tmpDict);
         }
         catch (Exception e)
         {
-            return ServiceResult.Fail<Dictionary<int, JavaInfo>>(e);
+            return Result.Fail<Dictionary<int, JavaInfo>>(e);
         }
     }
 
@@ -82,7 +82,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
 
     #region 获取系统中的Java
 
-    public async Task<ServiceResult> DetectJavaAsync()
+    public async Task<Result> DetectJavaAsync()
     {
         try
         {
@@ -100,7 +100,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             catch (Exception e)
             {
                 logger.LogError(e, "Error Detecting Java.");
-                return ServiceResult.Fail(new KeyNotFoundException(e.Message));
+                return Result.Fail(new KeyNotFoundException(e.Message));
             }
             Dictionary<string, JavaInfo> javaDict = [];
             //遍历写入Java信息
@@ -115,12 +115,12 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath,
                 JsonSerializer.Serialize(javaDict, SnakeJsonOptions.Default.DictionaryInt32JavaInfo)); //写入配置文件
             logger.LogInformation("Java detection completed, found {count} javas.", javaDict.Count);
-            return ServiceResult.Success();
+            return Result.Success();
         }
         catch (Exception e)
         {
             logger.LogError(e, "Error Detecting Java.");
-            return ServiceResult.Fail(e);
+            return Result.Fail(e);
         }
     }
 

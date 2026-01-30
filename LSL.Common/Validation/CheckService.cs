@@ -97,17 +97,17 @@ public static class CheckService
         
     #region 服务器配置验证方法
         
-    public static ServiceResult<IndexedServerConfig> VerifyServerConfig(int id, string path, IDictionary<string, string> config)
+    public static Result<IndexedServerConfig> VerifyServerConfig(int id, string path, IDictionary<string, string> config)
     {
-        if (id < 0) return ServiceResult.Fail<IndexedServerConfig>(new ArgumentException($"Server id of {id} is not valid."));
+        if (id < 0) return Result.Fail<IndexedServerConfig>(new ArgumentException($"Server id of {id} is not valid."));
         var cache = LocatedServerConfig.Empty;
         var pResult = CheckComponents.ServerPath(path);
-        if (!pResult.Passed) return ServiceResult.Fail<IndexedServerConfig>(new ValidationException($"Error validating server config with id {id} because of nonexistent server path."));
+        if (!pResult.Passed) return Result.Fail<IndexedServerConfig>(new ValidationException($"Error validating server config with id {id} because of nonexistent server path."));
         cache.ServerPath = path;
         foreach (var item in s_serverConfigKeys)
         {
             if (!config.TryGetValue(item, out var value))
-                return ServiceResult.Fail<IndexedServerConfig>(
+                return Result.Fail<IndexedServerConfig>(
                     new KeyNotFoundException($"key {item} not found in server with id {id}."));
             VerifyResult vResult;
             switch(item)
@@ -175,11 +175,11 @@ public static class CheckService
                 }
             }
 
-            if (!vResult.Passed) return ServiceResult.Fail<IndexedServerConfig>(
+            if (!vResult.Passed) return Result.Fail<IndexedServerConfig>(
                 new ValidationException($"Error validating server config with id {id} at key {vResult.Key}:\n{vResult.Reason}"));
         }
 
-        return ServiceResult.Success(new IndexedServerConfig(id, cache));
+        return Result.Success(new IndexedServerConfig(id, cache));
     }
     #endregion
 }

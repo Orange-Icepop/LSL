@@ -61,7 +61,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             }
         }
 
-        private async Task<ServiceResult> WriteServerConfigs()
+        private async Task<Result> WriteServerConfigs()
         {
             try
             {
@@ -74,17 +74,17 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 await File.WriteAllTextAsync(ConfigPathProvider.ServerConfigPath,
                     JsonSerializer.Serialize(idx,
                         SnakeJsonOptions.Default.DictionaryInt32String));
-                return ServiceResult.Success();
+                return Result.Success();
             }
             catch (Exception e)
             {
-                return ServiceResult.Fail(e);
+                return Result.Fail(e);
             }
         }
 
         #region 增/改/删服务器注册项操作
 
-        public async Task<ServiceResult<Dictionary<int, IndexedServerConfig>>> AddServerToIndex(
+        public async Task<Result<Dictionary<int, IndexedServerConfig>>> AddServerToIndex(
             LocatedServerConfig config)
         {
             using (await _syncLock.WriterLockAsync())
@@ -93,20 +93,20 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 try
                 {
                     if (!_serverConfigs.TryAdd(id, config.AsIndexed(id)))
-                        return ServiceResult.Fail<Dictionary<int, IndexedServerConfig>>(
+                        return Result.Fail<Dictionary<int, IndexedServerConfig>>(
                             "Unable to add new server config to index server config");
                     (await WriteServerConfigs()).Unwrap();
-                    return ServiceResult.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
+                    return Result.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
                         kvp => new IndexedServerConfig(kvp.Value)));
                 }
                 catch (Exception e)
                 {
-                    return ServiceResult.Fail<Dictionary<int, IndexedServerConfig>>(e);
+                    return Result.Fail<Dictionary<int, IndexedServerConfig>>(e);
                 }
             }
         }
 
-        public async Task<ServiceResult<Dictionary<int, IndexedServerConfig>>> ModifyServerInIndex(
+        public async Task<Result<Dictionary<int, IndexedServerConfig>>> ModifyServerInIndex(
             IndexedServerConfig config)
         {
             using (await _syncLock.WriterLockAsync())
@@ -114,21 +114,21 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 try
                 {
                     if (!_serverConfigs.ContainsKey(config.ServerId))
-                        return ServiceResult.Fail<Dictionary<int, IndexedServerConfig>>(
+                        return Result.Fail<Dictionary<int, IndexedServerConfig>>(
                             new KeyNotFoundException("Index server config doesn't contain the selected server id"));
                     _serverConfigs[config.ServerId] = config;
                     (await WriteServerConfigs()).Unwrap();
-                    return ServiceResult.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
+                    return Result.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
                         kvp => new IndexedServerConfig(kvp.Value)));
                 }
                 catch (Exception e)
                 {
-                    return ServiceResult.Fail<Dictionary<int, IndexedServerConfig>>(e);
+                    return Result.Fail<Dictionary<int, IndexedServerConfig>>(e);
                 }
             }
         }
 
-        public async Task<ServiceResult<Dictionary<int, IndexedServerConfig>>> DeleteServerFromIndex(int id)
+        public async Task<Result<Dictionary<int, IndexedServerConfig>>> DeleteServerFromIndex(int id)
         {
             using (await _syncLock.WriterLockAsync())
             {
@@ -136,12 +136,12 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 {
                     _serverConfigs.Remove(id, out _);
                     (await WriteServerConfigs()).Unwrap();
-                    return ServiceResult.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
+                    return Result.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
                         kvp => new IndexedServerConfig(kvp.Value)));
                 }
                 catch (Exception e)
                 {
-                    return ServiceResult.Fail<Dictionary<int, IndexedServerConfig>>(e);
+                    return Result.Fail<Dictionary<int, IndexedServerConfig>>(e);
                 }
             }
         }
@@ -178,7 +178,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
         #region 刷新服务器主配置文件
 
-        private static async Task<ServiceResult<Dictionary<int, string>>> GetIndexConfigAsync()
+        private static async Task<Result<Dictionary<int, string>>> GetIndexConfigAsync()
         {
             // 测试目标文件存在性
             try
@@ -186,12 +186,12 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 if (!File.Exists(ConfigPathProvider.ServerConfigPath))
                 {
                     await File.WriteAllTextAsync(ConfigPathProvider.ServerConfigPath, "{}");
-                    return ServiceResult.Success(new Dictionary<int, string>());
+                    return Result.Success(new Dictionary<int, string>());
                 }
             }
             catch
             {
-                return ServiceResult.Fail<Dictionary<int, string>>(
+                return Result.Fail<Dictionary<int, string>>(
                     "LSL has no permission to write server config file."); // 这不应该，哥们
             }
 
@@ -203,12 +203,12 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             }
             catch (Exception ex)
             {
-                return ServiceResult.Fail<Dictionary<int, string>>(ex);
+                return Result.Fail<Dictionary<int, string>>(ex);
             }
 
             // 验空
             if (string.IsNullOrWhiteSpace(mainFile) || mainFile == "{}")
-                return ServiceResult.Success(new Dictionary<int, string>());
+                return Result.Success(new Dictionary<int, string>());
 
             // 反序列化
             try
@@ -216,18 +216,18 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 var configs = JsonSerializer.Deserialize(mainFile, SnakeJsonOptions.Default.DictionaryInt32String);
                 return configs is null
                     ? throw new JsonException("The Main Server Config file cannot be converted.")
-                    : ServiceResult.Success(configs);
+                    : Result.Success(configs);
             }
             catch (JsonException ex)
             {
                 var err = new JsonException(
                     $"The main server config file at {ConfigPathProvider.ServerConfigPath} is not a valid LSL server config file.",
                     ex);
-                return ServiceResult.Fail<Dictionary<int, string>>(err);
+                return Result.Fail<Dictionary<int, string>>(err);
             }
             catch (Exception e)
             {
-                return ServiceResult.Fail<Dictionary<int, string>>(e);
+                return Result.Fail<Dictionary<int, string>>(e);
             }
         }
 
@@ -263,10 +263,10 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             return ServerConfigList.Success(scCache);
         }
 
-        public static Task<ServiceResult<IndexedServerConfig>> GetSingleServerConfigAsync(int id, string targetDir)
+        public static Task<Result<IndexedServerConfig>> GetSingleServerConfigAsync(int id, string targetDir)
         {
             return ServerConfigHelper.ReadSingleConfigAsync(targetDir, true)
-                .BindAsync(config => Task.FromResult(ServiceResult.Success(config.AsIndexed(id))));
+                .BindAsync(config => Task.FromResult(Result.Success(config.AsIndexed(id))));
         }
 
         #endregion
@@ -278,7 +278,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 注册服务器方法RegisterServer
 
-    private async Task<ServiceResult<IDictionary<int, IndexedServerConfig>>> RegisterServer(
+    private async Task<Result<IDictionary<int, IndexedServerConfig>>> RegisterServer(
         LocatedServerConfig config)
     {
         try
@@ -290,7 +290,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
             var writeResult = await config.ToLatestConfig().BindAsync(conf => conf.WriteToFileAsync(config.ServerPath));
             if (writeResult.IsError)
-                return ServiceResult.Fail<IDictionary<int, IndexedServerConfig>>(writeResult.Error);
+                return Result.Fail<IDictionary<int, IndexedServerConfig>>(writeResult.Error);
             // 创建Eula文件
             if (!mcm.CurrentConfigs.TryGetValue("auto_eula", out var rawEula) ||
                 !bool.TryParse(rawEula.ToString(), out var eula)) eula = false; // TODO:在MainConfig改掉之后换过去
@@ -299,16 +299,16 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 $"# Generated by LSL at {time}\n# For details of Mojang EULA, go to https://aka.ms/MinecraftEULA\neula={eula}");
             // 在服务器列表文件中注册新服务器
             var result = await _indexManager.AddServerToIndex(config);
-            if (result.IsError) return result.Bind(ServiceResult.Success<IDictionary<int, IndexedServerConfig>>);
+            if (result.IsError) return result.Bind(Result.Success<IDictionary<int, IndexedServerConfig>>);
             logger.LogInformation("Server {ServerName} registered, config file path {AddedConfigPath}",
                 config.ServerName,
                 config.ServerPath);
-            return result.Bind(ServiceResult.Success<IDictionary<int, IndexedServerConfig>>);
+            return result.Bind(Result.Success<IDictionary<int, IndexedServerConfig>>);
         }
         catch (Exception e)
         {
             logger.LogError(e, "Server {ServerName} could not be registered", config.ServerName);
-            return ServiceResult.Fail<IDictionary<int, IndexedServerConfig>>(e);
+            return Result.Fail<IDictionary<int, IndexedServerConfig>>(e);
         }
     }
 
@@ -316,7 +316,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 修改服务器方法EditServer
 
-    public async Task<ServiceResult<IDictionary<int,IndexedServerConfig>>> EditServer(IndexedServerConfig config)
+    public async Task<Result<IDictionary<int,IndexedServerConfig>>> EditServer(IndexedServerConfig config)
     {
         try
         {
@@ -325,18 +325,18 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 (await config.LocatedConfig.ToLatestConfig().BindAsync(c => c.WriteToFileAsync(config.ServerPath))).Unwrap(); // 写入服务器文件夹内的配置文件
                 var result = await _indexManager.ModifyServerInIndex(config);
                 logger.LogInformation("Server Edited:{id}", config.ServerId);
-                return result.Bind(ServiceResult.Success<IDictionary<int, IndexedServerConfig>>);
+                return result.Bind(Result.Success<IDictionary<int, IndexedServerConfig>>);
             }
             else
             {
                 logger.LogError("Match Server Not Found:{id}", config.ServerId);
-                return ServiceResult.Fail<IDictionary<int,IndexedServerConfig>>(new KeyNotFoundException($"未找到匹配的服务器{config.ServerId}：{config.ServerName}"));
+                return Result.Fail<IDictionary<int,IndexedServerConfig>>(new KeyNotFoundException($"未找到匹配的服务器{config.ServerId}：{config.ServerName}"));
             }
         }
         catch (Exception e)
         {
             logger.LogError(e, "Server {ServerId} failed to edit.", config.ServerId);
-            return ServiceResult.Fail<IDictionary<int,IndexedServerConfig>>(e);
+            return Result.Fail<IDictionary<int,IndexedServerConfig>>(e);
         }
     }
 
@@ -344,12 +344,12 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 删除服务器方法DeleteServer
 
-    public async Task<ServiceResult<IDictionary<int,IndexedServerConfig>>> DeleteServer(int serverId)
+    public async Task<Result<IDictionary<int,IndexedServerConfig>>> DeleteServer(int serverId)
     {
         if (!_indexManager.TryGetServerConfig(serverId, out var config))
         {
             logger.LogError("Server Not Found in Dictionary:{id}", serverId);
-            return ServiceResult.Fail<IDictionary<int,IndexedServerConfig>>(new KeyNotFoundException($"在LSL配置文件中未找到id为{serverId}的服务器。"));
+            return Result.Fail<IDictionary<int,IndexedServerConfig>>(new KeyNotFoundException($"在LSL配置文件中未找到id为{serverId}的服务器。"));
         }
 
         var serverPath = config.ServerPath;
@@ -359,12 +359,12 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             var result = await _indexManager.DeleteServerFromIndex(serverId); // 在服务器列表文件中删除服务器
             await DirectoryExtensions.DeleteDirectoryAsync(serverPath); // 删除服务器文件夹
             logger.LogInformation("Server deleted:{id}", serverId);
-            return result.Bind(ServiceResult.Success<IDictionary<int,IndexedServerConfig>>);
+            return result.Bind(Result.Success<IDictionary<int,IndexedServerConfig>>);
         }
         catch (Exception e)
         {
             logger.LogError(e, "Server {ServerId} could not be deleted", serverId);
-            return ServiceResult.Fail<IDictionary<int,IndexedServerConfig>>(e);
+            return Result.Fail<IDictionary<int,IndexedServerConfig>>(e);
         }
     }
 
@@ -372,7 +372,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 添加裸核服务器方法AddServerUsingCore
 
-    public async Task<ServiceResult<IDictionary<int,IndexedServerConfig>>> AddServerUsingCore(LocatedServerConfig config, string corePath,
+    public async Task<Result<IDictionary<int,IndexedServerConfig>>> AddServerUsingCore(LocatedServerConfig config, string corePath,
         bool installForge = false, IProgress<string>? progress = null)
     {
         config.ServerPath = Path.Combine(ConfigPathProvider.ServersFolder, config.ServerName);
@@ -380,7 +380,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         {
             Directory.CreateDirectory(config.ServerPath);
             var coreFile = new FileInfo(corePath);
-            if (!coreFile.Exists) return ServiceResult.Fail<IDictionary<int,IndexedServerConfig>>(new FileNotFoundException($"File {corePath} not found"));
+            if (!coreFile.Exists) return Result.Fail<IDictionary<int,IndexedServerConfig>>(new FileNotFoundException($"File {corePath} not found"));
             progress?.Report("Start copying core file");
             await FileExtensions.CopyFileAsync(corePath, Path.Combine(config.ServerPath, coreFile.Name),
                 FileOverwriteMode.Overwrite);
@@ -394,10 +394,10 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             }
             catch (Exception ex)
             {
-                return ServiceResult.Fail<IDictionary<int,IndexedServerConfig>>(ex);
+                return Result.Fail<IDictionary<int,IndexedServerConfig>>(ex);
             }
 
-            return ServiceResult.Fail<IDictionary<int,IndexedServerConfig>>(e);
+            return Result.Fail<IDictionary<int,IndexedServerConfig>>(e);
         }
 
         try
@@ -406,7 +406,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             {
                 var installResult = await ForgeInstaller.InstallForge(
                     Path.Combine(config.ServerPath, Path.GetFileName(config.ServerPath)), config.JavaPath, progress);
-                if (installResult.IsError) return ServiceResult.Fail<IDictionary<int,IndexedServerConfig>>(installResult.Error);
+                if (installResult.IsError) return Result.Fail<IDictionary<int,IndexedServerConfig>>(installResult.Error);
                 var findResult = await ForgeConfigHelper.GetForgeConfig(config.ServerPath);
                 if (findResult.IsError)
                 {
@@ -414,7 +414,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                     var enumerations = dirInfo.EnumerateFiles("*universal.jar");
                     var fileInfos = enumerations as FileInfo[] ?? enumerations.ToArray();
                     if (fileInfos.Length > 1)
-                        return ServiceResult.Warning<IDictionary<int,IndexedServerConfig>>(_indexManager.CloneServerConfigs(),
+                        return Result.Warning<IDictionary<int,IndexedServerConfig>>(_indexManager.CloneServerConfigs(),
                             "Installation finished, but cannot ensure which is your Forge server jar file. Please re-add the server via \"Add server folder\"."); // TODO:本地化
                     config.CommonCoreInfo = new CommonCoreConfigV1() { JarName = fileInfos.First().Name };
                     config.ServerType = ServerCoreType.OldForge;
@@ -428,7 +428,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         }
         catch (Exception e)
         {
-            return ServiceResult.Fail<IDictionary<int,IndexedServerConfig>>(e);
+            return Result.Fail<IDictionary<int,IndexedServerConfig>>(e);
         }
 
         return await RegisterServer(config);
@@ -438,7 +438,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 添加已有服务器方法AddExistedServer
 
-    public async Task<ServiceResult> AddExistedServer(LocatedServerConfig config, IProgress<string>? progress = null)
+    public async Task<Result> AddExistedServer(LocatedServerConfig config, IProgress<string>? progress = null)
     {
         try
         {
@@ -450,7 +450,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             // 连接服务器路径
             var originalServerDir = Path.GetDirectoryName(corePath);
             if (originalServerDir is null)
-                return ServiceResult.Fail(new ArgumentException("Cannot get the root folder of the server",
+                return Result.Fail(new ArgumentException("Cannot get the root folder of the server",
                     nameof(corePath)));
             string addedServerPath = Path.Combine(ConfigPathProvider.ServersFolder, serverName);
             string addedConfigPath = Path.Combine(addedServerPath, "lslconfig.json");
@@ -497,12 +497,12 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 addedServerPath); // 在服务器列表文件中注册新服务器
             logger.LogInformation("Server {serverName} registered, config file path {addedConfigPath}", serverName,
                 addedConfigPath);
-            return ServiceResult.Success();
+            return Result.Success();
         }
         catch (Exception e)
         {
             logger.LogError(e, "Error registering server {serverName} at {corePath}", serverName, corePath);
-            return ServiceResult.Fail(e);
+            return Result.Fail(e);
         }
     }
 

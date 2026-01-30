@@ -5,11 +5,11 @@ namespace LSL.Common.Utilities;
 
 public static class XPlatformOperationHelper
 {
-    public static ServiceResult OpenWebBrowser(string url)
+    public static Result OpenWebBrowser(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
             (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-            return ServiceResult.Fail(new ArgumentException("Bad url format", nameof(url)));
+            return Result.Fail(new ArgumentException("Bad url format", nameof(url)));
         try
         {
             if (OperatingSystem.IsWindows())
@@ -35,9 +35,9 @@ public static class XPlatformOperationHelper
         }
         catch (Exception e)
         {
-            return ServiceResult.Fail(new InvalidOperationException($"Unable to open URL{url}", e));
+            return Result.Fail(new InvalidOperationException($"Unable to open URL{url}", e));
         }
 
-        return ServiceResult.Success();
+        return Result.Success();
     }
 }

@@ -11,10 +11,10 @@ public static class ServerConfigHelper
     /// <param name="path">The server's directory</param>
     /// <param name="v1Read">Determine whether the first version of ServerConfig (lslconfig.json) should be included</param>
     /// <returns></returns>
-    public static async Task<ServiceResult<LocatedServerConfig>> ReadSingleConfigAsync(string path, bool v1Read = false)
+    public static async Task<Result<LocatedServerConfig>> ReadSingleConfigAsync(string path, bool v1Read = false)
     {
         if (!Directory.Exists(path))
-            return ServiceResult.Fail<LocatedServerConfig>(new ArgumentException("Target server doesn't exist.",
+            return Result.Fail<LocatedServerConfig>(new ArgumentException("Target server doesn't exist.",
                 nameof(path)));
         // try v2
         var confPath = Path.Combine(path, "lsl-configs", ServerConfigV2.ConfigFileName);
@@ -24,7 +24,7 @@ public static class ServerConfigHelper
         
         
         
-        if (!v1Read) return ServiceResult.Fail<LocatedServerConfig>(new ArgumentException(
+        if (!v1Read) return Result.Fail<LocatedServerConfig>(new ArgumentException(
             "Target path doesn't contain any server config file of LSL",
             nameof(path)));
         // try v1
@@ -32,7 +32,7 @@ public static class ServerConfigHelper
         if (File.Exists(confPath))
             return await ServerConfigV1.Deserialize(await File.ReadAllTextAsync(confPath))
                 .BindAsync(async config => await config.StandardizeAsync(path));
-        return ServiceResult.Fail<LocatedServerConfig>(new ArgumentException(
+        return Result.Fail<LocatedServerConfig>(new ArgumentException(
             "Target path doesn't contain any server config file of LSL",
             nameof(path)));
     }

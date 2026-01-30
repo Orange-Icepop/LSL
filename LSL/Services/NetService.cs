@@ -24,7 +24,7 @@ public class NetService
     }
 
     #region 异步下载请求
-    public async Task<ServiceResult> GetFileAsync(string url, string dir, IProgress<double>? progress, CancellationToken token = new()) 
+    public async Task<Result> GetFileAsync(string url, string dir, IProgress<double>? progress, CancellationToken token = new()) 
     {
         using var client = Factory.CreateClient();
         string? path = null;
@@ -76,9 +76,9 @@ public class NetService
         }
         catch (Exception ex) when (HandleException(ex, fileExists, path))
         {
-            return ServiceResult.Fail(ex);
+            return Result.Fail(ex);
         }
-        return ServiceResult.Success();
+        return Result.Success();
     }
     #endregion
     

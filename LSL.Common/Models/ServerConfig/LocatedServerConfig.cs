@@ -47,11 +47,11 @@ public class LocatedServerConfig
     #region 创建与转换
     public IndexedServerConfig AsIndexed(int serverId) => new(serverId, this);
 
-    public ServiceResult<ServerConfigV2> ToLatestConfig()
+    public Result<ServerConfigV2> ToLatestConfig()
     {
         var validationResult = Validate();
-        if (validationResult.IsError) return ServiceResult.Fail<ServerConfigV2>(validationResult.Error);
-        return ServiceResult.Success(new ServerConfigV2
+        if (validationResult.IsError) return Result.Fail<ServerConfigV2>(validationResult.Error);
+        return Result.Success(new ServerConfigV2
         {
             Name = ServerName,
             ServerType = ServerType,
@@ -65,7 +65,7 @@ public class LocatedServerConfig
         });
     }
     
-    public static Task<ServiceResult<LocatedServerConfig>> CreateAsync(string serverPath,
+    public static Task<Result<LocatedServerConfig>> CreateAsync(string serverPath,
         string? serverName,
         ServerCoreType? serverType,
         CommonCoreConfigV1? commonInfo,
@@ -77,9 +77,9 @@ public class LocatedServerConfig
         bool? enablePreLaunchProtection)
     {
         if (string.IsNullOrEmpty(serverName))
-            return Task.FromResult(ServiceResult.Fail<LocatedServerConfig>("This server doesn't have a name"));
-        if (minMemory is null) return Task.FromResult(ServiceResult.Fail<LocatedServerConfig>("Minimum memory is missing"));
-        if (maxMemory is null) return Task.FromResult(ServiceResult.Fail<LocatedServerConfig>("Maximum memory is missing"));
+            return Task.FromResult(Result.Fail<LocatedServerConfig>("This server doesn't have a name"));
+        if (minMemory is null) return Task.FromResult(Result.Fail<LocatedServerConfig>("Minimum memory is missing"));
+        if (maxMemory is null) return Task.FromResult(Result.Fail<LocatedServerConfig>("Maximum memory is missing"));
         return new LocatedServerConfig(serverPath, serverName, serverType ?? ServerCoreType.Error, commonInfo, forgeInfo,
             javaPath ?? string.Empty, minMemory.Value, maxMemory.Value, extJvm ?? [],
             enablePreLaunchProtection ?? true).CheckAndFixAsync();
@@ -91,12 +91,12 @@ public class LocatedServerConfig
     #endregion
     
     #region 检查与修复
-    public async Task<ServiceResult<LocatedServerConfig>> CheckAndFixAsync()
+    public async Task<Result<LocatedServerConfig>> CheckAndFixAsync()
     {
         for (int tries = 0; tries < 3; tries++)
         {
             var validationResult = Validate();
-            if (validationResult.IsError) return ServiceResult.Fail<LocatedServerConfig>(validationResult.Error);
+            if (validationResult.IsError) return Result.Fail<LocatedServerConfig>(validationResult.Error);
             switch (ServerType)
             {
                 case ServerCoreType.Forge or ServerCoreType.ForgeInstaller or ServerCoreType.ForgeShim:
@@ -106,7 +106,7 @@ public class LocatedServerConfig
                     {
                         var detectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
                         if (detectResult.IsError)
-                            return ServiceResult.Fail<LocatedServerConfig>("Cannot get the correct core info of the forge server");
+                            return Result.Fail<LocatedServerConfig>("Cannot get the correct core info of the forge server");
                         ForgeCoreInfo = detectResult.Value;
                     }
 
@@ -115,7 +115,7 @@ public class LocatedServerConfig
                 case ServerCoreType.Error when CommonCoreInfo is not null && File.Exists(CommonCoreInfo.JarName):
                 {
                     var detectResult = await CoreTypeHelper.GetCoreType(CommonCoreInfo.JarName);
-                    if (detectResult.IsError) return ServiceResult.Fail<LocatedServerConfig>("Cannot get the core type");
+                    if (detectResult.IsError) return Result.Fail<LocatedServerConfig>("Cannot get the core type");
                     ServerType = detectResult.Value;
                     continue;
                 }
@@ -125,21 +125,21 @@ public class LocatedServerConfig
                     ServerType = ServerCoreType.Forge;
                     break;
                 case ServerCoreType.Error:
-                    return ServiceResult.Fail<LocatedServerConfig>("Neither core file nor forge arguments is valid");
+                    return Result.Fail<LocatedServerConfig>("Neither core file nor forge arguments is valid");
                 default:
                 {
                     if (CommonCoreInfo is null || !File.Exists(CommonCoreInfo.JarName))
-                        return ServiceResult.Fail<LocatedServerConfig>("The jar info of the server is invalid");
+                        return Result.Fail<LocatedServerConfig>("The jar info of the server is invalid");
                     break;
                 }
             }
-            return ServiceResult.Success(this);
+            return Result.Success(this);
         }
 
-        return ServiceResult.Fail<LocatedServerConfig>("Failed to check server configuration after multiple attempts");
+        return Result.Fail<LocatedServerConfig>("Failed to check server configuration after multiple attempts");
     }
 
-    public ServiceResult Validate()
+    public Result Validate()
     {
         List<string> warnings = [];
         if (!Path.Exists(ServerPath)) warnings.Add($"Server {ServerPath} does not exist");
@@ -148,19 +148,19 @@ public class LocatedServerConfig
         warnings.AddRange(from arg in ExtraJvmArgs
             where !CheckComponents.ExtJvm(arg).Passed
             select $"Invalid extra JVM argument {arg}");
-        if (warnings.Count != 0) return ServiceResult.Fail(new StringBuilder().AppendJoin('\n', warnings).ToString());
-        return ServiceResult.Success();
+        if (warnings.Count != 0) return Result.Fail(new StringBuilder().AppendJoin('\n', warnings).ToString());
+        return Result.Success();
     }
     #endregion
 
     #region 获取启动信息
-    public ServiceResult<ProcessStartInfo> GetStartInfo()
+    public Result<ProcessStartInfo> GetStartInfo()
     {
         if (!CheckComponents.IsValidJava(JavaPath))
-            return ServiceResult.Fail<ProcessStartInfo>(new ArgumentException("Java is not valid"));
+            return Result.Fail<ProcessStartInfo>(new ArgumentException("Java is not valid"));
         if (ServerType is not ServerCoreType.Forge && File.Exists(CommonCoreInfo?.JarName))
         {
-            return ServiceResult.Success(new ProcessStartInfo()
+            return Result.Success(new ProcessStartInfo()
             {
                 FileName = JavaPath,
                 Arguments =
@@ -181,7 +181,7 @@ public class LocatedServerConfig
         {
             if (OperatingSystem.IsWindows() && File.Exists(ForgeCoreInfo.WinLibraryArgsPath))
             {
-                return ServiceResult.Success(new ProcessStartInfo()
+                return Result.Success(new ProcessStartInfo()
                 {
                     FileName = JavaPath,
                     Arguments =
@@ -199,7 +199,7 @@ public class LocatedServerConfig
             }
             if (File.Exists(ForgeCoreInfo.UnixLibraryArgsPath))
             {
-                return ServiceResult.Success(new ProcessStartInfo()
+                return Result.Success(new ProcessStartInfo()
                 {
                     FileName = JavaPath,
                     Arguments =
@@ -217,7 +217,7 @@ public class LocatedServerConfig
             }
         }
         
-        return ServiceResult.Fail<ProcessStartInfo>("Server configuration is not valid to create a Minecraft server process");
+        return Result.Fail<ProcessStartInfo>("Server configuration is not valid to create a Minecraft server process");
     }
     #endregion
 }

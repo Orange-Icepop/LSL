@@ -13,17 +13,17 @@ public class DaemonConfig : IConfig<DaemonConfig>
     public bool AllowPanelEditDaemonConfig { get; set; } = false;
     [IgnoreDataMember] public static string ConfigFileName => "DaemonConfig.toml";
 
-    public ServiceResult Validate()
+    public Result Validate()
     {
-        if (DownloadThreads > 256) return ServiceResult.Fail("DownloadThreads must be at most 256");
-        return ServiceResult.Success();
+        if (DownloadThreads > 256) return Result.Fail("DownloadThreads must be at most 256");
+        return Result.Success();
     }
 
-    public static ServiceResult<DaemonConfig> Deserialize(string content)
+    public static Result<DaemonConfig> Deserialize(string content)
     {
         if (!Toml.TryToModel<DaemonConfig>(content, out var result, out var error))
-            return ServiceResult.Fail<DaemonConfig>($"The daemon config is not parsable:\n{error}");
+            return Result.Fail<DaemonConfig>($"The daemon config is not parsable:\n{error}");
         var validationResult = result.Validate();
-        return validationResult.IsSuccess ? ServiceResult.Success(result) : ServiceResult.Warning(result, validationResult.Error);
+        return validationResult.IsSuccess ? Result.Success(result) : Result.Warning(result, validationResult.Error);
     }
 }

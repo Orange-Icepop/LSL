@@ -28,7 +28,7 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         ExtJvm = extJvm
     };
 
-    public static ServiceResult<ServerConfigV1> Deserialize(string json)
+    public static Result<ServerConfigV1> Deserialize(string json)
     {
         var result = new ServerConfigV1();
         try
@@ -37,12 +37,12 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         }
         catch (Exception e)
         {
-            return ServiceResult.Fail<ServerConfigV1>(e);
+            return Result.Fail<ServerConfigV1>(e);
         }
-        return ServiceResult.Success(result);
+        return Result.Success(result);
     }
 
-    public Task<ServiceResult<LocatedServerConfig>> StandardizeAsync(string path) => LocatedServerConfig.CreateAsync(path, Name, ServerCoreType.Error,
+    public Task<Result<LocatedServerConfig>> StandardizeAsync(string path) => LocatedServerConfig.CreateAsync(path, Name, ServerCoreType.Error,
         new CommonCoreConfigV1 { JarName = CoreName ?? string.Empty }, null, UsingJava, MinMemory, MaxMemory,
         [..ExtJvm?.Split(' ') ?? []], true);
 
@@ -50,20 +50,20 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
     
     public static bool Exists(string path) => File.Exists(Path.Combine(path, ConfigFileName));
     
-    public async Task<ServiceResult> WriteToFileAsync(string path)
+    public async Task<Result> WriteToFileAsync(string path)
     {
         try
         {
             await File.WriteAllTextAsync(Path.Combine(path, ConfigFileName), Serialize());
-            return ServiceResult.Success();
+            return Result.Success();
         }
         catch (Exception e)
         {
-            return ServiceResult.Fail(e);
+            return Result.Fail(e);
         }
     }
 
-    public static async Task<ServiceResult<LocatedServerConfig>> ReadFromFileAsync(string path)
+    public static async Task<Result<LocatedServerConfig>> ReadFromFileAsync(string path)
     {
         try
         {
@@ -72,7 +72,7 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         }
         catch (Exception e)
         {
-            return ServiceResult.Fail<LocatedServerConfig>(e);
+            return Result.Fail<LocatedServerConfig>(e);
         }
     }
 }

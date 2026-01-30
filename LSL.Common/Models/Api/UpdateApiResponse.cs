@@ -13,13 +13,13 @@ public class UpdateApiResponse
     public string ZipballUrl { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
 
-    public ServiceResult<bool> IsNewerVersion(string oldVersionTag)
+    public Result<bool> IsNewerVersion(string oldVersionTag)
     {
         if (string.IsNullOrWhiteSpace(TagName))
-            return ServiceResult.Fail<bool>(new ArgumentException("TagName is empty"));
+            return Result.Fail<bool>(new ArgumentException("TagName is empty"));
     
         if (string.IsNullOrWhiteSpace(oldVersionTag))
-            return ServiceResult.Fail<bool>(new ArgumentException("oldVersionTag is empty", nameof(oldVersionTag)));
+            return Result.Fail<bool>(new ArgumentException("oldVersionTag is empty", nameof(oldVersionTag)));
     
         try
         {
@@ -29,17 +29,17 @@ public class UpdateApiResponse
         
             // 解析版本
             if (!Version.TryParse(newVerStr, out var newVersion))
-                return ServiceResult.Fail<bool>(new ArgumentException("TagName is of invalid format"));
+                return Result.Fail<bool>(new ArgumentException("TagName is of invalid format"));
         
             if (!Version.TryParse(oldVerStr, out var oldVersion))
-                return ServiceResult.Fail<bool>(new ArgumentException("oldVersionTag is of invalid format", nameof(oldVersionTag)));
+                return Result.Fail<bool>(new ArgumentException("oldVersionTag is of invalid format", nameof(oldVersionTag)));
         
             // 比较版本
-            return ServiceResult.Success(newVersion > oldVersion);
+            return Result.Success(newVersion > oldVersion);
         }
         catch (Exception ex)
         {
-            return ServiceResult.Fail<bool>(new Exception("An error occured when comparing versions", ex));
+            return Result.Fail<bool>(new Exception("An error occured when comparing versions", ex));
         }
     }
 

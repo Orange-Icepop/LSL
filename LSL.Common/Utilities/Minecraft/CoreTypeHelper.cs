@@ -11,19 +11,19 @@ namespace LSL.Common.Utilities.Minecraft;
 /// </summary>
 public static class CoreTypeHelper
 {
-    public static async Task<ServiceResult<ServerCoreType>> GetCoreType(string? filePath)
+    public static async Task<Result<ServerCoreType>> GetCoreType(string? filePath)
     {
-        if (string.IsNullOrEmpty(filePath)) return ServiceResult.Fail<ServerCoreType>(new ArgumentNullException(nameof(filePath)));
-        if (!File.Exists(filePath)) return ServiceResult.Fail<ServerCoreType>(new FileNotFoundException($"Cannot find core file {filePath}"));
+        if (string.IsNullOrEmpty(filePath)) return Result.Fail<ServerCoreType>(new ArgumentNullException(nameof(filePath)));
+        if (!File.Exists(filePath)) return Result.Fail<ServerCoreType>(new FileNotFoundException($"Cannot find core file {filePath}"));
 
         var jarMainClassResult = await GetMainClass(filePath).ConfigureAwait(false);
         return jarMainClassResult.IsError
-            ? ServiceResult.Fail<ServerCoreType>(jarMainClassResult.Error)
-            : ServiceResult.Success(s_coreTypeMap.GetValueOrDefault(jarMainClassResult.Value, ServerCoreType.Unknown));
+            ? Result.Fail<ServerCoreType>(jarMainClassResult.Error)
+            : Result.Success(s_coreTypeMap.GetValueOrDefault(jarMainClassResult.Value, ServerCoreType.Unknown));
     }
 
     // the following code is taken and modified from https://github.com/Orange-Icepop/JavaMainClassFinder
-    private static async Task<ServiceResult<string>> GetMainClass(string jarFilePath)
+    private static async Task<Result<string>> GetMainClass(string jarFilePath)
     {
         try
         {
@@ -31,26 +31,26 @@ public static class CoreTypeHelper
                 bufferSize: 81920, useAsync: true);
             using var zipFile = new ZipFile(stream);
             var entry = zipFile.GetEntry("META-INF/MANIFEST.MF");
-            if (entry is null || entry.IsDirectory) return ServiceResult.Fail<string>("MANIFEST.MF not found");
+            if (entry is null || entry.IsDirectory) return Result.Fail<string>("MANIFEST.MF not found");
             await using var fStream = zipFile.GetInputStream(entry);
-            if (fStream is null) return ServiceResult.Fail<string>("Unable to read MANIFEST.MF");
+            if (fStream is null) return Result.Fail<string>("Unable to read MANIFEST.MF");
             using var reader = new StreamReader(fStream, Encoding.UTF8);
             var mc = await FindMainClassLine(reader);
             return mc is null
-                ? ServiceResult.Fail<string>("Cannot find Main-Class property in MANIFEST.MF")
-                : ServiceResult.Success(mc);
+                ? Result.Fail<string>("Cannot find Main-Class property in MANIFEST.MF")
+                : Result.Success(mc);
         }
         catch (UnauthorizedAccessException ex)
         {
-            return ServiceResult.Fail<string>("Access denied: " + ex.Message);
+            return Result.Fail<string>("Access denied: " + ex.Message);
         }
         catch (IOException ex)
         {
-            return ServiceResult.Fail<string>("Error reading file: " + ex.Message);
+            return Result.Fail<string>("Error reading file: " + ex.Message);
         }
         catch (Exception ex)
         {
-            return ServiceResult.Fail<string>("Error reading jar file: " + ex.Message);
+            return Result.Fail<string>("Error reading jar file: " + ex.Message);
         }
     }
 

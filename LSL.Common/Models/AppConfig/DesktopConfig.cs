@@ -26,7 +26,7 @@ public class DesktopConfig : IConfig<DesktopConfig>
     public bool BetaUpdate { get; set; } = false;
     [IgnoreDataMember] public static string ConfigFileName => "DesktopConfig.toml";
 
-    public ServiceResult Validate()
+    public Result Validate()
     {
         List<string> errors = [];
         if (!ThemeColor.IsValidRgbHex())
@@ -44,15 +44,15 @@ public class DesktopConfig : IConfig<DesktopConfig>
             errors.Add("Background opacity is invalid");
             BackgroundOpacity = 1.0;
         }
-        return errors.Count != 0 ? ServiceResult.Fail(new StringBuilder().AppendJoin('\n', errors).ToString()) : ServiceResult.Success();
+        return errors.Count != 0 ? Result.Fail(new StringBuilder().AppendJoin('\n', errors).ToString()) : Result.Success();
     }
 
-    public static ServiceResult<DesktopConfig> Deserialize(string content)
+    public static Result<DesktopConfig> Deserialize(string content)
     {
         if (!Toml.TryToModel<DesktopConfig>(content, out var result, out var error))
-            return ServiceResult.Fail<DesktopConfig>($"The desktop config is not parsable:\n{error}");
+            return Result.Fail<DesktopConfig>($"The desktop config is not parsable:\n{error}");
         var validationResult = result.Validate();
-        return validationResult.IsSuccess ? ServiceResult.Success(result) : ServiceResult.Warning(result, validationResult.Error);
+        return validationResult.IsSuccess ? Result.Success(result) : Result.Warning(result, validationResult.Error);
     }
 
 }
