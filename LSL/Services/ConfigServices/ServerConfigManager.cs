@@ -95,7 +95,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                     if (!_serverConfigs.TryAdd(id, config.AsIndexed(id)))
                         return Result.Fail<Dictionary<int, IndexedServerConfig>>(
                             "Unable to add new server config to index server config");
-                    (await WriteServerConfigs()).Unwrap();
+                    (await WriteServerConfigs()).GetValueOrThrow();
                     return Result.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
                         kvp => new IndexedServerConfig(kvp.Value)));
                 }
@@ -117,7 +117,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                         return Result.Fail<Dictionary<int, IndexedServerConfig>>(
                             new KeyNotFoundException("Index server config doesn't contain the selected server id"));
                     _serverConfigs[config.ServerId] = config;
-                    (await WriteServerConfigs()).Unwrap();
+                    await WriteServerConfigs().AsGeneric().GetValueOrThrow();
                     return Result.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
                         kvp => new IndexedServerConfig(kvp.Value)));
                 }
@@ -135,7 +135,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 try
                 {
                     _serverConfigs.Remove(id, out _);
-                    (await WriteServerConfigs()).Unwrap();
+                    (await WriteServerConfigs()).GetValueOrThrow();
                     return Result.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
                         kvp => new IndexedServerConfig(kvp.Value)));
                 }
@@ -148,7 +148,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
         #endregion
 
-        #region 读取各个服务器的LSL配置文件
+        #region 读取LSL Server配置文件
 
         public async Task<ServerConfigList> ReadServerConfig()
         {
@@ -322,7 +322,8 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         {
             if (_indexManager.TryGetServerConfig(config.ServerId, out var serverConfig) && serverConfig.ServerPath == config.ServerPath)
             {
-                (await config.LocatedConfig.ToLatestConfig().BindAsync(c => c.WriteToFileAsync(config.ServerPath))).Unwrap(); // 写入服务器文件夹内的配置文件
+                await config.LocatedConfig.ToLatestConfig().BindAsync(c => c.WriteToFileAsync(config.ServerPath))
+                    .AsGeneric().GetValueOrThrow(); // 写入服务器文件夹内的配置文件
                 var result = await _indexManager.ModifyServerInIndex(config);
                 logger.LogInformation("Server Edited:{id}", config.ServerId);
                 return result.Bind(Result.Success<IDictionary<int, IndexedServerConfig>>);

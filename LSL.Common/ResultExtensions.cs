@@ -171,17 +171,17 @@ public static class ResultExtensions
 
     #endregion
 
-    #region Unwrap
+    #region GetValueOrThrow
 
-    public static Result<T> Unwrap<T>(this Result<T> result, bool ignoreWarning = true)
+    public static T GetValueOrThrow<T>(this Result<T> result, bool ignoreWarning = true)
     {
         if (result.IsFailed || result.IsWarning && !ignoreWarning) throw result.Error;
-        return result;
+        return result.Value;
     }
 
-    public static async Task<Result<T>> Unwrap<T>(this Task<Result<T>> result, bool ignoreWarning = true)
+    public static async Task<T> GetValueOrThrow<T>(this Task<Result<T>> result, bool ignoreWarning = true)
     {
-        return (await result).Unwrap(ignoreWarning);
+        return (await result).GetValueOrThrow(ignoreWarning);
     }
 
     #endregion
@@ -207,4 +207,9 @@ public static class ResultExtensions
     }
 
     #endregion
+    
+    public static Task<Result<Unit>> AsGeneric(this Task<Result> taskResult)
+    {
+        return taskResult.ContinueWith(Result<Unit> (t) => t.Result);
+    }
 }

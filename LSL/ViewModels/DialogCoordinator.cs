@@ -19,10 +19,8 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
     public Interaction<NotifyArgs, Unit> NotifyInteraction { get; } = new();
     public Interaction<FilePickerType, string> FilePickerInteraction { get; } = new();
 
-    public IObservable<PopupResult> ThrowError(string title, string message)
-    {
-        return PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, title, message));
-    }
+    public IObservable<PopupResult> ThrowError(string title, string message) =>
+        PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, title, message));
 
     public Task<Result<T>> SubmitServiceError<T>(Result<T> result, bool suppressWarning = false)
     {
