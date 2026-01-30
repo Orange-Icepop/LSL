@@ -1,9 +1,9 @@
 namespace LSL.Common;
 
-#region Bind
-
-public static class ResultBinder
+public static class ResultExtensions
 {
+    #region Bind
+
     public static Result<TResult> Bind<T, TResult>(
         this Result<T> result,
         Func<T, Result<TResult>> binder)
@@ -93,14 +93,11 @@ public static class ResultBinder
         var result = await taskResult;
         return await result.BindAsync(binder);
     }
-}
 
-#endregion
+    #endregion
 
-#region Map
+    #region Map
 
-public static class ResultMapper
-{
     public static Result<TResult> Map<T, TResult>(
         this Result<T> result,
         Func<T, TResult> mapper)
@@ -134,14 +131,11 @@ public static class ResultMapper
             }
         });
     }
-}
 
-#endregion
+    #endregion
 
-#region Tap
+    #region Tap
 
-public static class ResultTapper
-{
     public static Result<T> Tap<T>(this Result<T> result, Action<T> action, bool acceptWarning = false)
     {
         if (result.IsSuccess || result.IsWarning && acceptWarning)
@@ -174,14 +168,11 @@ public static class ResultTapper
     {
         return await (await result.ConfigureAwait(false)).TapAsync(action, acceptWarning);
     }
-}
 
-#endregion
+    #endregion
 
-#region Unwrap
+    #region Unwrap
 
-public static class ResultUnwrapper
-{
     public static Result<T> Unwrap<T>(this Result<T> result, bool ignoreWarning = true)
     {
         if (result.IsFailed || result.IsWarning && !ignoreWarning) throw result.Error;
@@ -192,15 +183,12 @@ public static class ResultUnwrapper
     {
         return (await result).Unwrap(ignoreWarning);
     }
-}
 
-#endregion
+    #endregion
 
-#region Handle
+    #region Match
 
-public static class ResultHandle
-{
-    public static Result<T> Handle<T>(this Result<T> result, Action<T>? onSuccess, Action<T, Exception>? onWarning,
+    public static Result<T> Match<T>(this Result<T> result, Action<T>? onSuccess, Action<T, Exception>? onWarning,
         Action<Exception>? onFailure)
     {
         if (result.IsSuccess) onSuccess?.Invoke(result.Value);
@@ -217,6 +205,6 @@ public static class ResultHandle
         else if (result.IsFailed && onFailure is not null) await onFailure(result.Error);
         return result;
     }
-}
 
-#endregion
+    #endregion
+}
