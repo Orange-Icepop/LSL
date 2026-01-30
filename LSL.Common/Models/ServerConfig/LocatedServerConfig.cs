@@ -107,7 +107,7 @@ public class LocatedServerConfig
                         var detectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
                         if (detectResult.IsError)
                             return ServiceResult.Fail<LocatedServerConfig>("Cannot get the correct core info of the forge server");
-                        ForgeCoreInfo = detectResult.Result;
+                        ForgeCoreInfo = detectResult.Value;
                     }
 
                     break;
@@ -116,7 +116,7 @@ public class LocatedServerConfig
                 {
                     var detectResult = await CoreTypeHelper.GetCoreType(CommonCoreInfo.JarName);
                     if (detectResult.IsError) return ServiceResult.Fail<LocatedServerConfig>("Cannot get the core type");
-                    ServerType = detectResult.Result;
+                    ServerType = detectResult.Value;
                     continue;
                 }
                 case ServerCoreType.Error when ForgeCoreInfo is not null &&

@@ -6,7 +6,7 @@ public record ServerConfigList : ServiceResult<IDictionary<int, IndexedServerCon
 {
     private ServerConfigList(
         IDictionary<int, IndexedServerConfig>? configs, 
-        ServiceResultType resultType = ServiceResultType.Success, 
+        ResultType resultType = ResultType.Success, 
         Exception? error = null, 
         string? errors = null, 
         string? warnings = null)
@@ -24,11 +24,11 @@ public record ServerConfigList : ServiceResult<IDictionary<int, IndexedServerCon
         => new(configs);
     
     public static ServerConfigList Fail(Exception error) 
-        => new(null, ServiceResultType.Error, error);
+        => new(null, ResultType.Error, error);
     
     public static ServerConfigList PartialError(
         IDictionary<int, IndexedServerConfig> configs, 
         string errors, 
         string warnings) 
-        => new(configs, ServiceResultType.Warning, null, errors, warnings);
+        => new(configs, ResultType.Warning, null, errors, warnings);
 }

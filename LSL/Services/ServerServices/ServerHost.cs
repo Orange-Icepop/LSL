@@ -78,7 +78,7 @@ public class ServerHost : IServerHost, IDisposable
             _logger.LogError("Server with id {id} failed to run: {error}.", serverId, processResult.Error.Message);
             return false;
         }
-        var process = processResult.Result;
+        var process = processResult.Value;
         process.StatusEventHandler += (_, args) => EventBus.Instance.Fire<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
         // 启动服务器
         try

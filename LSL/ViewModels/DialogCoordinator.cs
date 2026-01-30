@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using LSL.Common;
 using LSL.Common.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -39,10 +40,10 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
         if (result.Error is not null) fin = result.Error.ToString();
         else return;
 
-        var level = result.ResultType switch
+        var level = result.Kind switch
         {
-            ServiceResultType.Error => PopupType.ErrorConfirm,
-            ServiceResultType.Warning => PopupType.WarningConfirm,
+            ResultType.Error => PopupType.ErrorConfirm,
+            ResultType.Warning => PopupType.WarningConfirm,
             _ => PopupType.ErrorConfirm
         };
         await PopupInteraction.Handle(new InvokePopupArgs(level, "服务错误", fin));
@@ -83,7 +84,7 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
                 ? () => Task.CompletedTask
                 : taskFactoryIfHasError);
             IsSuccess = !result.IsError;
-            Result = result.Result;
+            Result = result.Value;
         }
 
         private Task Task => _lazyTask.Value;

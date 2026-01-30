@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using LSL.Common;
 using LSL.Common.Collections;
 using LSL.Common.DTOs;
 using LSL.Common.Models;
@@ -78,20 +79,20 @@ public class ServiceConnector
             var res = await _configManager.ReadJavaConfig();
             if (!res.HasResult) return ServiceResult.Fail<int>(res.Error);
 
-            if (res.Result.NotFound.Any() || res.Result.NotJava.Any())
+            if (res.Value.NotFound.Any() || res.Value.NotJava.Any())
             {
                 var error = new StringBuilder("在读取已保存的Java列表时出现了一些非致命错误:");
                 error.AppendLine();
-                if (res.Result.NotFound.Any())
+                if (res.Value.NotFound.Any())
                 {
                     error.AppendLine("以下Java不存在或无法被访问:");
-                    error.AppendJoin('\n', res.Result.NotFound);
+                    error.AppendJoin('\n', res.Value.NotFound);
                 }
 
-                if (res.Result.NotJava.Any())
+                if (res.Value.NotJava.Any())
                 {
                     error.AppendLine("以下文件不是Java:");
-                    error.AppendJoin('\n', res.Result.NotJava);
+                    error.AppendJoin('\n', res.Value.NotJava);
                 }
 
                 error.AppendLine();
@@ -390,7 +391,7 @@ public class ServiceConnector
         if (skipCorePathCheck) return ServiceResult.Success(); // 不检查核心，直接返回
         var coreResult = await CoreTypeHelper.GetCoreType(config.CorePath);
         if (coreResult.IsError) return ServiceResult.Fail(coreResult.Error);
-        return coreResult.Result switch
+        return coreResult.Value switch
         {
             ServerCoreType.ForgeInstaller => ServiceResult.Fail(
                 "您选择的文件是一个Forge安装器，而不是一个Minecraft服务端核心文件。LSL暂不支持Forge服务器的添加与启动。"),
@@ -521,19 +522,19 @@ public class ServiceConnector
             return;
         }
 
-        var isGreater = result.Result.IsNewerVersion(DesktopConstant.Version);
+        var isGreater = result.Value.IsNewerVersion(DesktopConstant.Version);
         if (!isGreater.IsSuccess)
         {
             await _appState.Coordinator.ThrowError("检查更新时出错", "无法比较当前软件版本与远程软件版本的大小差异。这是一个开发错误，请向作者反馈。");
             return;
         }
 
-        if (isGreater.Result)
+        if (isGreater.Value)
         {
             var confirm = await _appState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
                 PopupType.InfoYesNo,
-                "LSL 版本更新", $"LSL 有新版本 {result.Result.TagName} 已经发布。\n{result.Result.FormatBody().Body}\n是否前往更新？"));
-            if (confirm == PopupResult.Yes) await _appState.Commands.OpenWebPage(result.Result.HtmlUrl);
+                "LSL 版本更新", $"LSL 有新版本 {result.Value.TagName} 已经发布。\n{result.Value.FormatBody().Body}\n是否前往更新？"));
+            if (confirm == PopupResult.Yes) await _appState.Commands.OpenWebPage(result.Value.HtmlUrl);
         }
         else
         {

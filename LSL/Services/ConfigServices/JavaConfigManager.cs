@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using LSL.Common;
 using LSL.Common.Models;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Options;
@@ -45,7 +46,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
         if (res.IsWarning) logger.LogWarning("Some javas are invalid when reading java config:{error}", res.Error.ToString());
         if (writeBack)
         {
-            await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, JsonSerializer.Serialize(res.Result, SnakeJsonOptions.Default.DictionaryInt32JavaInfo));
+            await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, JsonSerializer.Serialize(res.Value, SnakeJsonOptions.Default.DictionaryInt32JavaInfo));
         }
         logger.LogInformation("Read Java config completed.");
         return res;

@@ -19,7 +19,7 @@ public static class CoreTypeHelper
         var jarMainClassResult = await GetMainClass(filePath).ConfigureAwait(false);
         return jarMainClassResult.IsError
             ? ServiceResult.Fail<ServerCoreType>(jarMainClassResult.Error)
-            : ServiceResult.Success(s_coreTypeMap.GetValueOrDefault(jarMainClassResult.Result, ServerCoreType.Unknown));
+            : ServiceResult.Success(s_coreTypeMap.GetValueOrDefault(jarMainClassResult.Value, ServerCoreType.Unknown));
     }
 
     // the following code is taken and modified from https://github.com/Orange-Icepop/JavaMainClassFinder

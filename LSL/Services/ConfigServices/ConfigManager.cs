@@ -3,6 +3,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using LSL.Common;
 using LSL.Common.Models;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
@@ -42,7 +43,7 @@ public class ConfigManager(
         {
             await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, "{}");
             var mainRes = await MainConfigManager.InitAsync();
-            if (mainRes.ResultType == ServiceResultType.Error) return mainRes;
+            if (mainRes.Kind == ResultType.Error) return mainRes;
             logger.LogInformation("Config.json initialized.");
         }
 

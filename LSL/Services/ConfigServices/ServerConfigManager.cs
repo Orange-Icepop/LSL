@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using LSL.Common;
 using LSL.Common.Models;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
@@ -157,12 +158,12 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 var indexRes = await GetIndexConfigAsync();
                 if (indexRes.IsError) return ServerConfigList.Fail(indexRes.Error);
                 // 读取单个服务器配置文件
-                var detailRes = await GetServerDetailsAsync(indexRes.Result);
+                var detailRes = await GetServerDetailsAsync(indexRes.Value);
                 if (!detailRes.HasResult) return ServerConfigList.Fail(detailRes.Error);
                 // 写入当前字典
                 using (await _syncLock.WriterLockAsync())
                 {
-                    _serverConfigs = detailRes.Result.ToDictionary();
+                    _serverConfigs = detailRes.Value.ToDictionary();
                 }
 
                 return detailRes;
@@ -247,9 +248,9 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 else if (result.IsWarning)
                 {
                     warnings.Add($"{pair.Value}: {result.Error.Message}");
-                    scCache.TryAdd(pair.Key, result.Result);
+                    scCache.TryAdd(pair.Key, result.Value);
                 }
-                else scCache.TryAdd(pair.Key, result.Result);
+                else scCache.TryAdd(pair.Key, result.Value);
             });
 
             if (!errors.IsEmpty || !warnings.IsEmpty)
@@ -420,7 +421,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 }
                 else
                 {
-                    config.ForgeCoreInfo = findResult.Result;
+                    config.ForgeCoreInfo = findResult.Value;
                     config.ServerType = ServerCoreType.Forge;
                 }
             }
