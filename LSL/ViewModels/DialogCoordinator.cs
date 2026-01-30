@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LSL.Common.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using Unit = System.Reactive.Unit;
 
 namespace LSL.ViewModels;
 
@@ -32,7 +33,7 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
         return ServiceResultCommitWrapper.Commit(() => ShowServiceError(result), result);
     }
 
-    private async Task ShowServiceError(IServiceResult result)
+    private async Task ShowServiceError<T>(ServiceResult<T> result)
     {
         string fin;
         if (result.Error is not null) fin = result.Error.ToString();

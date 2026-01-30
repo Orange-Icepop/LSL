@@ -1,8 +1,9 @@
 namespace LSL.Common.Models;
 
+#region Bind
 public static class ServiceResultBinder
 {
-    #region Synchronous
+
 
     public static ServiceResult<TResult> Bind<T, TResult>(
         this ServiceResult<T> result,
@@ -40,10 +41,6 @@ public static class ServiceResultBinder
 
         return binder(result.Result!);
     }
-
-    #endregion
-    
-    #region Asynchronous
 
     public static async Task<ServiceResult<TResult>> BindAsync<T, TResult>(
         this ServiceResult<T> result,
@@ -98,5 +95,77 @@ public static class ServiceResultBinder
         return await result.BindAsync(binder);
     }
 
-    #endregion
 }
+#endregion
+
+#region Map
+public static class ServiceResultMap
+{
+    public static ServiceResult<TResult> Map<T, TResult>(
+        this ServiceResult<T> result,
+        Func<T, TResult> mapper)
+    {
+        return result.Bind(x =>
+        {
+            try
+            {
+                return ServiceResult.Success(mapper(x));
+            }
+            catch (Exception e)
+            {
+                return ServiceResult.Fail<TResult>(e);
+            }
+        });
+    }
+    public static Task<ServiceResult<TResult>> MapAsync<T, TResult>(
+        this ServiceResult<T> result,
+        Func<T, Task<TResult>> mapper)
+    {
+        return result.BindAsync(async x =>
+        {
+            try
+            {
+                return ServiceResult.Success(await mapper(x));
+            }
+            catch (Exception e)
+            {
+                return ServiceResult.Fail<TResult>(e);
+            }
+        });
+    }
+}
+#endregion
+
+#region Tap
+public static class ServiceResultTap
+{
+    public static ServiceResult<T> Tap<T>(this ServiceResult<T> result, Action<T> action, bool acceptWarning = false)
+    {
+        if (result.IsSuccess || result.IsWarning && acceptWarning)
+        {
+            action(result.Result);
+        }
+
+        return result;
+    }
+
+    public static async Task<ServiceResult<T>> Tap<T>(this Task<ServiceResult<T>> result, Action<T> action,
+        bool acceptWarning = false)
+    {
+        return (await result.ConfigureAwait(false)).Tap(action, acceptWarning);
+    }
+    public static async Task<ServiceResult<T>> TapAsync<T>(this ServiceResult<T> result, Func<T, Task> action, bool acceptWarning = false)
+    {
+        if (result.IsSuccess || result.IsWarning && acceptWarning)
+        {
+            await action(result.Result);
+        }
+
+        return result;
+    }
+    public static async Task<ServiceResult<T>> TapAsync<T>(this Task<ServiceResult<T>> result, Func<T, Task> action, bool acceptWarning = false)
+    {
+        return await (await result.ConfigureAwait(false)).TapAsync(action, acceptWarning);
+    }
+}
+#endregion

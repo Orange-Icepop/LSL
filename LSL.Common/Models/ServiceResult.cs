@@ -2,22 +2,21 @@
 
 namespace LSL.Common.Models;
 
-public interface IServiceResult
+// 表示无返回值的单位类型
+public readonly record struct Unit
 {
-    ServiceResultType ResultType { get; }
-    Exception? Error { get; }
-    
-    [MemberNotNullWhen(false, nameof(Error))]
-    bool IsSuccess => ResultType == ServiceResultType.Success;
-    [MemberNotNullWhen(true, nameof(Error))]
-    bool IsWarning => ResultType == ServiceResultType.Warning;
-    [MemberNotNullWhen(true, nameof(Error))]
-    bool IsError => ResultType == ServiceResultType.Error;
-    [MemberNotNullWhen(true, nameof(Error))]
-    bool HasError => ResultType != ServiceResultType.Success;
+    public static readonly Unit Value = default;
+    public override string ToString() => "()";
 }
 
-public record ServiceResult<T> : IServiceResult
+public enum ServiceResultType
+{
+    Success,
+    Warning,
+    Error,
+}
+
+public record ServiceResult<T>
 {
     public T? Result { get; }
     public ServiceResultType ResultType { get; }
@@ -46,28 +45,15 @@ public record ServiceResult<T> : IServiceResult
         Result = result;
         Error = error;
     }
+    public void Unwrap()
+    {
+        if (HasError) throw Error;
+    }
 }
 
-public record ServiceResult : IServiceResult
+public record ServiceResult : ServiceResult<Unit>
 {
-    private ServiceResult(ServiceResultType ResultType, Exception? Error)
-    {
-        this.ResultType = ResultType;
-        this.Error = Error;
-    }
-
-    [MemberNotNullWhen(false, nameof(Error))]
-    public bool IsSuccess => ResultType == ServiceResultType.Success;
-    [MemberNotNullWhen(true, nameof(Error))]
-    public bool IsWarning => ResultType == ServiceResultType.Warning;
-    [MemberNotNullWhen(true, nameof(Error))]
-    public bool IsError => ResultType == ServiceResultType.Error;
-    [MemberNotNullWhen(true, nameof(Error))]
-    public bool HasError => ResultType != ServiceResultType.Success;
-
-    public ServiceResultType ResultType { get; init; }
-    public Exception? Error { get; init; }
-
+    private ServiceResult(ServiceResultType ResultType, Exception? Error) : base(ResultType, Unit.Value, Error){}
 
     public static ServiceResult Success() => new (ServiceResultType.Success, null);
     public static ServiceResult Fail(Exception error) => new(ServiceResultType.Error, error);
@@ -82,15 +68,4 @@ public record ServiceResult : IServiceResult
     public static ServiceResult<T> Warning<T>(T result, Exception error) => new(ServiceResultType.Warning, result, error);
     public static ServiceResult<T> Warning<T>(T result, string error) => new(ServiceResultType.Warning, result,
         new Exception(error));
-    public void Unwrap()
-    {
-        if (HasError) throw Error;
-    }
-}
-
-public enum ServiceResultType
-{
-    Success,
-    Warning,
-    Error,
 }
