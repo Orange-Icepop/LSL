@@ -179,9 +179,10 @@ public static class ResultExtensions
     }
 
     #endregion
-    
-    public static Task<Result<Unit>> AsGeneric(this Task<Result> taskResult)
-    {
-        return taskResult.ContinueWith(Result<Unit> (t) => t.Result);
-    }
+
+    public static Task<Result<Unit>> AsGeneric(this Task<Result> taskResult) =>
+        taskResult.ContinueWith(Result<Unit> (t) => t.Result);
+    public static Result AsSimple(this Result<Unit> result) => new(result);
+
+    public static async Task<Result> AsSimple(this Task<Result<Unit>> taskResult) => new(await taskResult);
 }

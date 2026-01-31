@@ -275,6 +275,9 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     private readonly ServerConfigIndexManager _indexManager = new();
 
+    public bool TryGetServerConfig(int serverId, [MaybeNullWhen(false)] out IndexedServerConfig serverConfig) =>
+        _indexManager.TryGetServerConfig(serverId, out serverConfig);
+
     #region 注册服务器方法RegisterServer
 
     private async Task<Result<IDictionary<int, IndexedServerConfig>>> RegisterServer(

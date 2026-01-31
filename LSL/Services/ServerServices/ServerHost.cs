@@ -66,7 +66,7 @@ public class ServerHost : IServerHost, IDisposable
             _logger.LogError("Server with id {id} is already running. Not running another instance.", serverId);
             return false;
         }
-        if (!_serverConfigManager.ServerConfigs.TryGetValue(serverId, out var config)) 
+        if (!_serverConfigManager.TryGetServerConfig(serverId, out var config)) 
         {
             _logger.LogError("Server with id {id} not found in configuration. That's weird! It should have been checked!", serverId);
             return false; 
@@ -79,7 +79,7 @@ public class ServerHost : IServerHost, IDisposable
             return false;
         }
         var process = processResult.Value;
-        process.StatusEventHandler += (_, args) => EventBus.Instance.Fire<IStorageArgs>(new ServerStatusArgs(serverId, args.Item1, args.Item2));
+        process.StatusEventHandler += (_, args) => EventBus.Instance.Fire<IStorageArgs>(new ServerStatusArgs(serverId, args.IsRunning, args.IsOnline));
         // 启动服务器
         try
         {
@@ -131,7 +131,7 @@ public class ServerHost : IServerHost, IDisposable
         };
         process.StatusEventHandler += (_, e) =>
         {
-            if (e.Item2)
+            if (e.IsOnline)
             {
                 _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动成功!", OutputChannelType.LSLInfo));
                 _logger.LogInformation("Server with id {id} is online now.", serverId);

@@ -50,6 +50,7 @@ public record Result<T>
 public record Result : Result<Unit>
 {
     private Result(ResultType kind, Exception? Error) : base(kind, Unit.Value, Error){}
+    internal Result(Result<Unit> result) : base(result.Kind, result.Value, result.Error){}
 
     public static Result Success() => new (ResultType.Success, null);
     public static Result Fail(Exception error) => new(ResultType.Error, error);
