@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 using LSL.Common;
-using LSL.Common.Models;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Options;
@@ -90,12 +86,15 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             using (await _syncLock.WriterLockAsync())
             {
                 var id = _serverConfigs.Keys.Max() + 1;
+                if (_serverConfigs.Values.Select(x => x.ServerPath).Contains(config.ServerPath))
+                    return Result.Fail<Dictionary<int, IndexedServerConfig>>(
+                        new DuplicateNameException("The server path to add already exists in server index"));
                 try
                 {
                     if (!_serverConfigs.TryAdd(id, config.AsIndexed(id)))
                         return Result.Fail<Dictionary<int, IndexedServerConfig>>(
                             "Unable to add new server config to index server config");
-                    (await WriteServerConfigs()).GetValueOrThrow();
+                    await WriteServerConfigs().AsGeneric().GetValueOrThrow();
                     return Result.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
                         kvp => new IndexedServerConfig(kvp.Value)));
                 }
@@ -288,7 +287,8 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 await File.WriteAllTextAsync(ConfigPathProvider.ServerConfigPath, "{}");
             }
 
-            var writeResult = await config.ToLatestConfig().BindAsync(conf => conf.WriteToFileAsync(config.ServerPath));
+            var writeResult = await config.ToLatestConfig()
+                .BindAsync(conf => conf.WriteToFileAsync(config.ServerPath).AsGeneric());
             if (writeResult.IsFailed)
                 return Result.Fail<IDictionary<int, IndexedServerConfig>>(writeResult.Error);
             // 创建Eula文件
@@ -316,28 +316,34 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 修改服务器方法EditServer
 
-    public async Task<Result<IDictionary<int,IndexedServerConfig>>> EditServer(IndexedServerConfig config)
+    public async Task<Result<IDictionary<int, IndexedServerConfig>>> EditServer(IndexedServerConfig config)
     {
         try
         {
-            if (_indexManager.TryGetServerConfig(config.ServerId, out var serverConfig) && serverConfig.ServerPath == config.ServerPath)
+            if (_indexManager.TryGetServerConfig(config.ServerId, out var serverConfig) &&
+                serverConfig.ServerPath == config.ServerPath)
             {
-                await config.LocatedConfig.ToLatestConfig().BindAsync(c => c.WriteToFileAsync(config.ServerPath))
-                    .AsGeneric().GetValueOrThrow(); // 写入服务器文件夹内的配置文件
-                var result = await _indexManager.ModifyServerInIndex(config);
-                logger.LogInformation("Server Edited:{id}", config.ServerId);
-                return result.Bind(Result.Success<IDictionary<int, IndexedServerConfig>>);
+                await config.LocatedConfig.ToLatestConfig()
+                    .BindAsync(c => c.WriteToFileAsync(config.ServerPath).AsGeneric())
+                    .GetValueOrThrow(); // 写入服务器文件夹内的配置文件
+                return await _indexManager.ModifyServerInIndex(config)
+                    .Match(
+                        _ => logger.LogInformation("Server{id} \"{name}\" edited", config.ServerId, config.ServerName),
+                        null,
+                        ex => logger.LogWarning(ex, "Error editing server \"{serverName}\"", serverConfig.ServerName))
+                    .Bind(Result.Success<IDictionary<int, IndexedServerConfig>>);
             }
             else
             {
                 logger.LogError("Match Server Not Found:{id}", config.ServerId);
-                return Result.Fail<IDictionary<int,IndexedServerConfig>>(new KeyNotFoundException($"未找到匹配的服务器{config.ServerId}：{config.ServerName}"));
+                return Result.Fail<IDictionary<int, IndexedServerConfig>>(
+                    new KeyNotFoundException($"未找到匹配的服务器{config.ServerId}：{config.ServerName}"));
             }
         }
         catch (Exception e)
         {
             logger.LogError(e, "Server {ServerId} failed to edit.", config.ServerId);
-            return Result.Fail<IDictionary<int,IndexedServerConfig>>(e);
+            return Result.Fail<IDictionary<int, IndexedServerConfig>>(e);
         }
     }
 
@@ -345,27 +351,34 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 删除服务器方法DeleteServer
 
-    public async Task<Result<IDictionary<int,IndexedServerConfig>>> DeleteServer(int serverId)
+    public async Task<Result<IDictionary<int, IndexedServerConfig>>> DeleteServer(int serverId)
     {
         if (!_indexManager.TryGetServerConfig(serverId, out var config))
         {
             logger.LogError("Server Not Found in Dictionary:{id}", serverId);
-            return Result.Fail<IDictionary<int,IndexedServerConfig>>(new KeyNotFoundException($"在LSL配置文件中未找到id为{serverId}的服务器。"));
+            return Result.Fail<IDictionary<int, IndexedServerConfig>>(
+                new KeyNotFoundException($"在LSL配置文件中未找到id为{serverId}的服务器。"));
         }
 
         var serverPath = config.ServerPath;
 
         try
         {
-            var result = await _indexManager.DeleteServerFromIndex(serverId); // 在服务器列表文件中删除服务器
-            await DirectoryExtensions.DeleteDirectoryAsync(serverPath); // 删除服务器文件夹
-            logger.LogInformation("Server deleted:{id}", serverId);
-            return result.Bind(Result.Success<IDictionary<int,IndexedServerConfig>>);
+            return await _indexManager.DeleteServerFromIndex(serverId).MatchAsync( // 在服务器列表文件中删除服务器
+                async _ =>
+                {
+                    await DirectoryExtensions.DeleteDirectoryAsync(serverPath); // 删除服务器文件夹
+                    logger.LogInformation("Server deleted:{id}", serverId);
+                }, null, ex =>
+                {
+                    logger.LogError(ex, "Server {ServerId} could not be deleted", serverId);
+                    return Task.CompletedTask;
+                }).Bind(Result.Success<IDictionary<int, IndexedServerConfig>>);
         }
         catch (Exception e)
         {
             logger.LogError(e, "Server {ServerId} could not be deleted", serverId);
-            return Result.Fail<IDictionary<int,IndexedServerConfig>>(e);
+            return Result.Fail<IDictionary<int, IndexedServerConfig>>(e);
         }
     }
 
@@ -373,7 +386,8 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #region 添加裸核服务器方法AddServerUsingCore
 
-    public async Task<Result<IDictionary<int,IndexedServerConfig>>> AddServerUsingCore(LocatedServerConfig config, string corePath,
+    public async Task<Result<IDictionary<int, IndexedServerConfig>>> AddServerUsingCore(LocatedServerConfig config,
+        string corePath,
         bool installForge = false, IProgress<string>? progress = null)
     {
         config.ServerPath = Path.Combine(ConfigPathProvider.ServersFolder, config.ServerName);
@@ -381,7 +395,9 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         {
             Directory.CreateDirectory(config.ServerPath);
             var coreFile = new FileInfo(corePath);
-            if (!coreFile.Exists) return Result.Fail<IDictionary<int,IndexedServerConfig>>(new FileNotFoundException($"File {corePath} not found"));
+            if (!coreFile.Exists)
+                return Result.Fail<IDictionary<int, IndexedServerConfig>>(
+                    new FileNotFoundException($"File {corePath} not found"));
             progress?.Report("Start copying core file");
             await FileExtensions.CopyFileAsync(corePath, Path.Combine(config.ServerPath, coreFile.Name),
                 FileOverwriteMode.Overwrite);
@@ -395,10 +411,10 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             }
             catch (Exception ex)
             {
-                return Result.Fail<IDictionary<int,IndexedServerConfig>>(ex);
+                return Result.Fail<IDictionary<int, IndexedServerConfig>>(ex);
             }
 
-            return Result.Fail<IDictionary<int,IndexedServerConfig>>(e);
+            return Result.Fail<IDictionary<int, IndexedServerConfig>>(e);
         }
 
         try
@@ -407,7 +423,8 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
             {
                 var installResult = await ForgeInstaller.InstallForge(
                     Path.Combine(config.ServerPath, Path.GetFileName(config.ServerPath)), config.JavaPath, progress);
-                if (installResult.IsFailed) return Result.Fail<IDictionary<int,IndexedServerConfig>>(installResult.Error);
+                if (installResult.IsFailed)
+                    return Result.Fail<IDictionary<int, IndexedServerConfig>>(installResult.Error);
                 var findResult = await ForgeConfigHelper.GetForgeConfig(config.ServerPath);
                 if (findResult.IsFailed)
                 {
@@ -415,7 +432,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                     var enumerations = dirInfo.EnumerateFiles("*universal.jar");
                     var fileInfos = enumerations as FileInfo[] ?? enumerations.ToArray();
                     if (fileInfos.Length > 1)
-                        return Result.Warning<IDictionary<int,IndexedServerConfig>>(_indexManager.CloneServerConfigs(),
+                        return Result.Warning<IDictionary<int, IndexedServerConfig>>(_indexManager.CloneServerConfigs(),
                             "Installation finished, but cannot ensure which is your Forge server jar file. Please re-add the server via \"Add server folder\"."); // TODO:本地化
                     config.CommonCoreInfo = new CommonCoreConfigV1() { JarName = fileInfos.First().Name };
                     config.ServerType = ServerCoreType.OldForge;
@@ -429,81 +446,74 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         }
         catch (Exception e)
         {
-            return Result.Fail<IDictionary<int,IndexedServerConfig>>(e);
+            return Result.Fail<IDictionary<int, IndexedServerConfig>>(e);
         }
 
-        return await RegisterServer(config);
+        return await RegisterServer(config).Match(
+            _ => logger.LogInformation("Server \"{serverName}\" registered at {serverPath}", config.ServerName,
+                config.ServerPath),
+            (_, ex) => logger.LogWarning(ex, "Server \"{serverName}\" registered at {serverPath} with warning",
+                config.ServerName, config.ServerPath),
+            ex => logger.LogError(ex, "Server \"{serverName}\" failed to register", config.ServerName));
     }
 
     #endregion
 
     #region 添加已有服务器方法AddExistedServer
 
-    public async Task<Result> AddExistedServer(LocatedServerConfig config, IProgress<string>? progress = null)
+    public async Task<Result<IDictionary<int, IndexedServerConfig>>> AddExistedServer(LocatedServerConfig config,
+        IProgress<string>? progress = null)
     {
         try
         {
-            if (!File.Exists(ConfigPathProvider.ServerConfigPath))
+            var originalServerDir = new DirectoryInfo(config.ServerPath);
+            if (!originalServerDir.Exists)
             {
-                await File.WriteAllTextAsync(ConfigPathProvider.ServerConfigPath, "{}");
+                return Result.Fail<IDictionary<int, IndexedServerConfig>>(
+                    new DirectoryNotFoundException($"Directory {config.ServerPath} not found"));
             }
 
-            // 连接服务器路径
-            var originalServerDir = Path.GetDirectoryName(corePath);
-            if (originalServerDir is null)
-                return Result.Fail(new ArgumentException("Cannot get the root folder of the server",
-                    nameof(corePath)));
-            string addedServerPath = Path.Combine(ConfigPathProvider.ServersFolder, serverName);
-            string addedConfigPath = Path.Combine(addedServerPath, "lslconfig.json");
-            string coreName = Path.GetFileName(corePath);
-            Directory.CreateDirectory(addedServerPath);
-            if (Directory.GetParent(originalServerDir)?.FullName !=
-                Path.GetFullPath(ConfigPathProvider.ServerConfigPath))
+            var registerServerPath = Path.Combine(ConfigPathProvider.ServersFolder, config.ServerName);
+
+            if (originalServerDir.Parent!.FullName != ConfigPathProvider.ServersFolder)
             {
-                await DirectoryExtensions.CopyDirectoryAsync(originalServerDir, addedServerPath, true, true,
+                await DirectoryExtensions.CopyDirectoryAsync(originalServerDir.FullName, registerServerPath, true, true,
                     DirectoryCopyMode.CopyContentsOnly, FileOverwriteMode.Overwrite,
-                    fileInProgress: progress); // 复制原文件到新服务器文件夹内
+                    fileInProgress: progress); // 复制原服务器文件到新服务器文件夹内
             }
 
-            // 初始化服务器配置文件
-            var initialConfig = new
-            {
-                name = serverName,
-                using_java = usingJava,
-                core_name = coreName,
-                min_memory = minMem,
-                max_memory = maxMem,
-                ext_jvm = extJvm
-            };
-            string serializedConfig = JsonConvert.SerializeObject(initialConfig, Formatting.Indented);
-            await File.WriteAllTextAsync(addedConfigPath, serializedConfig); // 写入服务器文件夹内的配置文件
             // 创建Eula文件
-            if (!File.Exists(Path.Combine(addedServerPath, "eula.txt")))
+            if (!File.Exists(Path.Combine(registerServerPath, "eula.txt")))
             {
                 if (!mcm.CurrentConfigs.TryGetValue("auto_eula", out var rawEula) ||
                     !bool.TryParse(rawEula.ToString(), out var eula)) eula = false;
-                string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                await File.WriteAllTextAsync(Path.Combine(addedServerPath, "eula.txt"),
+                var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                await File.WriteAllTextAsync(Path.Combine(registerServerPath, "eula.txt"),
                     $"# Generated by LSL at {time}\n# For details of Mojang EULA, go to https://aka.ms/MinecraftEULA\neula={eula}");
             }
 
-            //找到空闲id
-            int targetId = 0;
-            while (IndexServerConfig.ContainsKey(targetId))
-            {
-                ++targetId;
-            }
-
-            JsonHelper.AddJson(ConfigPathProvider.ServerConfigPath, targetId.ToString(),
-                addedServerPath); // 在服务器列表文件中注册新服务器
-            logger.LogInformation("Server {serverName} registered, config file path {addedConfigPath}", serverName,
-                addedConfigPath);
-            return Result.Success();
+            config.ServerPath = registerServerPath;
+            return await RegisterServer(config).Match(
+                _ => logger.LogInformation("Server \"{serverName}\" registered at {serverPath}", config.ServerName,
+                    config.ServerPath),
+                (_, ex) => logger.LogWarning(ex, "Server \"{serverName}\" registered at {serverPath} with warning",
+                    config.ServerName, config.ServerPath),
+                ex => logger.LogError(ex, "Server \"{serverName}\" failed to register", config.ServerName));
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Error registering server {serverName} at {corePath}", serverName, corePath);
-            return Result.Fail(e);
+            logger.LogError(e, "Error registering server {serverName} at {corePath}", config.ServerName,
+                config.ServerPath);
+            try
+            {
+                await DirectoryExtensions.DeleteDirectoryAsync(config.ServerPath);
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail<IDictionary<int, IndexedServerConfig>>(ex);
+            }
+
+            return Result.Fail<IDictionary<int, IndexedServerConfig>>(e);
         }
     }
 

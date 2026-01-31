@@ -11,7 +11,7 @@
 
  - [x] 配置文件版本化
  - [ ] 添加LocatedServerConfig.Check()方法，替代CheckService用于启动前验证
- - [ ] 重写ServerConfigManager
+ - [x] 重写ServerConfigManager
  - [ ] 重写MainConfigManager
  - [x] 重写JavaConfigManager
  - [ ] 修改EditServer方法，使其直接使用FormedServerConfig

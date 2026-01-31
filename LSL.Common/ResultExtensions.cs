@@ -23,23 +23,12 @@ public static class ResultExtensions
         return binder(result.Value!);
     }
 
-    public static Result Bind<T>(
-        this Result<T> result,
-        Func<T, Result> binder)
+    public static async Task<Result<TResult>> Bind<T, TResult>(this Task<Result<T>> resultTask,
+        Func<T, Result<TResult>> binder)
     {
-        if (result.IsFailed) return Result.Fail(result.Error);
-
-        if (result.IsWarning)
-        {
-            var nextResult = binder(result.Value);
-            if (nextResult.IsSuccess) return Result.Warning(result.Error);
-            if (nextResult.IsWarning)
-                return Result.Warning(new AggregateException(result.Error, nextResult.Error));
-            return Result.Fail(new AggregateException(result.Error!, nextResult.Error));
-        }
-
-        return binder(result.Value!);
+        return (await resultTask).Bind(binder);
     }
+    
 
     public static async Task<Result<TResult>> BindAsync<T, TResult>(
         this Result<T> result,
@@ -60,38 +49,11 @@ public static class ResultExtensions
         return await binder(result.Value);
     }
 
-    public static async Task<Result> BindAsync<T>(
-        this Result<T> result,
-        Func<T, Task<Result>> binder)
-    {
-        if (result.IsFailed) return Result.Fail(result.Error);
-
-        if (result.IsWarning)
-        {
-            var nextResult = await binder(result.Value);
-            if (nextResult.IsSuccess) return Result.Warning(result.Error!);
-            if (nextResult.IsWarning)
-                return Result.Warning(new AggregateException(result.Error!, nextResult.Error));
-            return Result.Fail(new AggregateException(result.Error!, nextResult.Error));
-        }
-
-        return await binder(result.Value);
-    }
-
     public static async Task<Result<TResult>> BindAsync<T, TResult>(
         this Task<Result<T>> taskResult,
         Func<T, Task<Result<TResult>>> binder)
     {
-        var result = await taskResult;
-        return await result.BindAsync(binder);
-    }
-
-    public static async Task<Result> BindAsync<T>(
-        this Task<Result<T>> taskResult,
-        Func<T, Task<Result>> binder)
-    {
-        var result = await taskResult;
-        return await result.BindAsync(binder);
+        return await (await taskResult).BindAsync(binder);
     }
 
     #endregion
@@ -196,14 +158,24 @@ public static class ResultExtensions
         else onFailure?.Invoke(result.Error);
         return result;
     }
+    public static async Task<Result<T>> Match<T>(this Task<Result<T>> resultTask, Action<T>? onSuccess, Action<T, Exception>? onWarning,
+        Action<Exception>? onFailure)
+    {
+        return (await resultTask).Match(onSuccess, onWarning, onFailure);
+    }
 
-    public static async Task<Result<T>> HandleAsync<T>(this Result<T> result, Func<T, Task>? onSuccess,
+    public static async Task<Result<T>> MatchAsync<T>(this Result<T> result, Func<T, Task>? onSuccess,
         Func<T, Exception, Task>? onWarning, Func<Exception, Task>? onFailure)
     {
         if (result.IsSuccess && onSuccess is not null) await onSuccess(result.Value);
         else if (result.IsWarning && onWarning is not null) await onWarning(result.Value, result.Error);
         else if (result.IsFailed && onFailure is not null) await onFailure(result.Error);
         return result;
+    }
+    public static async Task<Result<T>> MatchAsync<T>(this Task<Result<T>> resultTask, Func<T, Task>? onSuccess,
+        Func<T, Exception, Task>? onWarning, Func<Exception, Task>? onFailure)
+    {
+        return await (await resultTask).MatchAsync(onSuccess, onWarning, onFailure);
     }
 
     #endregion

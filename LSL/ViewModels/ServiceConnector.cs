@@ -13,7 +13,6 @@ using Avalonia.Threading;
 using LSL.Common;
 using LSL.Common.Collections;
 using LSL.Common.DTOs;
-using LSL.Common.Models;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Utilities;

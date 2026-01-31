@@ -2,7 +2,6 @@
 using System.Collections.Specialized;
 using System.Reactive.Linq;
 using LSL.Common.Collections;
-using LSL.Common.Models;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Utilities;

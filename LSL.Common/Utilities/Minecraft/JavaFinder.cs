@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using LSL.Common.Models;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Options;
 

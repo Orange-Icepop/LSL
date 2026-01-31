@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using LSL.Common;
-using LSL.Common.Models;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using Microsoft.Extensions.Logging;

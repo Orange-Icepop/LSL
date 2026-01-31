@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Reactive;
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using LSL.Common;
 using LSL.Common.Models;
@@ -25,8 +21,8 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
     public Task<Result<T>> SubmitServiceError<T>(Result<T> result, bool suppressWarning = false)
     {
         return suppressWarning
-            ? result.HandleAsync(null, null, exception => ShowServiceError(ResultType.Error, exception))
-            : result.HandleAsync(null, (_, exception) => ShowServiceError(ResultType.Warning, exception),
+            ? result.MatchAsync(null, null, exception => ShowServiceError(ResultType.Error, exception))
+            : result.MatchAsync(null, (_, exception) => ShowServiceError(ResultType.Warning, exception),
                 exception => ShowServiceError(ResultType.Error, exception));
     }
 
