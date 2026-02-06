@@ -9,43 +9,18 @@ using Nito.AsyncEx;
 namespace LSL.Services.ConfigServices;
 
 public abstract class ConfigManagerComponentBase<T, TConfig> : IConfigManager<TConfig>
-    where T : ConfigManagerComponentBase<T, TConfig> where TConfig : IConfig<TConfig>, new()
+    where T : ConfigManagerComponentBase<T, TConfig> where TConfig : class, IConfig<TConfig>, new()
 {
-    private ConfigManagerComponentBase(ILogger<T> logger)
+    protected ConfigManagerComponentBase(ILogger<T> logger)
     {
         Logger = logger;
+        Config = new TConfig();
     }
 
     protected abstract string ConfigPath { get; }
     protected readonly ILogger<T> Logger;
-    protected readonly AsyncReaderWriterLock Lock = new();
-    private TConfig _config = new();
 
-    protected TConfig Config
-    {
-        get
-        {
-            using (Lock.ReaderLock())
-            {
-                return _config;
-            }
-        }
-        set
-        {
-            using (Lock.WriterLock())
-            {
-                _config = value;
-            }
-        }
-    }
-
-    public TConfig CloneConfig()
-    {
-        using (Lock.ReaderLock())
-        {
-            return _config.Clone();
-        }
-    }
+    public TConfig Config { get; protected set; }
 
     public virtual async Task<Result<TConfig>> LoadAsync()
     {
@@ -60,7 +35,7 @@ public abstract class ConfigManagerComponentBase<T, TConfig> : IConfigManager<TC
                         (_, _) => Logger.LogInformation("Config file {configPath} of type {type} generated", ConfigPath,
                             typeof(TConfig).Name),
                         ex => Logger.LogError(ex, "Cannot write config."))
-                    .Bind(_ => Result.Success(Config.Clone()));
+                    .Bind(_ => Result.Success(Config));
             }
 
             return TConfig.Deserialize(await File.ReadAllTextAsync(ConfigPath))
@@ -75,8 +50,7 @@ public abstract class ConfigManagerComponentBase<T, TConfig> : IConfigManager<TC
                         Config = config;
                     },
                     ex => Logger.LogError(ex, "An error occured while reading config file of type {type}.",
-                        typeof(TConfig).Name))
-                .Bind(config => Result.Success(config.Clone()));
+                        typeof(TConfig).Name));
         }
         catch (Exception e)
         {

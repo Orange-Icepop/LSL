@@ -27,9 +27,9 @@ public static partial class BasicValidators
     [GeneratedRegex("^#(?:[0-9A-Fa-f]{8})$")]
     private static partial Regex ArgbHexRegex();
 
-    public static bool IsValidUri(this string urlString)
+    public static bool IsValidUri(this string urlString, bool ignoreEmpty = false)
     {
-        if (string.IsNullOrEmpty(urlString)) return false;
+        if (string.IsNullOrEmpty(urlString) && !ignoreEmpty) return false;
         if (!Uri.TryCreate(urlString, UriKind.Absolute, out var uri)) return false;
         if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps) return false;
         if (string.IsNullOrEmpty(uri.Host)) return false;

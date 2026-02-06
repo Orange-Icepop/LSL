@@ -5,7 +5,7 @@ namespace LSL.Services.ConfigServices;
 
 public interface IConfigManager<TConfig>
 {
-    public TConfig CloneConfig();
+    TConfig Config { get; }
     public Task<Result<TConfig>> LoadAsync();
     public Task<Result> SetAndWriteAsync(TConfig config);
 }
