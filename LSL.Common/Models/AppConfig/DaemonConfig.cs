@@ -1,4 +1,5 @@
-﻿using Mutty;
+﻿using LSL.Common.Results;
+using Mutty;
 
 namespace LSL.Common.Models.AppConfig;
 

@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfig;
+using LSL.Common.Results;
 
 namespace LSL.Common.Validation;
 

@@ -1,4 +1,4 @@
-namespace LSL.Common;
+namespace LSL.Common.Results;
 
 public static class ResultExtensions
 {

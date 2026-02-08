@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace LSL.Common;
+namespace LSL.Common.Results;
 
 // 表示无返回值的单位类型
 public readonly record struct Unit

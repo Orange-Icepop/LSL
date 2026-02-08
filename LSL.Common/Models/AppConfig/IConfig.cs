@@ -1,3 +1,5 @@
+using LSL.Common.Results;
+
 namespace LSL.Common.Models.AppConfig;
 
 public interface IConfig

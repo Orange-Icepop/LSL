@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace LSL.Common;
+namespace LSL.Common.Results;
 
 public static class ResultParallelExtensions
 {
