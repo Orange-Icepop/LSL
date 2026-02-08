@@ -28,13 +28,13 @@ public class ConfigManager(
     {
         try
         {
-            await Task.WhenAll(
-                ReadDaemonConfig(),
-                ReadWebConfig(),
-                ReadDesktopConfig(),
-                ReadServerConfig(),
-                ReadJavaConfig()
-            );
+            await ((List<Task<IResult>>)[
+                ReadDaemonConfig().AsIResult(),
+                ReadWebConfig().AsIResult(),
+                ReadDesktopConfig().AsIResult(),
+                Task.FromResult<IResult>(await ReadServerConfig()),
+                ReadJavaConfig().AsIResult()
+            ]).WhenAll();
             return Result.Success();
         }
         catch (Exception e)

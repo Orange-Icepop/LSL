@@ -16,7 +16,13 @@ public enum ResultType
     Error,
 }
 
-public record Result<T>
+public interface IResult
+{
+    ResultType Kind { get; }
+    Exception? Error { get; }
+}
+
+public record Result<T> : IResult
 {
     public T? Value { get; }
     public ResultType Kind { get; }
