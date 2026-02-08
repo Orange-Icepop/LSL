@@ -61,8 +61,10 @@ public static class InjectionHelper
     {
         collection.AddSingleton<JavaConfigManager>();
         collection.AddSingleton<ServerConfigManager>();
+        collection.AddSingleton<DaemonConfigManager>();
+        collection.AddSingleton<WebConfigManager>();
+        collection.AddSingleton<DesktopConfigManager>();
         collection.AddSingleton<ConfigManager>();
-        collection.AddSingleton<MainConfigManager>();
     }
 
     public static void AddServerHost(this IServiceCollection collection)

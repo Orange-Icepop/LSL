@@ -1,9 +1,11 @@
 ﻿using System;
-using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
 using LSL.Common;
+using LSL.Common.Models.AppConfig;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using Microsoft.Extensions.Logging;
@@ -14,7 +16,9 @@ namespace LSL.Services.ConfigServices;
 /// The wrapper of detailed ConfigManagers.
 /// </summary>
 public class ConfigManager(
-    MainConfigManager mcm,
+    DaemonConfigManager dcm,
+    WebConfigManager wcm,
+    DesktopConfigManager dkcm,
     ServerConfigManager scm,
     JavaConfigManager jcm,
     ILogger<ConfigManager> logger)
@@ -22,69 +26,54 @@ public class ConfigManager(
     #region 初始化配置文件
     public async Task<Result> Initialize()
     {
-        // 检查权限
-        if (!ConfigPathProvider.HasReadWriteAccess(ConfigPathProvider.LSLFolder))
+        try
         {
-            var error = new UnauthorizedAccessException($"LSL does not have write access to config folder:{ConfigPathProvider.LSLFolder}");
-            logger.LogCritical(error, "");
-            return Result.Fail(error);
+            await Task.WhenAll(
+                ReadDaemonConfig(),
+                ReadWebConfig(),
+                ReadDesktopConfig(),
+                ReadServerConfig(),
+                ReadJavaConfig()
+            );
+            return Result.Success();
         }
-        if (!ConfigPathProvider.HasReadWriteAccess(ConfigPathProvider.ServersFolder))
+        catch (Exception e)
         {
-            var error = new UnauthorizedAccessException($"LSL does not have write access to the servers folder:{ConfigPathProvider.ServersFolder}");
-            logger.LogCritical(error, "");
-            return Result.Fail(error);
+            logger.LogCritical(e, "Something critical error occured while loading config.");
+            return Result.Fail(e);
         }
-        // 确保LSL文件夹存在  
-        Directory.CreateDirectory(ConfigPathProvider.LSLFolder);
-        Directory.CreateDirectory(ConfigPathProvider.ServersFolder);
-        if (!File.Exists(ConfigPathProvider.ConfigFilePath))
-        {
-            await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, "{}");
-            var mainRes = await MainConfigManager.InitAsync();
-            if (mainRes.Kind == ResultType.Error) return mainRes;
-            logger.LogInformation("Config.json initialized.");
-        }
-
-        if (!File.Exists(ConfigPathProvider.ServerConfigPath))
-        {
-            await File.WriteAllTextAsync(ConfigPathProvider.ServerConfigPath, "{}");
-            logger.LogInformation("ServerConfig.json initialized.");
-        }
-
-        if (!File.Exists(ConfigPathProvider.JavaListPath))
-        {
-            await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "{}");
-            logger.LogInformation("JavaList.json initialized.");
-        }
-        return Result.Success();
     }
 
     #endregion
         
     #region 配置文件代理操作
-    // 主配置文件
-    public FrozenDictionary<string, object> MainConfigs => mcm.CurrentConfigs;
-    public Task<Result<FrozenDictionary<string, object>>> ConfirmMainConfig(IDictionary<string, object> conf) => mcm.ConfirmConfig(conf);
-    public Task<Result> ReadMainConfig() => mcm.LoadConfig();
+    // 守护进程配置
+    public DaemonConfig DaemonConfigs => dcm.Config;
+    public Task<Result<DaemonConfig>> SetDaemonConfig(DaemonConfig conf) => dcm.SetAndWriteAsync(conf);
+    public Task<Result<DaemonConfig>> ReadDaemonConfig() => dcm.LoadAsync();
+    // 网页面板配置
+    public WebConfig WebConfigs => wcm.Config;
+    public Task<Result<WebConfig>> SetWebConfig(WebConfig conf) => wcm.SetAndWriteAsync(conf);
+    public Task<Result<WebConfig>> ReadWebConfig() => wcm.LoadAsync();
+    // 桌面配置
+    public DesktopConfig DesktopConfigs => dkcm.Config;
+    public Task<Result<DesktopConfig>> SetDesktopConfig(DesktopConfig conf) => dkcm.SetAndWriteAsync(conf);
+    public Task<Result<DesktopConfig>> ReadDesktopConfig() => dkcm.LoadAsync();
     // 服务器配置
-    public FrozenDictionary<int, IndexedServerConfig> ServerConfigs => scm.ServerConfigs;
+    public Dictionary<int, IndexedServerConfig> CloneServerConfigs() => scm.CloneServerConfigs();
     public Task<ServerConfigList> ReadServerConfig() => scm.ReadServerConfig();
-
-    public Task<Result> RegisterServer(FormedServerConfig config) => scm.RegisterServer(config.ServerName,
-        config.JavaPath, config.CorePath, uint.Parse(config.MinMem), uint.Parse(config.MaxMem), config.ExtJvm);
-    public Task<Result> EditServer(int id, FormedServerConfig config) => scm.EditServer(id, config.ServerName, config.JavaPath, 
-        uint.Parse(config.MinMem),
-        uint.Parse(config.MaxMem), config.ExtJvm);
-    public Task<Result> DeleteServer(int id) => scm.DeleteServer(id);
-
-    public async Task<Result> AddExistedServer(FormedServerConfig config) => await scm.AddExistedServer(
-        config.ServerName, config.JavaPath, config.CorePath, uint.Parse(config.MinMem), uint.Parse(config.MaxMem), config.ExtJvm);
+    public bool TryGetServerConfig(int serverId, [MaybeNullWhen(false)] out IndexedServerConfig serverConfig) =>
+        scm.TryGetServerConfig(serverId, out serverConfig);
+    public Task<Result<IDictionary<int, IndexedServerConfig>>> AddServerUsingCore(LocatedServerConfig config,
+        string corePath, bool installForge, IProgress<string>? progress) =>
+        scm.AddServerUsingCore(config, corePath, installForge, progress);
+    public Task<Result<IDictionary<int, IndexedServerConfig>>> AddServerFolder(LocatedServerConfig config, IProgress<string>? progress) => scm.AddServerFolder(config, progress);
+    public Task<Result<IDictionary<int, IndexedServerConfig>>> EditServer(IndexedServerConfig config) => scm.EditServer(config);
+    public Task<Result<IDictionary<int, IndexedServerConfig>>> DeleteServer(int id) => scm.DeleteServer(id);
     // Java配置
-    public FrozenDictionary<int, JavaInfo> JavaConfigs => jcm.JavaDict;
-    public Task<Result<Dictionary<int, JavaInfo>>> ReadJavaConfig(bool writeBack = false) => jcm.ReadJavaConfig(writeBack);
+    public ImmutableDictionary<int, JavaInfo> JavaConfigs => jcm.JavaDict;
+    public Task<Result<ImmutableDictionary<int, JavaInfo>>> ReadJavaConfig(bool writeBack = false) => jcm.ReadJavaConfig(writeBack);
     public Task<Result> DetectJavaAsync() => jcm.DetectJavaAsync();
-
     #endregion
 }
 

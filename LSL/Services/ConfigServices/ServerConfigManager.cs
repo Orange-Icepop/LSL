@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -30,14 +31,13 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
     private sealed class ServerConfigIndexManager
     {
         private readonly AsyncReaderWriterLock _syncLock = new();
-        private Dictionary<int, IndexedServerConfig> _serverConfigs = [];
+        private ImmutableDictionary<int, IndexedServerConfig> _serverConfigs = ImmutableDictionary<int, IndexedServerConfig>.Empty;
 
         public Dictionary<int, IndexedServerConfig> CloneServerConfigs()
         {
             using (_syncLock.ReaderLock())
             {
-                return _serverConfigs.ToDictionary(config => config.Key,
-                    config => new IndexedServerConfig(config.Value));
+                return _serverConfigs.ToDictionary();
             }
         }
 
@@ -61,14 +61,8 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         {
             try
             {
-                Dictionary<int, string> idx;
-                using (await _syncLock.ReaderLockAsync())
-                {
-                    idx = _serverConfigs.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ServerPath);
-                }
-
                 await File.WriteAllTextAsync(ConfigPathProvider.ServerConfigPath,
-                    JsonSerializer.Serialize(idx,
+                    JsonSerializer.Serialize(_serverConfigs,
                         SnakeJsonOptions.Default.DictionaryInt32String));
                 return Result.Success();
             }
@@ -80,67 +74,64 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
         #region 增/改/删服务器注册项操作
 
-        public async Task<Result<Dictionary<int, IndexedServerConfig>>> AddServerToIndex(
+        public async Task<Result<ImmutableDictionary<int, IndexedServerConfig>>> AddServerToIndex(
             LocatedServerConfig config)
         {
             using (await _syncLock.WriterLockAsync())
             {
                 var id = _serverConfigs.Keys.Max() + 1;
                 if (_serverConfigs.Values.Select(x => x.ServerPath).Contains(config.ServerPath))
-                    return Result.Fail<Dictionary<int, IndexedServerConfig>>(
+                    return Result.Fail<ImmutableDictionary<int, IndexedServerConfig>>(
                         new DuplicateNameException("The server path to add already exists in server index"));
                 try
                 {
                     if (!_serverConfigs.TryAdd(id, config.AsIndexed(id)))
-                        return Result.Fail<Dictionary<int, IndexedServerConfig>>(
+                        return Result.Fail<ImmutableDictionary<int, IndexedServerConfig>>(
                             "Unable to add new server config to index server config");
                     await WriteServerConfigs().AsGeneric().GetValueOrThrow();
-                    return Result.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
-                        kvp => new IndexedServerConfig(kvp.Value)));
+                    return Result.Success(_serverConfigs);
                 }
                 catch (Exception e)
                 {
-                    return Result.Fail<Dictionary<int, IndexedServerConfig>>(e);
+                    return Result.Fail<ImmutableDictionary<int, IndexedServerConfig>>(e);
                 }
             }
         }
 
-        public async Task<Result<Dictionary<int, IndexedServerConfig>>> ModifyServerInIndex(
+        public async Task<Result<ImmutableDictionary<int, IndexedServerConfig>>> ModifyServerInIndex(
             IndexedServerConfig config)
         {
             using (await _syncLock.WriterLockAsync())
             {
                 try
                 {
-                    if (!_serverConfigs.ContainsKey(config.ServerId))
-                        return Result.Fail<Dictionary<int, IndexedServerConfig>>(
+                    if (!_serverConfigs.TryGetValue(config.ServerId, out _))
+                        return Result.Fail<ImmutableDictionary<int, IndexedServerConfig>>(
                             new KeyNotFoundException("Index server config doesn't contain the selected server id"));
-                    _serverConfigs[config.ServerId] = config;
+                    _serverConfigs = _serverConfigs.SetItem(config.ServerId, config);
                     await WriteServerConfigs().AsGeneric().GetValueOrThrow();
-                    return Result.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
-                        kvp => new IndexedServerConfig(kvp.Value)));
+                    return Result.Success(_serverConfigs);
                 }
                 catch (Exception e)
                 {
-                    return Result.Fail<Dictionary<int, IndexedServerConfig>>(e);
+                    return Result.Fail<ImmutableDictionary<int, IndexedServerConfig>>(e);
                 }
             }
         }
 
-        public async Task<Result<Dictionary<int, IndexedServerConfig>>> DeleteServerFromIndex(int id)
+        public async Task<Result<ImmutableDictionary<int, IndexedServerConfig>>> DeleteServerFromIndex(int id)
         {
             using (await _syncLock.WriterLockAsync())
             {
                 try
                 {
-                    _serverConfigs.Remove(id, out _);
-                    (await WriteServerConfigs()).GetValueOrThrow();
-                    return Result.Success(_serverConfigs.ToDictionary(kvp => kvp.Key,
-                        kvp => new IndexedServerConfig(kvp.Value)));
+                    _serverConfigs = _serverConfigs.Remove(id);
+                    await WriteServerConfigs().AsGeneric().GetValueOrThrow();
+                    return Result.Success(_serverConfigs);
                 }
                 catch (Exception e)
                 {
-                    return Result.Fail<Dictionary<int, IndexedServerConfig>>(e);
+                    return Result.Fail<ImmutableDictionary<int, IndexedServerConfig>>(e);
                 }
             }
         }
@@ -162,7 +153,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 // 写入当前字典
                 using (await _syncLock.WriterLockAsync())
                 {
-                    _serverConfigs = detailRes.Value.ToDictionary();
+                    _serverConfigs = detailRes.Value;
                 }
 
                 return detailRes;
@@ -254,12 +245,12 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
             if (!errors.IsEmpty || !warnings.IsEmpty)
             {
-                return ServerConfigList.PartialError(scCache,
+                return ServerConfigList.PartialError(scCache.ToImmutableDictionary(),
                     new StringBuilder().AppendJoin('\n', errors).ToString(),
                     new StringBuilder().AppendJoin('\n', warnings).ToString());
             }
 
-            return ServerConfigList.Success(scCache);
+            return ServerConfigList.Success(scCache.ToImmutableDictionary());
         }
 
         public static Task<Result<IndexedServerConfig>> GetSingleServerConfigAsync(int id, string targetDir)
@@ -277,6 +268,10 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     public bool TryGetServerConfig(int serverId, [MaybeNullWhen(false)] out IndexedServerConfig serverConfig) =>
         _indexManager.TryGetServerConfig(serverId, out serverConfig);
+
+    public Dictionary<int, IndexedServerConfig> CloneServerConfigs() => _indexManager.CloneServerConfigs();
+
+    public Task<ServerConfigList> ReadServerConfig() => _indexManager.ReadServerConfig();
 
     #region 注册服务器方法RegisterServer
 
@@ -462,9 +457,9 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
     #endregion
 
-    #region 添加已有服务器方法AddExistedServer
+    #region 添加已有服务器方法AddServerFolder
 
-    public async Task<Result<IDictionary<int, IndexedServerConfig>>> AddExistedServer(LocatedServerConfig config,
+    public async Task<Result<IDictionary<int, IndexedServerConfig>>> AddServerFolder(LocatedServerConfig config,
         IProgress<string>? progress = null)
     {
         try

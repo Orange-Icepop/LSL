@@ -1,10 +1,13 @@
+using Mutty;
+
 namespace LSL.Common.Models.ServerConfig;
 
-public class ForgeCoreConfigV1
+[MutableGeneration]
+public record ForgeCoreConfigV1
 {
     public int ConfigVersion => 1;
-    public string UnixLibraryArgsPath { get; set; }
-    public string WinLibraryArgsPath { get; set; }
+    public string UnixLibraryArgsPath { get; init; }
+    public string WinLibraryArgsPath { get; init; }
 
     public ForgeCoreConfigV1()
     {

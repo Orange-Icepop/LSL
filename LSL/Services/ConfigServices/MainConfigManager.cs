@@ -12,7 +12,8 @@ namespace LSL.Services.ConfigServices;
 /// <summary>
 /// The config manager of LSL's main config.
 /// </summary>
-/// <param name="logger">An ILogger that logs logs.</param> 
+/// <param name="logger">An ILogger that logs logs.</param>
+[Obsolete]
 public class MainConfigManager(ILogger<MainConfigManager> logger)
 {
     #region 默认配置字典

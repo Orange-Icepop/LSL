@@ -1,11 +1,12 @@
-﻿using LSL.Common.Models.ServerConfig;
+﻿using System.Collections.Immutable;
+using LSL.Common.Models.ServerConfig;
 
 namespace LSL.Common.Models.Minecraft;
 
-public record ServerConfigList : Result<IDictionary<int, IndexedServerConfig>>
+public record ServerConfigList : Result<ImmutableDictionary<int, IndexedServerConfig>>
 {
     private ServerConfigList(
-        IDictionary<int, IndexedServerConfig>? configs, 
+        ImmutableDictionary<int, IndexedServerConfig>? configs, 
         ResultType resultType = ResultType.Success, 
         Exception? error = null, 
         string? errors = null, 
@@ -20,15 +21,15 @@ public record ServerConfigList : Result<IDictionary<int, IndexedServerConfig>>
     public string WarningMessages { get; }
     
 
-    public static ServerConfigList Success(IDictionary<int, IndexedServerConfig> configs) 
+    public static ServerConfigList Success(ImmutableDictionary<int, IndexedServerConfig> configs) 
         => new(configs);
     
     public static ServerConfigList Fail(Exception error) 
         => new(null, ResultType.Error, error);
     
     public static ServerConfigList PartialError(
-        IDictionary<int, IndexedServerConfig> configs, 
-        string errors, 
+        ImmutableDictionary<int, IndexedServerConfig> configs, 
+        string errors,
         string warnings) 
         => new(configs, ResultType.Warning, null, errors, warnings);
 }

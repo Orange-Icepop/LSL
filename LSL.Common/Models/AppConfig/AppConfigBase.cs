@@ -1,4 +1,3 @@
-using System.Runtime.Serialization;
 using Tomlyn;
 
 namespace LSL.Common.Models.AppConfig;
@@ -11,7 +10,7 @@ public abstract record AppConfigBase<TConfig> : IConfig<TConfig> where TConfig :
     public static Result<TConfig> Deserialize(string content)
     { 
         if (!Toml.TryToModel<TConfig>(content, out var result, out var error))
-            return Result.Fail<TConfig>($"The {typeof(TConfig).Name} is not parsable:\n{error}");
+            return Result.Warning(new TConfig(), $"The {typeof(TConfig).Name} is not parsable:\n{error}");
         var validationResult = result.Validate();
         return validationResult.IsSuccess ? Result.Success(result) : Result.Warning(result, validationResult.Error);
     }

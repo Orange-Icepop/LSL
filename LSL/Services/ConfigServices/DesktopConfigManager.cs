@@ -7,5 +7,5 @@ namespace LSL.Services.ConfigServices;
 public class DesktopConfigManager(ILogger<DesktopConfigManager> logger)
     : ConfigManagerComponentBase<DesktopConfigManager, DesktopConfig>(logger)
 {
-    protected override string ConfigPath => Path.Combine(ConfigPathProvider.BaseDir, "LSL.Config.toml");
+    protected override string ConfigPath => Path.Combine(ConfigPathProvider.LSLFolder, "LSL.Config.Desktop.toml");
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -19,29 +19,38 @@ namespace LSL.Services.ConfigServices;
 /// <param name="logger">An ILogger that logs logs.</param> 
 public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关服务
 {
-    public FrozenDictionary<int, JavaInfo> JavaDict { get; private set; } = FrozenDictionary<int, JavaInfo>.Empty; // 目前读取的Java列表
+    public ImmutableDictionary<int, JavaInfo> JavaDict { get; private set; } = ImmutableDictionary<int, JavaInfo>.Empty; // 目前读取的Java列表
 
     #region 读取Java列表
-    public async Task<Result<Dictionary<int, JavaInfo>>> ReadJavaConfig(bool writeBack = false)
+    public async Task<Result<ImmutableDictionary<int, JavaInfo>>> ReadJavaConfig(bool writeBack = false)
     {
-        var res = await ReadConfig()//先读配置文件
-            .BindAsync(async dict =>// 验证
-        {
-            ConcurrentBag<string> errors = [];
-            await Parallel.ForEachAsync(dict, ConcurrencyOptions.ConcurrencyLimit, async (kvp, _) =>
+        var res = await ReadConfig() //先读配置文件
+            .BindAsync(async dict => // 验证
             {
-                if (!await kvp.Value.Validate()) errors.Add(kvp.Value.Path);
-            });
-            return errors.IsEmpty
-                ? Result.Success(dict)
-                : Result.Warning(dict, new StringBuilder().AppendJoin('\n', errors).ToString());
-        });
+                ConcurrentBag<string> errors = [];
+                ConcurrentDictionary<int, JavaInfo> tmpDict = [];
+                await Parallel.ForEachAsync(dict, ConcurrencyOptions.ConcurrencyLimit, async (kvp, _) =>
+                {
+                    if (!await kvp.Value.Validate())
+                    {
+                        errors.Add(kvp.Value.Path);
+                    }
+                    else
+                    {
+                        tmpDict.TryAdd(kvp.Key, kvp.Value);
+                    }
+                });
+                return errors.IsEmpty
+                    ? Result.Success(tmpDict)
+                    : Result.Warning(tmpDict, new StringBuilder().AppendJoin('\n', errors).ToString());
+            }).Bind(dict => Result.Success(dict.ToImmutableDictionary()));
         if (res.IsFailed)
         {
             logger.LogError(res.Error, "Something went wrong while reading java config.");
             return res;
         }
 
+        JavaDict = res.Value;
         if (res.IsWarning) logger.LogWarning("Some javas are invalid when reading java config:{error}", res.Error.ToString());
         if (writeBack)
         {

@@ -62,11 +62,11 @@ public class ServiceConnector
     {
         if (readFile)
         {
-            var res = await _configManager.ReadMainConfig();
+            var res = await _configManager.ReadDaemonConfig();
             if (res.IsFailed) return res;
         }
 
-        await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentConfigs = _configManager.MainConfigs);
+        await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentConfigs = _configManager.DaemonConfigs);
         return Result.Success();
     }
 
@@ -133,7 +133,7 @@ public class ServiceConnector
             }
         }
 
-        var cache = _configManager.ServerConfigs.CloneToDict();
+        var cache = _configManager.CloneServerConfigs();
         if (cache.Count == 0)
         {
             cache.Add(-1, IndexedServerConfig.None);
@@ -143,7 +143,7 @@ public class ServiceConnector
     }
 
     public Task<Result<FrozenDictionary<string, object>>> SaveConfig() =>
-        _configManager.ConfirmMainConfig(_appState.CurrentConfigs);
+        _configManager.SetMainConfig(_appState.CurrentConfigs);
 
     public async Task<Result<int>> FindJava()
     {
@@ -208,7 +208,7 @@ public class ServiceConnector
 
     public string? VerifyServerConfigBeforeStart(int serverId)
     {
-        if (!_configManager.ServerConfigs.TryGetValue(serverId, out var config))
+        if (!_configManager.TryGetServerConfig(serverId, out var config))
             return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
         else if (!File.Exists(config.JavaPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
         else
@@ -407,7 +407,7 @@ public class ServiceConnector
 
     public async Task<Result> AddServer(FormedServerConfig config)
     {
-        var registerResult = await _configManager.RegisterServer(config);
+        var registerResult = await _configManager.AddServerUsingCore(config);
         if (!registerResult.IsSuccess) return registerResult;
         return await ReadServerConfig(true);
     }
@@ -428,7 +428,7 @@ public class ServiceConnector
 
     public async Task<Result> AddExistedServer(FormedServerConfig config)
     {
-        var result = await _configManager.AddExistedServer(config);
+        var result = await _configManager.AddServerFolder(config);
         if (!result.IsSuccess) return result;
         return await ReadServerConfig(true);
     }
