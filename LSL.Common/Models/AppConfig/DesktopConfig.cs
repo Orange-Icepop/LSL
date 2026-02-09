@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using LSL.Common.Results;
+using FluentResults;
 using LSL.Common.Validation;
 using Mutty;
 
@@ -8,12 +8,18 @@ namespace LSL.Common.Models.AppConfig;
 [MutableGeneration]
 public record DesktopConfig : AppConfigBase<DesktopConfig>, IConfig<DesktopConfig>
 {
+    public static readonly DesktopConfig Default = new();
+
     // system
     public bool EnableTray { get; init; } = true;
+
     public bool EnableDaemonKeepRunning { get; init; } = true;
+
     // server setup
     public bool AutoEula { get; init; } = true;
+
     public List<string> UniversalJvmPrefix { get; init; } = [];
+
     // styles
     public string ThemeColor { get; init; } = "#33F3E5";
     public string BackgroundColor { get; init; } = "#C7FFEE";
@@ -21,7 +27,9 @@ public record DesktopConfig : AppConfigBase<DesktopConfig>, IConfig<DesktopConfi
     public double BackgroundOpacity { get; init; } = 1.0;
     public string CustomTitleText { get; init; } = "Lime Server Launcher";
     public CustomPageOption CustomPageType { get; init; } = CustomPageOption.None;
+
     public string CustomPageUrl { get; init; } = string.Empty;
+
     // about
     public bool AutoCheckUpdate { get; init; } = true;
     public bool BetaUpdate { get; init; } = false;
@@ -34,10 +42,8 @@ public record DesktopConfig : AppConfigBase<DesktopConfig>, IConfig<DesktopConfi
         if (!BackgroundOpacity.IsInRange(0.0, 1.0)) errors.Add("Background opacity is invalid");
         return errors.Count != 0
             ? Result.Fail(new StringBuilder().AppendJoin('\n', errors).ToString())
-            : Result.Success();
+            : Result.Ok();
     }
-
-    public static readonly DesktopConfig Default = new();
 
     public override Result<DesktopConfig> ValidateAndFix()
     {
@@ -63,7 +69,7 @@ public record DesktopConfig : AppConfigBase<DesktopConfig>, IConfig<DesktopConfi
 
         return errors.Count != 0
             ? Result.Warning(tmp.FinishDraft(), new StringBuilder().AppendJoin('\n', errors).ToString())
-            : Result.Success(this);
+            : Result.Ok(this);
     }
 }
 

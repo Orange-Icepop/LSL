@@ -4,14 +4,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using LSL.Common;
-using LSL.Common.Results;
+using System.Xml;
+using FluentResults;
 using LSL.Common.Validation;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services.ConfigServices;
+
 /// <summary>
-/// The config manager of LSL's main config.
+///     The config manager of LSL's main config.
 /// </summary>
 /// <param name="logger">An ILogger that logs logs.</param>
 [Obsolete]
@@ -19,7 +20,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 {
     #region 默认配置字典
 
-    private static readonly FrozenDictionary<string, object> s_defaultConfigs = new Dictionary<string, object>()
+    private static readonly FrozenDictionary<string, object> s_defaultConfigs = new Dictionary<string, object>
     {
         //Common
         { "auto_eula", true },
@@ -46,7 +47,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
     #region 使用的键的列表
 
-    private static readonly IReadOnlyList<string> s_configKeys = new List<string>()
+    private static readonly IReadOnlyList<string> s_configKeys = new List<string>
     {
         //Common
         "auto_eula",
@@ -78,17 +79,14 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
         {
             Dictionary<string, object> fin = [];
             foreach (var conf in configs)
-            {
                 if (CheckService.VerifyConfig(conf.Key, conf.Value))
-                {
                     fin.TryAdd(conf.Key, conf.Value);
-                }
-            }
+
             CurrentConfigs = fin.ToFrozenDictionary();
             await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath,
                 JsonConvert.SerializeObject(fin, Formatting.Indented));
             logger.LogInformation("New LSL main config is written.");
-            return Result.Success(fin.ToFrozenDictionary());
+            return Result.Ok(fin.ToFrozenDictionary());
         }
         catch (Exception e)
         {
@@ -99,10 +97,23 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
     #endregion
 
+    #region 初始化
+
+    internal static async Task<Result> InitAsync()
+    {
+        // 将初始配置字典序列化成JSON字符串并写入文件  
+        string configString = JsonConvert.SerializeObject(s_defaultConfigs, Formatting.Indented);
+        await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, configString);
+        return Result.Ok();
+    }
+
+    #endregion
+
     #region 读取配置键值
 
     // 当前配置字典
-    public FrozenDictionary<string, object> CurrentConfigs { get; private set; } = FrozenDictionary<string, object>.Empty;
+    public FrozenDictionary<string, object> CurrentConfigs { get; private set; } =
+        FrozenDictionary<string, object>.Empty;
 
     public async Task<Result> LoadConfig()
     {
@@ -140,7 +151,7 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
                     JTokenType.Boolean => config.Value<bool>(),
                     JTokenType.Integer => config.Value<int>(),
                     JTokenType.String => config.Value<string>(),
-                    _ => null,
+                    _ => null
                 };
                 if (keyValue == null || !CheckService.VerifyConfig(key, keyValue))
                 {
@@ -162,7 +173,8 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
 
             if (keysNeedToRepair.Count > 0) // 修复配置
             {
-                await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, JsonConvert.SerializeObject(cache, Formatting.Indented));
+                await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath,
+                    JsonConvert.SerializeObject(cache, Formatting.Indented));
                 CurrentConfigs = cache.ToFrozenDictionary();
                 var list = new StringBuilder("The following main config keys are reset due to value type mismatch:");
                 list.AppendJoin(",", keysNeedToRepair);
@@ -170,27 +182,16 @@ public class MainConfigManager(ILogger<MainConfigManager> logger)
                 logger.LogInformation("Config.json loaded and repaired.");
                 return Result.Warning(new Exception(list.ToString()));
             }
+
             CurrentConfigs = cache.ToFrozenDictionary();
             logger.LogInformation("Config.json loaded.");
-            return Result.Success();
-
+            return Result.Ok();
         }
         catch (Exception e)
         {
             logger.LogError(e, "An error occured while loading main config.");
             return Result.Fail(e);
         }
-    }
-
-    #endregion
-
-    #region 初始化
-    internal static async Task<Result> InitAsync()
-    {
-        // 将初始配置字典序列化成JSON字符串并写入文件  
-        string configString = JsonConvert.SerializeObject(s_defaultConfigs, Formatting.Indented);
-        await File.WriteAllTextAsync(ConfigPathProvider.ConfigFilePath, configString);
-        return Result.Success();
     }
 
     #endregion

@@ -5,12 +5,11 @@
              xmlns:controls="clr-namespace:LSL.Controls"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Download.ManualDown">
-	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-		<StackPanel>
-			<controls:MyCard Text="手动下载">
-				<DockPanel Margin="25,40,23,15">
-				</DockPanel>
-			</controls:MyCard>
-		</StackPanel>
-	</ScrollViewer>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel>
+            <controls:MyCard Text="手动下载">
+                <DockPanel Margin="25,40,23,15" />
+            </controls:MyCard>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

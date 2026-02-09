@@ -4,14 +4,10 @@ using LSL.Common.DTOs;
 namespace LSL.Common.Models.Minecraft;
 
 /// <summary>
-/// A wrapper of a server's historic metrics record.
+///     A wrapper of a server's historic metrics record.
 /// </summary>
 public class MetricsStorage
 {
-    public RangedObservableLinkedList<double> CpuPct { get; }
-    public RangedObservableLinkedList<long> MemCnt { get; }
-    public RangedObservableLinkedList<double> MemPct { get; }
-
     public MetricsStorage(bool notifiable = false)
     {
         CpuPct = new RangedObservableLinkedList<double>(30, 0, notifiable);
@@ -21,8 +17,12 @@ public class MetricsStorage
 
     public MetricsStorage(MetricsReport report, bool notifiable = false) : this(notifiable)
     {
-        this.Add(report);
+        Add(report);
     }
+
+    public RangedObservableLinkedList<double> CpuPct { get; }
+    public RangedObservableLinkedList<long> MemCnt { get; }
+    public RangedObservableLinkedList<double> MemPct { get; }
 
     public MetricsStorage Add(MetricsReport report)
     {

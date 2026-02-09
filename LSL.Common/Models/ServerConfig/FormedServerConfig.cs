@@ -1,6 +1,7 @@
 ﻿namespace LSL.Common.Models.ServerConfig;
+
 /// <summary>
-/// A record of unvalidated or unregistered server's config.
+///     A record of unvalidated or unregistered server's config.
 /// </summary>
 /// <param name="serverName">The server's name.</param>
 /// <param name="corePath">The server's core file path. Meaningless in editing config.</param>

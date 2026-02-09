@@ -5,18 +5,18 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using LSL.Common;
+using FluentResults;
 using LSL.Common.Models.Api;
-using LSL.Common.Results;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services;
 
 public class NetService
 {
-    public readonly IHttpClientFactory Factory;
-    private readonly ILogger<NetService> _logger;
     private const int BufferSize = 8192;
+    private readonly ILogger<NetService> _logger;
+    public readonly IHttpClientFactory Factory;
+
     public NetService(IHttpClientFactory factory, ILogger<NetService> logger)
     {
         Factory = factory;
@@ -24,7 +24,9 @@ public class NetService
     }
 
     #region 异步下载请求
-    public async Task<Result> GetFileAsync(string url, string dir, IProgress<double>? progress, CancellationToken token = new()) 
+
+    public async Task<Result> GetFileAsync(string url, string dir, IProgress<double>? progress,
+        CancellationToken token = new())
     {
         using var client = Factory.CreateClient();
         string? path = null;
@@ -78,10 +80,12 @@ public class NetService
         {
             return Result.Fail(ex);
         }
-        return Result.Success();
+
+        return Result.Ok();
     }
+
     #endregion
-    
+
     #region API获取
 
     public async Task<ApiResult> ApiGet(string url)
@@ -120,12 +124,13 @@ public class NetService
             return new ApiResult(0, ex.Message);
         }
     }
+
     #endregion
-    
+
     private static bool HandleException(Exception ex, bool fileCreated, string? path)
     {
         TryDeleteFile(fileCreated, path);
-        
+
         // 保留原始异常信息
         var wrappedEx = ex switch
         {
@@ -134,7 +139,7 @@ public class NetService
             IOException => new Exception($"文件IO错误: {ex.Message}", ex),
             _ => new Exception($"下载失败: {ex.Message}", ex)
         };
-        
+
         throw wrappedEx;
     }
 
@@ -142,16 +147,14 @@ public class NetService
     {
         if (response.Content.Headers.ContentDisposition is not null)
         {
-            var filename = response.Content.Headers.ContentDisposition.FileNameStar ?? 
-                        response.Content.Headers.ContentDisposition.FileName;
-            if (!string.IsNullOrEmpty(filename))
-            {
-                return filename.Trim('"', '\'');// 返回头有文件名再好不过了
-            }
+            var filename = response.Content.Headers.ContentDisposition.FileNameStar ??
+                           response.Content.Headers.ContentDisposition.FileName;
+            if (!string.IsNullOrEmpty(filename)) return filename.Trim('"', '\''); // 返回头有文件名再好不过了
         }
+
         var uri = response.RequestMessage?.RequestUri;
-        var uriFilename = Path.GetFileName(uri?.LocalPath);// 不行再找请求头中的文件名称
-        return !string.IsNullOrEmpty(uriFilename) ? uriFilename : $"{Guid.NewGuid()}.bin";// 再没有只能用GUID了
+        var uriFilename = Path.GetFileName(uri?.LocalPath); // 不行再找请求头中的文件名称
+        return !string.IsNullOrEmpty(uriFilename) ? uriFilename : $"{Guid.NewGuid()}.bin"; // 再没有只能用GUID了
     }
 
     private static bool TryDeleteFile(bool hasFile, string? path)
@@ -165,6 +168,7 @@ public class NetService
         {
             return false;
         }
+
         return true;
     }
 }

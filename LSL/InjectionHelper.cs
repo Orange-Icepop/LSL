@@ -25,6 +25,12 @@ namespace LSL;
 
 public static class InjectionHelper
 {
+    private static ILogger? GetLogger(this Context context, IServiceProvider provider) // 获取日志记录器
+    {
+        return provider.GetService<ILoggerFactory>()?
+            .CreateLogger("Polly");
+    }
+
     #region 添加单例
 
     public static void AddLogging(this IServiceCollection collection)
@@ -43,14 +49,11 @@ public static class InjectionHelper
 
     public static void AddNetworking(this IServiceCollection collection)
     {
-        collection.AddHttpClient("LSL", client =>
-            {
-                client.ResetUserAgent($"LSL/{DesktopConstant.Version}");
-            })
+        collection.AddHttpClient("LSL", client => { client.ResetUserAgent($"LSL/{DesktopConstant.Version}"); })
             .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
             {
                 PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),
-                UseCookies = false,
+                UseCookies = false
             })
             .AddPolicyHandler((provider, _) => GetRetryPolicy(provider))
             .AddPolicyHandler((provider, _) => GetCircuitBreakerPolicy(provider));
@@ -129,16 +132,10 @@ public static class InjectionHelper
                     context.GetLogger(provider)?.LogError("Web connection meltdown activated. Restore in {Timespan}.",
                         timespan);
                 },
-                (context) => { context.GetLogger(provider)?.LogInformation("Web connection meltdown deactivated."); });
+                context => { context.GetLogger(provider)?.LogInformation("Web connection meltdown deactivated."); });
     }
 
     #endregion
-
-    private static ILogger? GetLogger(this Context context, IServiceProvider provider) // 获取日志记录器
-    {
-        return provider.GetService<ILoggerFactory>()?
-            .CreateLogger("Polly");
-    }
 }
 
 #region 自定义日志格式化器
@@ -164,15 +161,12 @@ public sealed class Utf8ConsoleFormatter : ConsoleFormatter
             LogLevel.Warning => "WARN",
             LogLevel.Error => "FAIL",
             LogLevel.Critical => "DEAD",
-            _ => string.Empty,
+            _ => string.Empty
         };
         var message = $"[{DateTime.Now:hh:mm:ss}] [{logEntry.Category}|{level}] ";
         message += logEntry.Formatter(logEntry.State, logEntry.Exception);
 
-        if (logEntry.Exception != null)
-        {
-            message += $"\n{logEntry.Exception}";
-        }
+        if (logEntry.Exception != null) message += $"\n{logEntry.Exception}";
 
         var bytes = encoding.GetBytes(message + Environment.NewLine);
         var consoleStream = Console.OpenStandardOutput();

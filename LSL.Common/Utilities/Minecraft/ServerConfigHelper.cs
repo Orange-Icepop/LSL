@@ -1,12 +1,12 @@
+using FluentResults;
 using LSL.Common.Models.ServerConfig;
-using LSL.Common.Results;
 
 namespace LSL.Common.Utilities.Minecraft;
 
 public static class ServerConfigHelper
 {
     /// <summary>
-    /// Read the LSL server config of the specified server folder.
+    ///     Read the LSL server config of the specified server folder.
     /// </summary>
     /// <param name="path">The server's directory</param>
     /// <param name="v1Read">Determine whether the first version of ServerConfig (lslconfig.json) should be included</param>
@@ -21,12 +21,12 @@ public static class ServerConfigHelper
         if (File.Exists(confPath))
             return await ServerConfigV2.Deserialize(await File.ReadAllTextAsync(confPath))
                 .BindAsync(async config => await config.StandardizeAsync(path));
-        
-        
-        
-        if (!v1Read) return Result.Fail<LocatedServerConfig>(new ArgumentException(
-            "Target path doesn't contain any server config file of LSL",
-            nameof(path)));
+
+
+        if (!v1Read)
+            return Result.Fail<LocatedServerConfig>(new ArgumentException(
+                "Target path doesn't contain any server config file of LSL",
+                nameof(path)));
         // try v1
         confPath = Path.Combine(path, "lslconfig.json");
         if (File.Exists(confPath))
@@ -36,5 +36,4 @@ public static class ServerConfigHelper
             "Target path doesn't contain any server config file of LSL",
             nameof(path)));
     }
-    
 }

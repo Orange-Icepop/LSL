@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using LSL.Common.Results;
 using LSL.Services.ConfigServices;
 using LSL.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,12 +15,6 @@ namespace LSL.ViewModels;
 
 public class InitializationViewModel : ViewModelBase
 {
-    [Reactive] public UserControl MainWindowView { get; private set; }
-
-    public AppStateLayer AppState { get; }
-    public ShellViewModel? Shell { get; private set; }
-    public DialogViewModel DialogModel { get; }
-
     public InitializationViewModel(ILogger<InitializationViewModel> logger, AppStateLayer appState,
         DialogViewModel dialogModel) : base(logger)
     {
@@ -36,16 +29,26 @@ public class InitializationViewModel : ViewModelBase
         Logger.LogInformation("Initialization VM ctor complete.");
     }
 
+    [Reactive] public UserControl MainWindowView { get; private set; }
+
+    public AppStateLayer AppState { get; }
+    public ShellViewModel? Shell { get; private set; }
+    public DialogViewModel DialogModel { get; }
+
+    public ICommand ShowMainWindowCmd { get; } // 显示主窗口命令
+    public ICommand TrayQuitCmd { get; } // 退出命令
+
     public async Task Initialize(IServiceProvider provider)
     {
         Logger.LogInformation("===== Starting App =====");
-        var configMgr = provider.GetRequiredService<ConfigManager>(); 
+        var configMgr = provider.GetRequiredService<ConfigManager>();
         var res = await configMgr.Initialize();
         if (res.IsFailed)
         {
             Logger.LogCritical(res.Error, "Config initialization failed.");
             throw new Exception("Config initialization failed.", res.Error);
         }
+
         Shell = provider.GetRequiredService<ShellViewModel>();
         if (Shell is null) throw new Exception("ShellViewModel failed to initialize");
         await Task.Run(async () =>
@@ -55,13 +58,10 @@ public class InitializationViewModel : ViewModelBase
         });
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            MainWindowView = new MainView() { DataContext = Shell, ViewModel = Shell };
+            MainWindowView = new MainView { DataContext = Shell, ViewModel = Shell };
         });
         Logger.LogInformation("===== App started =====");
     }
-
-    public ICommand ShowMainWindowCmd { get; } // 显示主窗口命令
-    public ICommand TrayQuitCmd { get; } // 退出命令
 
     public static void ShowMainWindow()
     {

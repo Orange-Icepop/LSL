@@ -12,14 +12,15 @@ public static class ZipHelper
         if (password != null) zipStream.Password = password;
         while (zipStream.GetNextEntry() is { } entry)
         {
-            if (entry.IsDirectory || string.IsNullOrEmpty(entry.Name)) 
+            if (entry.IsDirectory || string.IsNullOrEmpty(entry.Name))
                 continue;
-            string fullPath = Path.Combine(targetDir, entry.Name.Replace('/', Path.DirectorySeparatorChar));
-            string? dirPath = Path.GetDirectoryName(fullPath);
+            var fullPath = Path.Combine(targetDir, entry.Name.Replace('/', Path.DirectorySeparatorChar));
+            var dirPath = Path.GetDirectoryName(fullPath);
             if (!string.IsNullOrEmpty(dirPath)) Directory.CreateDirectory(dirPath);
             using var fileStream = File.Create(fullPath);
             zipStream.CopyTo(fileStream);
         }
+
         return true;
     }
 }

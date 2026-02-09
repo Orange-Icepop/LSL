@@ -20,7 +20,7 @@ public enum ServerCoreType
     Mohist,
     Paper,
     Vanilla,
-    Velocity,
+    Velocity
 }
 
 public static class ServerCoreTypeExtensions

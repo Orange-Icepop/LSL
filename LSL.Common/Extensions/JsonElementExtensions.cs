@@ -6,18 +6,16 @@ namespace LSL.Common.Extensions;
 [Obsolete]
 public static class JsonElementExtensions
 {
-    public static bool TryGetString(this JsonElement property, [NotNullWhen(true)]out string? value)
+    public static bool TryGetString(this JsonElement property, [NotNullWhen(true)] out string? value)
     {
         if (property.ValueKind == JsonValueKind.String)
         {
             value = property.GetString();
             return value is not null;
         }
-        else
-        {
-            value = null;
-            return false;
-        }
+
+        value = null;
+        return false;
     }
 
     public static bool TryGetNullableString(this JsonElement property, out string? value)

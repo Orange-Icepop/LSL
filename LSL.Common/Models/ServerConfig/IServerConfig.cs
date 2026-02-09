@@ -1,4 +1,4 @@
-using LSL.Common.Results;
+using FluentResults;
 
 namespace LSL.Common.Models.ServerConfig;
 

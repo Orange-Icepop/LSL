@@ -17,6 +17,6 @@ public enum OutputChannelType
     LSLError
 }
 
-public record TerminalOutputArgs(int ServerId, string Output, OutputChannelType ChannelType);// 终端输出事件
-public record ColorOutputLine(string Line, string ColorHex);// 着色输出行
-    
+public record TerminalOutputArgs(int ServerId, string Output, OutputChannelType ChannelType); // 终端输出事件
+
+public record ColorOutputLine(string Line, string ColorHex); // 着色输出行

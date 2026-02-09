@@ -10,45 +10,43 @@ using Microsoft.Extensions.Logging;
 namespace LSL.Services.ServerServices;
 
 /// <summary>
-/// A storage in daemon program to provide server information histories for clients.
+///     A storage in daemon program to provide server information histories for clients.
 /// </summary>
 public class ServerOutputStorage : IDisposable
 {
-    public readonly ConcurrentDictionary<int, ObservableCollection<ColorOutputLine>> OutputDict = new();
-    public readonly ConcurrentDictionary<int, (bool IsRunning, bool IsOnline)> StatusDict = new();
-    public readonly ConcurrentDictionary<(int ServerId, string PlayerName), string> PlayerDict = new();
-    public readonly ConcurrentDictionary<int, ObservableCollection<string>> MessageDict = new();
-    private readonly Channel<IStorageArgs> _storageQueue;
-    private readonly CancellationTokenSource _storageCts = new();
     private readonly ILogger<ServerOutputStorage> _logger;
+    private readonly CancellationTokenSource _storageCts = new();
+    private readonly Channel<IStorageArgs> _storageQueue;
+    public readonly ConcurrentDictionary<int, ObservableCollection<string>> MessageDict = new();
+    public readonly ConcurrentDictionary<int, ObservableCollection<ColorOutputLine>> OutputDict = new();
+    public readonly ConcurrentDictionary<(int ServerId, string PlayerName), string> PlayerDict = new();
+    public readonly ConcurrentDictionary<int, (bool IsRunning, bool IsOnline)> StatusDict = new();
+
     public ServerOutputStorage(ILogger<ServerOutputStorage> logger)
     {
         _logger = logger;
-        _storageQueue = Channel.CreateUnbounded<IStorageArgs>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = true });
+        _storageQueue = Channel.CreateUnbounded<IStorageArgs>(new UnboundedChannelOptions
+            { SingleWriter = false, SingleReader = true });
         Task.Run(() => ProcessStorage(_storageCts.Token));
         EventBus.Instance.Subscribe<IStorageArgs>(arg => TrySendLine(arg));
         _logger.LogInformation("ServerOutputStorage Launched");
     }
 
     #region 排队处理
+
     private bool TrySendLine(IStorageArgs args)
     {
-        if (_storageQueue.Writer.TryWrite(args))
-        {
-            return true;
-        }
-        else
-        {
-            _logger.LogError("StorageQueue Writer is full");
-            return false;
-        }
+        if (_storageQueue.Writer.TryWrite(args)) return true;
+
+        _logger.LogError("StorageQueue Writer is full");
+        return false;
     }
+
     private async Task ProcessStorage(CancellationToken ct)
     {
         try
         {
             await foreach (var args in _storageQueue.Reader.ReadAllAsync(ct))
-            {
                 try
                 {
                     await StorageProcessor(args);
@@ -57,10 +55,12 @@ public class ServerOutputStorage : IDisposable
                 {
                     _logger.LogError(ex, "An error occured in output storage processing.");
                 }
-            }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException)
+        {
+        }
     }
+
     private Task StorageProcessor(IStorageArgs args)
     {
         return Task.Run(() =>
@@ -86,15 +86,10 @@ public class ServerOutputStorage : IDisposable
                 case PlayerUpdateArgs pua:
                     PlayerDict.AddOrUpdate((pua.ServerId, pua.PlayerName), pua.UUID, (key, value) =>
                     {
-                        if (pua.Entering)
-                        {
-                            return pua.UUID;
-                        }
-                        else
-                        {
-                            PlayerDict.TryRemove(key, out _);
-                            return string.Empty;
-                        }
+                        if (pua.Entering) return pua.UUID;
+
+                        PlayerDict.TryRemove(key, out _);
+                        return string.Empty;
                     });
                     break;
                 case PlayerMessageArgs pma:
@@ -107,6 +102,7 @@ public class ServerOutputStorage : IDisposable
             }
         });
     }
+
     public void Dispose()
     {
         _storageCts.Cancel();
@@ -114,6 +110,6 @@ public class ServerOutputStorage : IDisposable
         _storageCts.Dispose();
         GC.SuppressFinalize(this);
     }
-    #endregion
 
+    #endregion
 }

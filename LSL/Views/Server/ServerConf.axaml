@@ -24,35 +24,41 @@
             </controls:MyCard>
             <controls:MyCard Text="详细信息">
                 <Grid Margin="25,50,25,25" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,Auto">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="LSL注册ID："/>
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="最小内存（MB）："/>
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="最大内存（MB）："/>
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="使用的Java路径："/>
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="附加JVM参数："/>
-                    <SelectableTextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.ServerId}"/>
-                    <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.MinMemory}"/>
-                    <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.MaxMemory}"/>
-                    <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.JavaPath}"/>
-                    <SelectableTextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ConfigVM.SelectedServerConfig.ExtraJvmArgs}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="LSL注册ID：" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="最小内存（MB）：" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="最大内存（MB）：" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="使用的Java路径：" />
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="附加JVM参数：" />
+                    <SelectableTextBlock Grid.Row="0" Grid.Column="1"
+                                         Text="{Binding ConfigVM.SelectedServerConfig.ServerId}" />
+                    <SelectableTextBlock Grid.Row="1" Grid.Column="1"
+                                         Text="{Binding ConfigVM.SelectedServerConfig.MinMemory}" />
+                    <SelectableTextBlock Grid.Row="2" Grid.Column="1"
+                                         Text="{Binding ConfigVM.SelectedServerConfig.MaxMemory}" />
+                    <SelectableTextBlock Grid.Row="3" Grid.Column="1"
+                                         Text="{Binding ConfigVM.SelectedServerConfig.JavaPath}" />
+                    <SelectableTextBlock Grid.Row="4" Grid.Column="1"
+                                         Text="{Binding ConfigVM.SelectedServerConfig.ExtraJvmArgs}" />
                 </Grid>
             </controls:MyCard>
             <controls:MyCard Text="配置操作">
                 <DockPanel Margin="25,50,25,25">
                     <controls:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight"
-                                    Height="30" Width="100" Margin="10" Command="{Binding FullViewCmd}"
-                                    IsEnabled="{Binding AppState.NotTemplateServer}"
-                                    CommandParameter="ServerConfEdit">
+                                       Height="30" Width="100" Margin="10" Command="{Binding FullViewCmd}"
+                                       IsEnabled="{Binding AppState.NotTemplateServer}"
+                                       CommandParameter="ServerConfEdit">
                         修改配置
                     </controls:MyButton>
                     <controls:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Highlight"
-                                    Height="30" Width="100" Margin="10" Command="{Binding PublicCmd.OpenFileCmd}"
-                                    CommandParameter="{Binding ConfigVM.SelectedServerPath}"
-                                    IsEnabled="{Binding AppState.NotTemplateServer}">
+                                       Height="30" Width="100" Margin="10" Command="{Binding PublicCmd.OpenFileCmd}"
+                                       CommandParameter="{Binding ConfigVM.SelectedServerPath}"
+                                       IsEnabled="{Binding AppState.NotTemplateServer}">
                         打开文件夹
                     </controls:MyButton>
-                    <controls:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Red" Height="30"
-                                    Width="100" Margin="10" Command="{Binding ConfigVM.DeleteServerCmd}"
-                                    IsEnabled="{Binding AppState.NotTemplateServer}">
+                    <controls:MyButton VerticalAlignment="Center" HorizontalAlignment="Left" ColorType="Red"
+                                       Height="30"
+                                       Width="100" Margin="10" Command="{Binding ConfigVM.DeleteServerCmd}"
+                                       IsEnabled="{Binding AppState.NotTemplateServer}">
                         删除服务器
                     </controls:MyButton>
                 </DockPanel>

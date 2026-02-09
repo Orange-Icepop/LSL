@@ -18,6 +18,8 @@ namespace LSL.ViewModels;
 
 public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 {
+    private ConcurrentDictionary<string, object> _cachedConfig = [];
+
     public ConfigViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
     {
         JavaVersions = null!;
@@ -32,14 +34,20 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
                     new TextColumn<JavaInfo, string>("版本", x => x.Version),
                     new TextColumn<JavaInfo, string>("路径", x => x.Path),
                     new TextColumn<JavaInfo, string>("提供商", x => x.Vendor),
-                    new TextColumn<JavaInfo, string>("架构", x => x.Architecture),
-                },
+                    new TextColumn<JavaInfo, string>("架构", x => x.Architecture)
+                }
             })
             .ToPropertyEx(this, x => x.JavaVersions);
         AppState.WhenAnyValue(x => x.CurrentServerConfigs, x => x.SelectedServerId)
             .Subscribe(scc => RaiseServerConfigChanged(scc.Item2, scc.Item1));
         DeleteServerCmd = ReactiveCommand.CreateFromTask(async () => await DeleteServer());
     }
+
+    #region Java配置
+
+    public FlatTreeDataGridSource<JavaInfo> JavaVersions { [ObservableAsProperty] get; }
+
+    #endregion
 
     public async Task<bool> Init()
     {
@@ -58,12 +66,11 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         catch (Exception e)
         {
             Logger.LogCritical(e, "A fatal error occured when initializing LSL.");
-            MessageBus.Current.SendMessage(new ViewModelFatalError(e, "A fatal error occured when initializing LSL.", "初始化LSL时发生了致命错误。"));
+            MessageBus.Current.SendMessage(new ViewModelFatalError(e, "A fatal error occured when initializing LSL.",
+                "初始化LSL时发生了致命错误。"));
             return false;
         }
     }
-
-    private ConcurrentDictionary<string, object> _cachedConfig = [];
 
     #region 核心配置数据
 
@@ -166,11 +173,9 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
                 _cachedConfig = new ConcurrentDictionary<string, object>(AppState.CurrentConfigs));
             return true;
         }
-        else
-        {
-            await AppState.Coordinator.SubmitServiceError(success);
-            return false;
-        }
+
+        await AppState.Coordinator.SubmitServiceError(success);
+        return false;
     }
 
     private void SaveConfigToCache(string key, object? value) // 向缓存字典中写入新配置
@@ -195,7 +200,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     public async Task DeleteServer()
     {
         // 检查是否可以删除
-        int serverId = AppState.SelectedServerId;
+        var serverId = AppState.SelectedServerId;
         if (serverId < 0)
         {
             await AppState.Coordinator.ThrowError("选定的服务器不存在", "你没有添加过服务器。该服务器是LSL提供的占位符，不支持删除。");
@@ -208,7 +213,8 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
             await AppState.Coordinator.ThrowError("无法删除服务器", "指定的服务器不存在。");
             return;
         }
-        else if (status.IsRunning)
+
+        if (status.IsRunning)
         {
             await AppState.Coordinator.ThrowError("无法删除服务器", $"指定的服务器{config.ServerName}正在运行，请先关闭服务器再删除。");
             return;
@@ -231,16 +237,8 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         if (result3 == PopupResult.No) return;
         var deleteResult = await AppState.Coordinator.SubmitServiceError(await Connector.DeleteServer(serverId));
         if (deleteResult.IsSuccess)
-        {
             AppState.Coordinator.Notify(NotifyType.Success, null, $"服务器{config.ServerName}删除成功");
-        }
     }
-
-    #endregion
-
-    #region Java配置
-
-    public FlatTreeDataGridSource<JavaInfo> JavaVersions { [ObservableAsProperty] get; }
 
     #endregion
 

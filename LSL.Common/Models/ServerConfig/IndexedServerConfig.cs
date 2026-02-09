@@ -5,20 +5,6 @@ namespace LSL.Common.Models.ServerConfig;
 [MutableGeneration]
 public record IndexedServerConfig
 {
-    public LocatedServerConfig LocatedConfig { get; init; }
-    public int ServerId { get; init; }
-    public string ServerPath => LocatedConfig.ServerPath;
-    public string ServerName => LocatedConfig.ServerName;
-    public ServerCoreType ServerType => LocatedConfig.ServerType;
-
-    public CommonCoreConfigV1? CommonCoreInfo => LocatedConfig.CommonCoreInfo;
-    public ForgeCoreConfigV1? ForgeCoreInfo => LocatedConfig.ForgeCoreInfo;
-    public string JavaPath => LocatedConfig.JavaPath;
-    public uint MinMemory => LocatedConfig.MinMemory;
-    public uint MaxMemory => LocatedConfig.MaxMemory;
-    public List<string> ExtraJvmArgs => LocatedConfig.ExtraJvmArgs;
-    public bool EnablePreLaunchProtection => LocatedConfig.EnablePreLaunchProtection;
-
     /// <param name="serverId">The server's register ID in LSL.</param>
     /// <param name="serverPath">The server folder's path.</param>
     /// <param name="serverName">The server's name.</param>
@@ -29,7 +15,10 @@ public record IndexedServerConfig
     /// <param name="minMemory">The minimum JVM allocated RAM.</param>
     /// <param name="maxMemory">The maximum JVM allocated RAM.</param>
     /// <param name="extJvm">The extent JVM parameters.</param>
-    /// <param name="enablePreLaunchProtection">Disable the operation before the server's complete start. May lock permanently in some types of server such as Mohist.</param>
+    /// <param name="enablePreLaunchProtection">
+    ///     Disable the operation before the server's complete start. May lock permanently
+    ///     in some types of server such as Mohist.
+    /// </param>
     public IndexedServerConfig(int serverId,
         string serverPath,
         string serverName,
@@ -52,8 +41,22 @@ public record IndexedServerConfig
         LocatedConfig = locatedConfig;
     }
 
+    public LocatedServerConfig LocatedConfig { get; init; }
+    public int ServerId { get; init; }
+    public string ServerPath => LocatedConfig.ServerPath;
+    public string ServerName => LocatedConfig.ServerName;
+    public ServerCoreType ServerType => LocatedConfig.ServerType;
+
+    public CommonCoreConfigV1? CommonCoreInfo => LocatedConfig.CommonCoreInfo;
+    public ForgeCoreConfigV1? ForgeCoreInfo => LocatedConfig.ForgeCoreInfo;
+    public string JavaPath => LocatedConfig.JavaPath;
+    public uint MinMemory => LocatedConfig.MinMemory;
+    public uint MaxMemory => LocatedConfig.MaxMemory;
+    public List<string> ExtraJvmArgs => LocatedConfig.ExtraJvmArgs;
+    public bool EnablePreLaunchProtection => LocatedConfig.EnablePreLaunchProtection;
+
     /// <summary>
-    /// Returns a server info which will be recognized as not added.
+    ///     Returns a server info which will be recognized as not added.
     /// </summary>
     public static IndexedServerConfig None =>
         new(-1, "", "未添加服务器", ServerCoreType.Unknown, null, null, "", 0, 0, [], false);

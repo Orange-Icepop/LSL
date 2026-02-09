@@ -14,8 +14,7 @@
                     <StackPanel Margin="30,50,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器名称</TextBlock>
                         <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300"
-                                 Text="{Binding FormViewModel.ServerName}">
-                        </TextBox>
+                                 Text="{Binding FormViewModel.ServerName}" />
                     </StackPanel>
                     <StackPanel Margin="30,10,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">核心文件</TextBlock>
@@ -23,8 +22,8 @@
                             <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300"
                                      Text="{Binding FormViewModel.CorePath}" />
                             <controls:MyButton VerticalAlignment="Center" HorizontalAlignment="Left"
-                                            Command="{Binding FormViewModel.SelectCoreCmd}" Width="100" Height="30"
-                                            Margin="10,0,10,0">
+                                               Command="{Binding FormViewModel.SelectCoreCmd}" Width="100" Height="30"
+                                               Margin="10,0,10,0">
                                 选择核心
                             </controls:MyButton>
                         </StackPanel>
@@ -49,8 +48,7 @@
                                       VerticalAlignment="Center"
                                       Margin="10"
                                       Stroke="#019eff"
-                                      StrokeThickness="2">
-                                </Path>
+                                      StrokeThickness="2" />
                                 <ToolTip.Tip>
                                     <TextBlock>
                                         出于性能考虑，不会即时检查目标可执行文件是否为Java。在提交表单时将会进行检查。
@@ -65,11 +63,10 @@
                                       HorizontalAlignment="Left"
                                       Width="300"
                                       ItemsSource="{Binding FormViewModel.JavaList}"
-                                      SelectedIndex="{Binding FormViewModel.SelectedJavaIndex}">
-                            </ComboBox>
+                                      SelectedIndex="{Binding FormViewModel.SelectedJavaIndex}" />
                             <controls:MyButton Name="GetJavaBtn" VerticalAlignment="Center" HorizontalAlignment="Left"
-                                            Width="100"
-                                            Height="30" Margin="10,0,0,0" Command="{Binding PublicCmd.SearchJava}">
+                                               Width="100"
+                                               Height="30" Margin="10,0,0,0" Command="{Binding PublicCmd.SearchJava}">
                                 搜索Java
                             </controls:MyButton>
                         </StackPanel>
@@ -80,8 +77,8 @@
                                  Text="{Binding FormViewModel.ExtJvm}" />
                     </StackPanel>
                     <controls:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
-                                    Height="30" Margin="30,10,0,5" ColorType="Highlight"
-                                    Command="{Binding FormViewModel.AddCoreCmd}">
+                                       Height="30" Margin="30,10,0,5" ColorType="Highlight"
+                                       Command="{Binding FormViewModel.AddCoreCmd}">
                         确认添加
                     </controls:MyButton>
                 </StackPanel>

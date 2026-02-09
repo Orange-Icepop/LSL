@@ -1,9 +1,8 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using LSL.Common;
+using FluentResults;
 using LSL.Common.Models.AppConfig;
-using LSL.Common.Results;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services.ConfigServices;
@@ -11,6 +10,8 @@ namespace LSL.Services.ConfigServices;
 public abstract class ConfigManagerComponentBase<T, TConfig> : IConfigManager<TConfig>
     where T : ConfigManagerComponentBase<T, TConfig> where TConfig : class, IConfig<TConfig>, new()
 {
+    protected readonly ILogger<T> Logger;
+
     protected ConfigManagerComponentBase(ILogger<T> logger)
     {
         Logger = logger;
@@ -18,7 +19,6 @@ public abstract class ConfigManagerComponentBase<T, TConfig> : IConfigManager<TC
     }
 
     protected abstract string ConfigPath { get; }
-    protected readonly ILogger<T> Logger;
 
     public TConfig Config { get; protected set; }
 
@@ -35,7 +35,7 @@ public abstract class ConfigManagerComponentBase<T, TConfig> : IConfigManager<TC
                         (_, _) => Logger.LogInformation("Config file {configPath} of type {type} generated", ConfigPath,
                             typeof(TConfig).Name),
                         ex => Logger.LogError(ex, "Cannot write {type}.", typeof(TConfig).Name))
-                    .Bind(_ => Result.Success(Config));
+                    .Bind(_ => Result.Ok(Config));
             }
 
             return await TConfig.Deserialize(await File.ReadAllTextAsync(ConfigPath))
@@ -75,7 +75,7 @@ public abstract class ConfigManagerComponentBase<T, TConfig> : IConfigManager<TC
                     try
                     {
                         await File.WriteAllTextAsync(ConfigPath, c.Serialize());
-                        return Result.Success(c);
+                        return Result.Ok(c);
                     }
                     catch (Exception e)
                     {

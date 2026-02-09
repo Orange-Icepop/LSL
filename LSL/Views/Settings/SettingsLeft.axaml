@@ -7,14 +7,17 @@
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.SettingsLeft">
-	<StackPanel Width="150">
-		<TextBlock DockPanel.Dock="Top" Text="设置" Margin="10,10,0,0" Foreground="Gray"/>
-		<controls:MyLeftButton Width="150" Text="常规" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="CommonSettings" x:Name="Common" Command="{Binding RightViewCmd}" CommandParameter="CommonSettings" />
-		<!--
+    <StackPanel Width="150">
+        <TextBlock DockPanel.Dock="Top" Text="设置" Margin="10,10,0,0" Foreground="Gray" />
+        <controls:MyLeftButton Width="150" Text="常规" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}"
+                               Page="CommonSettings" x:Name="Common" Command="{Binding RightViewCmd}"
+                               CommandParameter="CommonSettings" />
+        <!--
 		<controls:MyLeftButton Width="150" Text="下载" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="DownloadSettings" x:Name="Download" Command="{Binding RightViewCmd}" CommandParameter="DownloadSettings"/>
 		<controls:MyLeftButton Width="150" Text="网页面板" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="PanelSettings" x:Name="Panel" Command="{Binding RightViewCmd}" CommandParameter="PanelSettings"/>
 		<controls:MyLeftButton Width="150" Text="个性化" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="StyleSettings" x:Name="StyleButton" Command="{Binding RightViewCmd}" CommandParameter="StyleSettings"/>
 		-->
-		<controls:MyLeftButton Width="150" Text="关于" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Page="About" x:Name="About" Command="{Binding RightViewCmd}" CommandParameter="About"/>
-	</StackPanel>
+        <controls:MyLeftButton Width="150" Text="关于" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}"
+                               Page="About" x:Name="About" Command="{Binding RightViewCmd}" CommandParameter="About" />
+    </StackPanel>
 </UserControl>

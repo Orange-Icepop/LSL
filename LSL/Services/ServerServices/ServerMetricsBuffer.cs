@@ -13,8 +13,8 @@ using Microsoft.Extensions.Logging;
 namespace LSL.Services.ServerServices;
 
 /// <summary>
-/// A class used to transfer ProcessMetricsEventArgs into continuous & low-cost args.
-/// Also caches metrics information.
+///     A class used to transfer ProcessMetricsEventArgs into continuous & low-cost args.
+///     Also caches metrics information.
 /// </summary>
 public class ServerMetricsBuffer : IDisposable
 {
@@ -22,27 +22,27 @@ public class ServerMetricsBuffer : IDisposable
     private const int ReportIntervalMs = 1000;
     private const int MinuteIntervalMs = 60000;
     private static readonly long s_systemMem = MemoryInfo.CurrentSystemMemory;
-    
-    private readonly CancellationTokenSource _cts;
-    private readonly ILogger<ServerMetricsBuffer> _logger;
-    private readonly Channel<ProcessMetricsEventArgs> _metricsChannel;
-    
+
     // 历史记录队列
     private readonly RangedObservableLinkedList<double> _cpuHistory = new(HistoryMinutes, 0, false);
-    private readonly RangedObservableLinkedList<double> _ramPercentHistory = new(HistoryMinutes, 0, false);
-    private readonly RangedObservableLinkedList<long> _ramBytesAvgHistory = new(HistoryMinutes, 0, false);
-    private readonly RangedObservableLinkedList<long> _ramBytesPeakHistory = new(HistoryMinutes, 0, false);
-    
+
+    private readonly CancellationTokenSource _cts;
+
+    // 当前秒数据
+    private readonly ConcurrentDictionary<int, (double Cpu, long RamBytes, double RamPercent)> _currentMetrics = new();
+    private readonly ILogger<ServerMetricsBuffer> _logger;
+    private readonly Channel<ProcessMetricsEventArgs> _metricsChannel;
+
     // 当前分钟数据
     private readonly List<double> _minuteCpuSamples = [];
     private readonly List<long> _minuteRamBytesSamples = [];
-    
-    // 当前秒数据
-    private readonly ConcurrentDictionary<int, (double Cpu, long RamBytes, double RamPercent)> _currentMetrics = new();
+
+    private readonly Task _processingTask;
+    private readonly RangedObservableLinkedList<long> _ramBytesAvgHistory = new(HistoryMinutes, 0, false);
+    private readonly RangedObservableLinkedList<long> _ramBytesPeakHistory = new(HistoryMinutes, 0, false);
+    private readonly RangedObservableLinkedList<double> _ramPercentHistory = new(HistoryMinutes, 0, false);
+    private readonly Task _reportingTask;
     private DateTime _lastMinuteReportTime = DateTime.Now;
-    
-    private Task _processingTask;
-    private Task _reportingTask;
 
     public ServerMetricsBuffer(ILogger<ServerMetricsBuffer> logger)
     {
@@ -50,15 +50,29 @@ public class ServerMetricsBuffer : IDisposable
         _cts = new CancellationTokenSource();
         _metricsChannel = Channel.CreateUnbounded<ProcessMetricsEventArgs>(
             new UnboundedChannelOptions { SingleReader = true });
-        
+
         _processingTask = Task.Run(() => ProcessMetricsAsync(_cts.Token));
         _reportingTask = Task.Run(() => ReportMetricsAsync(_cts.Token));
-        
+
         _logger.LogInformation("ServerMetricsBuffer initialized");
     }
 
-    public bool TryWrite(ProcessMetricsEventArgs args) => 
-        _metricsChannel.Writer.TryWrite(args);
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _metricsChannel.Writer.Complete();
+
+        Task.WaitAll([_processingTask, _reportingTask], TimeSpan.FromSeconds(3));
+        _cts.Dispose();
+
+        GC.SuppressFinalize(this);
+        _logger.LogInformation("ServerMetricsBuffer disposed");
+    }
+
+    public bool TryWrite(ProcessMetricsEventArgs args)
+    {
+        return _metricsChannel.Writer.TryWrite(args);
+    }
 
     private async Task ProcessMetricsAsync(CancellationToken ct)
     {
@@ -86,7 +100,7 @@ public class ServerMetricsBuffer : IDisposable
                 // 每秒报告
                 await secondTimer.WaitForNextTickAsync(ct);
                 ReportPerSecondMetrics();
-                
+
                 // 每分钟报告
                 if (DateTime.Now.Subtract(_lastMinuteReportTime).TotalMilliseconds > MinuteIntervalMs)
                 {
@@ -103,12 +117,12 @@ public class ServerMetricsBuffer : IDisposable
 
     private void ReportPerSecondMetrics()
     {
-        var reports = _currentMetrics.Select(kvp => 
-            new MetricsReport(
-                kvp.Key,
-                SanitizeValue(kvp.Value.Cpu),
-                kvp.Value.RamBytes,
-                SanitizeValue(kvp.Value.RamPercent)))
+        var reports = _currentMetrics.Select(kvp =>
+                new MetricsReport(
+                    kvp.Key,
+                    SanitizeValue(kvp.Value.Cpu),
+                    kvp.Value.RamBytes,
+                    SanitizeValue(kvp.Value.RamPercent)))
             .ToList();
 
         EventBus.Instance.Fire<IMetricsArgs>(new MetricsUpdateArgs(reports));
@@ -117,17 +131,17 @@ public class ServerMetricsBuffer : IDisposable
     private void ReportPerMinuteMetrics()
     {
         // 计算分钟级指标
-        double cpuAvg = _minuteCpuSamples.Count > 0 
+        var cpuAvg = _minuteCpuSamples.Count > 0
             ? _minuteCpuSamples.Average()
             : 0;
 
-        long ramBytesAvg = _minuteRamBytesSamples.Count > 0
+        var ramBytesAvg = _minuteRamBytesSamples.Count > 0
             ? (long)_minuteRamBytesSamples.Average()
             : 0;
 
-        double ramPercentAvg = (double)ramBytesAvg / s_systemMem * 100;
-        
-        long ramBytesPeak = _minuteRamBytesSamples.Count > 0 
+        var ramPercentAvg = (double)ramBytesAvg / s_systemMem * 100;
+
+        var ramBytesPeak = _minuteRamBytesSamples.Count > 0
             ? _minuteRamBytesSamples.Max()
             : 0;
 
@@ -147,7 +161,7 @@ public class ServerMetricsBuffer : IDisposable
         // 重置分钟数据
         _minuteCpuSamples.Clear();
         _minuteRamBytesSamples.Clear();
-        
+
         _lastMinuteReportTime = DateTime.Now;
     }
 
@@ -155,11 +169,11 @@ public class ServerMetricsBuffer : IDisposable
     {
         if (args.IsProcessExited || args.Error != null)
             return (0, 0, 0);
-        
+
         // 收集分钟级样本
         _minuteCpuSamples.Add(args.CpuUsagePercent);
         _minuteRamBytesSamples.Add(args.MemoryUsageBytes);
-        
+
         return (args.CpuUsagePercent, args.MemoryUsageBytes, args.MemoryUsagePercent);
     }
 
@@ -168,17 +182,5 @@ public class ServerMetricsBuffer : IDisposable
         if (double.IsNaN(value)) return 0;
         if (double.IsInfinity(value)) return 100;
         return Math.Clamp(value, 0, 100);
-    }
-
-    public void Dispose()
-    {
-        _cts.Cancel();
-        _metricsChannel.Writer.Complete();
-        
-        Task.WaitAll([_processingTask, _reportingTask], TimeSpan.FromSeconds(3));
-        _cts.Dispose();
-        
-        GC.SuppressFinalize(this);
-        _logger.LogInformation("ServerMetricsBuffer disposed");
     }
 }

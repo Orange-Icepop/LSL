@@ -10,16 +10,19 @@
     <Grid RowDefinitions="*" Background="{DynamicResource OBlue}" Name="Bkg">
         <TextBlock Name="Title" Text="Lime Server Launcher" FontFamily="{StaticResource SmileySans}" FontSize="27"
                    Margin="15,0,0,0" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center" />
-        <StackPanel x:Name="Navigation" Grid.Row="0" Grid.Column="0" Orientation="Horizontal" FlowDirection="LeftToRight"
+        <StackPanel x:Name="Navigation" Grid.Row="0" Grid.Column="0" Orientation="Horizontal"
+                    FlowDirection="LeftToRight"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">
             <controls:MyBarButton x:Name="Home" Title="主页" Icon="{StaticResource IconHome}"
                                   Page="Home"
-                                  CurrentPageState="{Binding BarViewModel.CurrentMainPageState}" Command="{Binding LeftViewCmd}"
+                                  CurrentPageState="{Binding BarViewModel.CurrentMainPageState}"
+                                  Command="{Binding LeftViewCmd}"
                                   CommandParameter="HomeLeft" />
             <controls:MyBarButton x:Name="Server" Title="服务器" Icon="{StaticResource IconServer}"
                                   Page="Server"
-                                  CurrentPageState="{Binding BarViewModel.CurrentMainPageState}" Command="{Binding LeftViewCmd}"
+                                  CurrentPageState="{Binding BarViewModel.CurrentMainPageState}"
+                                  Command="{Binding LeftViewCmd}"
                                   CommandParameter="ServerLeft" />
             <controls:MyBarButton x:Name="Download" Title="下载" Icon="{StaticResource IconDownload}"
                                   Page="Downloads"

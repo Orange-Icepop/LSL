@@ -24,7 +24,7 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
         StopServerCmd = ReactiveCommand.Create(async () => await Connector.StopServer(AppState.SelectedServerId));
         SaveServerCmd = ReactiveCommand.Create(() => Connector.SaveServer(AppState.SelectedServerId));
         EndServerCmd = ReactiveCommand.Create(async () => await Connector.EndServer(AppState.SelectedServerId));
-        SendCommand = ReactiveCommand.Create(()=>
+        SendCommand = ReactiveCommand.Create(() =>
         {
             SendCommandToServer();
             InputText = "";
@@ -38,14 +38,15 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
                 Columns =
                 {
                     new TextColumn<PlayerInfo, string>("用户名", x => x.PlayerName),
-                    new TextColumn<PlayerInfo, string>("UUID", x => x.UUID),
+                    new TextColumn<PlayerInfo, string>("UUID", x => x.UUID)
                 }
             })
             .ToProperty(this, x => x.CurrentUsers);
         AppState.ServerIdChanged.Select(id => AppState.MessageDict.GetOrAdd(id, []))
             .ToPropertyEx(this, x => x.CurrentUserMessage);
         // status更新
-        var statusFlow = AppState.ServerIdChanged.Select(id => AppState.ServerStatuses.GetOrAdd(id, new ServerStatus()));
+        var statusFlow =
+            AppState.ServerIdChanged.Select(id => AppState.ServerStatuses.GetOrAdd(id, new ServerStatus()));
         statusFlow.ToPropertyEx(this, x => x.CurrentStatus);
         // status连带更新
         var statusChanges = this.WhenAnyValue(x => x.CurrentStatus)
@@ -66,58 +67,71 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
         });
     }
 
+    public ObservableCollection<ColoredLine> TerminalText { [ObservableAsProperty] get; }
+    public FlatTreeDataGridSource<PlayerInfo> CurrentUsers { [ObservableAsProperty] get; }
+    public ObservableCollection<UserMessageLine> CurrentUserMessage { [ObservableAsProperty] get; }
+
     #region 控制
-    public ICommand StartServerCmd { get; }// 启动服务器命令
-    public ICommand StopServerCmd { get; }// 停止服务器命令
-    public ICommand SaveServerCmd { get; }// 保存服务器命令
-    public ICommand EndServerCmd { get; }// 结束服务器进程命令
-    public ICommand SendCommand { get; }// 发送服务器命令
+
+    public ICommand StartServerCmd { get; } // 启动服务器命令
+    public ICommand StopServerCmd { get; } // 停止服务器命令
+    public ICommand SaveServerCmd { get; } // 保存服务器命令
+    public ICommand EndServerCmd { get; } // 结束服务器进程命令
+    public ICommand SendCommand { get; } // 发送服务器命令
     private string _inputText = "";
+
     public string InputText
     {
         get => _inputText;
         set
         {
-            string endless = value.TrimEnd('\r', '\n');
+            var endless = value.TrimEnd('\r', '\n');
             if (endless.Length < value.Length)
             {
                 _inputText = endless;
                 SendCommandToServer();
-                Dispatcher.UIThread.Post(() => this.RaiseAndSetIfChanged(ref _inputText, ""));// 避免编译时优化将赋值无效化
+                Dispatcher.UIThread.Post(() => this.RaiseAndSetIfChanged(ref _inputText, "")); // 避免编译时优化将赋值无效化
             }
-            else 
+            else
             {
-                this.RaiseAndSetIfChanged(ref _inputText, endless); 
+                this.RaiseAndSetIfChanged(ref _inputText, endless);
             }
         }
     }
-    public void StartSelectedServer()//启动服务器方法
+
+    public void StartSelectedServer() //启动服务器方法
     {
-        MessageBus.Current.SendMessage(new NavigateArgs { BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server, RightTarget = RightPageState.ServerTerminal });
+        MessageBus.Current.SendMessage(new NavigateArgs
+        {
+            BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server,
+            RightTarget = RightPageState.ServerTerminal
+        });
         var success = Connector.StartServer(AppState.SelectedServerId);
         if (success) AppState.Coordinator.Notify(NotifyType.Info, "服务器正在启动", "请稍候等待服务器启动完毕");
         else AppState.Coordinator.Notify(NotifyType.Error, "服务器启动失败", "配置检查不通过，请检查配置是否存在错误");
     }
-    public void SendCommandToServer()//发送命令方法
+
+    public void SendCommandToServer() //发送命令方法
     {
         if (string.IsNullOrEmpty(InputText))
         {
             AppState.Coordinator.Notify(NotifyType.Error, "输入为空", "请输入要发送的命令");
             return;
         }
+
         Connector.SendCommandToServer(AppState.SelectedServerId, InputText);
     }
 
     #endregion
 
     #region 服务器状态及其决定的操作
-    public bool LaunchButtonEnabled => CurrentStatus is not { IsRunning: true, IsOnline: false } && AppState.NotTemplateServer;
+
+    public bool LaunchButtonEnabled =>
+        CurrentStatus is not { IsRunning: true, IsOnline: false } && AppState.NotTemplateServer;
+
     public ICommand LaunchButtonCmd => CurrentStatus?.IsRunning == true ? StopServerCmd : StartServerCmd;
     public string LaunchButtonContent => CurrentStatus?.IsRunning == true ? "停止服务器" : "启动服务器";
     public ServerStatus CurrentStatus { [ObservableAsProperty] get; }
-    #endregion
 
-    public ObservableCollection<ColoredLine> TerminalText { [ObservableAsProperty] get; }
-    public FlatTreeDataGridSource<PlayerInfo> CurrentUsers { [ObservableAsProperty] get; }
-    public ObservableCollection<UserMessageLine> CurrentUserMessage { [ObservableAsProperty] get; }
+    #endregion
 }

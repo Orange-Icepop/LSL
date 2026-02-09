@@ -8,13 +8,18 @@ using Avalonia.ReactiveUI;
 
 namespace LSL.Browser;
 
-internal sealed partial class Program
+internal sealed class Program
 {
-    private static async Task Main(string[] args) => await BuildAvaloniaApp()
-        .WithInterFont()
-        .UseReactiveUI()
-        .StartBrowserAppAsync("out");
+    private static async Task Main(string[] args)
+    {
+        await BuildAvaloniaApp()
+            .WithInterFont()
+            .UseReactiveUI()
+            .StartBrowserAppAsync("out");
+    }
 
     public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>();
+    {
+        return AppBuilder.Configure<App>();
+    }
 }

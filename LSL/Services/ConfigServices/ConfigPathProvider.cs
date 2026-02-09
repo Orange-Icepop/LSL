@@ -22,7 +22,6 @@ public static class ConfigPathProvider
     {
         // 检查文件夹是否存在
         if (!Directory.Exists(folderPath))
-        {
             try
             {
                 // 测试写权限
@@ -32,10 +31,9 @@ public static class ConfigPathProvider
             {
                 return false;
             }
-        }
 
         // 执行文件读写测试
-        string testFilePath = Path.Combine(folderPath, $"permission_test_{Guid.NewGuid()}.tmp");
+        var testFilePath = Path.Combine(folderPath, $"permission_test_{Guid.NewGuid()}.tmp");
 
         try
         {
@@ -62,7 +60,9 @@ public static class ConfigPathProvider
                 if (File.Exists(testFilePath))
                     File.Delete(testFilePath);
             }
-            catch{}
+            catch
+            {
+            }
         }
     }
 }

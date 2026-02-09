@@ -1,73 +1,18 @@
 ﻿using System.Collections.Frozen;
 using System.Text;
+using FluentResults;
 using ICSharpCode.SharpZipLib.Zip;
 using LSL.Common.Models.ServerConfig;
-using LSL.Common.Results;
 
 namespace LSL.Common.Utilities.Minecraft;
 
 /// <summary>
-/// The specified validator for recognizing different types of server core.
+///     The specified validator for recognizing different types of server core.
 /// </summary>
 public static class CoreTypeHelper
 {
-    public static async Task<Result<ServerCoreType>> GetCoreType(string? filePath)
-    {
-        if (string.IsNullOrEmpty(filePath)) return Result.Fail<ServerCoreType>(new ArgumentNullException(nameof(filePath)));
-        if (!File.Exists(filePath)) return Result.Fail<ServerCoreType>(new FileNotFoundException($"Cannot find core file {filePath}"));
-
-        var jarMainClassResult = await GetMainClass(filePath).ConfigureAwait(false);
-        return jarMainClassResult.IsFailed
-            ? Result.Fail<ServerCoreType>(jarMainClassResult.Error)
-            : Result.Success(s_coreTypeMap.GetValueOrDefault(jarMainClassResult.Value, ServerCoreType.Unknown));
-    }
-
-    // the following code is taken and modified from https://github.com/Orange-Icepop/JavaMainClassFinder
-    private static async Task<Result<string>> GetMainClass(string jarFilePath)
-    {
-        try
-        {
-            await using var stream = new FileStream(jarFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
-                bufferSize: 81920, useAsync: true);
-            using var zipFile = new ZipFile(stream);
-            var entry = zipFile.GetEntry("META-INF/MANIFEST.MF");
-            if (entry is null || entry.IsDirectory) return Result.Fail<string>("MANIFEST.MF not found");
-            await using var fStream = zipFile.GetInputStream(entry);
-            if (fStream is null) return Result.Fail<string>("Unable to read MANIFEST.MF");
-            using var reader = new StreamReader(fStream, Encoding.UTF8);
-            var mc = await FindMainClassLine(reader);
-            return mc is null
-                ? Result.Fail<string>("Cannot find Main-Class property in MANIFEST.MF")
-                : Result.Success(mc);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Result.Fail<string>("Access denied: " + ex.Message);
-        }
-        catch (IOException ex)
-        {
-            return Result.Fail<string>("Error reading file: " + ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return Result.Fail<string>("Error reading jar file: " + ex.Message);
-        }
-    }
-
-    private static async Task<string?> FindMainClassLine(StreamReader reader)
-    {
-        while (await reader.ReadLineAsync().ConfigureAwait(false) is { } line)
-        {
-            if (line.StartsWith("Main-Class:"))
-            {
-                return line["Main-Class:".Length..].Trim();
-            }
-        }
-        return null;
-    }
-    
     private static readonly FrozenDictionary<string, ServerCoreType> s_coreTypeMap =
-        new Dictionary<string, ServerCoreType>()
+        new Dictionary<string, ServerCoreType>
         {
             ["net.minecraft.server.MinecraftServer"] = ServerCoreType.Vanilla,
             ["net.minecraft.bundler.Main"] = ServerCoreType.Vanilla,
@@ -89,6 +34,60 @@ public static class CoreTypeHelper
             ["com.mohistmc.MohistMCStart"] = ServerCoreType.Mohist,
             ["com.mohistmc.MohistMC"] = ServerCoreType.Mohist,
             ["com.destroystokyo.paperclip.Paperclip"] = ServerCoreType.Paper,
-            ["com.velocitypowered.proxy.Velocity"] = ServerCoreType.Velocity,
+            ["com.velocitypowered.proxy.Velocity"] = ServerCoreType.Velocity
         }.ToFrozenDictionary();
+
+    public static async Task<Result<ServerCoreType>> GetCoreType(string? filePath)
+    {
+        if (string.IsNullOrEmpty(filePath))
+            return Result.Fail<ServerCoreType>(new ArgumentNullException(nameof(filePath)));
+        if (!File.Exists(filePath))
+            return Result.Fail<ServerCoreType>(new FileNotFoundException($"Cannot find core file {filePath}"));
+
+        var jarMainClassResult = await GetMainClass(filePath).ConfigureAwait(false);
+        return jarMainClassResult.IsFailed
+            ? Result.Fail<ServerCoreType>(jarMainClassResult.Error)
+            : Result.Ok(s_coreTypeMap.GetValueOrDefault(jarMainClassResult.Value, ServerCoreType.Unknown));
+    }
+
+    // the following code is taken and modified from https://github.com/Orange-Icepop/JavaMainClassFinder
+    private static async Task<Result<string>> GetMainClass(string jarFilePath)
+    {
+        try
+        {
+            await using var stream = new FileStream(jarFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                81920, true);
+            using var zipFile = new ZipFile(stream);
+            var entry = zipFile.GetEntry("META-INF/MANIFEST.MF");
+            if (entry is null || entry.IsDirectory) return Result.Fail<string>("MANIFEST.MF not found");
+            await using var fStream = zipFile.GetInputStream(entry);
+            if (fStream is null) return Result.Fail<string>("Unable to read MANIFEST.MF");
+            using var reader = new StreamReader(fStream, Encoding.UTF8);
+            var mc = await FindMainClassLine(reader);
+            return mc is null
+                ? Result.Fail<string>("Cannot find Main-Class property in MANIFEST.MF")
+                : Result.Ok(mc);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Result.Fail<string>("Access denied: " + ex.Message);
+        }
+        catch (IOException ex)
+        {
+            return Result.Fail<string>("Error reading file: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail<string>("Error reading jar file: " + ex.Message);
+        }
+    }
+
+    private static async Task<string?> FindMainClassLine(StreamReader reader)
+    {
+        while (await reader.ReadLineAsync().ConfigureAwait(false) is { } line)
+            if (line.StartsWith("Main-Class:"))
+                return line["Main-Class:".Length..].Trim();
+
+        return null;
+    }
 }

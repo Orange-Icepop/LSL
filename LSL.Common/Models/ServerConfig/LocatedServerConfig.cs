@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Text;
-using LSL.Common.Results;
+using FluentResults;
 using LSL.Common.Utilities.Minecraft;
 using LSL.Common.Validation;
 
@@ -45,14 +45,82 @@ public class LocatedServerConfig
     public static LocatedServerConfig Empty =>
         new(string.Empty, string.Empty, ServerCoreType.Unknown, null, null, string.Empty, 1024, 4096, [], true);
 
+    #region 获取启动信息
+
+    public Result<ProcessStartInfo> GetStartInfo()
+    {
+        if (!CheckComponents.IsValidJava(JavaPath))
+            return Result.Fail<ProcessStartInfo>(new ArgumentException("Java is not valid"));
+        if (ServerType is not ServerCoreType.Forge && File.Exists(CommonCoreInfo?.JarName))
+            return Result.Ok(new ProcessStartInfo
+            {
+                FileName = JavaPath,
+                Arguments =
+                    $"-server -Xms{MinMemory}M -Xmx{MaxMemory} {new StringBuilder().AppendJoin(' ', ExtraJvmArgs)} -jar {Path.Combine(ServerPath, CommonCoreInfo.JarName)} nogui",
+                WorkingDirectory = ServerPath,
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                StandardInputEncoding = null,
+                StandardOutputEncoding = null,
+                StandardErrorEncoding = null
+            });
+
+        if (ServerType is ServerCoreType.Forge && ForgeCoreInfo is not null)
+        {
+            if (OperatingSystem.IsWindows() && File.Exists(ForgeCoreInfo.WinLibraryArgsPath))
+                return Result.Ok(new ProcessStartInfo
+                {
+                    FileName = JavaPath,
+                    Arguments =
+                        $"-server -Xms{MinMemory}M -Xmx{MaxMemory} {new StringBuilder().AppendJoin(' ', ExtraJvmArgs)} @{ForgeCoreInfo.WinLibraryArgsPath} nogui",
+                    WorkingDirectory = ServerPath,
+                    UseShellExecute = false,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    StandardInputEncoding = null,
+                    StandardOutputEncoding = null,
+                    StandardErrorEncoding = null
+                });
+            if (File.Exists(ForgeCoreInfo.UnixLibraryArgsPath))
+                return Result.Ok(new ProcessStartInfo
+                {
+                    FileName = JavaPath,
+                    Arguments =
+                        $"-server -Xms{MinMemory}M -Xmx{MaxMemory} {new StringBuilder().AppendJoin(' ', ExtraJvmArgs)} @{ForgeCoreInfo.UnixLibraryArgsPath} nogui",
+                    WorkingDirectory = ServerPath,
+                    UseShellExecute = false,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    StandardInputEncoding = null,
+                    StandardOutputEncoding = null,
+                    StandardErrorEncoding = null
+                });
+        }
+
+        return Result.Fail<ProcessStartInfo>("Server configuration is not valid to create a Minecraft server process");
+    }
+
+    #endregion
+
     #region 创建与转换
-    public IndexedServerConfig AsIndexed(int serverId) => new(serverId, this);
+
+    public IndexedServerConfig AsIndexed(int serverId)
+    {
+        return new IndexedServerConfig(serverId, this);
+    }
 
     public Result<ServerConfigV2> ToLatestConfig()
     {
         var validationResult = Validate();
         if (validationResult.IsFailed) return Result.Fail<ServerConfigV2>(validationResult.Error);
-        return Result.Success(new ServerConfigV2
+        return Result.Ok(new ServerConfigV2
         {
             Name = ServerName,
             ServerType = ServerType,
@@ -65,7 +133,7 @@ public class LocatedServerConfig
             EnablePreLaunchProtection = EnablePreLaunchProtection
         });
     }
-    
+
     public static Task<Result<LocatedServerConfig>> CreateAsync(string serverPath,
         string? serverName,
         ServerCoreType? serverType,
@@ -81,20 +149,25 @@ public class LocatedServerConfig
             return Task.FromResult(Result.Fail<LocatedServerConfig>("This server doesn't have a name"));
         if (minMemory is null) return Task.FromResult(Result.Fail<LocatedServerConfig>("Minimum memory is missing"));
         if (maxMemory is null) return Task.FromResult(Result.Fail<LocatedServerConfig>("Maximum memory is missing"));
-        return new LocatedServerConfig(serverPath, serverName, serverType ?? ServerCoreType.Error, commonInfo, forgeInfo,
+        return new LocatedServerConfig(serverPath, serverName, serverType ?? ServerCoreType.Error, commonInfo,
+            forgeInfo,
             javaPath ?? string.Empty, minMemory.Value, maxMemory.Value, extJvm ?? [],
             enablePreLaunchProtection ?? true).CheckAndFixAsync();
     }
 
-    public LocatedServerConfig Clone() => new(ServerPath, ServerName, ServerType, CommonCoreInfo, ForgeCoreInfo,
-        JavaPath, MinMemory, MaxMemory, ExtraJvmArgs, EnablePreLaunchProtection);
+    public LocatedServerConfig Clone()
+    {
+        return new LocatedServerConfig(ServerPath, ServerName, ServerType, CommonCoreInfo, ForgeCoreInfo,
+            JavaPath, MinMemory, MaxMemory, ExtraJvmArgs, EnablePreLaunchProtection);
+    }
 
     #endregion
-    
+
     #region 检查与修复
+
     public async Task<Result<LocatedServerConfig>> CheckAndFixAsync()
     {
-        for (int tries = 0; tries < 3; tries++)
+        for (var tries = 0; tries < 3; tries++)
         {
             var validationResult = Validate();
             if (validationResult.IsFailed) return Result.Fail<LocatedServerConfig>(validationResult.Error);
@@ -107,7 +180,8 @@ public class LocatedServerConfig
                     {
                         var detectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
                         if (detectResult.IsFailed)
-                            return Result.Fail<LocatedServerConfig>("Cannot get the correct core info of the forge server");
+                            return Result.Fail<LocatedServerConfig>(
+                                "Cannot get the correct core info of the forge server");
                         ForgeCoreInfo = detectResult.Value;
                     }
 
@@ -134,7 +208,8 @@ public class LocatedServerConfig
                     break;
                 }
             }
-            return Result.Success(this);
+
+            return Result.Ok(this);
         }
 
         return Result.Fail<LocatedServerConfig>("Failed to check server configuration after multiple attempts");
@@ -150,75 +225,8 @@ public class LocatedServerConfig
             where !CheckComponents.ExtJvm(arg).Passed
             select $"Invalid extra JVM argument {arg}");
         if (warnings.Count != 0) return Result.Fail(new StringBuilder().AppendJoin('\n', warnings).ToString());
-        return Result.Success();
+        return Result.Ok();
     }
-    #endregion
 
-    #region 获取启动信息
-    public Result<ProcessStartInfo> GetStartInfo()
-    {
-        if (!CheckComponents.IsValidJava(JavaPath))
-            return Result.Fail<ProcessStartInfo>(new ArgumentException("Java is not valid"));
-        if (ServerType is not ServerCoreType.Forge && File.Exists(CommonCoreInfo?.JarName))
-        {
-            return Result.Success(new ProcessStartInfo()
-            {
-                FileName = JavaPath,
-                Arguments =
-                    $"-server -Xms{MinMemory}M -Xmx{MaxMemory} {new StringBuilder().AppendJoin(' ', ExtraJvmArgs)} -jar {Path.Combine(ServerPath, CommonCoreInfo.JarName)} nogui",
-                WorkingDirectory = ServerPath,
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                StandardInputEncoding = null,
-                StandardOutputEncoding = null,
-                StandardErrorEncoding = null
-            });
-        }
-
-        if (ServerType is ServerCoreType.Forge && ForgeCoreInfo is not null)
-        {
-            if (OperatingSystem.IsWindows() && File.Exists(ForgeCoreInfo.WinLibraryArgsPath))
-            {
-                return Result.Success(new ProcessStartInfo()
-                {
-                    FileName = JavaPath,
-                    Arguments =
-                        $"-server -Xms{MinMemory}M -Xmx{MaxMemory} {new StringBuilder().AppendJoin(' ', ExtraJvmArgs)} @{ForgeCoreInfo.WinLibraryArgsPath} nogui",
-                    WorkingDirectory = ServerPath,
-                    UseShellExecute = false,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                    StandardInputEncoding = null,
-                    StandardOutputEncoding = null,
-                    StandardErrorEncoding = null
-                });
-            }
-            if (File.Exists(ForgeCoreInfo.UnixLibraryArgsPath))
-            {
-                return Result.Success(new ProcessStartInfo()
-                {
-                    FileName = JavaPath,
-                    Arguments =
-                        $"-server -Xms{MinMemory}M -Xmx{MaxMemory} {new StringBuilder().AppendJoin(' ', ExtraJvmArgs)} @{ForgeCoreInfo.UnixLibraryArgsPath} nogui",
-                    WorkingDirectory = ServerPath,
-                    UseShellExecute = false,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                    StandardInputEncoding = null,
-                    StandardOutputEncoding = null,
-                    StandardErrorEncoding = null
-                });
-            }
-        }
-        
-        return Result.Fail<ProcessStartInfo>("Server configuration is not valid to create a Minecraft server process");
-    }
     #endregion
 }

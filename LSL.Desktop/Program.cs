@@ -5,7 +5,7 @@ using Avalonia.ReactiveUI;
 
 namespace LSL.Desktop;
 
-class Program
+internal class Program
 {
     // 查重防多开
     private static readonly Mutex s_desktopMutex = new(true, $"{DesktopConstant.AppName}_Mutex");
@@ -16,10 +16,7 @@ class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        if (!s_desktopMutex.WaitOne(TimeSpan.Zero, true))
-        {
-            return; //TODO:使用IPC唤起窗口
-        }
+        if (!s_desktopMutex.WaitOne(TimeSpan.Zero, true)) return; //TODO:使用IPC唤起窗口
 
         try
         {
@@ -35,9 +32,11 @@ class Program
 
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
+    {
+        return AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace()
             .UseReactiveUI();
+    }
 }

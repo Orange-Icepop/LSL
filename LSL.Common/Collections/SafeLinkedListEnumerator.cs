@@ -1,18 +1,19 @@
 ﻿using System.Collections;
 
 namespace LSL.Common.Collections;
+
 /// <summary>
-/// A thread-safe enumerator class for LinkedList.
-/// The lock must support recursion.
-/// MUST BE DISPOSED MANUALLY IF NOT USING foreach() or using()!
+///     A thread-safe enumerator class for LinkedList.
+///     The lock must support recursion.
+///     MUST BE DISPOSED MANUALLY IF NOT USING foreach() or using()!
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
 public sealed class SafeLinkedListEnumerator<T> : IEnumerator<T>
 {
-    private readonly LinkedList<T> _source;
     private readonly ReaderWriterLockSlim _lock;
-    private IEnumerator<T>? _inner;
+    private readonly LinkedList<T> _source;
     private bool _disposed;
+    private IEnumerator<T>? _inner;
 
     public SafeLinkedListEnumerator(LinkedList<T> source, ReaderWriterLockSlim lockObj)
     {
@@ -26,7 +27,8 @@ public sealed class SafeLinkedListEnumerator<T> : IEnumerator<T>
         get
         {
             ThrowIfDisposed();
-            if (_inner is null) throw new InvalidOperationException("Enumeration has not started. Call MoveNext first.");
+            if (_inner is null)
+                throw new InvalidOperationException("Enumeration has not started. Call MoveNext first.");
             return _inner.Current;
         }
     }
@@ -36,9 +38,9 @@ public sealed class SafeLinkedListEnumerator<T> : IEnumerator<T>
     public bool MoveNext()
     {
         ThrowIfDisposed();
-            
+
         _inner ??= _source.GetEnumerator();
-            
+
         return _inner.MoveNext();
     }
 
@@ -51,7 +53,7 @@ public sealed class SafeLinkedListEnumerator<T> : IEnumerator<T>
     public void Dispose()
     {
         if (_disposed) return;
-            
+
         _inner?.Dispose();
         _lock.ExitReadLock();
         _disposed = true;

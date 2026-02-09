@@ -9,45 +9,46 @@
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerTerminal">
     <UserControl.Styles>
-        <Style Selector="server|ServerTerminal > Grid#MainLayout > controls|MyCard#TerminalCard > controls|MyTerminal#Terminal">
-            <Setter Property="BorderBrush" Value="#191919"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="CornerRadius" Value="5"/>
+        <Style
+            Selector="server|ServerTerminal > Grid#MainLayout > controls|MyCard#TerminalCard > controls|MyTerminal#Terminal">
+            <Setter Property="BorderBrush" Value="#191919" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="CornerRadius" Value="5" />
             <Setter Property="Transitions">
                 <Transitions>
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.3"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.3" />
                 </Transitions>
             </Setter>
             <Style Selector="^:pointerover">
-                <Setter Property="BorderBrush" Value="#33f3e5"/>
+                <Setter Property="BorderBrush" Value="#33f3e5" />
             </Style>
         </Style>
     </UserControl.Styles>
     <Grid RowDefinitions="*,70" ColumnDefinitions="*,200" x:Name="MainLayout">
         <controls:MyCard Text="终端" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" x:Name="TerminalCard">
             <controls:MyTerminal VerticalAlignment="Stretch"
-                          HorizontalAlignment="Stretch"
-                          Margin="30,60,30,20"
-                          ItemsSource="{Binding ServerVM.TerminalText}"
-                          x:Name="Terminal"/>
+                                 HorizontalAlignment="Stretch"
+                                 Margin="30,60,30,20"
+                                 ItemsSource="{Binding ServerVM.TerminalText}"
+                                 x:Name="Terminal" />
         </controls:MyCard>
         <controls:MyCard Grid.Row="1" Grid.Column="0">
             <Grid VerticalAlignment="Center" HorizontalAlignment="Stretch" ColumnDefinitions="*,Auto">
                 <TextBox Grid.Column="0" Height="30" Margin="10" Text="{Binding ServerVM.InputText,Mode=TwoWay}"
                          AcceptsReturn="True" VerticalAlignment="Center" HorizontalAlignment="Stretch" />
                 <controls:MyButton Content="发送" Grid.Column="1" Margin="10" Width="50" Height="30"
-                                VerticalAlignment="Center" HorizontalAlignment="Right"
-                                Command="{Binding ServerVM.SendCommand}" />
+                                   VerticalAlignment="Center" HorizontalAlignment="Right"
+                                   Command="{Binding ServerVM.SendCommand}" />
             </Grid>
         </controls:MyCard>
         <controls:MyCard Grid.Row="1" Grid.Column="1">
             <Grid VerticalAlignment="Center" HorizontalAlignment="Center" ColumnDefinitions="*,*,*">
                 <controls:MyButton BorderThickness="2"
-                                Padding="0"
-                                VerticalAlignment="Center"
-                                Grid.Column="0" Margin="2"
-                                Command="{Binding ServerVM.StopServerCmd}"
-                                IsEnabled="{Binding ServerVM.CurrentStatus.IsOnline}">
+                                   Padding="0"
+                                   VerticalAlignment="Center"
+                                   Grid.Column="0" Margin="2"
+                                   Command="{Binding ServerVM.StopServerCmd}"
+                                   IsEnabled="{Binding ServerVM.CurrentStatus.IsOnline}">
                     <TextBlock Text="关闭"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
@@ -55,11 +56,11 @@
                                FontSize="14" />
                 </controls:MyButton>
                 <controls:MyButton BorderThickness="2"
-                                Padding="0"
-                                VerticalAlignment="Center"
-                                Grid.Column="1" Margin="2"
-                                Command="{Binding ServerVM.SaveServerCmd}"
-                                IsEnabled="{Binding ServerVM.CurrentStatus.IsOnline}">
+                                   Padding="0"
+                                   VerticalAlignment="Center"
+                                   Grid.Column="1" Margin="2"
+                                   Command="{Binding ServerVM.SaveServerCmd}"
+                                   IsEnabled="{Binding ServerVM.CurrentStatus.IsOnline}">
                     <TextBlock Text="保存"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
@@ -67,10 +68,10 @@
                                FontSize="14" />
                 </controls:MyButton>
                 <controls:MyButton BorderThickness="2"
-                                VerticalAlignment="Center"
-                                Grid.Column="2" Margin="2"
-                                Command="{Binding ServerVM.EndServerCmd}"
-                                IsEnabled="{Binding ServerVM.CurrentStatus.IsRunning}">
+                                   VerticalAlignment="Center"
+                                   Grid.Column="2" Margin="2"
+                                   Command="{Binding ServerVM.EndServerCmd}"
+                                   IsEnabled="{Binding ServerVM.CurrentStatus.IsRunning}">
                     <TextBlock Text="终止"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"

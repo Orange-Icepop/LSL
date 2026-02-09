@@ -1,6 +1,6 @@
 ﻿namespace LSL.Daemon;
 
-class Program
+internal class Program
 {
     private static readonly Mutex s_daemonMutex = new(true, $"Global\\{DaemonConstant.AppName}_Mutex");
 
@@ -13,10 +13,6 @@ class Program
             {
                 Console.WriteLine("An active daemon is running. Exiting...");
                 Console.ReadKey();
-            }
-            else
-            {
-                
             }
         }
         finally

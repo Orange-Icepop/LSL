@@ -6,31 +6,37 @@ using LSL.Common.Utilities.Minecraft;
 namespace LSL.Common.Validation;
 
 /// <summary>
-/// A class that contains static methods for systematic validation.
+///     A class that contains static methods for systematic validation.
 /// </summary>
 public static partial class CheckComponents
 {
+    public static VerifyResult ServerPath(string serverPath)
+    {
+        if (!IsValidPath(serverPath)) return new VerifyResult("ServerPath", false, "指定的服务器路径不存在");
+        return new VerifyResult("ServerPath", true, null);
+    }
+
     #region 校验文件名-路径-合法Java
 
-    public static bool IsValidFileName([NotNullWhen(true)]string? fileName) //校验文件名
+    public static bool IsValidFileName([NotNullWhen(true)] string? fileName) //校验文件名
     {
         if (string.IsNullOrWhiteSpace(fileName)) return false;
         // 获取文件名中无效的字符
-        char[] invalidChars = Path.GetInvalidFileNameChars();
+        var invalidChars = Path.GetInvalidFileNameChars();
 
         // 检查文件名是否包含任何无效字符
         return !fileName.Any(c => invalidChars.Contains(c));
     }
 
-    public static bool IsValidPath([NotNullWhen(true)]string? path) //校验路径
+    public static bool IsValidPath([NotNullWhen(true)] string? path) //校验路径
     {
         if (string.IsNullOrWhiteSpace(path)) return false;
         // 获取路径中无效的字符
-        char[] invalidChars = Path.GetInvalidPathChars();
+        var invalidChars = Path.GetInvalidPathChars();
         return !path.Any(c => invalidChars.Contains(c));
     }
 
-    public static bool IsValidJava([NotNullWhen(true)]string? javaPath) //校验Java路径并确认可执行
+    public static bool IsValidJava([NotNullWhen(true)] string? javaPath) //校验Java路径并确认可执行
     {
         if (!IsValidPath(javaPath)) return false;
         if (!File.Exists(javaPath)) return false;
@@ -101,21 +107,12 @@ public static partial class CheckComponents
 
     #endregion
 
-    public static VerifyResult ServerPath(string serverPath)
-    {
-        if (!IsValidPath(serverPath)) return new VerifyResult("ServerPath", false, "指定的服务器路径不存在");
-        return new VerifyResult("ServerPath", true, null);
-    }
-
     #region LSL核心配置验证器组件
 
     public static VerifyResult DownloadLimit(string? value)
     {
         if (string.IsNullOrEmpty(value)) return new VerifyResult("DownloadLimit", false, "下载限速不可为空");
-        if (!IntRegex().IsMatch(value))
-        {
-            return new VerifyResult("DownloadLimit", false, "下载限速必须是整数");
-        }
+        if (!IntRegex().IsMatch(value)) return new VerifyResult("DownloadLimit", false, "下载限速必须是整数");
 
         if (value.Length > 8) return new VerifyResult("DownloadLimit", false, "下载限速不可大于100Gbps（有这个带宽的还要限速干嘛）");
         if (int.Parse(value) == 0) return new VerifyResult("DownloadLimit", true, null);
@@ -133,10 +130,7 @@ public static partial class CheckComponents
     public static VerifyResult PanelPort(string? value)
     {
         if (string.IsNullOrEmpty(value)) return new VerifyResult("PanelPort", false, "面板端口不可为空");
-        if (!IntRegex().IsMatch(value))
-        {
-            return new VerifyResult("PanelPort", false, "面板端口必须是正整数");
-        }
+        if (!IntRegex().IsMatch(value)) return new VerifyResult("PanelPort", false, "面板端口必须是正整数");
 
         if (value.Length > 5) return new VerifyResult("PanelPort", false, "面板端口不可大于65535");
         var result = uint.Parse(value);

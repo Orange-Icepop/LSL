@@ -4,8 +4,8 @@ public class PlayerInfo
 {
     public PlayerInfo(string uuid, string playerName)
     {
-        this.UUID = uuid;
-        this.PlayerName = playerName;
+        UUID = uuid;
+        PlayerName = playerName;
     }
 
     public string UUID { get; set; }

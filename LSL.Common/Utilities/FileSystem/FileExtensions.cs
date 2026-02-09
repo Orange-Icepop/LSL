@@ -22,7 +22,7 @@ public static class FileExtensions
             throw new ArgumentException("Invalid source file path", nameof(sourcePath));
         if (string.IsNullOrWhiteSpace(destinationPath))
             throw new ArgumentException("Invalid destination file path", nameof(destinationPath));
-        
+
         // 处理符号链接
         if (File.GetAttributes(sourcePath).HasFlag(FileAttributes.ReparsePoint))
         {
@@ -37,19 +37,21 @@ public static class FileExtensions
                     Directory.CreateSymbolicLink(destinationPath, directoryInfo.FullName);
                     break;
             }
+
             progress?.Report(0);
             return;
         }
 
         // 检查源文件是否存在
-        if (Directory.Exists(sourcePath)) throw new ArgumentException("The source is a directory, not a file", nameof(sourcePath));
+        if (Directory.Exists(sourcePath))
+            throw new ArgumentException("The source is a directory, not a file", nameof(sourcePath));
         if (!File.Exists(sourcePath))
             throw new FileNotFoundException("Source file not exists", sourcePath);
 
         // 处理目标文件覆盖
-        if (Directory.Exists(destinationPath)) throw new IOException("A directory of the same name already exists at the destination");
+        if (Directory.Exists(destinationPath))
+            throw new IOException("A directory of the same name already exists at the destination");
         if (File.Exists(destinationPath))
-        {
             switch (overwrite)
             {
                 case FileOverwriteMode.Overwrite:
@@ -60,12 +62,12 @@ public static class FileExtensions
                 case FileOverwriteMode.Skip:
                     return;
             }
-        }
+
         // 确保目标文件夹存在
         Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ??
                                   throw new ArgumentException("Destination file is the root directory",
                                       nameof(destinationPath)));
-        
+
         // 使用异步文件流复制
         await using var sourceStream = new FileStream(
             sourcePath,

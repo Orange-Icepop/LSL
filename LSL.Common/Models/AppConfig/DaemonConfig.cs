@@ -1,4 +1,4 @@
-﻿using LSL.Common.Results;
+﻿using FluentResults;
 using Mutty;
 
 namespace LSL.Common.Models.AppConfig;
@@ -16,16 +16,14 @@ public record DaemonConfig : AppConfigBase<DaemonConfig>, IConfig<DaemonConfig>
     public override Result Validate()
     {
         if (DownloadThreads > 64) return Result.Fail("DownloadThreads must be at most 64");
-        return Result.Success();
+        return Result.Ok();
     }
 
     public override Result<DaemonConfig> ValidateAndFix()
     {
         if (DownloadThreads > 64)
-        {
             return Result.Warning(this with { DownloadThreads = 4 }, "DownloadThreads must be at most 64");
-        }
 
-        return Result.Success(this);
+        return Result.Ok(this);
     }
 }

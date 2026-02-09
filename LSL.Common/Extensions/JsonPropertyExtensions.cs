@@ -19,6 +19,7 @@ public static class JsonPropertyExtensions
             _ => value
         };
     }
+
     public static void ParseStringProperty(this JsonElement root, string propertyParsedName,
         Action<string>? onSuccess = null,
         Action<string>? onFail = null,
@@ -115,7 +116,7 @@ public static class JsonPropertyExtensions
 
         onSuccess?.Invoke(value);
     }
-    
+
     public static void ParseULongProperty(this JsonElement root, string propertyName,
         Action<ulong>? onSuccess = null,
         Action<string>? onFail = null,
@@ -174,7 +175,6 @@ public static class JsonPropertyExtensions
 
         List<string> result = [];
         foreach (var item in element.EnumerateArray())
-        {
             if (item.TryGetNullableString(out var value))
             {
                 if (ignoreEmpty && string.IsNullOrWhiteSpace(value)) continue;
@@ -185,7 +185,6 @@ public static class JsonPropertyExtensions
                 onFail?.Invoke($"Property {propertyName} has non-string element");
                 return;
             }
-        }
 
         onSuccess?.Invoke(result.ToArray());
     }
@@ -220,9 +219,11 @@ public static class JsonPropertyExtensions
     public static void ParseFileProperty(this JsonElement root, string propertyName,
         Action<string>? onSuccess = null,
         Action<string>? onFail = null,
-        JsonKnownNamingPolicy keyNamingPolicy = JsonKnownNamingPolicy.CamelCase) =>
+        JsonKnownNamingPolicy keyNamingPolicy = JsonKnownNamingPolicy.CamelCase)
+    {
         root.ParseStringProperty(propertyName, onSuccess, onFail,
-            validator: s => File.Exists(s) ? null : $"Invalid file path {s}", keyNamingPolicy: keyNamingPolicy);
+            s => File.Exists(s) ? null : $"Invalid file path {s}", keyNamingPolicy: keyNamingPolicy);
+    }
 
     public static void ParseEnumProperty<T>(this JsonElement root, string propertyName,
         Action<T>? onSuccess = null,

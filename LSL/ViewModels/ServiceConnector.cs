@@ -10,12 +10,11 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Threading;
-using LSL.Common;
+using FluentResults;
 using LSL.Common.Collections;
 using LSL.Common.DTOs;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
-using LSL.Common.Results;
 using LSL.Common.Utilities;
 using LSL.Common.Utilities.Minecraft;
 using LSL.Common.Validation;
@@ -37,9 +36,9 @@ public class ServiceConnector
     private readonly AppStateLayer _appState;
     private readonly ConfigManager _configManager;
     private readonly ServerHost _daemonHost;
+    private readonly ILogger<ServiceConnector> _logger;
     private readonly ServerOutputStorage _outputStorage;
     private readonly NetService _webHost;
-    private readonly ILogger<ServiceConnector> _logger;
 
     public ServiceConnector(AppStateLayer appState, ConfigManager cfm, ServerHost daemon,
         ServerOutputStorage optStorage, NetService netService)
@@ -57,6 +56,66 @@ public class ServiceConnector
         _logger.LogInformation("Got total RAM:{ram}", MemoryInfo.CurrentSystemMemory);
     }
 
+    #region 启动前校验配置文件
+
+    public string? VerifyServerConfigBeforeStart(int serverId)
+    {
+        if (!_configManager.TryGetServerConfig(serverId, out var config))
+            return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
+        if (!File.Exists(config.JavaPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
+        var configPath = Path.Combine(config.ServerPath, config.CoreName);
+        if (!File.Exists(configPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的核心文件不存在。";
+
+        return null;
+    }
+
+    #endregion
+
+    #region 网络项
+
+    public async Task<Result> Download(string url, string dir, IProgress<double>? progress, CancellationToken? token)
+    {
+        return token is not null
+            ? await _webHost.GetFileAsync(url, dir, progress, (CancellationToken)token)
+            : await _webHost.GetFileAsync(url, dir, progress);
+    }
+
+    #endregion
+
+    #region 配置与自启项
+
+    public async Task CheckForUpdates()
+    {
+        var result = await UpdateHelper.QueryLatest(_webHost.Factory);
+        if (!result.IsSuccess)
+        {
+            await _appState.Coordinator.ThrowError("检查更新时出错", $"检查更新时出现以下错误：\n{result.Error}");
+            return;
+        }
+
+        var isGreater = result.Value.IsNewerVersion(DesktopConstant.Version);
+        if (!isGreater.IsSuccess)
+        {
+            await _appState.Coordinator.ThrowError("检查更新时出错", "无法比较当前软件版本与远程软件版本的大小差异。这是一个开发错误，请向作者反馈。");
+            return;
+        }
+
+        if (isGreater.Value)
+        {
+            var confirm = await _appState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
+                PopupType.InfoYesNo,
+                "LSL 版本更新", $"LSL 有新版本 {result.Value.TagName} 已经发布。\n{result.Value.FormatBody().Body}\n是否前往更新？"));
+            if (confirm == PopupResult.Yes) await _appState.Commands.OpenWebPage(result.Value.HtmlUrl);
+        }
+        else
+        {
+            _appState.Coordinator.Notify(NotifyType.Success, "版本检查完成",
+                $"当前版本已经为最新：v{DesktopConstant.Version}");
+        }
+    }
+
+    #endregion
+
     #region 配置部分
 
     public async Task<Result> ReadMainConfig(bool readFile = false)
@@ -68,7 +127,7 @@ public class ServiceConnector
         }
 
         await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentConfigs = _configManager.DaemonConfigs);
-        return Result.Success();
+        return Result.Ok();
     }
 
     public async Task<Result<int>> ReadJavaConfig(bool readFile = false)
@@ -102,8 +161,11 @@ public class ServiceConnector
                 warning = new Exception(error.ToString());
             }
         }
+
         Dispatcher.UIThread.Invoke(() => _appState.CurrentJavaDict = _configManager.JavaConfigs);
-        return warning is null ? Result.Success(_configManager.JavaConfigs.Count) : Result.Warning(_configManager.JavaConfigs.Count, warning);
+        return warning is null
+            ? Result.Ok(_configManager.JavaConfigs.Count)
+            : Result.Warning(_configManager.JavaConfigs.Count, warning);
     }
 
     public async Task<Result> ReadServerConfig(bool readFile = false)
@@ -117,39 +179,34 @@ public class ServiceConnector
             {
                 var error = new StringBuilder("在读取服务器配置时出现了一些问题:");
                 if (!string.IsNullOrEmpty(res.ErrorMessages))
-                {
                     error.AppendLine()
                         .AppendLine("以下服务器由于不可修复的错误而没有被读取：")
                         .AppendLine(res.ErrorMessages);
-                }
 
                 if (!string.IsNullOrEmpty(res.WarningMessages))
-                {
                     error.AppendLine()
                         .AppendLine("以下服务器存在一定问题，需要您手动修复：")
                         .AppendLine(res.WarningMessages);
-                }
                 error.AppendLine();
                 exception = new FileNotFoundException(error.ToString());
             }
         }
 
         var cache = _configManager.CloneServerConfigs();
-        if (cache.Count == 0)
-        {
-            cache.Add(-1, IndexedServerConfig.None);
-        }
+        if (cache.Count == 0) cache.Add(-1, IndexedServerConfig.None);
         await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = cache.ToFrozenDictionary());
-        return exception is null ? Result.Success() : Result.Warning(exception);
+        return exception is null ? Result.Ok() : Result.Warning(exception);
     }
 
-    public Task<Result<FrozenDictionary<string, object>>> SaveConfig() =>
-        _configManager.SetMainConfig(_appState.CurrentConfigs);
+    public Task<Result<FrozenDictionary<string, object>>> SaveConfig()
+    {
+        return _configManager.SetMainConfig(_appState.CurrentConfigs);
+    }
 
     public async Task<Result<int>> FindJava()
     {
         var detectResult = await _configManager.DetectJavaAsync();
-        if(detectResult.IsFailed) return Result.Fail<int>(detectResult.Error);
+        if (detectResult.IsFailed) return Result.Fail<int>(detectResult.Error);
         return await ReadJavaConfig(true);
     }
 
@@ -195,30 +252,15 @@ public class ServiceConnector
         if (confirm == PopupResult.Yes) _daemonHost.EndServer(serverId);
     }
 
-    public void EndAllServers() => _daemonHost.EndAllServers();
+    public void EndAllServers()
+    {
+        _daemonHost.EndAllServers();
+    }
 
     public void SendCommandToServer(int serverId, string command)
     {
         if (string.IsNullOrEmpty(command)) return;
         _daemonHost.SendCommand(serverId, command);
-    }
-
-    #endregion
-
-    #region 启动前校验配置文件
-
-    public string? VerifyServerConfigBeforeStart(int serverId)
-    {
-        if (!_configManager.TryGetServerConfig(serverId, out var config))
-            return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
-        else if (!File.Exists(config.JavaPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
-        else
-        {
-            string configPath = Path.Combine(config.ServerPath, config.CoreName);
-            if (!File.Exists(configPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的核心文件不存在。";
-        }
-
-        return null;
     }
 
     #endregion
@@ -234,7 +276,6 @@ public class ServiceConnector
         try
         {
             await foreach (var args in _serverOutputChannel.Reader.ReadAllAsync(token))
-            {
                 try
                 {
                     await ArgsProcessor(args);
@@ -243,7 +284,6 @@ public class ServiceConnector
                 {
                     _logger.LogError(ex, "An error occured while processing server output.");
                 }
-            }
         }
         catch (OperationCanceledException)
         {
@@ -298,16 +338,12 @@ public class ServiceConnector
         else
         {
             if (_appState.UserDict.TryGetValue(args.ServerId, out var uc))
-            {
-                for (int i = uc.Count - 1; i >= 0; i--)
-                {
-                    if (uc[i].PlayerName == args.PlayerName)//TODO:将uc转换为字典，提高搜索效率
+                for (var i = uc.Count - 1; i >= 0; i--)
+                    if (uc[i].PlayerName == args.PlayerName) //TODO:将uc转换为字典，提高搜索效率
                     {
                         uc.RemoveAt(i);
                         break;
                     }
-                }
-            }
         }
     }
 
@@ -323,9 +359,8 @@ public class ServiceConnector
     {
         _appState.RunningServerCount = 0;
         foreach (var item in _appState.ServerStatuses)
-        {
-            if (item.Value.IsRunning) _appState.RunningServerCount++;
-        }
+            if (item.Value.IsRunning)
+                _appState.RunningServerCount++;
     }
 
     #endregion
@@ -344,25 +379,17 @@ public class ServiceConnector
     private void ProcessSecondlyMetrics(MetricsUpdateArgs args)
     {
         foreach (var item in args.Metrics)
-        {
             _appState.MetricsDict.AddOrUpdate(item.ServerId, _ => new MetricsStorage(item),
                 (_, storage) => storage.Add(item));
-        }
     }
 
     private void ProcessMinutelyMetrics(GeneralMetricsArgs args)
     {
         RangedObservableLinkedList<double> cpu = new(30);
         RangedObservableLinkedList<double> ram = new(30);
-        foreach (var c in args.CpuHistory)
-        {
-            cpu.Add(c);
-        }
+        foreach (var c in args.CpuHistory) cpu.Add(c);
 
-        foreach (var r in args.RamPctHistory)
-        {
-            ram.Add(r);
-        }
+        foreach (var r in args.RamPctHistory) ram.Add(r);
 
         _appState.GeneralCpuMetrics = cpu;
         _appState.GeneralRamMetrics = ram;
@@ -377,18 +404,12 @@ public class ServiceConnector
     public static async Task<Result> ValidateNewServerConfig(FormedServerConfig config, bool skipCorePathCheck = false)
     {
         var checkResult = CheckService.VerifyFormedServerConfig(config, skipCorePathCheck);
-        StringBuilder errorInfo = new ();
-        foreach (var item in checkResult.Where(item => !item.Passed))
-        {
-            errorInfo.AppendLine(item.Reason);
-        }
+        StringBuilder errorInfo = new();
+        foreach (var item in checkResult.Where(item => !item.Passed)) errorInfo.AppendLine(item.Reason);
 
-        if (errorInfo.Length > 0)
-        {
-            return Result.Fail(errorInfo.ToString());
-        }
+        if (errorInfo.Length > 0) return Result.Fail(errorInfo.ToString());
 
-        if (skipCorePathCheck) return Result.Success(); // 不检查核心，直接返回
+        if (skipCorePathCheck) return Result.Ok(); // 不检查核心，直接返回
         var coreResult = await CoreTypeHelper.GetCoreType(config.CorePath);
         if (coreResult.IsFailed) return Result.Fail(coreResult.Error);
         return coreResult.Value switch
@@ -400,11 +421,14 @@ public class ServiceConnector
             ServerCoreType.Unknown => Result.Warning(
                 "LSL无法确认您选择的文件是否为Minecraft服务端核心文件。\n这可能是由于LSL没有收集足够的关于服务器核心的辨识信息造成的。如果这是确实一个Minecraft服务端核心并且具有一定的知名度，请您前往LSL的仓库（https://github.com/Orange-Icepop/LSL）提交相关Issue。\n您可以直接点击确认绕过校验，但是LSL及其开发团队不为因此造成的后果作担保。"),
             ServerCoreType.Client => Result.Fail("您选择的文件是一个Minecraft客户端核心文件，而不是一个服务端核心文件。"),
-            _ => Result.Success()
+            _ => Result.Ok()
         };
     }
 
-    public static Task<Result<ServerCoreType>> GetCoreType(string? corePath) => CoreTypeHelper.GetCoreType(corePath);
+    public static Task<Result<ServerCoreType>> GetCoreType(string? corePath)
+    {
+        return CoreTypeHelper.GetCoreType(corePath);
+    }
 
     public async Task<Result> AddServer(FormedServerConfig config)
     {
@@ -497,49 +521,6 @@ public class ServiceConnector
             _logger.LogInformation("Output handler restarted.");
             // 释放锁
             _copyLock.Release();
-        }
-    }
-
-    #endregion
-
-    #region 网络项
-
-    public async Task<Result> Download(string url, string dir, IProgress<double>? progress, CancellationToken? token) =>
-        token is not null
-            ? await _webHost.GetFileAsync(url, dir, progress, (CancellationToken)token)
-            : await _webHost.GetFileAsync(url, dir, progress);
-
-    #endregion
-
-    #region 配置与自启项
-
-    public async Task CheckForUpdates()
-    {
-        var result = await UpdateHelper.QueryLatest(_webHost.Factory);
-        if (!result.IsSuccess)
-        {
-            await _appState.Coordinator.ThrowError("检查更新时出错", $"检查更新时出现以下错误：\n{result.Error}");
-            return;
-        }
-
-        var isGreater = result.Value.IsNewerVersion(DesktopConstant.Version);
-        if (!isGreater.IsSuccess)
-        {
-            await _appState.Coordinator.ThrowError("检查更新时出错", "无法比较当前软件版本与远程软件版本的大小差异。这是一个开发错误，请向作者反馈。");
-            return;
-        }
-
-        if (isGreater.Value)
-        {
-            var confirm = await _appState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
-                PopupType.InfoYesNo,
-                "LSL 版本更新", $"LSL 有新版本 {result.Value.TagName} 已经发布。\n{result.Value.FormatBody().Body}\n是否前往更新？"));
-            if (confirm == PopupResult.Yes) await _appState.Commands.OpenWebPage(result.Value.HtmlUrl);
-        }
-        else
-        {
-            _appState.Coordinator.Notify(NotifyType.Success, "版本检查完成",
-                $"当前版本已经为最新：v{DesktopConstant.Version}");
         }
     }
 

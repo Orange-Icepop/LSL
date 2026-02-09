@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
-using LSL.Common.Results;
 using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -23,16 +22,19 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         OpenFileCmd = ReactiveCommand.CreateFromTask<string>(OpenExplorer);
         SearchJava = ReactiveCommand.CreateFromTask(async () =>
         {
-            await Dispatcher.UIThread.InvokeAsync(() => AppState.Coordinator.Notify(NotifyType.Info, "正在搜索Java", "请耐心等待......"));
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                AppState.Coordinator.Notify(NotifyType.Info, "正在搜索Java", "请耐心等待......"));
             var success = await AppState.Coordinator.SubmitServiceError(await Connector.FindJava());
             if (success.IsSuccess)
-            {
                 await Dispatcher.UIThread.InvokeAsync(() =>
                     AppState.Coordinator.Notify(NotifyType.Success, "Java搜索完成！", $"搜索到了{success.Value}个Java"));
-            }
         }); // 搜索Java命令-实现
         CheckUpdateCmd = ReactiveCommand.CreateFromTask(serveCon.CheckForUpdates);
     }
+
+    public ICommand CheckUpdateCmd { get; }
+
+    public ICommand SearchJava { get; }
 
     #region 打开网页命令
 
@@ -40,13 +42,13 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
 
     public async Task OpenWebPage(string url)
     {
-        Result<Unit> result = XPlatformOperationHelper.OpenWebBrowser(url);
+        var result = XPlatformOperationHelper.OpenWebBrowser(url);
         if (result.IsSuccess)
         {
             AppState.Coordinator.Notify(NotifyType.Success, "成功打开了网页！", url);
             Logger.LogInformation("Successfully opened web page {url}.", url);
         }
-        else if (result.Error is ArgumentException ae)
+        else if (result is ArgumentException ae)
         {
             Logger.LogError(ae, "Error opening webpage {url} because of invalid URL format.", url);
             await AppState.Coordinator.ThrowError("打开网页失败", $"URL格式不正确：{url}");
@@ -123,8 +125,4 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
     }
 
     #endregion
-
-    public ICommand CheckUpdateCmd { get; }
-
-    public ICommand SearchJava { get; }
 }

@@ -14,7 +14,7 @@ namespace LSL.Common.Options;
 [JsonSerializable(typeof(List<GitHubApiAsset>))]
 [JsonSerializable(typeof(UpdateApiResponse))]
 [JsonSourceGenerationOptions(WriteIndented = true, AllowTrailingCommas = true,
-    PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower, 
+    PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower,
     UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip,
     DefaultIgnoreCondition = JsonIgnoreCondition.Always)]
 public partial class SnakeJsonOptions : JsonSerializerContext

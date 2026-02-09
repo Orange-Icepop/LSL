@@ -6,16 +6,22 @@ namespace LSL.Common.Collections;
 public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionChanged
 {
     private readonly LinkedList<T> _list;
-    private readonly int _maxLength;
-    private readonly bool _notifiable;
     private readonly ReaderWriterLockSlim _lock;
-    public event NotifyCollectionChangedEventHandler? CollectionChanged;
-    private void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+
+    public RangedObservableLinkedList(int maxLength, bool notify = true)
     {
-        if (_notifiable)
-        {
-            CollectionChanged?.Invoke(this, e);
-        }
+        if (maxLength <= 0)
+            throw new ArgumentOutOfRangeException(nameof(maxLength), "The maxLength must be greater than zero.");
+        _list = new LinkedList<T>();
+        _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        MaxLength = maxLength;
+        Notifiable = notify;
+    }
+
+    public RangedObservableLinkedList(int maxLength, T defaultValue, bool notify = true) : this(maxLength, notify)
+    {
+        for (var i = maxLength - 1; i >= 0; i--) _list.AddLast(defaultValue);
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
     }
 
     public T? FirstItem
@@ -33,6 +39,7 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
             }
         }
     }
+
     public T? LastItem
     {
         get
@@ -48,6 +55,7 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
             }
         }
     }
+
     public int Count
     {
         get
@@ -57,34 +65,48 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
             {
                 return _list.Count;
             }
-            finally            
+            finally
             {
                 _lock.ExitReadLock();
             }
         }
     }
-    public int MaxLength => _maxLength;
-    public bool Notifiable => _notifiable;
 
-    public RangedObservableLinkedList(int maxLength, bool notify = true)
+    public int MaxLength { get; }
+
+    public bool Notifiable { get; }
+
+    public IEnumerator<T> GetEnumerator()
     {
-        if (maxLength <= 0) throw new ArgumentOutOfRangeException(nameof(maxLength), "The maxLength must be greater than zero.");
-        _list = new LinkedList<T>();
-        _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-        _maxLength = maxLength;
-        _notifiable = notify;
+        _lock.EnterReadLock();
+        try
+        {
+            // 创建链表快照避免长时间持有锁
+            var snapshot = new List<T>(_list);
+            return snapshot.GetEnumerator();
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
     }
 
-    public RangedObservableLinkedList(int maxLength, T defaultValue, bool notify = true) : this(maxLength, notify)
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        for (int i = maxLength - 1; i >= 0; i--) _list.AddLast(defaultValue);
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        return GetEnumerator();
+    }
+
+    public event NotifyCollectionChangedEventHandler? CollectionChanged;
+
+    private void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+    {
+        if (Notifiable) CollectionChanged?.Invoke(this, e);
     }
 
     public void Add(T item)
     {
         NotifyCollectionChangedEventArgs? args;
-        bool reset = _list.Count >= _maxLength;
+        var reset = _list.Count >= MaxLength;
         _lock.EnterWriteLock();
         try
         {
@@ -103,6 +125,7 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
         {
             _lock.ExitWriteLock();
         }
+
         OnCollectionChanged(args);
     }
 
@@ -119,20 +142,4 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
     }
-    
-    public IEnumerator<T> GetEnumerator()
-    {
-        _lock.EnterReadLock();
-        try
-        {
-            // 创建链表快照避免长时间持有锁
-            var snapshot = new List<T>(_list);
-            return snapshot.GetEnumerator();
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
-    }    
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

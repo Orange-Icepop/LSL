@@ -9,8 +9,6 @@ namespace LSL.ViewModels;
 
 public class RightRegionViewModel : RegionalViewModelBase<RightRegionViewModel>
 {
-    [Reactive] public UserControl CurrentView { get; set; }
-
     public RightRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
         CurrentView = null!;
@@ -27,12 +25,16 @@ public class RightRegionViewModel : RegionalViewModelBase<RightRegionViewModel>
             });
     }
 
+    [Reactive] public UserControl CurrentView { get; set; }
+
     #region 右侧视图导航逻辑
+
     private UserControl NavigateRight(RightPageState page)
     {
         if (page == RightPageState.Undefined) return CurrentView;
-        else if (page == RightPageState.Empty) return new UserControl();
-        else return ViewFactory.CreateView(page.ToString());
+        if (page == RightPageState.Empty) return new UserControl();
+        return ViewFactory.CreateView(page.ToString());
     }
+
     #endregion
 }

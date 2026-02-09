@@ -1,25 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
-  <PropertyGroup>
-    <TargetFramework>net8.0-browser</TargetFramework>
-	  <OutputType>Exe</OutputType>
-	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	  <LangVersion>12</LangVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Include="wwwroot\app.css" />
-    <None Include="wwwroot\favicon.ico" />
-    <None Include="wwwroot\index.html" />
-    <None Include="wwwroot\main.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Avalonia.Browser" Version="11.3.7" />
-    <PackageReference Include="Avalonia.BuildServices" Version="11.3.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>net8.0-browser</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>12</LangVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="wwwroot\app.css"/>
+        <None Include="wwwroot\favicon.ico"/>
+        <None Include="wwwroot\index.html"/>
+        <None Include="wwwroot\main.js"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Avalonia.Browser" Version="11.3.7"/>
+        <PackageReference Include="Avalonia.BuildServices" Version="11.3.1">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\LSL\LSL.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\LSL\LSL.csproj"/>
+    </ItemGroup>
 </Project>

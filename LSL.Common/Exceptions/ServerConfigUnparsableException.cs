@@ -8,6 +8,5 @@ public class ServerConfigUnparsableException : Exception
 
     public ServerConfigUnparsableException(string msg, Exception innerException) : base(msg, innerException)
     {
-        
     }
 }

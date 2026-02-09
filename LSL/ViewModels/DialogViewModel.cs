@@ -18,6 +18,16 @@ namespace LSL.ViewModels;
 
 public class DialogViewModel : ViewModelBase
 {
+    private readonly Channel<(IInteractionContext<InvokePopupArgs, PopupResult> interaction, TaskCompletionSource tcs)>
+        _popupChannel =
+            Channel.CreateUnbounded<(IInteractionContext<InvokePopupArgs, PopupResult>, TaskCompletionSource)>();
+
+    private readonly FrozenDictionary<PopupType, ButtonsConfig> _popupConfigs;
+
+    private readonly CancellationTokenSource _popupCts = new();
+
+    private TaskCompletionSource<PopupResult>? _tcs;
+
     public DialogViewModel(ILogger<DialogViewModel> logger, DialogCoordinator dialogCoordinator) : base(logger)
     {
         _popupConfigs = new Dictionary<PopupType, ButtonsConfig>
@@ -30,10 +40,10 @@ public class DialogViewModel : ViewModelBase
             {
                 PopupType.InfoYesNo,
                 new ButtonsConfig(Color.Parse("#019eff"),
-                CreateButtonCollection([
-                    CreateButton(MyButtonColorType.Highlight, "否", PopupResult.No),
-                    CreateButton(MyButtonColorType.Default, "是", PopupResult.Yes)
-                ]))
+                    CreateButtonCollection([
+                        CreateButton(MyButtonColorType.Highlight, "否", PopupResult.No),
+                        CreateButton(MyButtonColorType.Default, "是", PopupResult.Yes)
+                    ]))
             },
             {
                 PopupType.ErrorConfirm,
@@ -43,19 +53,19 @@ public class DialogViewModel : ViewModelBase
             {
                 PopupType.WarningYesNo,
                 new ButtonsConfig(Colors.Yellow,
-                CreateButtonCollection([
-                    CreateButton(MyButtonColorType.Default, "否", PopupResult.No),
-                    CreateButton(MyButtonColorType.Highlight, "是", PopupResult.Yes)
-                ]))
+                    CreateButtonCollection([
+                        CreateButton(MyButtonColorType.Default, "否", PopupResult.No),
+                        CreateButton(MyButtonColorType.Highlight, "是", PopupResult.Yes)
+                    ]))
             },
             {
                 PopupType.WarningYesNoCancel,
                 new ButtonsConfig(Colors.Yellow,
-                CreateButtonCollection([
-                    CreateButton(MyButtonColorType.Default, "取消", PopupResult.Cancel),
-                    CreateButton(MyButtonColorType.Default, "否", PopupResult.No),
-                    CreateButton(MyButtonColorType.Highlight, "是", PopupResult.Yes)
-                ]))
+                    CreateButtonCollection([
+                        CreateButton(MyButtonColorType.Default, "取消", PopupResult.Cancel),
+                        CreateButton(MyButtonColorType.Default, "否", PopupResult.No),
+                        CreateButton(MyButtonColorType.Highlight, "是", PopupResult.Yes)
+                    ]))
             },
             {
                 PopupType.WarningConfirm,
@@ -71,7 +81,7 @@ public class DialogViewModel : ViewModelBase
         Opacity = 0;
         Buttons = new StackPanel();
         BorderColor = new SolidColorBrush(Color.Parse("#019eff"));
-        _ = Task.Run((() => HandlePopup(_popupCts.Token)));
+        _ = Task.Run(() => HandlePopup(_popupCts.Token));
         dialogCoordinator.PopupInteraction.RegisterHandler(AddPopupTask);
     }
 
@@ -84,20 +94,12 @@ public class DialogViewModel : ViewModelBase
     [Reactive] public SolidColorBrush BorderColor { get; private set; }
     [Reactive] public StackPanel Buttons { get; private set; }
 
-    private readonly CancellationTokenSource _popupCts = new();
-
-    private readonly Channel<(IInteractionContext<InvokePopupArgs, PopupResult> interaction, TaskCompletionSource tcs)>
-        _popupChannel =
-            Channel.CreateUnbounded<(IInteractionContext<InvokePopupArgs, PopupResult>, TaskCompletionSource)>();
-
     private async Task HandlePopup(CancellationToken token)
     {
         try
         {
             await foreach (var (interaction, tcs) in _popupChannel.Reader.ReadAllAsync(token))
-            {
                 await PopupTaskProcessor(interaction, tcs);
-            }
         }
         catch (OperationCanceledException)
         {
@@ -145,8 +147,6 @@ public class DialogViewModel : ViewModelBase
         await Dispatcher.UIThread.InvokeAsync(() => IsVisible = false);
     }
 
-    private TaskCompletionSource<PopupResult>? _tcs;
-
     private void SetButton(PopupType type)
     {
         if (!_popupConfigs.TryGetValue(type, out var config)) throw new ArgumentException("未处理的弹窗类型，开发错误");
@@ -172,13 +172,11 @@ public class DialogViewModel : ViewModelBase
         _tcs = null;
     }
 
-    // 按钮配置字典
-    private record ButtonsConfig(Color BorderColor, StackPanel Buttons);
-
-    private readonly FrozenDictionary<PopupType, ButtonsConfig> _popupConfigs;
-
-    private MyButton CreateButton(MyButtonColorType color, string content, PopupResult resultType) =>
-        new(color, content, ReactiveCommand.Create(() => Close(resultType))){Padding = new Thickness(5)};
+    private MyButton CreateButton(MyButtonColorType color, string content, PopupResult resultType)
+    {
+        return new MyButton(color, content, ReactiveCommand.Create(() => Close(resultType)))
+            { Padding = new Thickness(5) };
+    }
 
     private static StackPanel CreateButtonCollection(Avalonia.Controls.Controls content)
     {
@@ -186,4 +184,7 @@ public class DialogViewModel : ViewModelBase
         panel.Children.AddRange(content);
         return panel;
     }
+
+    // 按钮配置字典
+    private record ButtonsConfig(Color BorderColor, StackPanel Buttons);
 }

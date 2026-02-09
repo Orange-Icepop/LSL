@@ -1,4 +1,4 @@
-using LSL.Common.Results;
+using FluentResults;
 
 namespace LSL.Common.Models.Api;
 
@@ -19,25 +19,26 @@ public class UpdateApiResponse
     {
         if (string.IsNullOrWhiteSpace(TagName))
             return Result.Fail<bool>(new ArgumentException("TagName is empty"));
-    
+
         if (string.IsNullOrWhiteSpace(oldVersionTag))
             return Result.Fail<bool>(new ArgumentException("oldVersionTag is empty", nameof(oldVersionTag)));
-    
+
         try
         {
             // 清理版本字符串
-            string newVerStr = TagName.TrimStart('v', 'V');
-            string oldVerStr = oldVersionTag.TrimStart('v', 'V');
-        
+            var newVerStr = TagName.TrimStart('v', 'V');
+            var oldVerStr = oldVersionTag.TrimStart('v', 'V');
+
             // 解析版本
             if (!Version.TryParse(newVerStr, out var newVersion))
                 return Result.Fail<bool>(new ArgumentException("TagName is of invalid format"));
-        
+
             if (!Version.TryParse(oldVerStr, out var oldVersion))
-                return Result.Fail<bool>(new ArgumentException("oldVersionTag is of invalid format", nameof(oldVersionTag)));
-        
+                return Result.Fail<bool>(new ArgumentException("oldVersionTag is of invalid format",
+                    nameof(oldVersionTag)));
+
             // 比较版本
-            return Result.Success(newVersion > oldVersion);
+            return Result.Ok(newVersion > oldVersion);
         }
         catch (Exception ex)
         {

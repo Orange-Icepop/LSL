@@ -9,13 +9,6 @@ namespace LSL.Controls;
 
 public partial class MyTerminal : UserControl
 {
-    public MyTerminal()
-    {
-        InitializeComponent();
-        TerminalOutput.ItemsSource = ItemsSource;
-        TerminalScroll.ScrollChanged += OnScrollChanged;
-    }
-
     public static readonly DirectProperty<MyTerminal, ObservableCollection<ColoredLine>?> ItemsSourceProperty =
         AvaloniaProperty.RegisterDirect<MyTerminal, ObservableCollection<ColoredLine>?>(
             nameof(ItemsSource),
@@ -25,7 +18,16 @@ public partial class MyTerminal : UserControl
     public static readonly StyledProperty<bool> EnableAutoScrollProperty =
         AvaloniaProperty.Register<MyTerminal, bool>(nameof(EnableAutoScroll), true);
 
+    private bool _isUserScrolling;
+
     private ObservableCollection<ColoredLine>? _itemsSource;
+
+    public MyTerminal()
+    {
+        InitializeComponent();
+        TerminalOutput.ItemsSource = ItemsSource;
+        TerminalScroll.ScrollChanged += OnScrollChanged;
+    }
 
     public ObservableCollection<ColoredLine>? ItemsSource
     {
@@ -48,16 +50,15 @@ public partial class MyTerminal : UserControl
         }
     }
 
-    private bool _isUserScrolling;
-
-    private void ScrollToBottom() => TerminalScroll.ScrollToEnd();
+    private void ScrollToBottom()
+    {
+        TerminalScroll.ScrollToEnd();
+    }
 
     private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (EnableAutoScroll && !_isUserScrolling)
-        {
             Dispatcher.UIThread.Post(ScrollToBottom, DispatcherPriority.Background);
-        }
     }
 
     private void OnScrollChanged(object? sender, ScrollChangedEventArgs e)
@@ -69,10 +70,7 @@ public partial class MyTerminal : UserControl
 
     private void OnEnableAutoScrollChanged(bool enable)
     {
-        if (enable && !_isUserScrolling)
-        {
-            ScrollToBottom();
-        }
+        if (enable && !_isUserScrolling) ScrollToBottom();
     }
 
 

@@ -1,8 +1,8 @@
 using System.Text.Json;
+using FluentResults;
 using LSL.Common.Extensions;
 using LSL.Common.Models.Api;
 using LSL.Common.Options;
-using LSL.Common.Results;
 
 namespace LSL.Common.Utilities;
 
@@ -10,7 +10,7 @@ public static class UpdateHelper
 {
     private const string StableVersionEndpoint = "https://api.orllow.cn/lsl/latest/stable";
     private const string PrereleaseVersionEndpoint = "https://api.orllow.cn/lsl/latest/prerelease";
-    
+
     public static Task<Result<UpdateApiResponse>> QueryLatest(IHttpClientFactory factory, bool prerelease = false)
     {
         using var client = factory.CreateClient();
@@ -27,14 +27,16 @@ public static class UpdateHelper
             {
                 var code = (int)response.StatusCode;
                 var msg = response.ReasonPhrase ?? string.Empty;
-                return Result.Fail<UpdateApiResponse>(new HttpRequestException($"API returns status code {code}:{msg}"));
+                return Result.Fail<UpdateApiResponse>(
+                    new HttpRequestException($"API returns status code {code}:{msg}"));
             }
-            
+
             return await ParseApiResultAsync(await response.Content.ReadAsStreamAsync());
         }
         catch (HttpRequestException ex)
         {
-            return Result.Fail<UpdateApiResponse>(new HttpRequestException("Update check failed due to network connectivity issue", ex));
+            return Result.Fail<UpdateApiResponse>(
+                new HttpRequestException("Update check failed due to network connectivity issue", ex));
         }
         catch (TaskCanceledException ex)
         {
@@ -51,7 +53,9 @@ public static class UpdateHelper
         try
         {
             var res = await JsonSerializer.DeserializeAsync(content, SnakeJsonOptions.Default.UpdateApiResponse);
-            return res is null? Result.Fail<UpdateApiResponse>(new JsonException("Unable to parse the API result")) : Result.Success(res);
+            return res is null
+                ? Result.Fail<UpdateApiResponse>(new JsonException("Unable to parse the API result"))
+                : Result.Ok(res);
         }
         catch (Exception e)
         {

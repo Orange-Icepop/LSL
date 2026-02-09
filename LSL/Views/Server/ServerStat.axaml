@@ -23,7 +23,7 @@
                     </TextBlock.Text>
                 </TextBlock>
                 <controls:MyPlot Grid.Row="1" Grid.Column="0" LineColor="#019eff" FillColor="#80019eff"
-                              ItemsSource="{Binding MonitorVM.CurrentCpuMetrics}" Margin="5" />
+                                 ItemsSource="{Binding MonitorVM.CurrentCpuMetrics}" Margin="5" />
                 <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="True">
                     <TextBlock FontSize="12" HorizontalAlignment="Left" DockPanel.Dock="Left">
                         <TextBlock.Text>
@@ -39,19 +39,18 @@
                               VerticalAlignment="Center"
                               Margin="0,0,10,0"
                               Stroke="#019eff"
-                              StrokeThickness="2">
-                        </Path>
+                              StrokeThickness="2" />
                         <ToolTip.Tip>
                             <TextBlock>
-                                本性能图显示的最大值为JVM堆内存设置的最大值，但是监控的是整个Java进程的内存占用最大值（即包含非堆内存，一般大小约为1GB）。<LineBreak/>
-                                因此，可能存在占用内存值超过100%的情况，这是正常现象。<LineBreak/>
+                                本性能图显示的最大值为JVM堆内存设置的最大值，但是监控的是整个Java进程的内存占用最大值（即包含非堆内存，一般大小约为1GB）。<LineBreak />
+                                因此，可能存在占用内存值超过100%的情况，这是正常现象。<LineBreak />
                                 在配置的JVM堆内存较小的情况下更容易出现这种情况。
                             </TextBlock>
                         </ToolTip.Tip>
                     </Border>
                 </DockPanel>
                 <controls:MyPlot Grid.Row="1" Grid.Column="1" LineColor="#FFE39A6B" FillColor="#80E39A6B"
-                              ItemsSource="{Binding MonitorVM.CurrentRamMetrics}" Margin="5" />
+                                 ItemsSource="{Binding MonitorVM.CurrentRamMetrics}" Margin="5" />
             </Grid>
         </controls:MyCard>
         <controls:MyCard Text="玩家列表" DockPanel.Dock="Left" Width="250">

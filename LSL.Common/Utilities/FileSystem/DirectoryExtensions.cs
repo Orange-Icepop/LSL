@@ -8,11 +8,6 @@ public enum DirectoryCopyMode
 
 public static class DirectoryExtensions
 {
-    private class CopyProgressState
-    {
-        public long BytesCopied = 0;
-        public string FileNameInProgress = string.Empty;
-    }
     public static async Task CopyDirectoryAsync(
         string sourceDirectoryPath,
         string destinationDirectoryPath,
@@ -32,7 +27,7 @@ public static class DirectoryExtensions
 
         if (string.IsNullOrWhiteSpace(destinationDirectoryPath))
             throw new ArgumentException("Invalid destination directory path", nameof(destinationDirectoryPath));
-        
+
         // 检查源目录是否存在
         if (!Directory.Exists(sourceDirectoryPath))
             throw new DirectoryNotFoundException($"Source directory not found: {sourceDirectoryPath}");
@@ -79,12 +74,12 @@ public static class DirectoryExtensions
                 try
                 {
                     await FileExtensions.CopyFileAsync(
-                        sourcePath: filePath,
-                        destinationPath: destPath,
-                        overwrite: overwrite,
-                        bufferSize: bufferSize,
-                        progress: null, // 不报告单个文件进度
-                        cancellationToken: cancellationToken);
+                        filePath,
+                        destPath,
+                        overwrite,
+                        bufferSize,
+                        null, // 不报告单个文件进度
+                        cancellationToken);
                 }
                 catch (Exception)
                 {
@@ -133,12 +128,12 @@ public static class DirectoryExtensions
             try
             {
                 await FileExtensions.CopyFileAsync(
-                    sourcePath: filePath,
-                    destinationPath: destPath,
-                    overwrite: overwrite,
-                    bufferSize: bufferSize,
-                    progress: null, // 不报告单个文件进度
-                    cancellationToken: cancellationToken);
+                    filePath,
+                    destPath,
+                    overwrite,
+                    bufferSize,
+                    null, // 不报告单个文件进度
+                    cancellationToken);
             }
             catch (Exception)
             {
@@ -176,7 +171,7 @@ public static class DirectoryExtensions
     {
         if (!Directory.Exists(targetDir))
             throw new DirectoryNotFoundException("The target directory doesn't exist");
-        
+
         cancellationToken.ThrowIfCancellationRequested();
 
         // delete all files
@@ -197,5 +192,11 @@ public static class DirectoryExtensions
 
         // delete current directory
         Directory.Delete(targetDir, false);
+    }
+
+    private class CopyProgressState
+    {
+        public long BytesCopied;
+        public string FileNameInProgress = string.Empty;
     }
 }

@@ -10,16 +10,23 @@ namespace LSL.Services;
 
 public sealed class EventBus
 {
-    // 字典，用于存储事件类型和对应的委托列表  
-    private readonly ConcurrentDictionary<Type, (object _lock, List<Delegate> _delegates)> _handlers = [];
-
     // 单例
     private static readonly Lazy<EventBus> s_instance = new(() => new EventBus());
+
+    // 字典，用于存储事件类型和对应的委托列表  
+    private readonly ConcurrentDictionary<Type, (object _lock, List<Delegate> _delegates)> _handlers = [];
     public static EventBus Instance => s_instance.Value;
 
     // 订阅事件（支持同步和异步处理程序）
-    public bool Subscribe<TEvent>(Action<TEvent> handler) => SubscribeInternal<TEvent>(handler);
-    public bool Subscribe<TEvent>(Func<TEvent, Task> handler) => SubscribeInternal<TEvent>(handler);
+    public bool Subscribe<TEvent>(Action<TEvent> handler)
+    {
+        return SubscribeInternal<TEvent>(handler);
+    }
+
+    public bool Subscribe<TEvent>(Func<TEvent, Task> handler)
+    {
+        return SubscribeInternal<TEvent>(handler);
+    }
 
     private bool SubscribeInternal<TEvent>(Delegate handler)
     {
@@ -45,12 +52,10 @@ public sealed class EventBus
         try
         {
             if (_handlers.TryGetValue(typeof(TEvent), out var entry))
-            {
                 lock (entry._lock)
                 {
                     return entry._delegates.Remove(handler);
                 }
-            }
 
             return false;
         }
@@ -75,7 +80,6 @@ public sealed class EventBus
         var exceptions = new List<Exception>();
 
         foreach (var handler in snapshot)
-        {
             try
             {
                 switch (handler)
@@ -95,7 +99,6 @@ public sealed class EventBus
                 // 记录错误但继续执行其他处理程序
                 Console.WriteLine($"Error in event handler: {ex.Message}");
             }
-        }
 
         return exceptions.Count == 0;
     }
@@ -116,7 +119,6 @@ public sealed class EventBus
         var exceptions = new List<Exception>();
 
         foreach (var handler in snapshot)
-        {
             try
             {
                 switch (handler)
@@ -135,7 +137,6 @@ public sealed class EventBus
                 exceptions.Add(ex);
                 Console.WriteLine($"Error starting event handler: {ex.Message}");
             }
-        }
 
         try
         {
@@ -152,10 +153,7 @@ public sealed class EventBus
         }
 
         // 记录所有异常
-        foreach (var ex in exceptions)
-        {
-            Console.WriteLine($"Error in event handler: {ex.Message}");
-        }
+        foreach (var ex in exceptions) Console.WriteLine($"Error in event handler: {ex.Message}");
 
         return exceptions.Count == 0;
     }
@@ -173,7 +171,6 @@ public sealed class EventBus
         }
 
         foreach (var handler in snapshot)
-        {
             // 为每个处理程序启动独立任务
             _ = Task.Run(async () =>
             {
@@ -196,7 +193,6 @@ public sealed class EventBus
                     Console.WriteLine($"Fire-and-forget error: {ex.Message}");
                 }
             });
-        }
     }
 }
 
@@ -225,14 +221,15 @@ EventBus.Instance.Subscribe<【事件类名】>(【事件处理器方法】);
  */
 public sealed class InvokeBus
 {
+    private static readonly Lazy<InvokeBus> s_instance = new(() => new InvokeBus());
+
+    private readonly ConcurrentDictionary<Type, (Type RTType, Delegate Handler)> _handlers = new();
+
     private InvokeBus()
     {
     }
 
-    private static readonly Lazy<InvokeBus> s_instance = new(() => new InvokeBus());
     public static InvokeBus Instance => s_instance.Value;
-
-    private readonly ConcurrentDictionary<Type, (Type RTType, Delegate Handler)> _handlers = new();
 
     // 注册事件处理器
     public bool TryRegister<TEvent, TResult>(Func<TEvent, TResult> handler, bool force = false)
@@ -264,7 +261,9 @@ public sealed class InvokeBus
 
     // 移除事件处理器
     public bool TryRemove<TEvent>()
-        => _handlers.TryRemove(typeof(TEvent), out _);
+    {
+        return _handlers.TryRemove(typeof(TEvent), out _);
+    }
 
     // 调用事件处理器
     public TResult? Invoke<TEvent, TResult>(TEvent args)
@@ -277,9 +276,11 @@ public sealed class InvokeBus
                 var handler = (Func<TEvent, TResult>)pair.Handler;
                 return handler(args);
             }
-            else throw new InvalidCastException("Return type mismatch");
+
+            throw new InvalidCastException("Return type mismatch");
         }
-        else return default;
+
+        return default;
     }
 
     // 异步调用事件处理器
@@ -293,14 +294,17 @@ public sealed class InvokeBus
                 var asyncHandler = (Func<TEvent, Task<TResult>>)pair.Handler;
                 return await asyncHandler(args).ConfigureAwait(false);
             }
-            else if (pair.RTType == typeof(TResult))
+
+            if (pair.RTType == typeof(TResult))
             {
                 var syncHandler = (Func<TEvent, TResult>)pair.Handler;
                 return await Task.Run(() => syncHandler(args)).ConfigureAwait(false);
             }
-            else throw new InvalidCastException("Return type mismatch");
+
+            throw new InvalidCastException("Return type mismatch");
         }
-        else return default;
+
+        return default;
     }
 }
 

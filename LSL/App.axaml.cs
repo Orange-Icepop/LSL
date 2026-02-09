@@ -13,8 +13,29 @@ using NLog;
 
 namespace LSL;
 
-public partial class App : Application
+public class App : Application
 {
+    private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
+
+    private readonly ServiceProvider _diServices;
+    private readonly InitializationViewModel _startupViewModel;
+
+    public App()
+    {
+        s_logger.Info("Building LSL DI Container");
+        var serviceDescriptors = new ServiceCollection();
+        serviceDescriptors.AddLogging();
+        serviceDescriptors.AddNetworking();
+        serviceDescriptors.AddConfigManager();
+        serviceDescriptors.AddServerHost();
+        serviceDescriptors.AddStartUp();
+        serviceDescriptors.AddViewModels();
+        _diServices = serviceDescriptors.BuildServiceProvider();
+        s_logger.Info("DI Completed");
+        _startupViewModel = _diServices.GetRequiredService<InitializationViewModel>();
+        DataContext = _startupViewModel;
+    }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -31,7 +52,7 @@ public partial class App : Application
             {
                 DataContext = _startupViewModel,
                 ViewModel = _startupViewModel,
-                Logger = _diServices.GetRequiredService<ILogger<MainWindow>>(),
+                Logger = _diServices.GetRequiredService<ILogger<MainWindow>>()
             };
             desktop.MainWindow.Show();
             _ = _startupViewModel.Initialize(_diServices).ContinueWith(t =>
@@ -53,9 +74,7 @@ public partial class App : Application
             }).GetTask().ContinueWith(prevTask =>
             {
                 if (prevTask.IsFaulted || prevTask.Result == null)
-                {
                     throw new Exception("ShellViewModel failed to initialize");
-                }
 
                 shellVM = prevTask.Result;
                 return Task.WhenAll(
@@ -65,16 +84,13 @@ public partial class App : Application
                 );
             }).Unwrap().ContinueWith(prevTask =>
             {
-                if (prevTask.IsFaulted)
-                {
-                    throw prevTask.Exception;
-                }
+                if (prevTask.IsFaulted) throw prevTask.Exception;
 
                 Dispatcher.UIThread.Invoke(() =>
                 {
                     singleViewPlatform.MainView = new MainView
                     {
-                        DataContext = shellVM,
+                        DataContext = shellVM
                     };
                 });
             }, TaskScheduler.FromCurrentSynchronizationContext()).ContinueWith(task =>
@@ -93,24 +109,4 @@ public partial class App : Application
     }
 
     #endregion
-
-    private readonly ServiceProvider _diServices;
-    private readonly InitializationViewModel _startupViewModel;
-    private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
-
-    public App()
-    {
-        s_logger.Info("Building LSL DI Container");
-        var serviceDescriptors = new ServiceCollection();
-        serviceDescriptors.AddLogging();
-        serviceDescriptors.AddNetworking();
-        serviceDescriptors.AddConfigManager();
-        serviceDescriptors.AddServerHost();
-        serviceDescriptors.AddStartUp();
-        serviceDescriptors.AddViewModels();
-        _diServices = serviceDescriptors.BuildServiceProvider();
-        s_logger.Info("DI Completed");
-        _startupViewModel = _diServices.GetRequiredService<InitializationViewModel>();
-        this.DataContext = _startupViewModel;
-    }
 }
