@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
+using LSL.Common.Results;
 using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -39,7 +40,7 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
 
     public async Task OpenWebPage(string url)
     {
-        var result = XPlatformOperationHelper.OpenWebBrowser(url);
+        Result<Unit> result = XPlatformOperationHelper.OpenWebBrowser(url);
         if (result.IsSuccess)
         {
             AppState.Coordinator.Notify(NotifyType.Success, "成功打开了网页！", url);

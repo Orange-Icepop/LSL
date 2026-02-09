@@ -9,20 +9,7 @@ public readonly record struct Unit
     public override string ToString() => "()";
 }
 
-public enum ResultType
-{
-    Success,
-    Warning,
-    Error,
-}
-
-public interface IResult
-{
-    ResultType Kind { get; }
-    Exception? Error { get; }
-}
-
-public record Result<T> : IResult
+public readonly struct Result<T> : IResult<T>
 {
     public T? Value { get; }
     public ResultType Kind { get; }
@@ -53,10 +40,14 @@ public record Result<T> : IResult
     }
 }
 
-public record Result : Result<Unit>
+public readonly struct Result : IResult<Unit>
 {
-    private Result(ResultType kind, Exception? Error) : base(kind, Unit.Value, Error){}
-    internal Result(Result<Unit> result) : base(result.Kind, result.Value, result.Error){}
+    private Result(ResultType kind, Exception? error)
+    {
+        Kind = kind;
+        Error = error;
+    }
+    internal Result(Result<Unit> result) : this(result.Kind, result.Error){}
 
     public static Result Success() => new (ResultType.Success, null);
     public static Result Fail(Exception error) => new(ResultType.Error, error);
@@ -71,4 +62,24 @@ public record Result : Result<Unit>
     public static Result<T> Warning<T>(T result, Exception error) => new(ResultType.Warning, result, error);
     public static Result<T> Warning<T>(T result, string error) => new(ResultType.Warning, result,
         new Exception(error));
+
+    public ResultType Kind { get; }
+    public Exception? Error { get; }
+    public Unit Value { get; } = Unit.Value;
+    
+    [MemberNotNullWhen(true, nameof(Value))]
+    [MemberNotNullWhen(false, nameof(Error))]
+    public bool IsSuccess => Kind is ResultType.Success;
+    [MemberNotNullWhen(true, nameof(Value))]
+    [MemberNotNullWhen(true, nameof(Error))]
+    public bool IsWarning => Kind is ResultType.Warning;
+    [MemberNotNullWhen(true, nameof(Error))]
+    [MemberNotNullWhen(false, nameof(Value))]
+    public bool IsFailed => Kind is ResultType.Error;
+    [MemberNotNullWhen(true, nameof(Error))]
+    [MemberNotNullWhen(false, nameof(Value))]
+    public bool HasError => Kind is not ResultType.Success;
+    
+    public static implicit operator Result(Result<Unit> result) => new(result);
+    public static implicit operator Result<Unit>(Result result) => new(result.Kind, result.Value, result.Error);
 }

@@ -12,7 +12,7 @@ public abstract record AppConfigBase<TConfig> : IConfig<TConfig> where TConfig :
     { 
         if (!Toml.TryToModel<TConfig>(content, out var result, out var error))
             return Result.Warning(new TConfig(), $"The {typeof(TConfig).Name} is not parsable:\n{error}");
-        var validationResult = result.Validate();
+        Result<Unit> validationResult = result.Validate();
         return validationResult.IsSuccess ? Result.Success(result) : Result.Warning(result, validationResult.Error);
     }
 }

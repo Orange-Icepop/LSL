@@ -4,7 +4,7 @@ using LSL.Common.Results;
 
 namespace LSL.Common.Models.Minecraft;
 
-public record ServerConfigList : Result<ImmutableDictionary<int, IndexedServerConfig>>
+public class ServerConfigList : Result<ImmutableDictionary<int, IndexedServerConfig>>
 {
     private ServerConfigList(
         ImmutableDictionary<int, IndexedServerConfig>? configs, 

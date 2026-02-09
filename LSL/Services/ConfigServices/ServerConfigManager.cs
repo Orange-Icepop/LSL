@@ -420,7 +420,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         {
             if (config.ServerType is ServerCoreType.ForgeInstaller && installForge)
             {
-                var installResult = await ForgeInstaller.InstallForge(
+                Result<Unit> installResult = await ForgeInstaller.InstallForge(
                     Path.Combine(config.ServerPath, Path.GetFileName(config.ServerPath)), config.JavaPath, progress);
                 if (installResult.IsFailed)
                     return Result.Fail<IDictionary<int, IndexedServerConfig>>(installResult.Error);
