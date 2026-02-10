@@ -94,13 +94,19 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 await config.LocatedConfig.ToLatestConfig()
                     .Bind(c => c.WriteToFileAsync(config.ServerPath))
                     .PackAndThrowIfFailed(); // 写入服务器文件夹内的配置文件
-                return (await _indexManager.ModifyServerInIndex(config))
-                    .MapSuccesses(r =>
-                    {
-                        logger.LogInformation("Server{id} \"{name}\" edited", config.ServerId, config.ServerName);
-                        return r;
-                    })
-                    .MapErrors(ex => logger.LogWarning(ex, "Error editing server \"{serverName}\"", serverConfig.ServerName));
+                return await _indexManager.ModifyServerInIndex(config)
+                    .Handle(_ =>
+                        {
+                            logger.LogInformation("Server{id} \"{name}\" edited", config.ServerId, config.ServerName);
+                        },
+                        (_, w) =>
+                        {
+                            logger.LogWarning("Error editing server \"{serverName}\"\n{ex}", serverConfig.ServerName,
+                                w.ToResult());
+                        },
+                        ex => logger.LogWarning("Error editing server \"{serverName}\"\n{ex}", serverConfig.ServerName,
+                            ex.ToResult()))
+                    .Bind(Result.Ok<IDictionary<int, IndexedServerConfig>>);
             }
 
             logger.LogError("Match Server Not Found:{id}", config.ServerId);

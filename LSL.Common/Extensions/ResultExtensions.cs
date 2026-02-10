@@ -31,7 +31,7 @@ public static class ResultExtensions
     }
 
     #endregion
-
+    
     public static IReadOnlyList<Exception> GetWarnings(this IResultBase result)
     {
         if (result.IsFailed) return [];
@@ -53,7 +53,9 @@ public static class ResultExtensions
             _ => new Exception(e.Message)
         }).ToList();
     }
-    
+
+    #region PackAndThrowIfFailed
+
     public static Result<TResult> PackAndThrowIfFailed<TResult>(
         this Result<TResult> result, 
         bool throwWarnings = false,
@@ -103,7 +105,55 @@ public static class ResultExtensions
     public static async Task<Result> PackAndThrowIfFailed(this Task<Result> task,
         bool throwWarnings = false, bool packWarningsIfFail = false) =>
         (await task).PackAndThrowIfFailed(throwWarnings, packWarningsIfFail);
+    #endregion
 
+    #region Handle
+
+    public static Result Handle(this Result result, Action onSuccess,
+        Action<IReadOnlyList<Exception>> onWarning, Action<IReadOnlyList<Exception>> onFailure)
+    {
+        if (result.IsFailed)
+        {
+            onFailure(result.GetErrors());
+        }
+        else
+        {
+            var warnings = result.GetWarnings();
+            if (warnings.Count == 0) onSuccess();
+            else onWarning(warnings);
+        }
+        return result;
+    }
+    public static async Task<Result> Handle(this Task<Result> result, Action onSuccess,
+        Action<IReadOnlyList<Exception>> onWarning, Action<IReadOnlyList<Exception>> onFailure) =>
+        (await result).Handle(onSuccess, onWarning, onFailure);
+
+    public static Result<TResult> Handle<TResult>(this Result<TResult> result, Action<TResult> onSuccess,
+        Action<TResult, IReadOnlyList<Exception>> onWarning, Action<IReadOnlyList<Exception>> onFailure)
+    {
+        if (result.IsFailed)
+        {
+            onFailure(result.GetErrors());
+        }
+        else
+        {
+            var warnings = result.GetWarnings();
+            if (warnings.Count == 0) onSuccess(result.Value);
+            else onWarning(result.Value, warnings);
+        }
+        return result;
+    }
+    public static async Task<Result<TResult>> Handle<TResult>(this Task<Result<TResult>> result,
+        Action<TResult> onSuccess,
+        Action<TResult, IReadOnlyList<Exception>> onWarning,
+        Action<IReadOnlyList<Exception>> onFailure) => (await result).Handle(onSuccess, onWarning, onFailure);
+
+    #endregion
+    
+    public static Result ToResult(this AggregateException aggregate)
+    {
+        return Result.Fail(aggregate.InnerExceptions.Select(e => new ExceptionalError(e)));
+    }
     public static Result<TResult> ToResult<TResult>(this AggregateException aggregate)
     {
         return Result.Fail<TResult>(aggregate.InnerExceptions.Select(e => new ExceptionalError(e)));
