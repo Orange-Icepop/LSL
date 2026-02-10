@@ -28,7 +28,7 @@ public static class UpdateHelper
                 var code = (int)response.StatusCode;
                 var msg = response.ReasonPhrase ?? string.Empty;
                 return Result.Fail<UpdateApiResponse>(
-                    new HttpRequestException($"API returns status code {code}:{msg}"));
+                    new Error($"API returns status code {code}:{msg}"));
             }
 
             return await ParseApiResultAsync(await response.Content.ReadAsStreamAsync());
@@ -36,15 +36,15 @@ public static class UpdateHelper
         catch (HttpRequestException ex)
         {
             return Result.Fail<UpdateApiResponse>(
-                new HttpRequestException("Update check failed due to network connectivity issue", ex));
+                new Error("Update check failed due to network connectivity issue").CausedBy(ex));
         }
         catch (TaskCanceledException ex)
         {
-            return Result.Fail<UpdateApiResponse>(new TaskCanceledException("Update check timeout", ex));
+            return Result.Fail<UpdateApiResponse>(new Error("Update check timeout").CausedBy(ex));
         }
         catch (Exception ex)
         {
-            return Result.Fail<UpdateApiResponse>(ex);
+            return Result.Fail<UpdateApiResponse>(new ExceptionalError(ex));
         }
     }
 
@@ -54,12 +54,12 @@ public static class UpdateHelper
         {
             var res = await JsonSerializer.DeserializeAsync(content, SnakeJsonOptions.Default.UpdateApiResponse);
             return res is null
-                ? Result.Fail<UpdateApiResponse>(new JsonException("Unable to parse the API result"))
+                ? Result.Fail<UpdateApiResponse>(new Error("Unable to parse the API result"))
                 : Result.Ok(res);
         }
         catch (Exception e)
         {
-            return Result.Fail<UpdateApiResponse>(new JsonException("Unable to parse the API result", e));
+            return Result.Fail<UpdateApiResponse>(new Error("Unable to parse the API result").CausedBy(e));
         }
     }
 }

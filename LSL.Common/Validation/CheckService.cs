@@ -100,16 +100,16 @@ public static class CheckService
         
     public static Result<IndexedServerConfig> VerifyServerConfig(int id, string path, IDictionary<string, string> config)
     {
-        if (id < 0) return Result.Fail<IndexedServerConfig>(new ArgumentException($"Server id of {id} is not valid."));
+        if (id < 0) return Result.Fail<IndexedServerConfig>(new Error($"Server id of {id} is not valid."));
         var cache = LocatedServerConfig.Empty;
         var pResult = CheckComponents.ServerPath(path);
-        if (!pResult.Passed) return Result.Fail<IndexedServerConfig>(new ValidationException($"Error validating server config with id {id} because of nonexistent server path."));
+        if (!pResult.Passed) return Result.Fail<IndexedServerConfig>(new Error($"Error validating server config with id {id} because of nonexistent server path."));
         cache.ServerPath = path;
         foreach (var item in s_serverConfigKeys)
         {
             if (!config.TryGetValue(item, out var value))
                 return Result.Fail<IndexedServerConfig>(
-                    new KeyNotFoundException($"key {item} not found in server with id {id}."));
+                    new Error($"key {item} not found in server with id {id}."));
             VerifyResult vResult;
             switch(item)
             {

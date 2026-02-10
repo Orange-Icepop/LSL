@@ -28,7 +28,7 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         }
         catch (Exception e)
         {
-            return Result.Fail<ServerConfigV1>(e);
+            return Result.Fail<ServerConfigV1>(new Error($"An error occured while deserializing {nameof(ServerConfigV1)}").CausedBy(e));
         }
 
         return Result.Ok(result);
@@ -60,7 +60,7 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         }
         catch (Exception e)
         {
-            return Result.Fail(e);
+            return Result.Fail(new Error($"An error occured while writing {nameof(ServerConfigV1)}").CausedBy(e));
         }
     }
 
@@ -69,11 +69,11 @@ public class ServerConfigV1 : IServerConfig<ServerConfigV1>
         try
         {
             var context = await File.ReadAllTextAsync(Path.Combine(path, ConfigFileName));
-            return await Deserialize(context).BindAsync(config => config.StandardizeAsync(path));
+            return await Deserialize(context).Bind(config => config.StandardizeAsync(path));
         }
         catch (Exception e)
         {
-            return Result.Fail<LocatedServerConfig>(e);
+            return Result.Fail<LocatedServerConfig>(new Error($"An error occured while reading {nameof(ServerConfigV1)}").CausedBy(e));
         }
     }
 

@@ -50,7 +50,7 @@ public class LocatedServerConfig
     public Result<ProcessStartInfo> GetStartInfo()
     {
         if (!CheckComponents.IsValidJava(JavaPath))
-            return Result.Fail<ProcessStartInfo>(new ArgumentException("Java is not valid"));
+            return Result.Fail<ProcessStartInfo>(new Error($"Java at {JavaPath} is not valid"));
         if (ServerType is not ServerCoreType.Forge && File.Exists(CommonCoreInfo?.JarName))
             return Result.Ok(new ProcessStartInfo
             {
@@ -118,9 +118,7 @@ public class LocatedServerConfig
 
     public Result<ServerConfigV2> ToLatestConfig()
     {
-        var validationResult = Validate();
-        if (validationResult.IsFailed) return Result.Fail<ServerConfigV2>(validationResult.Error);
-        return Result.Ok(new ServerConfigV2
+        return Validate().Bind(()=>Result.Ok(new ServerConfigV2
         {
             Name = ServerName,
             ServerType = ServerType,
@@ -131,7 +129,7 @@ public class LocatedServerConfig
             MaxMemory = MaxMemory,
             ExtraJvmArgs = ExtraJvmArgs,
             EnablePreLaunchProtection = EnablePreLaunchProtection
-        });
+        }));
     }
 
     public static Task<Result<LocatedServerConfig>> CreateAsync(string serverPath,
@@ -170,7 +168,7 @@ public class LocatedServerConfig
         for (var tries = 0; tries < 3; tries++)
         {
             var validationResult = Validate();
-            if (validationResult.IsFailed) return Result.Fail<LocatedServerConfig>(validationResult.Error);
+            if (validationResult.IsFailed) return Result.Fail<LocatedServerConfig>(validationResult.Errors);
             switch (ServerType)
             {
                 case ServerCoreType.Forge or ServerCoreType.ForgeInstaller or ServerCoreType.ForgeShim:

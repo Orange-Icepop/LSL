@@ -39,15 +39,14 @@ public static class CoreTypeHelper
 
     public static async Task<Result<ServerCoreType>> GetCoreType(string? filePath)
     {
-        if (string.IsNullOrEmpty(filePath))
-            return Result.Fail<ServerCoreType>(new ArgumentNullException(nameof(filePath)));
+        if (string.IsNullOrWhiteSpace(filePath))
+            return Result.Fail<ServerCoreType>(new Error($"Param {nameof(filePath)} is null or empty"));
         if (!File.Exists(filePath))
-            return Result.Fail<ServerCoreType>(new FileNotFoundException($"Cannot find core file {filePath}"));
+            return Result.Fail<ServerCoreType>(new Error($"Cannot find core file {filePath}"));
 
         var jarMainClassResult = await GetMainClass(filePath).ConfigureAwait(false);
-        return jarMainClassResult.IsFailed
-            ? Result.Fail<ServerCoreType>(jarMainClassResult.Error)
-            : Result.Ok(s_coreTypeMap.GetValueOrDefault(jarMainClassResult.Value, ServerCoreType.Unknown));
+        return jarMainClassResult.Bind(line =>
+            Result.Ok(s_coreTypeMap.GetValueOrDefault(line, ServerCoreType.Unknown)));
     }
 
     // the following code is taken and modified from https://github.com/Orange-Icepop/JavaMainClassFinder

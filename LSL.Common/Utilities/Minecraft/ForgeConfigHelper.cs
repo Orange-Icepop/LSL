@@ -13,7 +13,7 @@ public static class ForgeConfigHelper
     public static async Task<Result<ForgeCoreConfigV1>> GetForgeConfig(string? serverDir)
     {
         if (string.IsNullOrWhiteSpace(serverDir) || !Directory.Exists(serverDir))
-            return Result.Fail<ForgeCoreConfigV1>(new DirectoryNotFoundException("Server directory doesn't exist."));
+            return Result.Fail<ForgeCoreConfigV1>(new Error($"Server directory {serverDir} doesn't exist."));
         var tryArgs =
             await FindLibraryArgsWithScript(Path.Combine(serverDir, "run.bat"), Path.Combine(serverDir, "run.sh"));
         return tryArgs.IsSuccess ? tryArgs : FindLibraryArgsWithContrast(serverDir);
@@ -52,7 +52,7 @@ public static class ForgeConfigHelper
     {
         if (string.IsNullOrWhiteSpace(serverPath) || !File.Exists(serverPath))
             return Result.Fail<ForgeCoreConfigV1>(
-                new DirectoryNotFoundException("Server directory doesn't exist."));
+                new Error($"Server directory {serverPath} doesn't exist."));
         var dir = Path.Combine(serverPath, "libraries/net/minecraftforge/forge");
         if (!Directory.Exists(dir)) return Result.Fail<ForgeCoreConfigV1>("Server forge directory doesn't exist.");
         var subDirs = Directory.GetDirectories(dir);

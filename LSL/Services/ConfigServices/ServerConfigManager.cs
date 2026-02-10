@@ -10,6 +10,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentResults;
+using FluentResults.Extensions;
+using LSL.Common.Extensions;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Options;
@@ -54,9 +56,9 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 await File.WriteAllTextAsync(ConfigPathProvider.ServerConfigPath, "{}");
 
             var writeResult = await config.ToLatestConfig()
-                .BindAsync(conf => conf.WriteToFileAsync(config.ServerPath).AsGeneric());
+                .Bind(conf => conf.WriteToFileAsync(config.ServerPath));
             if (writeResult.IsFailed)
-                return Result.Fail<IDictionary<int, IndexedServerConfig>>(writeResult.Error);
+                return Result.Fail<IDictionary<int, IndexedServerConfig>>(writeResult.Errors);
             // 创建Eula文件
             if (!mcm.CurrentConfigs.TryGetValue("auto_eula", out var rawEula) ||
                 !bool.TryParse(rawEula.ToString(), out var eula)) eula = false; // TODO:在MainConfig改掉之后换过去
@@ -74,7 +76,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
         catch (Exception e)
         {
             logger.LogError(e, "Server {ServerName} could not be registered", config.ServerName);
-            return Result.Fail<IDictionary<int, IndexedServerConfig>>(e);
+            return Result.Fail<IDictionary<int, IndexedServerConfig>>(new Error($"Server {config.ServerName} could not be registered").CausedBy(e));
         }
     }
 
@@ -90,19 +92,20 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 serverConfig.ServerPath == config.ServerPath)
             {
                 await config.LocatedConfig.ToLatestConfig()
-                    .BindAsync(c => c.WriteToFileAsync(config.ServerPath).AsGeneric())
-                    .GetValueOrThrow(); // 写入服务器文件夹内的配置文件
-                return await _indexManager.ModifyServerInIndex(config)
-                    .Match(
-                        _ => logger.LogInformation("Server{id} \"{name}\" edited", config.ServerId, config.ServerName),
-                        null,
-                        ex => logger.LogWarning(ex, "Error editing server \"{serverName}\"", serverConfig.ServerName))
-                    .Bind(Result.Ok<IDictionary<int, IndexedServerConfig>>);
+                    .Bind(c => c.WriteToFileAsync(config.ServerPath))
+                    .PackAndThrowIfFailed(); // 写入服务器文件夹内的配置文件
+                return (await _indexManager.ModifyServerInIndex(config))
+                    .MapSuccesses(r =>
+                    {
+                        logger.LogInformation("Server{id} \"{name}\" edited", config.ServerId, config.ServerName);
+                        return r;
+                    })
+                    .MapErrors(ex => logger.LogWarning(ex, "Error editing server \"{serverName}\"", serverConfig.ServerName));
             }
 
             logger.LogError("Match Server Not Found:{id}", config.ServerId);
             return Result.Fail<IDictionary<int, IndexedServerConfig>>(
-                new KeyNotFoundException($"未找到匹配的服务器{config.ServerId}：{config.ServerName}"));
+                new Error($"未找到匹配的服务器{config.ServerId}：{config.ServerName}"));
         }
         catch (Exception e)
         {
@@ -446,15 +449,14 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
                 try
                 {
                     if (!_serverConfigs.TryGetValue(config.ServerId, out _))
-                        return Result.Fail<ImmutableDictionary<int, IndexedServerConfig>>(
-                            new KeyNotFoundException("Index server config doesn't contain the selected server id"));
+                        return Result.Fail<ImmutableDictionary<int, IndexedServerConfig>>(new Error("Index server config doesn't contain the selected server id"));
                     _serverConfigs = _serverConfigs.SetItem(config.ServerId, config);
-                    await WriteServerConfigs().AsGeneric().GetValueOrThrow();
+                    await WriteServerConfigs().GetValueOrThrow();
                     return Result.Ok(_serverConfigs);
                 }
                 catch (Exception e)
                 {
-                    return Result.Fail<ImmutableDictionary<int, IndexedServerConfig>>(e);
+                    return Result.Fail<ImmutableDictionary<int, IndexedServerConfig>>(new Error(""));
                 }
             }
         }
@@ -480,7 +482,7 @@ public class ServerConfigManager(MainConfigManager mcm, ILogger<ServerConfigMana
 
         #region 逐个获取服务器各自的配置文件
 
-        private static async Task<ServerConfigList> GetServerDetailsAsync(IDictionary<int, string> mainConfigs)
+        private static async Task<Result<ImmutableDictionary<int, IndexedServerConfig>>> GetServerDetailsAsync(IDictionary<int, string> mainConfigs)
         {
             ConcurrentBag<string> errors = [];
             ConcurrentBag<string> warnings = [];

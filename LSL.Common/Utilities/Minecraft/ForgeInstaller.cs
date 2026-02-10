@@ -9,9 +9,9 @@ public static class ForgeInstaller
         IProgress<string>? progress = null)
     {
         if (!File.Exists(installerPath))
-            return Result.Fail(new FileNotFoundException($"The file {installerPath} was not found."));
+            return Result.Fail(new Error($"The file {installerPath} was not found."));
         if (!File.Exists(javaPath))
-            return Result.Fail(new FileNotFoundException($"The file {javaPath} was not found."));
+            return Result.Fail(new Error($"The file {javaPath} was not found."));
         try
         {
             using var process = new Process();
@@ -47,7 +47,7 @@ public static class ForgeInstaller
         }
         catch (Exception e)
         {
-            return Result.Fail(e);
+            return Result.Fail(new Error($"An error occured while installing Forge server at {installerPath}").CausedBy(e));
         }
     }
 }
