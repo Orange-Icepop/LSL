@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using FluentResults;
+using LSL.Common.Extensions;
 using LSL.Common.Models.AppConfig;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
@@ -29,20 +30,14 @@ public class ConfigManager(
     {
         try
         {
-            await ((List<Task<IResult>>)
-            [
-                ReadDaemonConfig().AsIResult(),
-                ReadWebConfig().AsIResult(),
-                ReadDesktopConfig().AsIResult(),
-                Task.FromResult<IResult>(await ReadServerConfig()),
-                ReadJavaConfig().AsIResult()
-            ]).WhenAll();
-            return Result.Ok();
+            return await ResultHelper.ForEachAsync(ReadDaemonConfig().Basify(), ReadWebConfig().Basify(),
+                    ReadDesktopConfig().Basify(), ReadServerConfig().Basify(), ReadJavaConfig().Basify())
+                .ConfigureAwait(false);
         }
         catch (Exception e)
         {
             logger.LogCritical(e, "Something critical error occured while loading config.");
-            return Result.Fail(e);
+            return Result.Fail(new ExceptionalError(e));
         }
     }
 
@@ -95,7 +90,7 @@ public class ConfigManager(
         return scm.CloneServerConfigs();
     }
 
-    public Task<ServerConfigList> ReadServerConfig()
+    public Task<Result<ImmutableDictionary<int, IndexedServerConfig>>> ReadServerConfig()
     {
         return scm.ReadServerConfig();
     }

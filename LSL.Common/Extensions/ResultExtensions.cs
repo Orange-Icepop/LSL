@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using FluentResults;
 using LSL.Common.Models;
 
@@ -231,4 +232,7 @@ public static class ResultExtensions
     {
         return Result.Fail<TResult>(aggregate.InnerExceptions.Select(e => new ExceptionalError(e)));
     }
+
+    public static async Task<ResultBase> Basify(this Task<Result> task) => await task.ConfigureAwait(false);
+    public static async Task<ResultBase> Basify<T>(this Task<Result<T>> task) => await task.ConfigureAwait(false);
 }
