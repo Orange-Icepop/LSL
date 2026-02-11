@@ -220,7 +220,7 @@ public class LocatedServerConfig
         if (MinMemory > MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
         if (!CheckComponents.IsValidJava(JavaPath)) warnings.Add("The configured Java is not valid");
         warnings.AddRange(from arg in ExtraJvmArgs
-            where !CheckComponents.ExtJvm(arg).Passed
+            where !CheckComponents.ExtraJvmArg(arg).Passed
             select $"Invalid extra JVM argument {arg}");
         if (warnings.Count != 0) return Result.Fail(new StringBuilder().AppendJoin('\n', warnings).ToString());
         return Result.Ok();

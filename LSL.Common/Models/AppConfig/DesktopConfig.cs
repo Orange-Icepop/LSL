@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.Serialization;
+using System.Text;
 using FluentResults;
 using LSL.Common.Validation;
 using Mutty;
@@ -8,17 +9,11 @@ namespace LSL.Common.Models.AppConfig;
 [MutableGeneration]
 public record DesktopConfig : AppConfigBase<DesktopConfig>, IConfig<DesktopConfig>
 {
-    public static readonly DesktopConfig Default = new();
+    [IgnoreDataMember] public static readonly DesktopConfig Default = new();
 
     // system
     public bool EnableTray { get; init; } = true;
-
     public bool EnableDaemonKeepRunning { get; init; } = true;
-
-    // server setup
-    public bool AutoEula { get; init; } = true;
-
-    public List<string> UniversalJvmPrefix { get; init; } = [];
 
     // styles
     public string ThemeColor { get; init; } = "#33F3E5";
@@ -27,7 +22,6 @@ public record DesktopConfig : AppConfigBase<DesktopConfig>, IConfig<DesktopConfi
     public double BackgroundOpacity { get; init; } = 1.0;
     public string CustomTitleText { get; init; } = "Lime Server Launcher";
     public CustomPageOption CustomPageType { get; init; } = CustomPageOption.None;
-
     public string CustomPageUrl { get; init; } = string.Empty;
 
     // about

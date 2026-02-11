@@ -90,7 +90,7 @@ public static class CheckService
         if(!skipCorePathCheck) result.Add(CheckComponents.CorePath(config.CorePath));
         result.Add(CheckComponents.MaxMem(config.MaxMem, config.MinMem));
         result.Add(CheckComponents.MinMem(config.MinMem));
-        result.Add(CheckComponents.ExtJvm(config.ExtJvm));
+        result.Add(CheckComponents.ExtraJvmArg(config.ExtJvm));
         return result;
     }
 
@@ -164,7 +164,7 @@ public static class CheckService
                 case "extJvm":
                 case "ext_jvm":
                 {
-                    vResult = CheckComponents.ExtJvm(value);
+                    vResult = CheckComponents.ExtraJvmArg(value);
                     cache.ExtraJvmArgs = value;
                     break;
                 }

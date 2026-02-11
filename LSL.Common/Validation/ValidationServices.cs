@@ -54,7 +54,7 @@ public class ExtJvmValidator : ValidationAttribute // 扩展参数验证器
 {
     protected override ValidationResult? IsValid(object? value, ValidationContext context)
     {
-        var result = CheckComponents.ExtJvm(value as string);
+        var result = CheckComponents.ExtraJvmArg(value as string);
         return result.Passed ? ValidationResult.Success : new ValidationResult(result.Reason);
     }
 }

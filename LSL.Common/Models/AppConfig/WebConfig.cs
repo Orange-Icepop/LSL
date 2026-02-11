@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.Serialization;
+using System.Text;
 using FluentResults;
 using LSL.Common.Validation;
 using Mutty;
@@ -8,7 +9,7 @@ namespace LSL.Common.Models.AppConfig;
 [MutableGeneration]
 public record WebConfig : AppConfigBase<WebConfig>, IConfig<WebConfig>
 {
-    public static readonly WebConfig Default = new();
+    [IgnoreDataMember] public static readonly WebConfig Default = new();
 
     // Site
     public uint PanelPort { get; init; } = 25000;

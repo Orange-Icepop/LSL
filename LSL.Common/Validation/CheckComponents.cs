@@ -40,7 +40,7 @@ public static partial class CheckComponents
     {
         if (!IsValidPath(javaPath)) return false;
         if (!File.Exists(javaPath)) return false;
-        return JavaFinder.GetJavaInfo(javaPath) is not null;
+        return JavaFinder.GetJavaInfo(javaPath) is not null;//TODO:修复
     }
 
     #endregion
@@ -96,15 +96,16 @@ public static partial class CheckComponents
         return new VerifyResult("MaxMem", true, null);
     }
 
-    public static VerifyResult ExtJvm(string? arg)
+    public static VerifyResult ExtraJvmArg(string? arg)
     {
-        if (string.IsNullOrEmpty(arg)) return new VerifyResult("ExtraJvmArgs", true, null);
-        var group = arg.Split(' ');
-        return group.Any(item => !item.StartsWith('-') || item.StartsWith("--") || item.EndsWith('-'))
-            ? new VerifyResult("ExtraJvmArgs", false, "扩展参数格式错误")
-            : new VerifyResult("ExtraJvmArgs", true, null);
+        if (string.IsNullOrWhiteSpace(arg))
+            return new VerifyResult("ExtraJvmArgs", true, null);
+        if (!arg.StartsWith('-') && !arg.StartsWith("--"))
+            return new VerifyResult("ExtraJvmArgs", false, "扩展参数必须以 '-' 或 '--' 开头");
+        if (arg is "-" or "--")
+            return new VerifyResult("ExtraJvmArgs", false, "扩展参数不能是单独的横杠");
+        return new VerifyResult("ExtraJvmArgs", true, null);
     }
-
     #endregion
 
     #region LSL核心配置验证器组件
