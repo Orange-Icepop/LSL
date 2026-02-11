@@ -2,7 +2,7 @@ namespace LSL.Common.Extensions;
 
 public static class ExceptionCollectionExtensions
 {
-    public static string ToString(this IEnumerable<Exception> exceptions)
+    public static string FlattenToString(this IEnumerable<Exception> exceptions)
     {
         return new AggregateException(exceptions).ToString();
     }
