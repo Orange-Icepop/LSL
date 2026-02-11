@@ -3,10 +3,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentResults;
+using FluentResults.Extensions;
+using LSL.Common.Extensions;
+using LSL.Common.Models;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Options;
 using LSL.Common.Utilities.Minecraft;
@@ -41,7 +45,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             catch (Exception e)
             {
                 logger.LogError(e, "Error Detecting Java.");
-                return Result.Fail(new KeyNotFoundException(e.Message));
+                return Result.Fail(new ExceptionalError(e));
             }
 
             Dictionary<string, JavaInfo> javaDict = [];
@@ -62,7 +66,7 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
         catch (Exception e)
         {
             logger.LogError(e, "Error Detecting Java.");
-            return Result.Fail(e);
+            return Result.Fail(new ExceptionalError(e));
         }
     }
 
@@ -72,8 +76,8 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
 
     public async Task<Result<ImmutableDictionary<int, JavaInfo>>> ReadJavaConfig(bool writeBack = false)
     {
-        var res = await ReadConfig() //先读配置文件
-            .BindAsync(async dict => // 验证
+        return await ReadConfig() //先读配置文件
+            .Bind(async dict => // 验证
             {
                 ConcurrentBag<string> errors = [];
                 ConcurrentDictionary<int, JavaInfo> tmpDict = [];
@@ -86,22 +90,28 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                 });
                 return errors.IsEmpty
                     ? Result.Ok(tmpDict)
-                    : Result.Warning(tmpDict, new StringBuilder().AppendJoin('\n', errors).ToString());
-            }).Bind(dict => Result.Ok(dict.ToImmutableDictionary()));
-        if (res.IsFailed)
-        {
-            logger.LogError(res.Error, "Something went wrong while reading java config.");
-            return res;
-        }
-
-        JavaDict = res.Value;
-        if (res.IsWarning)
-            logger.LogWarning("Some javas are invalid when reading java config:{error}", res.Error.ToString());
-        if (writeBack)
-            await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath,
-                JsonSerializer.Serialize(res.Value, SnakeJsonOptions.Default.DictionaryInt32JavaInfo));
-        logger.LogInformation("Read Java config completed.");
-        return res;
+                    : Result.Ok(tmpDict).WithReasons(errors.Select(i => new WarningReason(i)));
+            }).Bind(dict => Result.Ok(dict.ToImmutableDictionary()))
+            .Handle(async dict =>
+            {
+                JavaDict = dict;
+                if (writeBack)
+                    await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath,
+                        JsonSerializer.Serialize(dict, SnakeJsonOptions.Default.DictionaryInt32JavaInfo));
+                logger.LogInformation("Read Java config completed.");
+            }, async (dict, w) =>
+            {
+                JavaDict = dict;
+                logger.LogWarning("Some javas are invalid when reading java config:\n{error}", w.FlattenToString());
+                if (writeBack)
+                    await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath,
+                        JsonSerializer.Serialize(dict, SnakeJsonOptions.Default.DictionaryInt32JavaInfo));
+                logger.LogInformation("Read Java config completed.");
+            }, e =>
+            {
+                logger.LogError("Something went wrong while reading java config.\n{ex}", e.FlattenToString());
+                return Task.CompletedTask;
+            });
     }
 
     private static async Task<Result<Dictionary<int, JavaInfo>>> ReadConfig()
@@ -118,13 +128,13 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                 else tmpDict.Add(id, kvp.Value);
 
             return error.Count > 0
-                ? Result.Warning(tmpDict,
-                    new StringBuilder("Keys ").AppendJoin(',', error).Append(" are not valid").ToString())
+                ? Result.Ok(tmpDict).WithReason(new WarningReason(
+                    new StringBuilder("Keys ").AppendJoin(',', error).Append(" are not valid").ToString()))
                 : Result.Ok(tmpDict);
         }
         catch (Exception e)
         {
-            return Result.Fail<Dictionary<int, JavaInfo>>(e);
+            return Result.Fail<Dictionary<int, JavaInfo>>(new ExceptionalError(e));
         }
     }
 

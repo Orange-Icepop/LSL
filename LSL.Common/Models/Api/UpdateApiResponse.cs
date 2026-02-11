@@ -18,10 +18,10 @@ public class UpdateApiResponse
     public Result<bool> IsNewerVersion(string oldVersionTag)
     {
         if (string.IsNullOrWhiteSpace(TagName))
-            return Result.Fail<bool>(new ArgumentException("TagName is empty"));
+            return Result.Fail<bool>(new Error("TagName is empty"));
 
         if (string.IsNullOrWhiteSpace(oldVersionTag))
-            return Result.Fail<bool>(new ArgumentException("oldVersionTag is empty", nameof(oldVersionTag)));
+            return Result.Fail<bool>(new Error("oldVersionTag is empty"));
 
         try
         {
@@ -31,18 +31,17 @@ public class UpdateApiResponse
 
             // 解析版本
             if (!Version.TryParse(newVerStr, out var newVersion))
-                return Result.Fail<bool>(new ArgumentException("TagName is of invalid format"));
+                return Result.Fail<bool>(new Error("TagName is of invalid format"));
 
             if (!Version.TryParse(oldVerStr, out var oldVersion))
-                return Result.Fail<bool>(new ArgumentException("oldVersionTag is of invalid format",
-                    nameof(oldVersionTag)));
+                return Result.Fail<bool>(new Error("oldVersionTag is of invalid format"));
 
             // 比较版本
             return Result.Ok(newVersion > oldVersion);
         }
         catch (Exception ex)
         {
-            return Result.Fail<bool>(new Exception("An error occured when comparing versions", ex));
+            return Result.Fail<bool>(new ExceptionalError("An error occured when comparing versions", ex));
         }
     }
 
