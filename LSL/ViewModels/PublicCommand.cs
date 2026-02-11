@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
+using FluentResults;
+using LSL.Common.Extensions;
 using LSL.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -48,19 +51,19 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
             AppState.Coordinator.Notify(NotifyType.Success, "成功打开了网页！", url);
             Logger.LogInformation("Successfully opened web page {url}.", url);
         }
-        else if (result is ArgumentException ae)
+        else if (result.Errors.OfType<ExceptionalError>().FirstOrDefault()?.Exception is ArgumentException ex)
         {
-            Logger.LogError(ae, "Error opening webpage {url} because of invalid URL format.", url);
+            Logger.LogError(ex, "Error opening webpage {url} because of invalid URL format.", url);
             await AppState.Coordinator.ThrowError("打开网页失败", $"URL格式不正确：{url}");
         }
         else
         {
-            Logger.LogError(result.Error, "Error opening webpage {url}.", url);
+            Logger.LogError("Error opening webpage {url}.", url);
             var uiMsg = new StringBuilder($"无法打开URL: {url}");
             uiMsg.AppendLine(OperatingSystem.IsLinux()
                 ? "请确保安装了 xdg-utils 并且设置了默认浏览器以使用打开浏览器网址的功能。"
                 : "在此系统上似乎无法正常打开网页，请检查默认浏览器设置。");
-            uiMsg.AppendLine(result.Error.ToString());
+            uiMsg.AppendLine(result.GetErrors().FlattenToString());
             await AppState.Coordinator.ThrowError("打开网页失败", uiMsg.ToString());
         }
     }

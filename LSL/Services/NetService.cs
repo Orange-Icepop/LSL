@@ -38,36 +38,36 @@ public class NetService
             using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, token);
             response.EnsureSuccessStatusCode();
             // 构建完整文件路径
-            var fname = GetFileNameFromResponse(response);
-            path = Path.Combine(dir, fname);
+            var fName = GetFileNameFromResponse(response);
+            path = Path.Combine(dir, fName);
             var size = response.Content.Headers.ContentLength ?? -1L; // 能读到大小就显示大小，否则显示负数
             // 开始使用网络文件流与文件写入流
-            await using var wstream = await response.Content.ReadAsStreamAsync(token);
-            await using var fstream =
+            await using var wStream = await response.Content.ReadAsStreamAsync(token);
+            await using var fStream =
                 new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize, true);
             fileExists = true;
 
             var buffer = ArrayPool<byte>.Shared.Rent(BufferSize); // 通过ArrayPool减少GC压力
             try
             {
-                var readbytes = 0L;
+                var readBytes = 0L;
                 var webProgress = 0d;
                 while (true)
                 {
-                    var tempbytes = await wstream.ReadAsync(buffer, token); // 当前一轮的下载
-                    if (tempbytes == 0) break; // 已结束则退出
-                    await fstream.WriteAsync(buffer.AsMemory(0, tempbytes), token); // 写入文件buffer
-                    readbytes += tempbytes; // 更新已读取字节数
+                    var tempBytes = await wStream.ReadAsync(buffer, token); // 当前一轮的下载
+                    if (tempBytes == 0) break; // 已结束则退出
+                    await fStream.WriteAsync(buffer.AsMemory(0, tempBytes), token); // 写入文件buffer
+                    readBytes += tempBytes; // 更新已读取字节数
                     if (size > 0) // 能否获取大小
                     {
-                        var curProgress = (double)readbytes / size;
-                        if (!(curProgress - webProgress >= 0.01) && readbytes != size) continue; // 进度过小则不报告
+                        var curProgress = (double)readBytes / size;
+                        if (!(curProgress - webProgress >= 0.01) && readBytes != size) continue; // 进度过小则不报告
                         webProgress = curProgress;
                         progress?.Report(webProgress);
                     }
                     else
                     {
-                        progress?.Report(-readbytes); // 用负数表示字节数而不是进度
+                        progress?.Report(-readBytes); // 用负数表示字节数而不是进度
                     }
                 }
             }
@@ -78,7 +78,7 @@ public class NetService
         }
         catch (Exception ex) when (HandleException(ex, fileExists, path))
         {
-            return Result.Fail(ex);
+            return Result.Fail(new ExceptionalError(ex));
         }
 
         return Result.Ok();

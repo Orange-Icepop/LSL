@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Threading;
+using FluentResults.Extensions;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Validation;
@@ -53,15 +54,11 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     {
         try
         {
-            var res1 = await Connector.ReadMainConfig(true);
-            if (res1.IsFailed) throw res1.Error;
-            var res2 = await Connector.ReadServerConfig(true);
-            if (res2.IsFailed) throw res2.Error;
-            await AppState.Coordinator.SubmitServiceError(res2);
-            var res3 = await Connector.ReadJavaConfig(true);
-            if (res3.IsFailed) throw res3.Error;
-            await AppState.Coordinator.SubmitServiceError(res3);
-            return true;
+            var res = await Connector.ReadMainConfig(true)
+                .Bind(() => Connector.ReadServerConfig(true))
+                .Bind(() => Connector.ReadJavaConfig(true));
+            await AppState.Coordinator.SubmitServiceError(res);
+            return res.IsSuccess;
         }
         catch (Exception e)
         {

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using LSL.Common.Extensions;
 using LSL.Services.ConfigServices;
 using LSL.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,8 +46,8 @@ public class InitializationViewModel : ViewModelBase
         var res = await configMgr.Initialize();
         if (res.IsFailed)
         {
-            Logger.LogCritical(res.Error, "Config initialization failed.");
-            throw new Exception("Config initialization failed.", res.Error);
+            Logger.LogCritical("Config initialization failed.\n{ex}", res.GetErrors().FlattenToString());
+            throw new AggregateException(res.GetErrors());
         }
 
         Shell = provider.GetRequiredService<ShellViewModel>();
@@ -60,7 +61,7 @@ public class InitializationViewModel : ViewModelBase
         {
             MainWindowView = new MainView { DataContext = Shell, ViewModel = Shell };
         });
-        Logger.LogInformation("===== App started =====");
+        Logger.LogInformation("===== App Started =====");
     }
 
     public static void ShowMainWindow()

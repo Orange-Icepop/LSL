@@ -34,11 +34,8 @@ public partial class ServerProcess : IDisposable
 
     public static Result<ServerProcess> Create(IndexedServerConfig config)
     {
-        var startInfoResult = config.LocatedConfig.GetStartInfo();
-        return startInfoResult.IsFailed
-            ? Result.Fail<ServerProcess>(startInfoResult.Error)
-            : Result.Ok(new ServerProcess(config.ServerId, (long)config.MaxMemory * 1024 * 1024,
-                startInfoResult.Value));
+        return config.LocatedConfig.GetStartInfo().Bind(r =>
+            Result.Ok(new ServerProcess(config.ServerId, (long)config.MaxMemory * 1024 * 1024, r)));
     }
 
     public event DataReceivedEventHandler? OutputReceived;

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using LSL.Common.DTOs;
+using LSL.Common.Extensions;
 using LSL.Services.ConfigServices;
 using Microsoft.Extensions.Logging;
 
@@ -64,11 +65,12 @@ public class ServerHost : IServerHost, IDisposable
         }
 
         var processResult = ServerProcess.Create(config);
-        if (processResult.HasError)
+        if (processResult.IsFailed)
         {
-            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, $"[LSL 错误]: {processResult.Error.Message}",
+            var messages = processResult.GetErrors().GetMessages();
+            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, $"[LSL 错误]: {messages}",
                 OutputChannelType.LSLError));
-            _logger.LogError("Server with id {id} failed to run: {error}.", serverId, processResult.Error.Message);
+            _logger.LogError("Server with id {id} failed to run: {error}.", serverId, messages);
             return false;
         }
 
