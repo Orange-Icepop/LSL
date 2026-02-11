@@ -1,8 +1,10 @@
-﻿namespace LSL.Services.ServerServices;
+﻿using System.Threading.Tasks;
+
+namespace LSL.Services.ServerServices;
 
 public interface IServerHost
 {
-    bool RunServer(int serverId);
+    Task<bool> RunServer(int serverId);
     void StopServer(int serverId);
     bool SendCommand(int serverId, string command);
     void EndServer(int serverId);

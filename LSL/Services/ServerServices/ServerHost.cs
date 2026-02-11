@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using LSL.Common.DTOs;
 using LSL.Common.Extensions;
 using LSL.Services.ConfigServices;
@@ -46,7 +47,7 @@ public class ServerHost : IServerHost, IDisposable
 
     #region 启动服务器RunServer(int serverId)
 
-    public bool RunServer(int serverId)
+    public async Task<bool> RunServer(int serverId)
     {
         _logger.LogInformation("Starting server with id {id}...", serverId);
         if (GetServer(serverId) is not null)
@@ -64,7 +65,7 @@ public class ServerHost : IServerHost, IDisposable
             return false;
         }
 
-        var processResult = ServerProcess.Create(config);
+        var processResult = await ServerProcess.Create(config);
         if (processResult.IsFailed)
         {
             var messages = processResult.GetErrors().GetMessages();

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 using FluentResults;
+using FluentResults.Extensions;
 using LSL.Common.Utilities.Minecraft;
 using LSL.Common.Validation;
 
@@ -47,9 +48,9 @@ public class LocatedServerConfig
 
     #region 获取启动信息
 
-    public Result<ProcessStartInfo> GetStartInfo()
+    public async Task<Result<ProcessStartInfo>> GetStartInfo()
     {
-        if (!CheckComponents.IsValidJava(JavaPath))
+        if (!await CheckComponents.IsValidJava(JavaPath))
             return Result.Fail<ProcessStartInfo>(new Error($"Java at {JavaPath} is not valid"));
         if (ServerType is not ServerCoreType.Forge && File.Exists(CommonCoreInfo?.JarName))
             return Result.Ok(new ProcessStartInfo
@@ -116,9 +117,9 @@ public class LocatedServerConfig
         return new IndexedServerConfig(serverId, this);
     }
 
-    public Result<ServerConfigV2> ToLatestConfig()
+    public Task<Result<ServerConfigV2>> ToLatestConfig()
     {
-        return Validate().Bind(()=>Result.Ok(new ServerConfigV2
+        return Validate().Bind(() => Task.FromResult(Result.Ok(new ServerConfigV2
         {
             Name = ServerName,
             ServerType = ServerType,
@@ -129,7 +130,7 @@ public class LocatedServerConfig
             MaxMemory = MaxMemory,
             ExtraJvmArgs = ExtraJvmArgs,
             EnablePreLaunchProtection = EnablePreLaunchProtection
-        }));
+        })));
     }
 
     public static Task<Result<LocatedServerConfig>> CreateAsync(string serverPath,
@@ -167,7 +168,7 @@ public class LocatedServerConfig
     {
         for (var tries = 0; tries < 3; tries++)
         {
-            var validationResult = Validate();
+            var validationResult = await Validate();
             if (validationResult.IsFailed) return Result.Fail<LocatedServerConfig>(validationResult.Errors);
             switch (ServerType)
             {
@@ -213,12 +214,12 @@ public class LocatedServerConfig
         return Result.Fail<LocatedServerConfig>("Failed to check server configuration after multiple attempts");
     }
 
-    public Result Validate()
+    public async Task<Result> Validate()
     {
         List<string> warnings = [];
         if (!Path.Exists(ServerPath)) warnings.Add($"Server {ServerPath} does not exist");
         if (MinMemory > MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
-        if (!CheckComponents.IsValidJava(JavaPath)) warnings.Add("The configured Java is not valid");
+        if (!await CheckComponents.IsValidJava(JavaPath)) warnings.Add("The configured Java is not valid");
         warnings.AddRange(from arg in ExtraJvmArgs
             where !CheckComponents.ExtraJvmArg(arg).Passed
             select $"Invalid extra JVM argument {arg}");

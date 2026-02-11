@@ -36,11 +36,11 @@ public static partial class CheckComponents
         return !path.Any(c => invalidChars.Contains(c));
     }
 
-    public static bool IsValidJava([NotNullWhen(true)] string? javaPath) //校验Java路径并确认可执行
+    public static async Task<bool> IsValidJava([NotNullWhen(true)] string? javaPath) //校验Java路径并确认可执行
     {
         if (!IsValidPath(javaPath)) return false;
         if (!File.Exists(javaPath)) return false;
-        return JavaFinder.GetJavaInfo(javaPath) is not null;//TODO:修复
+        return await JavaFinder.GetJavaInfo(javaPath) is not null;
     }
 
     #endregion
@@ -57,7 +57,6 @@ public static partial class CheckComponents
     {
         if (!IsValidPath(path)) return new VerifyResult("JavaPath", false, "Java路径不可为空或为非法路径");
         if (!File.Exists(path)) return new VerifyResult("JavaPath", false, "选定的Java不存在");
-        if (!IsValidJava(path)) return new VerifyResult("JavaPath", false, "选定的文件不是一个有效的Java");
         return new VerifyResult("JavaPath", true, null);
     }
 

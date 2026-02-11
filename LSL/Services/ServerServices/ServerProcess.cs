@@ -2,7 +2,9 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using FluentResults;
+using FluentResults.Extensions;
 using LSL.Common.Models.ServerConfig;
 
 namespace LSL.Services.ServerServices;
@@ -32,7 +34,7 @@ public partial class ServerProcess : IDisposable
 
     public int? ExitCode { get; private set; }
 
-    public static Result<ServerProcess> Create(IndexedServerConfig config)
+    public static Task<Result<ServerProcess>> Create(IndexedServerConfig config)
     {
         return config.LocatedConfig.GetStartInfo().Bind(r =>
             Result.Ok(new ServerProcess(config.ServerId, (long)config.MaxMemory * 1024 * 1024, r)));

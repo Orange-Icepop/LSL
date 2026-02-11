@@ -214,18 +214,17 @@ public class ServiceConnector
 
     #region 服务器命令
 
-    public bool StartServer(int serverId)
+    public Task<bool> StartServer(int serverId)
     {
         var result = VerifyServerConfigBeforeStart(serverId);
         if (result != null)
         {
             _appState.Coordinator.ThrowError("服务器配置校验发生错误", result);
-            return false;
+            return Task.FromResult(false);
         }
 
         _appState.TerminalTexts.TryAdd(serverId, []);
-        _daemonHost.RunServer(serverId);
-        return true;
+        return _daemonHost.RunServer(serverId);
     }
 
     public async Task StopServer(int serverId)

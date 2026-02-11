@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
@@ -20,7 +21,7 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
         TerminalText = [];
         CurrentUsers = null!;
         CurrentUserMessage = [];
-        StartServerCmd = ReactiveCommand.Create(StartSelectedServer);
+        StartServerCmd = ReactiveCommand.CreateFromTask(StartSelectedServer);
         StopServerCmd = ReactiveCommand.Create(async () => await Connector.StopServer(AppState.SelectedServerId));
         SaveServerCmd = ReactiveCommand.Create(() => Connector.SaveServer(AppState.SelectedServerId));
         EndServerCmd = ReactiveCommand.Create(async () => await Connector.EndServer(AppState.SelectedServerId));
@@ -99,14 +100,14 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
         }
     }
 
-    public void StartSelectedServer() //启动服务器方法
+    public async Task StartSelectedServer() //启动服务器方法
     {
         MessageBus.Current.SendMessage(new NavigateArgs
         {
             BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server,
             RightTarget = RightPageState.ServerTerminal
         });
-        var success = Connector.StartServer(AppState.SelectedServerId);
+        var success = await Connector.StartServer(AppState.SelectedServerId);
         if (success) AppState.Coordinator.Notify(NotifyType.Info, "服务器正在启动", "请稍候等待服务器启动完毕");
         else AppState.Coordinator.Notify(NotifyType.Error, "服务器启动失败", "配置检查不通过，请检查配置是否存在错误");
     }
