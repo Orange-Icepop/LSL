@@ -5,14 +5,14 @@
 ### 重写整个配置文件系统
 
 - [x] 对最旧版本的配置文件进行类化归档
-- [ ] 完成配置文件的版本化重写
+- [ ] 完成配置文件的重写
 
 #### 具体工作
 
 - [x] 配置文件版本化
-- [ ] 添加LocatedServerConfig.Check()方法，替代CheckService用于启动前验证
+- [x] 添加LocatedServerConfig.Validate()方法，替代CheckService用于启动前验证
 - [x] 重写ServerConfigManager
-- [ ] 重写MainConfigManager
+- [x] 重写MainConfigManager
 - [x] 重写JavaConfigManager
 - [ ] 修改EditServer方法，使其直接使用FormedServerConfig
 - [ ] 重写更新检查逻辑（缺：配置文件重写）
@@ -27,7 +27,7 @@
 
 - [ ] 修复某些情况下无法识别到服务器上线的情况
 - [x] 禁止在非服务器页面更换服务器时刷新右栏
-- [ ] 恢复服务器输出框自动转到底部的功能
+- [x] 恢复服务器输出框自动转到底部的功能
 - [x] 修复Linux上服务器从零到有时无法更新配置的问题
 - [ ] 修复当添加的现有服务器配置存在错误时无法选中该服务器的问题
 - [ ] 尝试Mask掉无服务器配置时的配置文件显示
@@ -73,7 +73,7 @@
 - [x] 使用Geometry替代Bar按钮的图标以支持自动换色
 - [x] 重写所有图标为Geometry
 - [ ] 将ReactiveUI.Fody换为ReactiveUI.SourceGenerators
-- [ ] 将ServiceResult重构为更接近rust的record struct Result<T>
+- [x] 将ServiceResult重构为FluentResult
 - [ ] 将ServerHost的报告链转换为IObservable
 
 ### 主题与美化
