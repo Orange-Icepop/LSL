@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using FluentResults;
+using LSL.Common.Extensions;
 using LSL.Common.Models.AppConfig;
 using Microsoft.Extensions.Logging;
 
@@ -29,39 +30,39 @@ public abstract class ConfigManagerComponentBase<T, TConfig> : IConfigManager<TC
             if (!File.Exists(ConfigPath))
             {
                 Logger.LogWarning("Config file {configPath} doesn't exist. Generating default config...", ConfigPath);
-                return await SetAndWriteAsync(new TConfig()).Match(
-                        _ => Logger.LogInformation("Config file {configPath} of type {type} generated", ConfigPath,
-                            typeof(TConfig).Name),
-                        (_, _) => Logger.LogInformation("Config file {configPath} of type {type} generated", ConfigPath,
-                            typeof(TConfig).Name),
-                        ex => Logger.LogError(ex, "Cannot write {type}.", typeof(TConfig).Name))
-                    .Bind(_ => Result.Ok(Config));
+                return await SetAndWriteAsync(new TConfig()).Handle(
+                    _ => Logger.LogInformation("Config file {configPath} of type {type} generated", ConfigPath,
+                        typeof(TConfig).Name),
+                    (_, _) => Logger.LogInformation("Config file {configPath} of type {type} generated", ConfigPath,
+                        typeof(TConfig).Name),
+                    ex => Logger.LogError("Cannot write {type}.\n{ex}", typeof(TConfig).Name, ex.FlattenToString()));
             }
 
             return await TConfig.Deserialize(await File.ReadAllTextAsync(ConfigPath))
                 .Bind(config => config.ValidateAndFix())
-                .MatchAsync(config =>
+                .Handle(config =>
                     {
                         Logger.LogInformation("Config file of type {type} loaded", typeof(TConfig).Name);
                         Config = config;
                         return Task.CompletedTask;
                     }, async (config, ex) =>
                     {
-                        Logger.LogWarning(ex, "Config file of type {type} loaded with warning.", typeof(TConfig).Name);
+                        Logger.LogWarning("Config file of type {type} loaded with warning.\n{ex}", typeof(TConfig).Name,
+                            ex.FlattenToString());
                         Config = config;
                         await SetAndWriteAsync(config);
                     },
                     ex =>
                     {
-                        Logger.LogError(ex, "A fatal error occured while reading config file of type {type}.",
-                            typeof(TConfig).Name);
+                        Logger.LogError("A fatal error occured while reading config file of type {type}.\n{ex}",
+                            typeof(TConfig).Name, ex.FlattenToString());
                         return Task.CompletedTask;
                     });
         }
         catch (Exception e)
         {
             Logger.LogError(e, "A fatal error occured while reading config file of type {type}.", typeof(TConfig).Name);
-            return Result.Fail<TConfig>(e);
+            return Result.Fail<TConfig>(new ExceptionalError(e));
         }
     }
 
@@ -70,7 +71,7 @@ public abstract class ConfigManagerComponentBase<T, TConfig> : IConfigManager<TC
         try
         {
             return await config.ValidateAndFix()
-                .BindAsync(async c =>
+                .Bind(async Task<Result<TConfig>> (c) =>
                 {
                     try
                     {
@@ -81,18 +82,18 @@ public abstract class ConfigManagerComponentBase<T, TConfig> : IConfigManager<TC
                     {
                         Logger.LogError(e, "An error occured while writing config file of type {type}.",
                             typeof(TConfig).Name);
-                        return Result.Fail<TConfig>(e);
+                        return Result.Fail<TConfig>(new ExceptionalError(e));
                     }
-                }).Match(
+                }).Handle(
                     _ => Logger.LogInformation("{type} written.", typeof(TConfig).Name),
-                    (_, e) => Logger.LogWarning(e, "{type} written with warnings.", typeof(TConfig).Name),
-                    e => Logger.LogError(e, "An error occured while writing config file of type {type}.",
-                        typeof(TConfig).Name));
+                    (_, e) => Logger.LogWarning("{type} written with warnings.\n{ex}", typeof(TConfig).Name, e),
+                    e => Logger.LogError("An error occured while writing config file of type {type}.\n{ex}",
+                        typeof(TConfig).Name, e));
         }
         catch (Exception e)
         {
             Logger.LogError(e, "An error occured while writing config file of type {type}.", typeof(TConfig).Name);
-            return Result.Fail<TConfig>(e);
+            return Result.Fail<TConfig>(new ExceptionalError(e));
         }
     }
 }

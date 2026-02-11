@@ -68,7 +68,7 @@ public record DesktopConfig : AppConfigBase<DesktopConfig>, IConfig<DesktopConfi
         }
 
         return errors.Count != 0
-            ? Result.Warning(tmp.FinishDraft(), new StringBuilder().AppendJoin('\n', errors).ToString())
+            ? Result.Ok(tmp.FinishDraft()).WithReasons(errors.Select(s=>new WarningReason(s)))
             : Result.Ok(this);
     }
 }

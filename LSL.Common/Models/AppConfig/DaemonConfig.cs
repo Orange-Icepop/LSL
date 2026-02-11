@@ -22,7 +22,7 @@ public record DaemonConfig : AppConfigBase<DaemonConfig>, IConfig<DaemonConfig>
     public override Result<DaemonConfig> ValidateAndFix()
     {
         if (DownloadThreads > 64)
-            return Result.Warning(this with { DownloadThreads = 4 }, "DownloadThreads must be at most 64");
+            return Result.Ok(this with { DownloadThreads = 4 }).WithReason(new WarningReason("DownloadThreads must be at most 64"));
 
         return Result.Ok(this);
     }

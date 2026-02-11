@@ -16,8 +16,7 @@ public abstract record AppConfigBase<TConfig> : IConfig<TConfig> where TConfig :
     public static Result<TConfig> Deserialize(string content)
     {
         if (!Toml.TryToModel<TConfig>(content, out var result, out var error))
-            return Result.Warning(new TConfig(), $"The {typeof(TConfig).Name} is not parsable:\n{error}");
-        Result<Unit> validationResult = result.Validate();
-        return validationResult.IsSuccess ? Result.Ok(result) : Result.Warning(result, validationResult.Error);
+            return Result.Ok(new TConfig()).WithReason(new WarningReason($"The {typeof(TConfig).Name} is not parsable:\n{error}"));
+        return result.ValidateAndFix();
     }
 }
