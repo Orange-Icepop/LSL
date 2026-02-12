@@ -107,8 +107,8 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
             BarTarget = BarState.Common, LeftTarget = GeneralPageState.Server,
             RightTarget = RightPageState.ServerTerminal
         });
-        var success = await Connector.StartServer(AppState.SelectedServerId);
-        if (success) AppState.Coordinator.Notify(NotifyType.Info, "服务器正在启动", "请稍候等待服务器启动完毕");
+        var res = await Connector.StartServer(AppState.SelectedServerId);
+        if (res.IsSuccess) AppState.Coordinator.Notify(NotifyType.Info, "服务器正在启动", "请稍候等待服务器启动完毕");
         else AppState.Coordinator.Notify(NotifyType.Error, "服务器启动失败", "配置检查不通过，请检查配置是否存在错误");
     }
 

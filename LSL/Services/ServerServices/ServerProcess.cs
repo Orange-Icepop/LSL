@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentResults;
 using FluentResults.Extensions;
@@ -166,7 +167,7 @@ public partial class ServerProcess : IDisposable
         StatusEventHandler = null;
     }
 
-    public void Kill()
+    public async Task Kill()
     {
         if (SProcess is not null)
             try
@@ -174,9 +175,10 @@ public partial class ServerProcess : IDisposable
                 if (!SProcess.HasExited)
                 {
                     SProcess.Kill();
-                    SProcess.WaitForExit(5000);
+                    await SProcess.WaitForExitAsync(new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
                 }
             }
+            catch (Exception) { }
             finally
             {
                 CleanupProcessHandlers();
@@ -188,7 +190,9 @@ public partial class ServerProcess : IDisposable
     public void Dispose()
     {
         _monitor?.Dispose();
-        Kill();
+        SProcess?.Kill();
+        SProcess?.Dispose();
+        CleanupProcessHandlers();
         GC.SuppressFinalize(this);
     }
 

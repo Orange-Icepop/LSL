@@ -1,14 +1,15 @@
 ﻿using System.Threading.Tasks;
+using FluentResults;
 
 namespace LSL.Services.ServerServices;
 
 public interface IServerHost
 {
-    Task<bool> RunServer(int serverId);
+    Task<Result> RunServer(int serverId);
     void StopServer(int serverId);
     bool SendCommand(int serverId, string command);
-    void EndServer(int serverId);
-    void EndAllServers();
+    Task EndServer(int serverId);
+    Task EndAllServers();
 }
 
 public enum OutputChannelType

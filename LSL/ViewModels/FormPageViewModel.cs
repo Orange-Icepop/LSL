@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Avalonia.Threading;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfig;
+using LSL.Common.Utilities.Minecraft;
 using LSL.Common.Validation;
 using LSL.Models;
 using LSL.Services.ConfigServices;
@@ -78,8 +79,8 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         var parentPath = "服务器文件夹：" + parent.FullName;
         if (File.Exists(Path.Combine(parent.FullName, "lslconfig.json")))
         {
-            var res = await ServerConfigManager.GetSingleServerConfigAsync(0, parent.FullName); //TODO, 转换为中间层调用方法
-            if (res.Status is ServerConfigParseResultType.Success)
+            var res = await ServerConfigHelper.ReadSingleConfigAsync(parent.FullName);
+            if (res.IsSuccess)
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     DeployConfig(res.Config);

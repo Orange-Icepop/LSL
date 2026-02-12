@@ -131,7 +131,7 @@ public partial class ShellViewModel : ViewModelBase
         if (daemon) return 1;
         if (AppState.CurrentConfigs.TryGetValue("end_server_when_close", out var eswc) && eswc is true)
         {
-            ServeCon.EndAllServers();
+            await ServeCon.EndAllServers();
         }
         else if (AppState.RunningServerCount > 0)
         {
@@ -143,7 +143,7 @@ public partial class ShellViewModel : ViewModelBase
             {
                 case PopupResult.Yes:
                 {
-                    ServeCon.EndAllServers();
+                    await ServeCon.EndAllServers();
                     return 0;
                 }
                 case PopupResult.No: return 0;

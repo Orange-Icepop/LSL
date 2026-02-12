@@ -11,6 +11,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using FluentResults;
+using FluentResults.Extensions;
 using LSL.Common.Collections;
 using LSL.Common.DTOs;
 using LSL.Common.Models.Minecraft;
@@ -58,15 +59,11 @@ public class ServiceConnector
 
     #region 启动前校验配置文件
 
-    public string? VerifyServerConfigBeforeStart(int serverId)
+    public Task<Result> VerifyServerConfigBeforeStart(int serverId)
     {
         if (!_configManager.TryGetServerConfig(serverId, out var config))
-            return "LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。";
-        if (!File.Exists(config.JavaPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的Java路径不存在。";
-        var configPath = Path.Combine(config.ServerPath, config.CoreName);
-        if (!File.Exists(configPath)) return "LSL无法启动选定的服务器，因为配置文件中指定的核心文件不存在。";
-
-        return null;
+            return Task.FromResult(Result.Fail("LSL无法启动选定的服务器，因为它不存在能够被读取到的配置文件。"));
+        return config.LocatedConfig.Validate();
     }
 
     #endregion
@@ -214,17 +211,13 @@ public class ServiceConnector
 
     #region 服务器命令
 
-    public Task<bool> StartServer(int serverId)
+    public Task<Result> StartServer(int serverId)
     {
-        var result = VerifyServerConfigBeforeStart(serverId);
-        if (result != null)
+        return VerifyServerConfigBeforeStart(serverId).Bind(() =>
         {
-            _appState.Coordinator.ThrowError("服务器配置校验发生错误", result);
-            return Task.FromResult(false);
-        }
-
-        _appState.TerminalTexts.TryAdd(serverId, []);
-        return _daemonHost.RunServer(serverId);
+            _appState.TerminalTexts.TryAdd(serverId, []);
+            return Task.FromResult(Result.Ok());
+        }).Bind(() => _daemonHost.RunServer(serverId));
     }
 
     public async Task StopServer(int serverId)
@@ -248,13 +241,10 @@ public class ServiceConnector
         var confirm = await _appState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo, "确定要终止该服务端进程吗？",
             "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！"));
-        if (confirm == PopupResult.Yes) _daemonHost.EndServer(serverId);
+        if (confirm == PopupResult.Yes) await _daemonHost.EndServer(serverId);
     }
 
-    public void EndAllServers()
-    {
-        _daemonHost.EndAllServers();
-    }
+    public Task EndAllServers() => _daemonHost.EndAllServers();
 
     public void SendCommandToServer(int serverId, string command)
     {

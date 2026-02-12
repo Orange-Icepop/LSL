@@ -2,8 +2,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FluentResults;
 using LSL.Common.DTOs;
 using LSL.Common.Extensions;
+using LSL.Common.Models;
 using LSL.Services.ConfigServices;
 using Microsoft.Extensions.Logging;
 
@@ -41,13 +43,12 @@ public class ServerHost : IServerHost, IDisposable
     // 释放资源
     public void Dispose()
     {
-        EndAllServers();
         GC.SuppressFinalize(this);
     }
 
     #region 启动服务器RunServer(int serverId)
 
-    public async Task<bool> RunServer(int serverId)
+    public async Task<Result> RunServer(int serverId)
     {
         _logger.LogInformation("Starting server with id {id}...", serverId);
         if (GetServer(serverId) is not null)
@@ -55,14 +56,14 @@ public class ServerHost : IServerHost, IDisposable
             _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 警告]: 服务器已经在运行中。",
                 OutputChannelType.LSLError));
             _logger.LogError("Server with id {id} is already running. Not running another instance.", serverId);
-            return false;
+            return Result.Ok().WithReason(new WarningReason($"Server with id {serverId} is already running."));
         }
 
         if (!_serverConfigManager.TryGetServerConfig(serverId, out var config))
         {
             _logger.LogError(
                 "Server with id {id} not found in configuration. That's weird! It should have been checked!", serverId);
-            return false;
+            return Result.Fail($"Server with id {serverId} not found in configuration.");
         }
 
         var processResult = await ServerProcess.Create(config);
@@ -72,7 +73,7 @@ public class ServerHost : IServerHost, IDisposable
             _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, $"[LSL 错误]: {messages}",
                 OutputChannelType.LSLError));
             _logger.LogError("Server with id {id} failed to run: {error}.", serverId, messages);
-            return false;
+            return processResult.Bind(_ => Result.Ok());
         }
 
         var process = processResult.Value;
@@ -83,13 +84,13 @@ public class ServerHost : IServerHost, IDisposable
         {
             process.Start();
         }
-        catch (InvalidOperationException)
+        catch (Exception ex)
         {
             process.Dispose();
-            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动失败，请检查配置文件。",
+            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器启动失败，请检查配置文件。",
                 OutputChannelType.LSLError));
-            _logger.LogError("Server with id {id} failed to run.", serverId);
-            return false;
+            _logger.LogError("Server with id {id} failed to run.\n{ex}", serverId, ex);
+            return Result.Fail(new ExceptionalError(ex));
         }
 
         LoadServer(serverId, process);
@@ -138,7 +139,7 @@ public class ServerHost : IServerHost, IDisposable
         };
         process.MetricsReceived += (_, e) => { _metricsHandler.TryWrite(e); };
         _logger.LogInformation("Server with id {id} is started.", serverId);
-        return true;
+        return Result.Ok();
     }
 
     #endregion
@@ -187,19 +188,20 @@ public class ServerHost : IServerHost, IDisposable
 
     #region 强制结束服务器进程EndServer(int serverId)
 
-    public void EndServer(int serverId)
+    public async Task EndServer(int serverId)
     {
         var server = GetServer(serverId);
-        server?.Kill();
+        var t = server?.Kill();
+        if (t is not null) await t;
     }
 
     #endregion
 
     #region 终止所有服务器进程EndAllServers()
 
-    public void EndAllServers()
+    public async Task EndAllServers()
     {
-        foreach (var process in _runningServers.Values) process?.Dispose();
+        await Parallel.ForEachAsync(_runningServers.Values, (p, _) => new ValueTask(p.Kill()));
         _runningServers.Clear();
         _logger.LogInformation("Ended all servers.");
     }
