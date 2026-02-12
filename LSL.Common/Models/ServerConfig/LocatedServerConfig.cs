@@ -214,10 +214,10 @@ public class LocatedServerConfig
         return Result.Fail<LocatedServerConfig>("Failed to check server configuration after multiple attempts");
     }
 
-    public async Task<Result> Validate()
+    public async Task<Result> Validate(bool skipPathCheck = false)
     {
         List<string> warnings = [];
-        if (!Path.Exists(ServerPath)) warnings.Add($"Server {ServerPath} does not exist");
+        if (!skipPathCheck && !Path.Exists(ServerPath)) warnings.Add($"Server {ServerPath} does not exist");
         if (MinMemory > MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
         if (!await CheckComponents.IsValidJava(JavaPath)) warnings.Add("The configured Java is not valid");
         warnings.AddRange(from arg in ExtraJvmArgs

@@ -1,3 +1,5 @@
+using FluentResults;
+
 namespace LSL.Common.Models.ServerConfig;
 
 public record CommonCoreConfigV1

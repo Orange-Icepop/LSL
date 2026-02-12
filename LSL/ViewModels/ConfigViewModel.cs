@@ -54,7 +54,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     {
         try
         {
-            var res = await Connector.ReadMainConfig(true)
+            var res = await Connector.ReadDaemonConfig(true)
                 .Bind(() => Connector.ReadServerConfig(true))
                 .Bind(() => Connector.ReadJavaConfig(true));
             await AppState.Coordinator.SubmitServiceError(res);
@@ -163,7 +163,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     public async Task<bool> TryCacheConfigFromFileAsync(bool rf = false)
     {
-        var success = await Connector.ReadMainConfig(rf);
+        var success = await Connector.ReadDaemonConfig(rf);
         if (success.IsSuccess)
         {
             Dispatcher.UIThread.Invoke(() =>
@@ -183,7 +183,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     public async Task ConfirmConfigAsync()
     {
-        var res = await Connector.SaveConfig();
+        var res = await Connector.SaveDesktopConfig();
         await AppState.Coordinator.SubmitServiceError(res);
         AppState.CurrentConfigs = _cachedConfig.ToFrozenDictionary();
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,9 @@ using FluentResults;
 using FluentResults.Extensions;
 using LSL.Common.Collections;
 using LSL.Common.DTOs;
+using LSL.Common.Extensions;
+using LSL.Common.Models;
+using LSL.Common.Models.AppConfig;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Utilities;
@@ -86,7 +90,7 @@ public class ServiceConnector
         var result = await UpdateHelper.QueryLatest(_webHost.Factory);
         if (!result.IsSuccess)
         {
-            await _appState.Coordinator.ThrowError("检查更新时出错", $"检查更新时出现以下错误：\n{result.Error}");
+            await _appState.Coordinator.ThrowError("检查更新时出错", $"检查更新时出现以下错误：\n{result.GetErrors().FlattenToString()}");
             return;
         }
 
@@ -115,96 +119,120 @@ public class ServiceConnector
 
     #region 配置部分
 
-    public async Task<Result> ReadMainConfig(bool readFile = false)
+    public async Task<Result> ReadDaemonConfig(bool readFile = false)
     {
         if (readFile)
         {
             var res = await _configManager.ReadDaemonConfig();
-            if (res.IsFailed) return res;
+            if (res.IsFailed) return Result.Ok().WithReasons(res.Reasons);
         }
 
-        await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentConfigs = _configManager.DaemonConfigs);
+        await Dispatcher.UIThread.InvokeAsync(() => _appState.DaemonConfigs = _configManager.DaemonConfigs);
+        return Result.Ok();
+    }
+
+    public async Task<Result> ReadWebConfig(bool readFile = false)
+    {
+        if (readFile)
+        {
+            var res = await _configManager.ReadWebConfig();
+            if (res.IsFailed) return Result.Ok().WithReasons(res.Reasons);
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() => _appState.WebConfigs = _configManager.WebConfigs);
+        return Result.Ok();
+    }
+
+    public async Task<Result> ReadDesktopConfig(bool readFile = false)
+    {
+        if (readFile)
+        {
+            var res = await _configManager.ReadDaemonConfig();
+            if (res.IsFailed) return Result.Ok().WithReasons(res.Reasons);
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() => _appState.DesktopConfigs = _configManager.DesktopConfigs);
         return Result.Ok();
     }
 
     public async Task<Result<int>> ReadJavaConfig(bool readFile = false)
     {
-        Exception? warning = null;
         if (readFile)
         {
             var res = await _configManager.ReadJavaConfig();
-            if (!res.HasResult) return Result.Fail<int>(res.Error);
-
-            if (res.Value.NotFound.Any() || res.Value.NotJava.Any())
+            if (res.IsSuccess)
             {
-                var error = new StringBuilder("在读取已保存的Java列表时出现了一些非致命错误:");
-                error.AppendLine();
-                if (res.Value.NotFound.Any())
+                await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentJavaDict = res.Value);
+                var rt = Result.Ok(res.Value.Count);
+                if (res.Reasons.Count != 0)
                 {
-                    error.AppendLine("以下Java不存在或无法被访问:");
-                    error.AppendJoin('\n', res.Value.NotFound);
+                    _logger.LogWarning(
+                        "Some nonfatal error occured when reading java, please refer to the service logfile for more details.");
+                    var error = new StringBuilder("在读取已保存的Java列表时出现了一些非致命错误:");
+                    error.AppendLine();
+                    error.AppendJoin('\n', res.Reasons.OfType<IWarning>().Select(w => w.Message));
+                    error.AppendLine("这些配置没有被读取。你可以通过重新搜索Java来解决这个问题。");
+                    rt.WithReason(new WarningReason(error.ToString()));
                 }
-
-                if (res.Value.NotJava.Any())
-                {
-                    error.AppendLine("以下文件不是Java:");
-                    error.AppendJoin('\n', res.Value.NotJava);
-                }
-
-                error.AppendLine();
-                error.AppendLine("这些配置没有被读取。你可以通过重新搜索Java来解决这个问题。");
-                _logger.LogWarning(
-                    "Some nonfatal error occured when reading java, please refer to the service logfile for more details.");
-                warning = new Exception(error.ToString());
+                return rt;
+            }
+            else
+            {
+                return Result.Fail<int>(res.Errors);
             }
         }
 
-        Dispatcher.UIThread.Invoke(() => _appState.CurrentJavaDict = _configManager.JavaConfigs);
-        return warning is null
-            ? Result.Ok(_configManager.JavaConfigs.Count)
-            : Result.Warning(_configManager.JavaConfigs.Count, warning);
+        await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentJavaDict = _configManager.JavaConfigs);
+        return Result.Ok(_configManager.JavaConfigs.Count);
     }
 
-    public async Task<Result> ReadServerConfig(bool readFile = false)
+    public async Task<Result<int>> ReadServerConfig(bool readFile = false)
     {
-        Exception? exception = null;
         if (readFile)
         {
             var res = await _configManager.ReadServerConfig();
-            if (res.IsFailed) return Result.Fail(res.Error);
-            if (res.IsWarning)
+            if (res.IsFailed) return Result.Fail<int>(res.Errors);
+            var rt = Result.Ok(res.Value.Count);
+            if (res.Reasons.Count != 0)
             {
                 var error = new StringBuilder("在读取服务器配置时出现了一些问题:");
-                if (!string.IsNullOrEmpty(res.ErrorMessages))
-                    error.AppendLine()
-                        .AppendLine("以下服务器由于不可修复的错误而没有被读取：")
-                        .AppendLine(res.ErrorMessages);
-
-                if (!string.IsNullOrEmpty(res.WarningMessages))
-                    error.AppendLine()
-                        .AppendLine("以下服务器存在一定问题，需要您手动修复：")
-                        .AppendLine(res.WarningMessages);
                 error.AppendLine();
-                exception = new FileNotFoundException(error.ToString());
+                error.AppendJoin('\n', res.Reasons.OfType<IWarning>().Select(w => w.Message));
+                rt.WithReason(new WarningReason(error.ToString()));
             }
+            return rt;
         }
 
         var cache = _configManager.CloneServerConfigs();
-        if (cache.Count == 0) cache.Add(-1, IndexedServerConfig.None);
-        await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = cache.ToFrozenDictionary());
-        return exception is null ? Result.Ok() : Result.Warning(exception);
+        var count = cache.Count;
+        if (count == 0)
+        {
+            cache.Add(-1, IndexedServerConfig.None);
+        }
+        await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = cache.ToImmutableDictionary());
+        return Result.Ok(count);
     }
 
-    public Task<Result<FrozenDictionary<string, object>>> SaveConfig()
+    public Task<Result<DesktopConfig>> SaveDesktopConfig()
     {
-        return _configManager.SetMainConfig(_appState.CurrentConfigs);
+        return _configManager.SetDesktopConfig(_appState.DesktopConfigs);
+    }
+    public Task<Result<DaemonConfig>> SaveDaemonConfig()
+    {
+        if (_appState.DaemonConfigs is null)
+            return Task.FromResult(Result.Fail<DaemonConfig>("The desktop app doesn't have a valid DaemonConfig."));
+        return _configManager.SetDaemonConfig(_appState.DaemonConfigs);
+    }
+    public Task<Result<WebConfig>> SaveWebConfig()
+    {
+        if (_appState.WebConfigs is null)
+            return Task.FromResult(Result.Fail<WebConfig>("The desktop app doesn't have a valid WebConfig."));
+        return _configManager.SetWebConfig(_appState.WebConfigs);
     }
 
     public async Task<Result<int>> FindJava()
     {
-        var detectResult = await _configManager.DetectJavaAsync();
-        if (detectResult.IsFailed) return Result.Fail<int>(detectResult.Error);
-        return await ReadJavaConfig(true);
+        return await _configManager.DetectJavaAsync().Bind(() => ReadJavaConfig(true));
     }
 
     #endregion

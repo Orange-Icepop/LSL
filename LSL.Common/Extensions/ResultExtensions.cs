@@ -33,6 +33,31 @@ public static class ResultExtensions
         await predicate(res);
         return res;
     }
+    public static Result<T> Tap<T>(this Result<T> result, Action<Result<T>> predicate)
+    {
+        predicate(result);
+        return result;
+    }
+
+    public static async Task<Result<T>> Tap<T>(this Task<Result<T>> result, Action<Result<T>> predicate)
+    {
+        var res = await result;
+        predicate(res);
+        return res;
+    }
+
+    public static async Task<Result<T>> Tap<T>(this Result<T> result, Func<Result<T>, Task> predicate)
+    {
+        await predicate(result);
+        return result;
+    }
+
+    public static async Task<Result<T>> Tap<T>(this Task<Result<T>> result, Func<Result<T>, Task> predicate)
+    {
+        var res = await result;
+        await predicate(res);
+        return res;
+    }
 
     #endregion
 

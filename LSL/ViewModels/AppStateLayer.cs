@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 using LSL.Common.Collections;
+using LSL.Common.Models.AppConfig;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Models;
@@ -172,15 +174,16 @@ public class AppStateLayer : ReactiveObject
 
     #region 配置相关
 
-    [Reactive]
-    public FrozenDictionary<string, object> CurrentConfigs { get; set; } = FrozenDictionary<string, object>.Empty;
+    [Reactive] public DaemonConfig? DaemonConfigs { get; set; } = null;
+    [Reactive] public WebConfig? WebConfigs { get; set; } = null;
+    [Reactive] public DesktopConfig DesktopConfigs { get; set; } = new();
 
     [Reactive]
-    public FrozenDictionary<int, IndexedServerConfig> CurrentServerConfigs { get; set; } =
-        FrozenDictionary<int, IndexedServerConfig>.Empty;
+    public ImmutableDictionary<int, IndexedServerConfig> CurrentServerConfigs { get; set; } =
+        ImmutableDictionary<int, IndexedServerConfig>.Empty;
 
     [Reactive]
-    public FrozenDictionary<int, JavaInfo> CurrentJavaDict { get; set; } = FrozenDictionary<int, JavaInfo>.Empty;
+    public ImmutableDictionary<int, JavaInfo> CurrentJavaDict { get; set; } = ImmutableDictionary<int, JavaInfo>.Empty;
 
     #endregion
 

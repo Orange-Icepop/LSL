@@ -22,9 +22,9 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
         CurrentUsers = null!;
         CurrentUserMessage = [];
         StartServerCmd = ReactiveCommand.CreateFromTask(StartSelectedServer);
-        StopServerCmd = ReactiveCommand.Create(async () => await Connector.StopServer(AppState.SelectedServerId));
+        StopServerCmd = ReactiveCommand.CreateFromTask(()=>Connector.StopServer(AppState.SelectedServerId));
         SaveServerCmd = ReactiveCommand.Create(() => Connector.SaveServer(AppState.SelectedServerId));
-        EndServerCmd = ReactiveCommand.Create(async () => await Connector.EndServer(AppState.SelectedServerId));
+        EndServerCmd = ReactiveCommand.CreateFromTask(() => Connector.EndServer(AppState.SelectedServerId));
         SendCommand = ReactiveCommand.Create(() =>
         {
             SendCommandToServer();
