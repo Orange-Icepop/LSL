@@ -164,7 +164,7 @@ public class LocatedServerConfig
 
     #region 检查与修复
 
-    public async Task<Result<LocatedServerConfig>> CheckAndFixAsync()
+    public async Task<Result<LocatedServerConfig>> CheckAndFixAsync(bool skipCoreCheck = false)
     {
         for (var tries = 0; tries < 3; tries++)
         {
@@ -174,8 +174,7 @@ public class LocatedServerConfig
             {
                 case ServerCoreType.Forge or ServerCoreType.ForgeInstaller or ServerCoreType.ForgeShim:
                 {
-                    if (ForgeCoreInfo is null || !File.Exists(ForgeCoreInfo.WinLibraryArgsPath) ||
-                        !File.Exists(ForgeCoreInfo.UnixLibraryArgsPath))
+                    if (ForgeCoreInfo is null || ForgeCoreInfo.Validate(ServerPath).IsFailed)
                     {
                         var detectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
                         if (detectResult.IsFailed)
@@ -217,7 +216,11 @@ public class LocatedServerConfig
     public async Task<Result> Validate(bool skipPathCheck = false)
     {
         List<string> warnings = [];
-        if (!skipPathCheck && !Path.Exists(ServerPath)) warnings.Add($"Server {ServerPath} does not exist");
+        if (!skipPathCheck && (!Path.Exists(ServerPath) || CommonCoreInfo?.Validate(ServerPath).IsFailed is not true || ForgeCoreInfo?.Validate(ServerPath).IsFailed is not true))
+        {
+            warnings.Add($"Cannot get the core information of server at {ServerPath}");
+        }
+
         if (MinMemory > MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
         if (!await CheckComponents.IsValidJava(JavaPath)) warnings.Add("The configured Java is not valid");
         warnings.AddRange(from arg in ExtraJvmArgs
