@@ -1,4 +1,5 @@
-﻿using Mutty;
+﻿using System.Collections.Immutable;
+using Mutty;
 
 namespace LSL.Common.Models.ServerConfig;
 
@@ -52,7 +53,7 @@ public record IndexedServerConfig
     public string JavaPath => LocatedConfig.JavaPath;
     public uint MinMemory => LocatedConfig.MinMemory;
     public uint MaxMemory => LocatedConfig.MaxMemory;
-    public List<string> ExtraJvmArgs => LocatedConfig.ExtraJvmArgs;
+    public ImmutableList<string> ExtraJvmArgs => LocatedConfig.ExtraJvmArgs;
     public bool EnablePreLaunchProtection => LocatedConfig.EnablePreLaunchProtection;
 
     /// <summary>

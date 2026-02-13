@@ -4,18 +4,18 @@ using LSL.Common.Options;
 
 namespace LSL.Common.Models.ServerConfig;
 
-public class ServerConfigV1 : IServerConfig<ServerConfigV1>
+public record ServerConfigV1 : IServerConfig<ServerConfigV1>
 {
     private ServerConfigV1()
     {
     }
 
-    public string? Name { get; set; }
-    public string? UsingJava { get; set; }
-    public string? CoreName { get; set; }
-    public uint? MinMemory { get; set; }
-    public uint? MaxMemory { get; set; }
-    public string? ExtJvm { get; set; }
+    public string? Name { get; init; }
+    public string? UsingJava { get; init; }
+    public string? CoreName { get; init; }
+    public uint? MinMemory { get; init; }
+    public uint? MaxMemory { get; init; }
+    public string? ExtJvm { get; init; }
 
     public static string ConfigFileName => "lslconfig.json";
 

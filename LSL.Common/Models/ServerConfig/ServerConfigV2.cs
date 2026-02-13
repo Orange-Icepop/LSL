@@ -1,25 +1,26 @@
+using System.Collections.Immutable;
 using FluentResults;
 using Tomlyn;
 
 namespace LSL.Common.Models.ServerConfig;
 
-public class ServerConfigV2 : IServerConfig<ServerConfigV2>
+public record ServerConfigV2 : IServerConfig<ServerConfigV2>
 {
     public ServerConfigV2()
     {
         EnablePreLaunchProtection = ServerType is not ServerCoreType.Mohist;
     }
 
-    public string? Name { get; set; } = string.Empty;
-    public ServerCoreType? ServerType { get; set; } = ServerCoreType.Error;
+    public string? Name { get; init; } = string.Empty;
+    public ServerCoreType? ServerType { get; init; } = ServerCoreType.Error;
 
-    public CommonCoreConfigV1? CommonCoreInfo { get; set; }
-    public ForgeCoreConfigV1? ForgeCoreInfo { get; set; }
-    public string? JavaPath { get; set; }
-    public uint? MinMemory { get; set; }
-    public uint? MaxMemory { get; set; }
-    public List<string>? ExtraJvmArgs { get; set; }
-    public bool? EnablePreLaunchProtection { get; set; }
+    public CommonCoreConfigV1? CommonCoreInfo { get; init; }
+    public ForgeCoreConfigV1? ForgeCoreInfo { get; init; }
+    public string? JavaPath { get; init; }
+    public uint? MinMemory { get; init; }
+    public uint? MaxMemory { get; init; }
+    public ImmutableList<string>? ExtraJvmArgs { get; init; }
+    public bool? EnablePreLaunchProtection { get; init; }
 
     public static Result<ServerConfigV2> Deserialize(string content)
     {

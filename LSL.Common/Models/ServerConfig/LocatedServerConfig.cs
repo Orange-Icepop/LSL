@@ -1,13 +1,16 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Text;
 using FluentResults;
 using FluentResults.Extensions;
 using LSL.Common.Utilities.Minecraft;
 using LSL.Common.Validation;
+using Mutty;
 
 namespace LSL.Common.Models.ServerConfig;
 
-public class LocatedServerConfig
+[MutableGeneration]
+public record LocatedServerConfig
 {
     internal LocatedServerConfig(string serverPath,
         string serverName,
@@ -17,7 +20,7 @@ public class LocatedServerConfig
         string javaPath,
         uint minMemory,
         uint maxMemory,
-        List<string> extJvm,
+        IEnumerable<string> extJvm,
         bool enablePreLaunchProtection)
     {
         ServerPath = serverPath;
@@ -28,20 +31,20 @@ public class LocatedServerConfig
         JavaPath = javaPath;
         MinMemory = minMemory;
         MaxMemory = maxMemory;
-        ExtraJvmArgs = extJvm;
+        ExtraJvmArgs = extJvm.ToImmutableList();
         EnablePreLaunchProtection = enablePreLaunchProtection;
     }
 
-    public string ServerPath { get; set; }
-    public string ServerName { get; set; }
-    public ServerCoreType ServerType { get; set; }
-    public CommonCoreConfigV1? CommonCoreInfo { get; set; }
-    public ForgeCoreConfigV1? ForgeCoreInfo { get; set; }
-    public string JavaPath { get; set; }
-    public uint MinMemory { get; set; }
-    public uint MaxMemory { get; set; }
-    public List<string> ExtraJvmArgs { get; set; }
-    public bool EnablePreLaunchProtection { get; set; }
+    public string ServerPath { get; init; }
+    public string ServerName { get; init; }
+    public ServerCoreType ServerType { get; init; }
+    public CommonCoreConfigV1? CommonCoreInfo { get; init; }
+    public ForgeCoreConfigV1? ForgeCoreInfo { get; init; }
+    public string JavaPath { get; init; }
+    public uint MinMemory { get; init; }
+    public uint MaxMemory { get; init; }
+    public ImmutableList<string> ExtraJvmArgs { get; init; }
+    public bool EnablePreLaunchProtection { get; init; }
 
     public static LocatedServerConfig Empty =>
         new(string.Empty, string.Empty, ServerCoreType.Unknown, null, null, string.Empty, 1024, 4096, [], true);
@@ -141,7 +144,7 @@ public class LocatedServerConfig
         string? javaPath,
         uint? minMemory,
         uint? maxMemory,
-        List<string>? extJvm,
+        IEnumerable<string>? extJvm,
         bool? enablePreLaunchProtection)
     {
         if (string.IsNullOrEmpty(serverName))
@@ -154,71 +157,24 @@ public class LocatedServerConfig
             enablePreLaunchProtection ?? true).CheckAndFixAsync();
     }
 
-    public LocatedServerConfig Clone()
-    {
-        return new LocatedServerConfig(ServerPath, ServerName, ServerType, CommonCoreInfo, ForgeCoreInfo,
-            JavaPath, MinMemory, MaxMemory, ExtraJvmArgs, EnablePreLaunchProtection);
-    }
-
     #endregion
 
     #region 检查与修复
 
-    public async Task<Result<LocatedServerConfig>> CheckAndFixAsync(bool skipCoreCheck = false)
-    {
-        for (var tries = 0; tries < 3; tries++)
-        {
-            var validationResult = await Validate();
-            if (validationResult.IsFailed) return Result.Fail<LocatedServerConfig>(validationResult.Errors);
-            switch (ServerType)
-            {
-                case ServerCoreType.Forge or ServerCoreType.ForgeInstaller or ServerCoreType.ForgeShim:
-                {
-                    if (ForgeCoreInfo is null || ForgeCoreInfo.Validate(ServerPath).IsFailed)
-                    {
-                        var detectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
-                        if (detectResult.IsFailed)
-                            return Result.Fail<LocatedServerConfig>(
-                                "Cannot get the correct core info of the forge server");
-                        ForgeCoreInfo = detectResult.Value;
-                    }
-
-                    break;
-                }
-                case ServerCoreType.Error when CommonCoreInfo is not null && File.Exists(CommonCoreInfo.JarName):
-                {
-                    var detectResult = await CoreTypeHelper.GetCoreType(CommonCoreInfo.JarName);
-                    if (detectResult.IsFailed) return Result.Fail<LocatedServerConfig>("Cannot get the core type");
-                    ServerType = detectResult.Value;
-                    continue;
-                }
-                case ServerCoreType.Error when ForgeCoreInfo is not null &&
-                                               File.Exists(ForgeCoreInfo.WinLibraryArgsPath) &&
-                                               File.Exists(ForgeCoreInfo.UnixLibraryArgsPath):
-                    ServerType = ServerCoreType.Forge;
-                    break;
-                case ServerCoreType.Error:
-                    return Result.Fail<LocatedServerConfig>("Neither core file nor forge arguments is valid");
-                default:
-                {
-                    if (CommonCoreInfo is null || !File.Exists(CommonCoreInfo.JarName))
-                        return Result.Fail<LocatedServerConfig>("The jar info of the server is invalid");
-                    break;
-                }
-            }
-
-            return Result.Ok(this);
-        }
-
-        return Result.Fail<LocatedServerConfig>("Failed to check server configuration after multiple attempts");
-    }
+    public Task<Result<LocatedServerConfig>> CheckAndFixAsync(bool skipCoreCheck = false) =>
+        this.CreateDraft().CheckAndFixAsync(skipCoreCheck);
 
     public async Task<Result> Validate(bool skipPathCheck = false)
     {
         List<string> warnings = [];
-        if (!skipPathCheck && (!Path.Exists(ServerPath) || CommonCoreInfo?.Validate(ServerPath).IsFailed is not true || ForgeCoreInfo?.Validate(ServerPath).IsFailed is not true))
+        if (!skipPathCheck)
         {
-            warnings.Add($"Cannot get the core information of server at {ServerPath}");
+            if (!Path.Exists(ServerPath) ||
+                !(CommonCoreInfo?.Validate(ServerPath).IsSuccess is true ||
+                  ForgeCoreInfo?.Validate(ServerPath).IsSuccess is true))
+            {
+                warnings.Add($"Cannot get the core information of server at {ServerPath}");
+            }
         }
 
         if (MinMemory > MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
@@ -231,4 +187,76 @@ public class LocatedServerConfig
     }
 
     #endregion
+}
+
+public static class MutableLocatedServerConfigExtensions
+{
+    public static async Task<Result<LocatedServerConfig>> CheckAndFixAsync(this MutableLocatedServerConfig config, bool skipCoreCheck = false, int tries = 1)
+    {
+        if (tries > 2)
+            return Result.Fail<LocatedServerConfig>("Failed to check server configuration after multiple attempts");
+
+        var validationResult = await config.Validate(skipCoreCheck);
+        if (validationResult.IsFailed) return Result.Fail<LocatedServerConfig>(validationResult.Errors);
+        if (skipCoreCheck) return Result.Ok(config.FinishDraft());
+        switch (config.ServerType)
+        {
+            case ServerCoreType.Forge or ServerCoreType.ForgeInstaller or ServerCoreType.ForgeShim:
+            {
+                if (config.ForgeCoreInfo is null || config.ForgeCoreInfo.Validate(config.ServerPath).IsFailed)
+                {
+                    var detectResult = await ForgeConfigHelper.GetForgeConfig(config.ServerPath);
+                    if (detectResult.IsFailed)
+                        return Result.Fail<LocatedServerConfig>(
+                            "Cannot get the correct core info of the forge server");
+                    config.ForgeCoreInfo = detectResult.Value;
+                }
+
+                break;
+            }
+            case ServerCoreType.Error when config.CommonCoreInfo is not null && File.Exists(config.CommonCoreInfo.JarName):
+            {
+                var detectResult = await CoreTypeHelper.GetCoreType(config.CommonCoreInfo.JarName);
+                if (detectResult.IsFailed) return Result.Fail<LocatedServerConfig>("Cannot get the core type");
+                config.ServerType = detectResult.Value;
+                return await config.CheckAndFixAsync(skipCoreCheck, tries + 1);
+            }
+            case ServerCoreType.Error when config.ForgeCoreInfo is not null && config.ForgeCoreInfo.Validate(config.ServerPath).IsSuccess:
+                config.ServerType = ServerCoreType.Forge;
+                break;
+            case ServerCoreType.Error:
+                return Result.Fail<LocatedServerConfig>("Neither core file nor forge arguments is valid");
+            default:
+            {
+                if (config.CommonCoreInfo is null || !File.Exists(config.CommonCoreInfo.JarName))
+                    return Result.Fail<LocatedServerConfig>("The jar info of the server is invalid");
+                break;
+            }
+        }
+
+        return Result.Ok(config.FinishDraft());
+    }
+    public static async Task<Result> Validate(this MutableLocatedServerConfig config, bool skipPathCheck = false)
+    {
+        List<string> warnings = [];
+        if (!skipPathCheck)
+        {
+            // if server path doesn't exist, or neither CoreInfo is valid, then warn
+            if (!Path.Exists(config.ServerPath) ||
+                !(config.CommonCoreInfo?.Validate(config.ServerPath).IsSuccess is true ||
+                  config.ForgeCoreInfo?.Validate(config.ServerPath).IsSuccess is true))
+            {
+                warnings.Add($"Cannot get the core information of server at {config.ServerPath}");
+            }
+        }
+
+        if (config.MinMemory > config.MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
+        if (!await CheckComponents.IsValidJava(config.JavaPath)) warnings.Add("The configured Java is not valid");
+        warnings.AddRange(from arg in config.ExtraJvmArgs
+            where !CheckComponents.ExtraJvmArg(arg).Passed
+            select $"Invalid extra JVM argument {arg}");
+        if (warnings.Count != 0) return Result.Fail(new StringBuilder().AppendJoin('\n', warnings).ToString());
+        return Result.Ok();
+    }
+
 }

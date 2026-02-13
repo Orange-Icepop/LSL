@@ -54,3 +54,37 @@ public record ForgeCoreConfigV1 : ICoreConfig<ForgeCoreConfigV1>
         }
     }
 }
+
+public static class MutableForgeConfigExtensions
+{
+    public static Result Validate(this MutableForgeCoreConfigV1 config, string parent)
+    {
+        try
+        {
+            if (!File.Exists(Path.Combine(parent, config.UnixLibraryArgsPath))) return Result.Fail("Unix library argument file does not exist.");
+            if (!File.Exists(Path.Combine(parent, config.WinLibraryArgsPath))) return Result.Fail("Windows library argument file does not exist.");
+            return Result.Ok();
+        }
+        catch (Exception)
+        {
+            return Result.Fail("Invalid character in argument path.");
+        }
+    }
+
+    public static async Task<Result<ForgeCoreConfigV1>> ValidateAndFix(this MutableForgeCoreConfigV1 config, string parent)
+    {
+        try
+        {
+            if (File.Exists(Path.Combine(parent, config.WinLibraryArgsPath)) &&
+                File.Exists(Path.Combine(parent, config.UnixLibraryArgsPath))) return Result.Ok(config.FinishDraft());
+            var detectResult = await ForgeConfigHelper.GetForgeConfig(parent);
+            if (detectResult.IsFailed)
+                return Result.Fail<ForgeCoreConfigV1>("Cannot get the correct core info of the forge server");
+            return detectResult;
+        }
+        catch (Exception)
+        {
+            return Result.Fail<ForgeCoreConfigV1>("Invalid character in argument path.");
+        }
+    }
+}
