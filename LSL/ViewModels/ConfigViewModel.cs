@@ -166,8 +166,8 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         var success = await Connector.ReadDaemonConfig(rf);
         if (success.IsSuccess)
         {
-            Dispatcher.UIThread.Invoke(() =>
-                _cachedConfig = new ConcurrentDictionary<string, object>(AppState.CurrentConfigs));
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                _cachedConfig = new ConcurrentDictionary<string, object>(AppState.));
             return true;
         }
 

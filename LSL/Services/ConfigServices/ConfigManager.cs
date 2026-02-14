@@ -9,7 +9,6 @@ using LSL.Common.Models.AppConfig;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using Microsoft.Extensions.Logging;
-using Nito.AsyncEx;
 
 namespace LSL.Services.ConfigServices;
 
@@ -101,13 +100,13 @@ public class ConfigManager(
     }
 
     public Task<Result<IDictionary<int, IndexedServerConfig>>> AddServerUsingCore(LocatedServerConfig config,
-        string corePath, bool installForge, IProgress<string>? progress)
+        string corePath, bool installForge = true, IProgress<string>? progress = null)
     {
         return scm.AddServerUsingCore(config, corePath, installForge, progress);
     }
 
     public Task<Result<IDictionary<int, IndexedServerConfig>>> AddServerFolder(LocatedServerConfig config,
-        IProgress<string>? progress)
+        IProgress<string>? progress = null)
     {
         return scm.AddServerFolder(config, progress);
     }

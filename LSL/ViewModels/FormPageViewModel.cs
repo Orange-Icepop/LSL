@@ -10,7 +10,6 @@ using LSL.Common.Models.ServerConfig;
 using LSL.Common.Utilities.Minecraft;
 using LSL.Common.Validation;
 using LSL.Models;
-using LSL.Services.ConfigServices;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -83,7 +82,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             if (res.IsSuccess)
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    DeployConfig(res.Config);
+                    DeployConfig(res.Value);
                     ExistedServerPath = parentPath;
                 });
         }
@@ -98,28 +97,16 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             });
         }
     }
-
-    #region 获取已有新增服务器信息
-
-    private async Task<LocatedServerConfig> GetExistedServerConfigAsync(string path)
-    {
-        var res = LocatedServerConfig.Empty;
-        if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return res;
-        var configFilePath = Path.Combine(path, "lslconfig.json");
-        if (!File.Exists(configFilePath)) return res;
-    }
-
-    #endregion
-
+    
     #region 新增服务器逻辑
 
     private async Task AddServerCore()
     {
-        FormedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
+        LocatedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
         var vResult = await ServiceConnector.ValidateNewServerConfig(serverInfo);
         if (vResult.IsFailed)
         {
-            await AppState.Coordinator.ThrowError("表单错误", vResult.Error.Message);
+            await AppState.Coordinator.SubmitServiceError(vResult, "表单错误");
             return;
         }
 
@@ -151,7 +138,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreTypeResult.Value.Explain()}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = AppState.Coordinator.SubmitServiceError(await Connector.AddServer(serverInfo));
+            var success = AppState.Coordinator.SubmitServiceError(await Connector.AddServerUsingCore(serverInfo, CorePath));
             if (success.IsSuccess)
             {
                 AppState.Coordinator.Notify(NotifyType.Success, null, "服务器配置成功！");
@@ -243,7 +230,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreTypeResult.Value}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = AppState.Coordinator.SubmitServiceError(await Connector.AddExistedServer(serverInfo));
+            var success = AppState.Coordinator.SubmitServiceError(await Connector.AddServerFolder(serverInfo));
             if (success.IsSuccess)
             {
                 AppState.Coordinator.Notify(NotifyType.Success, null, "服务器配置成功！");
@@ -294,7 +281,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             {
                 if (!AppState.CurrentServerConfigs.TryGetValue(AppState.SelectedServerId, out var tmp))
                     throw new Exception("选中的服务器不存在已经被读取的配置。\nLSL作者认为LSL理论上不应该抛出该异常，因为您不可能在不存在该服务器时编辑其配置。");
-                DeployConfig(tmp);
+                DeployConfig(tmp.LocatedConfig);
                 break;
             }
             case RightPageState.AddCore:
@@ -313,7 +300,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         }
     }
 
-    private void DeployConfig(IndexedServerConfig config)
+    private void DeployConfig(LocatedServerConfig config)
     {
         ServerName = config.ServerName;
         CorePath = config.ServerPath;

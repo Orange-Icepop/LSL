@@ -2,18 +2,15 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentResults;
 using FluentResults.Extensions;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
-using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Options;
 using LSL.Common.Utilities.FileSystem;
@@ -155,7 +152,7 @@ public class ServerConfigManager(DaemonConfigManager dcm, ILogger<ServerConfigMa
 
     public async Task<Result<IDictionary<int, IndexedServerConfig>>> AddServerUsingCore(LocatedServerConfig ordinalConfig,
         string corePath,
-        bool installForge = false, IProgress<string>? progress = null)
+        bool installForge = true, IProgress<string>? progress = null)
     {
         var config = ordinalConfig.CreateDraft();
         config.ServerPath = Path.Combine(ConfigPathProvider.ServersFolder, config.ServerName);

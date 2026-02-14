@@ -14,8 +14,10 @@
 - [x] 重写ServerConfigManager
 - [x] 重写MainConfigManager
 - [x] 重写JavaConfigManager
-- [ ] 修改EditServer方法，使其直接使用FormedServerConfig
-- [ ] 重写更新检查逻辑（缺：配置文件重写）
+- [x] 修改EditServer方法，使其直接使用LocatedServerConfig
+- [x] 重写更新检查逻辑（缺：配置文件重写）
+- [ ] 修改服务器配置添加/修改前端
+- [ ] 修改主配置文件配置前端
 
 ## SubProject
 

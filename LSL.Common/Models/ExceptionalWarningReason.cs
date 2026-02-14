@@ -1,5 +1,3 @@
-using FluentResults;
-
 namespace LSL.Common.Models;
 
 public class ExceptionalWarningReason(string message, Exception exception) : WarningReason(message)

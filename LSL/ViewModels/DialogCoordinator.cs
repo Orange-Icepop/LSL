@@ -23,22 +23,22 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
         return PopupInteraction.Handle(new InvokePopupArgs(PopupType.ErrorConfirm, title, message));
     }
 
-    public Task<Result<T>> SubmitServiceError<T>(Result<T> result, bool suppressWarning = false)
+    public Task<Result<T>> SubmitServiceError<T>(Result<T> result, string? title = null, bool suppressWarning = false)
     {
         return suppressWarning
-            ? result.Handle(null, null, exception => ShowServiceError(PopupType.ErrorConfirm, exception))
-            : result.Handle(null, (_, exception) => ShowServiceError(PopupType.WarningConfirm, exception),
-                exception => ShowServiceError(PopupType.ErrorConfirm, exception));
+            ? result.Handle(null, null, exception => ShowServiceError(PopupType.ErrorConfirm, exception, title))
+            : result.Handle(null, (_, exception) => ShowServiceError(PopupType.WarningConfirm, exception, title),
+                exception => ShowServiceError(PopupType.ErrorConfirm, exception, title));
     }
-    public Task<Result> SubmitServiceError(Result result, bool suppressWarning = false)
+    public Task<Result> SubmitServiceError(Result result, string? title = null, bool suppressWarning = false)
     {
         return suppressWarning
-            ? result.Handle(null, null, exception => ShowServiceError(PopupType.ErrorConfirm, exception))
-            : result.Handle(null, exception => ShowServiceError(PopupType.WarningConfirm, exception),
-                exception => ShowServiceError(PopupType.ErrorConfirm, exception));
+            ? result.Handle(null, null, exception => ShowServiceError(PopupType.ErrorConfirm, exception, title))
+            : result.Handle(null, exception => ShowServiceError(PopupType.WarningConfirm, exception, title),
+                exception => ShowServiceError(PopupType.ErrorConfirm, exception, title));
     }
 
-    private async Task ShowServiceError(PopupType type, IEnumerable<Exception> errors)
+    private async Task ShowServiceError(PopupType type, IEnumerable<Exception> errors, string? title = null)
     {
         var exceptions = errors.ToArray();
         await PopupInteraction.Handle(new InvokePopupArgs(type, "服务错误", exceptions.GetMessages() + "\n堆栈追踪：\n" + exceptions.FlattenToString()));

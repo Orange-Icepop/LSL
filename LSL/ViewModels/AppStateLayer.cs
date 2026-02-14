@@ -94,7 +94,7 @@ public class AppStateLayer : ReactiveObject
     private ILogger<AppStateLayer> Logger { get; }
     public DialogCoordinator Coordinator { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
     public PublicCommand Commands { get; }
-    public IObservable<FrozenDictionary<int, IndexedServerConfig>> ServerConfigChanged { get; }
+    public IObservable<ImmutableDictionary<int, IndexedServerConfig>> ServerConfigChanged { get; }
     public IObservable<int> ServerIndexChanged { get; }
     public IObservable<int> ServerIdChanged { get; private set; }
 
