@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
+using System.Collections.Immutable;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Threading;
+using FluentResults;
 using FluentResults.Extensions;
+using LSL.Common.Models.AppConfig;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Validation;
@@ -19,8 +22,6 @@ namespace LSL.ViewModels;
 
 public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 {
-    private ConcurrentDictionary<string, object> _cachedConfig = [];
-
     public ConfigViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
     {
         JavaVersions = null!;
@@ -55,8 +56,10 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         try
         {
             var res = await Connector.ReadDaemonConfig(true)
-                .Bind(() => Connector.ReadServerConfig(true))
-                .Bind(() => Connector.ReadJavaConfig(true));
+                .Bind(_ => Connector.ReadWebConfig(true))
+                .Bind(_ => Connector.ReadDesktopConfig(true))
+                .Bind(_ => Connector.ReadServerConfig(true))
+                .Bind(_ => Connector.ReadJavaConfig(true));
             await AppState.Coordinator.SubmitServiceError(res);
             return res.IsSuccess;
         }
@@ -71,91 +74,9 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     #region 核心配置数据
 
-    public bool AutoEula
-    {
-        get => (bool)_cachedConfig["auto_eula"];
-        set => SaveConfigToCache("auto_eula", value);
-    }
-
-    public int AppPriority
-    {
-        get => (int)_cachedConfig["app_priority"];
-        set => SaveConfigToCache("app_priority", value);
-    }
-
-    public bool EndServerWhenClose
-    {
-        get => (bool)_cachedConfig["end_server_when_close"];
-        set => SaveConfigToCache("end_server_when_close", value);
-    }
-
-    public bool Daemon
-    {
-        get => (bool)_cachedConfig["daemon"];
-        set => SaveConfigToCache("daemon", value);
-    }
-
-    public bool ColoringTerminal
-    {
-        get => (bool)_cachedConfig["coloring_terminal"];
-        set => SaveConfigToCache("coloring_terminal", value);
-    }
-
-    public int DownloadSource
-    {
-        get => (int)_cachedConfig["download_source"];
-        set => SaveConfigToCache("download_source", value);
-    }
-
-    public int DownloadThreads
-    {
-        get => (int)_cachedConfig["download_threads"];
-        set => SaveConfigToCache("download_threads", value);
-    }
-
-    [DownloadLimitValidator]
-    public string? DownloadLimit
-    {
-        get => _cachedConfig["download_limit"].ToString();
-        set => SaveConfigToCache("download_limit", value);
-    }
-
-    public bool PanelEnable
-    {
-        get => (bool)_cachedConfig["panel_enable"];
-        set => SaveConfigToCache("panel_enable", value);
-    }
-
-    [PanelPortValidator]
-    public string? PanelPort
-    {
-        get => _cachedConfig["panel_port"].ToString();
-        set => SaveConfigToCache("panel_port", value);
-    }
-
-    public bool PanelMonitor
-    {
-        get => (bool)_cachedConfig["panel_monitor"];
-        set => SaveConfigToCache("panel_monitor", value);
-    }
-
-    public bool PanelTerminal
-    {
-        get => (bool)_cachedConfig["panel_terminal"];
-        set => SaveConfigToCache("panel_terminal", value);
-    }
-
-    public bool AutoUpdate
-    {
-        get => (bool)_cachedConfig["auto_update"];
-        set => SaveConfigToCache("auto_update", value);
-    }
-
-    public bool BetaUpdate
-    {
-        get => (bool)_cachedConfig["beta_update"];
-        set => SaveConfigToCache("beta_update", value);
-    }
+    [Reactive] public MutableDaemonConfig? DaemonConfigs { get; set; }
+    [Reactive] public MutableWebConfig? WebConfigs { get; set; }
+    [Reactive] public MutableDesktopConfig? DesktopConfigs { get; set; }
 
     #endregion
 
@@ -167,7 +88,11 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         if (success.IsSuccess)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
-                _cachedConfig = new ConcurrentDictionary<string, object>(AppState.));
+            {
+                DaemonConfigs = AppState.DaemonConfigs.CreateDraft();
+                WebConfigs = AppState.WebConfigs.CreateDraft();
+                DesktopConfigs = AppState.DesktopConfigs.CreateDraft();
+            });
             return true;
         }
 
@@ -175,17 +100,13 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         return false;
     }
 
-    private void SaveConfigToCache(string key, object? value) // 向缓存字典中写入新配置
+    public async Task SaveConfigAsync()
     {
-        if (value == null) return;
-        _cachedConfig.AddOrUpdate(key, _ => value, (_, _) => value);
-    }
-
-    public async Task ConfirmConfigAsync()
-    {
-        var res = await Connector.SaveDesktopConfig();
-        await AppState.Coordinator.SubmitServiceError(res);
-        AppState.CurrentConfigs = _cachedConfig.ToFrozenDictionary();
+        var res = await Connector.SaveDaemonConfig(DaemonConfigs?.FinishDraft())
+            .Bind(_ => Connector.SaveWebConfig(WebConfigs?.FinishDraft()))
+            .Bind(_ => Connector.SaveDesktopConfig(DesktopConfigs?.FinishDraft()))
+            .Bind(_ => Result.Ok());
+        await AppState.Coordinator.SubmitServiceError(res, "保存配置时出现错误", true);
     }
 
     #endregion
@@ -245,7 +166,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     [Reactive] public string SelectedServerName { get; private set; }
     [Reactive] public string SelectedServerPath { get; private set; }
 
-    private void RaiseServerConfigChanged(int serverId, FrozenDictionary<int, IndexedServerConfig> serverConfig)
+    private void RaiseServerConfigChanged(int serverId, ImmutableDictionary<int, IndexedServerConfig> serverConfig)
     {
         if (serverConfig.TryGetValue(serverId, out var config))
         {

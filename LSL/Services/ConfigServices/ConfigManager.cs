@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using FluentResults;
 using LSL.Common.Extensions;
+using LSL.Common.Models;
 using LSL.Common.Models.AppConfig;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
@@ -47,9 +48,11 @@ public class ConfigManager(
     // 守护进程配置
     public DaemonConfig DaemonConfigs => dcm.Config;
 
-    public Task<Result<DaemonConfig>> SetDaemonConfig(DaemonConfig conf)
+    public Task<Result<DaemonConfig>> SetDaemonConfig(DaemonConfig? conf)
     {
-        return dcm.SetAndWriteAsync(conf);
+        return conf is null
+            ? Task.FromResult(Result.Ok(dcm.Config).WithReason(new WarningReason("Config is null")))
+            : dcm.SetAndWriteAsync(conf);
     }
 
     public Task<Result<DaemonConfig>> ReadDaemonConfig()
@@ -60,9 +63,11 @@ public class ConfigManager(
     // 网页面板配置
     public WebConfig WebConfigs => wcm.Config;
 
-    public Task<Result<WebConfig>> SetWebConfig(WebConfig conf)
+    public Task<Result<WebConfig>> SetWebConfig(WebConfig? conf)
     {
-        return wcm.SetAndWriteAsync(conf);
+        return conf is null
+            ? Task.FromResult(Result.Ok(wcm.Config).WithReason(new WarningReason("Config is null")))
+            : wcm.SetAndWriteAsync(conf);
     }
 
     public Task<Result<WebConfig>> ReadWebConfig()
@@ -73,9 +78,11 @@ public class ConfigManager(
     // 桌面配置
     public DesktopConfig DesktopConfigs => dkcm.Config;
 
-    public Task<Result<DesktopConfig>> SetDesktopConfig(DesktopConfig conf)
+    public Task<Result<DesktopConfig>> SetDesktopConfig(DesktopConfig? conf)
     {
-        return dkcm.SetAndWriteAsync(conf);
+        return conf is null
+            ? Task.FromResult(Result.Ok(dkcm.Config).WithReason(new WarningReason("Config is null")))
+            : dkcm.SetAndWriteAsync(conf);
     }
 
     public Task<Result<DesktopConfig>> ReadDesktopConfig()

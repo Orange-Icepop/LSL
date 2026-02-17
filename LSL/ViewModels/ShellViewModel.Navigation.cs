@@ -72,7 +72,7 @@ public partial class ShellViewModel
         // 检查右视图重合
         if (rps == AppState.CurrentRightPage && !force) return;
         // 自动保存配置
-        if (AppState.CurrentGeneralPage == GeneralPageState.Settings) await ConfigVM.ConfirmConfigAsync();
+        if (AppState.CurrentGeneralPage == GeneralPageState.Settings) await ConfigVM.SaveConfigAsync();
         // 新视图预操作
         if (gps == GeneralPageState.Settings) await ConfigVM.TryCacheConfigFromFileAsync();
         // 导航

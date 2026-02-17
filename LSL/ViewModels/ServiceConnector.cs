@@ -116,41 +116,34 @@ public class ServiceConnector
 
     #region 配置部分
 
-    public async Task<Result> ReadDaemonConfig(bool readFile = false)
+    public async Task<Result<DaemonConfig>> ReadDaemonConfig(bool readFile = false)
     {
-        if (readFile)
-        {
-            var res = await _configManager.ReadDaemonConfig();
-            if (res.IsFailed) return Result.Ok().WithReasons(res.Reasons);
-        }
-
-        await Dispatcher.UIThread.InvokeAsync(() => _appState.DaemonConfigs = _configManager.DaemonConfigs);
-        return Result.Ok();
+        return await (readFile ? await _configManager.ReadDaemonConfig() : Result.Ok(_configManager.DaemonConfigs))
+            .Bind(async Task<Result<DaemonConfig>> (conf) =>
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => _appState.DaemonConfigs = conf);
+                return Result.Ok(conf);
+            });
     }
-
-    public async Task<Result> ReadWebConfig(bool readFile = false)
+    public async Task<Result<WebConfig>> ReadWebConfig(bool readFile = false)
     {
-        if (readFile)
-        {
-            var res = await _configManager.ReadWebConfig();
-            if (res.IsFailed) return Result.Ok().WithReasons(res.Reasons);
-        }
-
-        await Dispatcher.UIThread.InvokeAsync(() => _appState.WebConfigs = _configManager.WebConfigs);
-        return Result.Ok();
+        return await (readFile ? await _configManager.ReadWebConfig() : Result.Ok(_configManager.WebConfigs))
+            .Bind(async Task<Result<WebConfig>> (conf) =>
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => _appState.WebConfigs = conf);
+                return Result.Ok(conf);
+            });
     }
-
-    public async Task<Result> ReadDesktopConfig(bool readFile = false)
+    public async Task<Result<DesktopConfig>> ReadDesktopConfig(bool readFile = false)
     {
-        if (readFile)
-        {
-            var res = await _configManager.ReadDaemonConfig();
-            if (res.IsFailed) return Result.Ok().WithReasons(res.Reasons);
-        }
-
-        await Dispatcher.UIThread.InvokeAsync(() => _appState.DesktopConfigs = _configManager.DesktopConfigs);
-        return Result.Ok();
+        return await (readFile ? await _configManager.ReadDesktopConfig() : Result.Ok(_configManager.DesktopConfigs))
+            .Bind(async Task<Result<DesktopConfig>> (conf) =>
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => _appState.DesktopConfigs = conf);
+                return Result.Ok(conf);
+            });
     }
+    
 
     public async Task<Result<int>> ReadJavaConfig(bool readFile = false)
     {
@@ -171,6 +164,7 @@ public class ServiceConnector
                     error.AppendLine("这些配置没有被读取。你可以通过重新搜索Java来解决这个问题。");
                     rt.WithReason(new WarningReason(error.ToString()));
                 }
+
                 return rt;
             }
             else
@@ -197,6 +191,7 @@ public class ServiceConnector
                 error.AppendJoin('\n', res.Reasons.OfType<IWarning>().Select(w => w.Message));
                 rt.WithReason(new WarningReason(error.ToString()));
             }
+
             return rt;
         }
 
@@ -206,30 +201,27 @@ public class ServiceConnector
         {
             cache.Add(-1, IndexedServerConfig.None);
         }
+
         await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = cache.ToImmutableDictionary());
         return Result.Ok(count);
     }
 
-    public Task<Result<DesktopConfig>> SaveDesktopConfig()
+    public Task<Result<DaemonConfig>> SaveDaemonConfig(DaemonConfig? config)
     {
-        return _configManager.SetDesktopConfig(_appState.DesktopConfigs);
+        return _configManager.SetDaemonConfig(config).Bind(_ => ReadDaemonConfig());
     }
-    public Task<Result<DaemonConfig>> SaveDaemonConfig()
+    public Task<Result<WebConfig>> SaveWebConfig(WebConfig? config)
     {
-        if (_appState.DaemonConfigs is null)
-            return Task.FromResult(Result.Fail<DaemonConfig>("The desktop app doesn't have a valid DaemonConfig."));
-        return _configManager.SetDaemonConfig(_appState.DaemonConfigs);
+        return _configManager.SetWebConfig(config).Bind(_ => ReadWebConfig());
     }
-    public Task<Result<WebConfig>> SaveWebConfig()
+    public Task<Result<DesktopConfig>> SaveDesktopConfig(DesktopConfig? config)
     {
-        if (_appState.WebConfigs is null)
-            return Task.FromResult(Result.Fail<WebConfig>("The desktop app doesn't have a valid WebConfig."));
-        return _configManager.SetWebConfig(_appState.WebConfigs);
+        return _configManager.SetDesktopConfig(config).Bind(_ => ReadDesktopConfig());
     }
 
-    public async Task<Result<int>> FindJava()
+    public Task<Result<int>> FindJava()
     {
-        return await _configManager.DetectJavaAsync().Bind(() => ReadJavaConfig(true));
+        return _configManager.DetectJavaAsync().Bind(() => ReadJavaConfig(true));
     }
 
     #endregion
@@ -441,7 +433,7 @@ public class ServiceConnector
 
     public async Task<Result> AddServerUsingCore(LocatedServerConfig config, string corePath)
     {
-        var registerResult = await _configManager.AddServerUsingCore(config, corePath);// TODO:安插等待Forge安装方法
+        var registerResult = await _configManager.AddServerUsingCore(config, corePath); // TODO:安插等待Forge安装方法
         return await registerResult.Bind(async Task<Result> (dict) =>
         {
             await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = dict.ToImmutableDictionary());
@@ -471,7 +463,7 @@ public class ServiceConnector
 
     public async Task<Result> AddServerFolder(LocatedServerConfig config)
     {
-        var result = await _configManager.AddServerFolder(config);// TODO:进度
+        var result = await _configManager.AddServerFolder(config); // TODO:进度
         return await result.Bind(async Task<Result> (dict) =>
         {
             await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = dict.ToImmutableDictionary());
