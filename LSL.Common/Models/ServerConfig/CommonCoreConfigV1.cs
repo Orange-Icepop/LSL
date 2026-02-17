@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using FluentResults;
 using Mutty;
 
@@ -9,6 +10,7 @@ public record CommonCoreConfigV1 : ICoreConfig<CommonCoreConfigV1>
     public int ConfigVersion => 1;
     public string JarName { get; init; } = string.Empty;
     
+    //TODO:合并逻辑
     public Result Validate(string parent)
     {
         try
@@ -31,14 +33,14 @@ public record CommonCoreConfigV1 : ICoreConfig<CommonCoreConfigV1>
     }
 }
 
-public static class MutableCommonCoreConfigExtensions
+public partial class MutableCommonCoreConfigV1 : INotifyPropertyChanged
 {
-    public static Result Validate(this MutableCommonCoreConfigV1 config, string parent)
+    public Result Validate(string parent)
     {
         try
         {
             if (!Directory.Exists(parent)) return Result.Fail("Invalid server directory.");
-            var jarPath = Path.Combine(parent, config.JarName);
+            var jarPath = Path.Combine(parent, JarName);
             if (!File.Exists(jarPath)) return Result.Fail($"Jar file at {jarPath} not found.");
             if (!jarPath.EndsWith(".jar", StringComparison.OrdinalIgnoreCase)) return Result.Fail($"Invalid jar file {jarPath}.");
             return Result.Ok();
@@ -49,8 +51,8 @@ public static class MutableCommonCoreConfigExtensions
         }
     }
 
-    public static Task<Result<CommonCoreConfigV1>> ValidateAndFix(this MutableCommonCoreConfigV1 config, string parent)
+    public Task<Result<CommonCoreConfigV1>> ValidateAndFix(string parent)
     {
-        return Task.FromResult(config.Validate(parent).Bind(() => Result.Ok(config.FinishDraft())));
+        return Task.FromResult(Validate(parent).Bind(() => Result.Ok(this.FinishDraft())));
     }
 }

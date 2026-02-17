@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.ComponentModel;
 using Mutty;
 
 namespace LSL.Common.Models.ServerConfig;
@@ -62,3 +63,5 @@ public record IndexedServerConfig
     public static IndexedServerConfig None =>
         new(-1, "", "未添加服务器", ServerCoreType.Unknown, null, null, "", 0, 0, [], false);
 }
+
+public partial class MutableIndexedServerConfig : INotifyPropertyChanged;

@@ -1,4 +1,6 @@
-﻿using System.Runtime.Serialization;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
 using System.Text;
 using FluentResults;
 using LSL.Common.Validation;
@@ -66,6 +68,8 @@ public record DesktopConfig : AppConfigBase<DesktopConfig>, IConfig<DesktopConfi
             : Result.Ok(this);
     }
 }
+
+public partial class MutableDesktopConfig : INotifyPropertyChanged;
 
 public enum BackgroundStretchOption
 {

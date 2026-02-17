@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System.ComponentModel;
+using System.Runtime.Serialization;
 using System.Text;
 using FluentResults;
 using LSL.Common.Validation;
@@ -100,3 +101,5 @@ public record WebConfig : AppConfigBase<WebConfig>, IConfig<WebConfig>
             : Result.Ok(this);
     }
 }
+
+public partial class MutableWebConfig : INotifyPropertyChanged;

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 using FluentResults;
@@ -164,11 +165,66 @@ public record LocatedServerConfig
     public Task<Result<LocatedServerConfig>> CheckAndFixAsync(bool skipCoreCheck = false) =>
         this.CreateDraft().CheckAndFixAsync(skipCoreCheck);
 
+    // PS.这样会多造成一次堆分配但是有效减少了代码重复......等之后可以用Interface把Validate方法包出去
+    //TODO:合并逻辑
+    public Task<Result> Validate(bool skipPathCheck = false) => this.CreateDraft().Validate(skipPathCheck);
+
+    #endregion
+}
+
+public partial class MutableLocatedServerConfig : INotifyPropertyChanged
+{
+    public async Task<Result<LocatedServerConfig>> CheckAndFixAsync(bool skipCoreCheck = false, int tries = 1)
+    {
+        if (tries > 2)
+            return Result.Fail<LocatedServerConfig>("Failed to check server configuration after multiple attempts");
+
+        var validationResult = await Validate(skipCoreCheck);
+        if (validationResult.IsFailed) return Result.Fail<LocatedServerConfig>(validationResult.Errors);
+        if (skipCoreCheck) return Result.Ok(this.FinishDraft());
+        switch (ServerType)
+        {
+            case ServerCoreType.Forge or ServerCoreType.ForgeInstaller or ServerCoreType.ForgeShim:
+            {
+                if (ForgeCoreInfo is null || ForgeCoreInfo.Validate(ServerPath).IsFailed)
+                {
+                    var detectResult = await ForgeConfigHelper.GetForgeConfig(ServerPath);
+                    if (detectResult.IsFailed)
+                        return Result.Fail<LocatedServerConfig>(
+                            "Cannot get the correct core info of the forge server");
+                    ForgeCoreInfo = detectResult.Value;
+                }
+
+                break;
+            }
+            case ServerCoreType.Error when CommonCoreInfo is not null && File.Exists(CommonCoreInfo.JarName):
+            {
+                var detectResult = await CoreTypeHelper.GetCoreType(CommonCoreInfo.JarName);
+                if (detectResult.IsFailed) return Result.Fail<LocatedServerConfig>("Cannot get the core type");
+                ServerType = detectResult.Value;
+                return await CheckAndFixAsync(skipCoreCheck, tries + 1);
+            }
+            case ServerCoreType.Error when ForgeCoreInfo is not null && ForgeCoreInfo.Validate(ServerPath).IsSuccess:
+                ServerType = ServerCoreType.Forge;
+                break;
+            case ServerCoreType.Error:
+                return Result.Fail<LocatedServerConfig>("Neither core file nor forge arguments is valid");
+            default:
+            {
+                if (CommonCoreInfo is null || !File.Exists(CommonCoreInfo.JarName))
+                    return Result.Fail<LocatedServerConfig>("The jar info of the server is invalid");
+                break;
+            }
+        }
+
+        return Result.Ok(this.FinishDraft());
+    }
     public async Task<Result> Validate(bool skipPathCheck = false)
     {
         List<string> warnings = [];
         if (!skipPathCheck)
         {
+            // if server path doesn't exist, or neither CoreInfo is valid, then warn
             if (!Path.Exists(ServerPath) ||
                 !(CommonCoreInfo?.Validate(ServerPath).IsSuccess is true ||
                   ForgeCoreInfo?.Validate(ServerPath).IsSuccess is true))
@@ -185,78 +241,4 @@ public record LocatedServerConfig
         if (warnings.Count != 0) return Result.Fail(new StringBuilder().AppendJoin('\n', warnings).ToString());
         return Result.Ok();
     }
-
-    #endregion
-}
-
-public static class MutableLocatedServerConfigExtensions
-{
-    public static async Task<Result<LocatedServerConfig>> CheckAndFixAsync(this MutableLocatedServerConfig config, bool skipCoreCheck = false, int tries = 1)
-    {
-        if (tries > 2)
-            return Result.Fail<LocatedServerConfig>("Failed to check server configuration after multiple attempts");
-
-        var validationResult = await config.Validate(skipCoreCheck);
-        if (validationResult.IsFailed) return Result.Fail<LocatedServerConfig>(validationResult.Errors);
-        if (skipCoreCheck) return Result.Ok(config.FinishDraft());
-        switch (config.ServerType)
-        {
-            case ServerCoreType.Forge or ServerCoreType.ForgeInstaller or ServerCoreType.ForgeShim:
-            {
-                if (config.ForgeCoreInfo is null || config.ForgeCoreInfo.Validate(config.ServerPath).IsFailed)
-                {
-                    var detectResult = await ForgeConfigHelper.GetForgeConfig(config.ServerPath);
-                    if (detectResult.IsFailed)
-                        return Result.Fail<LocatedServerConfig>(
-                            "Cannot get the correct core info of the forge server");
-                    config.ForgeCoreInfo = detectResult.Value;
-                }
-
-                break;
-            }
-            case ServerCoreType.Error when config.CommonCoreInfo is not null && File.Exists(config.CommonCoreInfo.JarName):
-            {
-                var detectResult = await CoreTypeHelper.GetCoreType(config.CommonCoreInfo.JarName);
-                if (detectResult.IsFailed) return Result.Fail<LocatedServerConfig>("Cannot get the core type");
-                config.ServerType = detectResult.Value;
-                return await config.CheckAndFixAsync(skipCoreCheck, tries + 1);
-            }
-            case ServerCoreType.Error when config.ForgeCoreInfo is not null && config.ForgeCoreInfo.Validate(config.ServerPath).IsSuccess:
-                config.ServerType = ServerCoreType.Forge;
-                break;
-            case ServerCoreType.Error:
-                return Result.Fail<LocatedServerConfig>("Neither core file nor forge arguments is valid");
-            default:
-            {
-                if (config.CommonCoreInfo is null || !File.Exists(config.CommonCoreInfo.JarName))
-                    return Result.Fail<LocatedServerConfig>("The jar info of the server is invalid");
-                break;
-            }
-        }
-
-        return Result.Ok(config.FinishDraft());
-    }
-    public static async Task<Result> Validate(this MutableLocatedServerConfig config, bool skipPathCheck = false)
-    {
-        List<string> warnings = [];
-        if (!skipPathCheck)
-        {
-            // if server path doesn't exist, or neither CoreInfo is valid, then warn
-            if (!Path.Exists(config.ServerPath) ||
-                !(config.CommonCoreInfo?.Validate(config.ServerPath).IsSuccess is true ||
-                  config.ForgeCoreInfo?.Validate(config.ServerPath).IsSuccess is true))
-            {
-                warnings.Add($"Cannot get the core information of server at {config.ServerPath}");
-            }
-        }
-
-        if (config.MinMemory > config.MaxMemory) warnings.Add("Minimum memory shouldn't be greater than maximum memory");
-        if (!await CheckComponents.IsValidJava(config.JavaPath)) warnings.Add("The configured Java is not valid");
-        warnings.AddRange(from arg in config.ExtraJvmArgs
-            where !CheckComponents.ExtraJvmArg(arg).Passed
-            select $"Invalid extra JVM argument {arg}");
-        if (warnings.Count != 0) return Result.Fail(new StringBuilder().AppendJoin('\n', warnings).ToString());
-        return Result.Ok();
-    }
-
 }

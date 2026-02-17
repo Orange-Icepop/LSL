@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System.ComponentModel;
+using System.Runtime.Serialization;
 using System.Text;
 using FluentResults;
 using LSL.Common.Validation;
@@ -49,3 +50,5 @@ public record DaemonConfig : AppConfigBase<DaemonConfig>, IConfig<DaemonConfig>
                 .WithReason(new WarningReason(new StringBuilder().AppendJoin('\n', errors).ToString()));
     }
 }
+
+public partial class MutableDaemonConfig : INotifyPropertyChanged;

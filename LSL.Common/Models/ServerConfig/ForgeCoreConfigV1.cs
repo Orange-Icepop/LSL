@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using FluentResults;
 using LSL.Common.Utilities.Minecraft;
 using Mutty;
@@ -23,6 +24,7 @@ public record ForgeCoreConfigV1 : ICoreConfig<ForgeCoreConfigV1>
     public string UnixLibraryArgsPath { get; init; }
     public string WinLibraryArgsPath { get; init; }
 
+    //TODO:合并逻辑
     public Result Validate(string parent)
     {
         try
@@ -55,14 +57,14 @@ public record ForgeCoreConfigV1 : ICoreConfig<ForgeCoreConfigV1>
     }
 }
 
-public static class MutableForgeConfigExtensions
+public partial class MutableForgeCoreConfigV1 : INotifyPropertyChanged
 {
-    public static Result Validate(this MutableForgeCoreConfigV1 config, string parent)
+    public Result Validate(string parent)
     {
         try
         {
-            if (!File.Exists(Path.Combine(parent, config.UnixLibraryArgsPath))) return Result.Fail("Unix library argument file does not exist.");
-            if (!File.Exists(Path.Combine(parent, config.WinLibraryArgsPath))) return Result.Fail("Windows library argument file does not exist.");
+            if (!File.Exists(Path.Combine(parent, UnixLibraryArgsPath))) return Result.Fail("Unix library argument file does not exist.");
+            if (!File.Exists(Path.Combine(parent, WinLibraryArgsPath))) return Result.Fail("Windows library argument file does not exist.");
             return Result.Ok();
         }
         catch (Exception)
@@ -71,12 +73,12 @@ public static class MutableForgeConfigExtensions
         }
     }
 
-    public static async Task<Result<ForgeCoreConfigV1>> ValidateAndFix(this MutableForgeCoreConfigV1 config, string parent)
+    public async Task<Result<ForgeCoreConfigV1>> ValidateAndFix(string parent)
     {
         try
         {
-            if (File.Exists(Path.Combine(parent, config.WinLibraryArgsPath)) &&
-                File.Exists(Path.Combine(parent, config.UnixLibraryArgsPath))) return Result.Ok(config.FinishDraft());
+            if (File.Exists(Path.Combine(parent, WinLibraryArgsPath)) &&
+                File.Exists(Path.Combine(parent, UnixLibraryArgsPath))) return Result.Ok(this.FinishDraft());
             var detectResult = await ForgeConfigHelper.GetForgeConfig(parent);
             if (detectResult.IsFailed)
                 return Result.Fail<ForgeCoreConfigV1>("Cannot get the correct core info of the forge server");
