@@ -407,7 +407,7 @@ public class ServiceConnector
 
     #region 服务器添加、修改与删除
 
-    public static async Task<Result> ValidateNewServerConfig(LocatedServerConfig config, bool skipCorePathCheck = false)
+    public static async Task<Result> ValidateNewServerConfig(MutableLocatedServerConfig config, bool skipCorePathCheck = false)
     {
         var checkResult = await config.CheckAndFixAsync(skipCorePathCheck);
         if (checkResult.IsFailed) return Result.Fail(checkResult.Errors);

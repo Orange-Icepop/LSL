@@ -150,11 +150,9 @@ public record LocatedServerConfig
     {
         if (string.IsNullOrEmpty(serverName))
             return Task.FromResult(Result.Fail<LocatedServerConfig>("This server doesn't have a name"));
-        if (minMemory is null) return Task.FromResult(Result.Fail<LocatedServerConfig>("Minimum memory is missing"));
-        if (maxMemory is null) return Task.FromResult(Result.Fail<LocatedServerConfig>("Maximum memory is missing"));
         return new LocatedServerConfig(serverPath, serverName, serverType ?? ServerCoreType.Error, commonInfo,
             forgeInfo,
-            javaPath ?? string.Empty, minMemory.Value, maxMemory.Value, extJvm ?? [],
+            javaPath ?? string.Empty, minMemory ?? 0, maxMemory ?? 0, extJvm ?? [],
             enablePreLaunchProtection ?? true).CheckAndFixAsync();
     }
 
@@ -241,4 +239,6 @@ public partial class MutableLocatedServerConfig : INotifyPropertyChanged
         if (warnings.Count != 0) return Result.Fail(new StringBuilder().AppendJoin('\n', warnings).ToString());
         return Result.Ok();
     }
+
+    public static MutableLocatedServerConfig New => LocatedServerConfig.Empty.CreateDraft();
 }

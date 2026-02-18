@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
+using LSL.Common.Extensions;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Utilities.Minecraft;
@@ -21,19 +22,14 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     public FormPageViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
         // Reset to not null
-        ServerName = string.Empty;
+        EditingConfig = MutableLocatedServerConfig.New;
         CorePath = string.Empty;
-        MinMem = string.Empty;
-        MaxMem = string.Empty;
-        ExtJvm = "-Dlog4j2.formatMsgNoLookups=true";
-        ExistedServerPath = string.Empty;
         JavaList = [];
-        JavaPath = string.Empty;
         // end
         this.WhenAnyValue(formPageVM => formPageVM.SelectedJavaIndex)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Select(GetJavaPath)
-            .Subscribe(val => JavaPath = val);
+            .Subscribe(val => EditingConfig.JavaPath = val);
         AppState.WhenAnyValue(stateLayer => stateLayer.CurrentJavaDict)
             .Select(javaInfos => javaInfos.Values)
             .Select(vals =>
@@ -67,7 +63,13 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     private async Task SelectExistedServerCore()
     {
         var result = await AppState.Coordinator.FilePickerInteraction.Handle(FilePickerType.CoreFile);
-        var parent = Directory.GetParent(result);
+        var file = new FileInfo(result);
+        if (!file.Exists)
+        {
+            Logger.LogError("Server core does not exist:{result}", result);
+            await AppState.Coordinator.ThrowError("服务器核心不存在", $"{result}不存在或无法访问。");
+        }
+        var parent = file.Directory;
         if (parent is null)
         {
             Logger.LogError("Error getting the parent folder info of an existing server's core:{result}", result);
@@ -80,45 +82,40 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         {
             var res = await ServerConfigHelper.ReadSingleConfigAsync(parent.FullName);
             if (res.IsSuccess)
+            {
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    DeployConfig(res.Value);
-                    ExistedServerPath = parentPath;
+                    EditingConfig = res.Value.CreateDraft();
+                    EditingConfig.ServerPath = parentPath;
                 });
+            }
         }
         else
         {
             var parentName = parent.Name;
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                ExistedServerPath = parentPath;
+                EditingConfig.ServerPath = parentPath;
                 CorePath = result;
-                ServerName = parentName;
+                EditingConfig.ServerName = parentName;
             });
         }
     }
-    
+
     #region 新增服务器逻辑
 
     private async Task AddServerCore()
     {
-        LocatedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
-        var vResult = await ServiceConnector.ValidateNewServerConfig(serverInfo);
+        var vResult = await EditingConfig.CheckAndFixAsync(true);
         if (vResult.IsFailed)
         {
             await AppState.Coordinator.SubmitServiceError(vResult, "表单错误");
             return;
         }
 
-        if (vResult.IsWarning)
-        {
-            var confirm =
-                await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo,
-                    "未知的Minecraft核心文件", vResult.Error.Message));
-            if (confirm == PopupResult.No) return;
-        }
+        var immutable = EditingConfig.FinishDraft();
 
-        if (int.Parse(serverInfo.MaxMem) < 512)
+        if (EditingConfig.MaxMemory < 512)
         {
             var confirm =
                 await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足",
@@ -126,27 +123,31 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             if (confirm == PopupResult.No) return;
         }
 
-        var coreTypeResult = await ServiceConnector.GetCoreType(serverInfo.CorePath);
-        if (!coreTypeResult.IsSuccess)
+        var coreTypeResult = await ServiceConnector.GetCoreType(CorePath);
+        var errors = coreTypeResult.GetErrors();
+        if (errors.Count > 0)
         {
-            await AppState.Coordinator.ThrowError("无法获取服务器类型信息", coreTypeResult.Error.Message);
+            await AppState.Coordinator.ThrowError("无法获取服务器类型信息", errors.FlattenToString());
             return;
         }
 
         var confirmResult = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo,
-            "确定添加此服务器吗？",
-            $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreTypeResult.Value.Explain()}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
+            "确定添加此服务器吗？", $@"服务器信息：
+名称：{immutable.ServerName}
+Java路径：{immutable.JavaPath}
+核心文件路径：{CorePath}
+服务器类型：{coreTypeResult.Value.Explain()}
+内存范围：{immutable.MinMemory} ~ {immutable.MaxMemory}
+附加JVM参数：{immutable.ExtraJvmArgs}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = AppState.Coordinator.SubmitServiceError(await Connector.AddServerUsingCore(serverInfo, CorePath));
+            var success =
+                await AppState.Coordinator.SubmitServiceError(
+                    await Connector.AddServerUsingCore(immutable, CorePath));
             if (success.IsSuccess)
             {
                 AppState.Coordinator.Notify(NotifyType.Success, null, "服务器配置成功！");
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
-            }
-            else
-            {
-                await success;
             }
         }
     }
@@ -158,15 +159,15 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     private async Task EditServer()
     {
         var id = AppState.SelectedServerId;
-        FormedServerConfig info = new(ServerName, "", MinMem, MaxMem, JavaPath, ExtJvm);
-        var vResult = await ServiceConnector.ValidateNewServerConfig(info, true);
-        if (vResult.IsFailed)
+        var vResult = await ServiceConnector.ValidateNewServerConfig(EditingConfig, true);
+        var errors = vResult.GetErrors();
+        if (errors.Count > 0)
         {
-            await AppState.Coordinator.ThrowError("表单错误", vResult.Error.Message);
+            await AppState.Coordinator.ThrowError("表单错误", errors.GetMessages());
             return;
         }
 
-        if (int.Parse(info.MaxMem) < 512)
+        if (EditingConfig.MaxMemory < 512)
         {
             var confirm =
                 await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo, "内存可能不足",
@@ -176,10 +177,15 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
 
         var confirmResult = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo,
             "确定修改此服务器吗？",
-            $"服务器信息：\n服务器路径：{info.CorePath}\n名称：{info.ServerName}\nJava路径：{info.JavaPath}\n内存范围：{info.MinMem}MB ~ {info.MaxMem}MB\n附加JVM参数：{info.ExtJvm}"));
+            $@"服务器信息：
+服务器路径：{EditingConfig.ServerPath}
+名称：{EditingConfig.ServerName}
+Java路径：{EditingConfig.JavaPath}
+内存范围：{EditingConfig.MinMemory}MB ~ {EditingConfig.MaxMemory}MB
+附加JVM参数：{EditingConfig.ExtraJvmArgs}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = await AppState.Coordinator.SubmitServiceError(await Connector.EditServer(id, info));
+            var success = await AppState.Coordinator.SubmitServiceError(await Connector.EditServer(id, EditingConfig));
             if (success.IsSuccess)
             {
                 AppState.Coordinator.Notify(NotifyType.Success, null, "服务器配置修改成功！");
@@ -245,15 +251,8 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
 
     #endregion
 
-    #region 表单绑定属性
-
-    [Reactive] [ServerNameValidator] public string ServerName { get; set; }
-    [Reactive] [ServerCorePathValidator] public string CorePath { get; set; }
-    [Reactive] public string ExistedServerPath { get; private set; }
-    [Reactive] [MinMemValidator] public string MinMem { get; set; }
-    [Reactive] [MaxMemValidator] public string MaxMem { get; set; }
-    [Reactive] [JavaPathValidator] public string JavaPath { get; set; }
-    [Reactive] [ExtJvmValidator] public string ExtJvm { get; set; }
+    [Reactive] public MutableLocatedServerConfig EditingConfig { get; set; }
+    [Reactive] public string CorePath { get; set; }
     private int _selectedJavaIndex;
 
     public int SelectedJavaIndex
@@ -269,8 +268,6 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         return AppState.CurrentJavaDict.TryGetValue(index, out var info) ? info.Path : string.Empty;
     }
 
-    #endregion
-
     #region 重置表单
 
     public void ClearForm(RightPageState rps)
@@ -281,34 +278,19 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             {
                 if (!AppState.CurrentServerConfigs.TryGetValue(AppState.SelectedServerId, out var tmp))
                     throw new Exception("选中的服务器不存在已经被读取的配置。\nLSL作者认为LSL理论上不应该抛出该异常，因为您不可能在不存在该服务器时编辑其配置。");
-                DeployConfig(tmp.LocatedConfig);
+                EditingConfig = tmp.LocatedConfig.CreateDraft();
                 break;
             }
             case RightPageState.AddCore:
             case RightPageState.AddFolder:
             {
-                ServerName = string.Empty;
+                EditingConfig = MutableLocatedServerConfig.New;
                 CorePath = string.Empty;
-                MinMem = string.Empty;
-                MaxMem = string.Empty;
-                ExistedServerPath = string.Empty;
                 SelectedJavaIndex = 0;
-                JavaPath = GetJavaPath(0);
-                ExtJvm = "-Dlog4j2.formatMsgNoLookups=true";
+                EditingConfig.JavaPath = GetJavaPath(0);
                 break;
             }
         }
-    }
-
-    private void DeployConfig(LocatedServerConfig config)
-    {
-        ServerName = config.ServerName;
-        CorePath = config.ServerPath;
-        MinMem = config.MinMemory.ToString();
-        MaxMem = config.MaxMemory.ToString();
-        ExistedServerPath = string.Empty;
-        JavaPath = config.JavaPath;
-        ExtJvm = config.ExtraJvmArgs;
     }
 
     #endregion

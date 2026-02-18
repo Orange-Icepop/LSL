@@ -6,7 +6,7 @@ namespace LSL.Common.Utilities.Minecraft;
 public static class ServerConfigHelper
 {
     /// <summary>
-    ///     Read the LSL server config of the specified server folder.
+    /// Read the LSL server config of the specified server folder.
     /// </summary>
     /// <param name="path">The server's directory</param>
     /// <param name="v1Read">Determine whether the first version of ServerConfig (lslconfig.json) should be included</param>
@@ -33,4 +33,5 @@ public static class ServerConfigHelper
         return Result.Fail<LocatedServerConfig>(new Error(
             "Target path doesn't contain any server config file of LSL"));
     }
+    
 }
