@@ -11,16 +11,15 @@
         <StackPanel>
             <controls:MyCard Text="网页面板设置">
                 <StackPanel Margin="25,40,23,15">
-                    <CheckBox Margin="0,10,0,5" IsChecked="{Binding ConfigVM.PanelEnable}">开启LSL网页面板</CheckBox>
+                    <CheckBox Margin="0,10,0,5" IsChecked="{Binding ConfigVM.DaemonConfigs.WebPanelAutoStart}">自动开启LSL网页面板</CheckBox>
                     <DockPanel Margin="0,5,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0" Text="监听端口" />
                         <MaskedTextBox Watermark="0~65535"
                                        HorizontalAlignment="Left"
                                        Width="100"
-                                       Text="{Binding ConfigVM.PanelPort}" />
+                                       Text="{Binding ConfigVM.WebConfigs.PanelPort}" />
                     </DockPanel>
-                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.PanelMonitor}">显示性能占用</CheckBox>
-                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.PanelTerminal}">显示终端输出</CheckBox>
+                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.WebConfigs.PerformanceMonitoring}">显示性能占用</CheckBox>
                 </StackPanel>
             </controls:MyCard>
         </StackPanel>

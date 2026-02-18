@@ -11,17 +11,9 @@
         <StackPanel>
             <controls:MyCard Text="常规设置">
                 <StackPanel Margin="25,40,23,15">
-                    <CheckBox Margin="0,10,0,5" IsChecked="{Binding ConfigVM.AutoEula}">自动同意EULA</CheckBox>
-                    <DockPanel Margin="0,5,0,5">
-                        <TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Text="进程优先级" />
-                        <ComboBox Name="Priority" Width="300" SelectedIndex="{Binding ConfigVM.AppPriority}">
-                            <ComboBoxItem Content="低" />
-                            <ComboBoxItem Content="中" />
-                            <ComboBoxItem Content="高" />
-                        </ComboBox>
-                    </DockPanel>
-                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.EndServerWhenClose}">关闭启动器时终止服务器进程</CheckBox>
-                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.Daemon}">保持后台进程开启</CheckBox>
+                    <CheckBox Margin="0,10,0,5" IsChecked="{Binding ConfigVM.DaemonConfigs.AutoEula}">自动同意EULA</CheckBox>
+                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.DaemonConfigs.EndServerOnClose}">关闭启动器时终止服务器进程</CheckBox>
+                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.DesktopConfigs.EnableDaemonKeepRunning}">保持后台进程开启</CheckBox>
                 </StackPanel>
             </controls:MyCard>
 
@@ -49,13 +41,6 @@
                     </DockPanel>
                 </StackPanel>
             </controls:MyCard>
-
-            <controls:MyCard Text="终端设置">
-                <StackPanel Margin="25,40,23,15">
-                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.ColoringTerminal}">终端分层设色</CheckBox>
-                </StackPanel>
-            </controls:MyCard>
-
         </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -33,8 +33,8 @@
                                        Margin="0,10,0,10" Command="{Binding PublicCmd.CheckUpdateCmd}">
                         检查更新
                     </controls:MyButton>
-                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.AutoUpdate}">启动时自动检查更新</CheckBox>
-                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.BetaUpdate}">更新测试版</CheckBox>
+                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.DesktopConfigs.AutoCheckUpdate}">启动时自动检查更新</CheckBox>
+                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.DesktopConfigs.BetaUpdate}">更新测试版</CheckBox>
                 </StackPanel>
             </controls:MyCard>
             <controls:MyCard Text="相关链接">

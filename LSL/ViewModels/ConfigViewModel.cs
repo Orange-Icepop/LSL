@@ -74,9 +74,9 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     #region 核心配置数据
 
-    [Reactive] public MutableDaemonConfig? DaemonConfigs { get; set; }
-    [Reactive] public MutableWebConfig? WebConfigs { get; set; }
-    [Reactive] public MutableDesktopConfig? DesktopConfigs { get; set; }
+    [Reactive] public MutableDaemonConfig DaemonConfigs { get; private set; } = new DaemonConfig().CreateDraft();
+    [Reactive] public MutableWebConfig WebConfigs { get; private set; } = new WebConfig().CreateDraft();
+    [Reactive] public MutableDesktopConfig DesktopConfigs { get; private set; } = new DesktopConfig().CreateDraft();
 
     #endregion
 
@@ -102,9 +102,9 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     public async Task SaveConfigAsync()
     {
-        var res = await Connector.SaveDaemonConfig(DaemonConfigs?.FinishDraft())
-            .Bind(_ => Connector.SaveWebConfig(WebConfigs?.FinishDraft()))
-            .Bind(_ => Connector.SaveDesktopConfig(DesktopConfigs?.FinishDraft()))
+        var res = await Connector.SaveDaemonConfig(DaemonConfigs.FinishDraft())
+            .Bind(_ => Connector.SaveWebConfig(WebConfigs.FinishDraft()))
+            .Bind(_ => Connector.SaveDesktopConfig(DesktopConfigs.FinishDraft()))
             .Bind(_ => Result.Ok());
         await AppState.Coordinator.SubmitServiceError(res, "保存配置时出现错误", true);
     }
