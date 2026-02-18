@@ -119,15 +119,15 @@ public partial class ShellViewModel : ViewModelBase
 
     private async Task AutoCheckUpdates()
     {
-        if (AppState.DesktopConfigs?.AutoCheckUpdate is true)
+        if (AppState.DesktopConfigs.AutoCheckUpdate)
             await ServeCon.CheckForUpdates();
     }
 
     private async Task<int> PreExitOperations() // 退出事件处理
     {
-        await ServeCon.SaveDesktopConfig();
-        if (AppState.DesktopConfigs?.EnableDaemonKeepRunning is true) return 1;
-        if (AppState.DaemonConfigs?.EndServerOnClose is true)
+        await ConfigVM.SaveConfigAsync();
+        if (AppState.DesktopConfigs.EnableDaemonKeepRunning) return 1;
+        if (AppState.DaemonConfigs.EndServerOnClose)
         {
             await ServeCon.EndAllServers();
         }

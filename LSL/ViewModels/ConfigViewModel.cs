@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -13,7 +11,6 @@ using FluentResults.Extensions;
 using LSL.Common.Models.AppConfig;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
-using LSL.Common.Validation;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -28,6 +25,9 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         SelectedServerConfig = IndexedServerConfig.None;
         SelectedServerName = string.Empty;
         SelectedServerPath = string.Empty;
+        DaemonConfigs = AppState.DaemonConfigs.CreateDraft();
+        WebConfigs = AppState.WebConfigs.CreateDraft();
+        DesktopConfigs = AppState.DesktopConfigs.CreateDraft();
         AppState.WhenAnyValue(stateLayer => stateLayer.CurrentJavaDict)
             .Select(s => new FlatTreeDataGridSource<JavaInfo>(s.Values)
             {
@@ -74,9 +74,9 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     #region 核心配置数据
 
-    [Reactive] public MutableDaemonConfig DaemonConfigs { get; private set; } = new DaemonConfig().CreateDraft();
-    [Reactive] public MutableWebConfig WebConfigs { get; private set; } = new WebConfig().CreateDraft();
-    [Reactive] public MutableDesktopConfig DesktopConfigs { get; private set; } = new DesktopConfig().CreateDraft();
+    [Reactive] public MutableDaemonConfig DaemonConfigs { get; private set; }
+    [Reactive] public MutableWebConfig WebConfigs { get; private set; }
+    [Reactive] public MutableDesktopConfig DesktopConfigs { get; private set; }
 
     #endregion
 

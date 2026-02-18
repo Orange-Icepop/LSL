@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -92,7 +91,7 @@ public class AppStateLayer : ReactiveObject
 
     public ILoggerFactory LoggerFactory { get; }
     private ILogger<AppStateLayer> Logger { get; }
-    public DialogCoordinator Coordinator { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
+    public DialogCoordinator Coordinator { get; } // 传到所有VM里面太麻烦了，方便起见就直接放在这儿了
     public PublicCommand Commands { get; }
     public IObservable<ImmutableDictionary<int, IndexedServerConfig>> ServerConfigChanged { get; }
     public IObservable<int> ServerIndexChanged { get; }
@@ -174,8 +173,8 @@ public class AppStateLayer : ReactiveObject
 
     #region 配置相关
 
-    [Reactive] public DaemonConfig? DaemonConfigs { get; set; } = null;
-    [Reactive] public WebConfig? WebConfigs { get; set; } = null;
+    [Reactive] public DaemonConfig DaemonConfigs { get; set; } = new();
+    [Reactive] public WebConfig WebConfigs { get; set; } = new();
     [Reactive] public DesktopConfig DesktopConfigs { get; set; } = new();
 
     [Reactive]
