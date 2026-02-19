@@ -461,9 +461,9 @@ public class ServiceConnector
         });
     }
 
-    public async Task<Result> AddServerFolder(LocatedServerConfig config)
+    public async Task<Result> AddServerFolder(LocatedServerConfig config, IProgress<string>? progress = null)
     {
-        var result = await _configManager.AddServerFolder(config); // TODO:进度
+        var result = await _configManager.AddServerFolder(config, progress); // TODO:进度的后台运行与报告
         return await result.Bind(async Task<Result> (dict) =>
         {
             await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = dict.ToImmutableDictionary());

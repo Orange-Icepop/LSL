@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
+using FluentResults;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
 using LSL.Common.Models.ServerConfig;
@@ -98,6 +99,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
                 EditingConfig.ServerPath = parentPath;
                 CorePath = result;
                 EditingConfig.ServerName = parentName;
+                EditingConfig.CommonCoreInfo = new CommonCoreConfigV1() { JarName = file.Name };
             });
         }
     }
@@ -107,15 +109,16 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
     private async Task AddServerCore()
     {
         var vResult = await EditingConfig.CheckAndFixAsync(true);
-        if (vResult.IsFailed)
+        var vErrors = vResult.GetErrors();
+        if (vErrors.Count > 0)
         {
-            await AppState.Coordinator.SubmitServiceError(vResult, "表单错误");
+            await AppState.Coordinator.ThrowError("表单错误", vErrors.GetMessages());
             return;
         }
 
-        var immutable = EditingConfig.FinishDraft();
+        var immutable = vResult.Value;
 
-        if (EditingConfig.MaxMemory < 512)
+        if (immutable.MaxMemory < 512)
         {
             var confirm =
                 await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足",
@@ -123,27 +126,23 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
             if (confirm == PopupResult.No) return;
         }
 
-        var coreTypeResult = await ServiceConnector.GetCoreType(CorePath);
-        var errors = coreTypeResult.GetErrors();
-        if (errors.Count > 0)
-        {
-            await AppState.Coordinator.ThrowError("无法获取服务器类型信息", errors.FlattenToString());
-            return;
-        }
+        var coreTypeResult = await HandleCoreType(await CoreTypeHelper.GetCoreType(CorePath));
+
+        if (coreTypeResult.Item1 is PopupResult.No) return;
 
         var confirmResult = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo,
             "确定添加此服务器吗？", $@"服务器信息：
 名称：{immutable.ServerName}
 Java路径：{immutable.JavaPath}
 核心文件路径：{CorePath}
-服务器类型：{coreTypeResult.Value.Explain()}
+服务器类型：{coreTypeResult.Item2.Explain()}
 内存范围：{immutable.MinMemory} ~ {immutable.MaxMemory}
 附加JVM参数：{immutable.ExtraJvmArgs}"));
         if (confirmResult == PopupResult.Yes)
         {
             var success =
                 await AppState.Coordinator.SubmitServiceError(
-                    await Connector.AddServerUsingCore(immutable, CorePath));
+                    await Connector.AddServerUsingCore(immutable, CorePath), "添加服务器时出现错误");
             if (success.IsSuccess)
             {
                 AppState.Coordinator.Notify(NotifyType.Success, null, "服务器配置成功！");
@@ -159,15 +158,17 @@ Java路径：{immutable.JavaPath}
     private async Task EditServer()
     {
         var id = AppState.SelectedServerId;
-        var vResult = await ServiceConnector.ValidateNewServerConfig(EditingConfig, true);
+        var vResult = await EditingConfig.CheckAndFixAsync();
         var errors = vResult.GetErrors();
         if (errors.Count > 0)
         {
             await AppState.Coordinator.ThrowError("表单错误", errors.GetMessages());
             return;
         }
+        
+        var immutable = vResult.Value;
 
-        if (EditingConfig.MaxMemory < 512)
+        if (immutable.MaxMemory < 512)
         {
             var confirm =
                 await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo, "内存可能不足",
@@ -178,14 +179,14 @@ Java路径：{immutable.JavaPath}
         var confirmResult = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo,
             "确定修改此服务器吗？",
             $@"服务器信息：
-服务器路径：{EditingConfig.ServerPath}
-名称：{EditingConfig.ServerName}
-Java路径：{EditingConfig.JavaPath}
-内存范围：{EditingConfig.MinMemory}MB ~ {EditingConfig.MaxMemory}MB
-附加JVM参数：{EditingConfig.ExtraJvmArgs}"));
+服务器路径：{immutable.ServerPath}
+名称：{immutable.ServerName}
+Java路径：{immutable.JavaPath}
+内存范围：{immutable.MinMemory}MB ~ {immutable.MaxMemory}MB
+附加JVM参数：{immutable.ExtraJvmArgs}"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = await AppState.Coordinator.SubmitServiceError(await Connector.EditServer(id, EditingConfig));
+            var success = await AppState.Coordinator.SubmitServiceError(await Connector.EditServer(id, immutable));
             if (success.IsSuccess)
             {
                 AppState.Coordinator.Notify(NotifyType.Success, null, "服务器配置修改成功！");
@@ -200,23 +201,17 @@ Java路径：{EditingConfig.JavaPath}
 
     private async Task AddServerFolder()
     {
-        FormedServerConfig serverInfo = new(ServerName, CorePath, MinMem, MaxMem, JavaPath, ExtJvm);
-        var vResult = await ServiceConnector.ValidateNewServerConfig(serverInfo);
+        var vResult = await EditingConfig.CheckAndFixAsync();
+        var vErrors = vResult.GetErrors();
         if (vResult.IsFailed)
         {
-            await AppState.Coordinator.ThrowError("表单错误", vResult.Error.Message);
+            await AppState.Coordinator.ThrowError("表单错误", vErrors.GetMessages());
             return;
         }
-
-        if (vResult.IsWarning)
-        {
-            var confirm =
-                await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo,
-                    "未知的Minecraft核心文件", vResult.Error.Message));
-            if (confirm == PopupResult.No) return;
-        }
-
-        if (int.Parse(serverInfo.MaxMem) < 512)
+        
+        var immutable = vResult.Value;
+        
+        if (immutable.MaxMemory < 512)
         {
             var confirm =
                 await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo, "内存可能不足",
@@ -224,27 +219,27 @@ Java路径：{EditingConfig.JavaPath}
             if (confirm == PopupResult.No) return;
         }
 
-        var coreTypeResult = await ServiceConnector.GetCoreType(serverInfo.CorePath);
-        if (!coreTypeResult.IsSuccess)
-        {
-            await AppState.Coordinator.ThrowError("无法获取服务器类型信息", coreTypeResult.Error.Message);
-            return;
-        }
+        var coreTypeResult = await HandleCoreType(await CoreTypeHelper.GetCoreType(CorePath));
+
+        if (coreTypeResult.Item1 is PopupResult.No) return;
 
         var confirmResult = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.InfoYesNo,
             "确定添加此服务器吗？",
-            $"服务器信息：\n名称：{serverInfo.ServerName}\nJava路径：{serverInfo.JavaPath}\n核心文件路径：{serverInfo.CorePath}\n服务器类型：{coreTypeResult.Value}\n内存范围：{serverInfo.MinMem} ~ {serverInfo.MaxMem}\n附加JVM参数：{serverInfo.ExtJvm}"));
+            $@"服务器信息：
+名称：{immutable.ServerName}
+Java路径：{immutable.JavaPath}
+服务器路径：{immutable.ServerPath}
+服务器类型：{coreTypeResult.Item2}
+内存范围：{immutable.MinMemory} ~ {immutable.MaxMemory}
+附加JVM参数：{immutable.ExtraJvmArgs}
+注意：如果该服务器没有位于LSL的服务器目录中，将进行一次完整的服务器拷贝，这可能耗费极长时间。请确保有足够的储存空间，否则请手动将服务器移动至LSL的服务器目录下。"));
         if (confirmResult == PopupResult.Yes)
         {
-            var success = AppState.Coordinator.SubmitServiceError(await Connector.AddServerFolder(serverInfo));
+            var success = await AppState.Coordinator.SubmitServiceError(await Connector.AddServerFolder(immutable));// TODO:等待/立即结束
             if (success.IsSuccess)
             {
                 AppState.Coordinator.Notify(NotifyType.Success, null, "服务器配置成功！");
                 MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.FullScreenToCommon));
-            }
-            else
-            {
-                await success;
             }
         }
     }
@@ -294,4 +289,41 @@ Java路径：{EditingConfig.JavaPath}
     }
 
     #endregion
+
+    private async Task<(PopupResult, ServerCoreType)> HandleCoreType(Result<ServerCoreType> result)
+    {
+        var errors = result.GetErrors();
+        if (errors.Count > 0)
+        {
+            await AppState.Coordinator.ThrowError("获取服务器类型信息时发生错误", errors.FlattenToString());
+            return (PopupResult.No, ServerCoreType.Error);
+        }
+        
+        switch (result.Value)
+        {
+            case ServerCoreType.ForgeInstaller:
+            {
+                await AppState.Coordinator.ThrowError("服务器类型错误", "您选择的文件是一个Forge安装器，而不是一个Minecraft服务端核心文件。LSL暂不支持Forge服务器的添加与启动。");
+                return (PopupResult.No, ServerCoreType.ForgeInstaller);
+            }
+            case ServerCoreType.FabricInstaller:
+            {
+                await AppState.Coordinator.ThrowError("服务器类型错误", "您选择的文件是一个Fabric安装器，而不是一个Minecraft服务端核心文件。请下载Fabric官方服务器jar文件，而不是安装器。");
+                return (PopupResult.No, ServerCoreType.FabricInstaller);
+            }
+            case ServerCoreType.Unknown:
+            {
+                return (await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(PopupType.WarningYesNo, "未知服务器类型", @"LSL无法确认您选择的文件是否为Minecraft服务端核心文件。
+这可能是由于LSL没有收集足够的关于服务器核心的辨识信息造成的。如果这是确实一个Minecraft服务端核心并且具有一定的知名度，请您前往LSL的仓库（https://github.com/Orange-Icepop/LSL）提交相关Issue。
+您可以直接点击确认绕过校验，但是LSL及其开发团队不为因此造成的后果作担保。")), ServerCoreType.Unknown);
+            }
+            case ServerCoreType.Client:
+            {
+                await AppState.Coordinator.ThrowError("服务器类型错误", "您选择的文件是一个Minecraft客户端核心文件，而不是一个服务端核心文件。");
+                return (PopupResult.No, ServerCoreType.Client);
+            }
+            default:
+                return (PopupResult.Yes, result.Value);
+        }
+    }
 }
