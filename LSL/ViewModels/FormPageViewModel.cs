@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -26,6 +28,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         EditingConfig = MutableLocatedServerConfig.New;
         CorePath = string.Empty;
         JavaList = [];
+        ExtraJvmArgs = string.Empty;
         // end
         this.WhenAnyValue(formPageVM => formPageVM.SelectedJavaIndex)
             .ObserveOn(RxApp.MainThreadScheduler)
@@ -88,6 +91,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
                 {
                     EditingConfig = res.Value.CreateDraft();
                     EditingConfig.ServerPath = parentPath;
+                    DisplayJvmArgs();
                 });
             }
         }
@@ -108,6 +112,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
 
     private async Task AddServerCore()
     {
+        await Dispatcher.UIThread.InvokeAsync(DeployJvmArgs);
         var vResult = await EditingConfig.CheckAndFixAsync(true);
         var vErrors = vResult.GetErrors();
         if (vErrors.Count > 0)
@@ -157,6 +162,7 @@ Java路径：{immutable.JavaPath}
 
     private async Task EditServer()
     {
+        await Dispatcher.UIThread.InvokeAsync(DeployJvmArgs);
         var id = AppState.SelectedServerId;
         var vResult = await EditingConfig.CheckAndFixAsync();
         var errors = vResult.GetErrors();
@@ -201,6 +207,7 @@ Java路径：{immutable.JavaPath}
 
     private async Task AddServerFolder()
     {
+        await Dispatcher.UIThread.InvokeAsync(DeployJvmArgs);
         var vResult = await EditingConfig.CheckAndFixAsync();
         var vErrors = vResult.GetErrors();
         if (vResult.IsFailed)
@@ -246,8 +253,9 @@ Java路径：{immutable.JavaPath}
 
     #endregion
 
-    [Reactive] public MutableLocatedServerConfig EditingConfig { get; set; }
+    [Reactive] public MutableLocatedServerConfig EditingConfig { get; private set; }
     [Reactive] public string CorePath { get; set; }
+    [Reactive] public string ExtraJvmArgs { get; set; }
     private int _selectedJavaIndex;
 
     public int SelectedJavaIndex
@@ -325,5 +333,22 @@ Java路径：{immutable.JavaPath}
             default:
                 return (PopupResult.Yes, result.Value);
         }
+    }
+
+    private void DisplayJvmArgs()
+    {
+        ExtraJvmArgs = string.Join('\n', EditingConfig.ExtraJvmArgs);
+    }
+
+    private void DeployJvmArgs()
+    {
+        var lines = ExtraJvmArgs.Split(
+            ["\r\n", "\r", "\n"],
+            StringSplitOptions.RemoveEmptyEntries
+        );
+
+        EditingConfig.ExtraJvmArgs = lines
+            .Select(line => line.Trim())
+            .ToList();
     }
 }
