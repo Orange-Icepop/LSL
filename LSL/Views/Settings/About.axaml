@@ -72,7 +72,7 @@
                                          CommandParameter="https://github.com/serilog/serilog" />
                 </StackPanel>
             </controls:MyCard>
-            <controls:MyCard Text="开源字体使用声明">
+            <controls:MyCard Text="开源字体与图标使用声明">
                 <StackPanel Margin="25,40,23,15">
                     <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/fonts/SmileySans.png"
                                          Title="SmileySans 得意黑"

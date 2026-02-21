@@ -32,7 +32,7 @@ public class MinMemValidator : ValidationAttribute // 最小内存验证器
     }
 }
 
-public class MaxMemValidator : ValidationAttribute // 最大内存验证器
+public class MaxMemValidator(string minMemPropertyName) : ValidationAttribute // 最大内存验证器
 {
     protected override ValidationResult? IsValid(object? value, ValidationContext context)
     {
