@@ -11,15 +11,6 @@ namespace LSL.ViewModels;
 
 public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
 {
-    [Reactive] public UserControl CurrentView { get; private set; }
-
-    #region 全屏顶栏板块
-
-    [Reactive] public string FullScreenTitle { get; set; }
-    [Reactive] public GeneralPageState CurrentMainPageState { get; private set; }
-
-    #endregion
-
     public BarRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
         CurrentView = new Bar();
@@ -32,11 +23,12 @@ public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
             .Subscribe(ChangeBarCont);
     }
 
+    [Reactive] public UserControl CurrentView { get; private set; }
+
     private void ChangeActiveButton(GeneralPageState state)
     {
         CurrentMainPageState = state;
         if (state == GeneralPageState.Empty)
-        {
             Dispatcher.UIThread.Post(() => // 使用Post延迟操作以避免CRP未更新
             {
                 FullScreenTitle = AppState.CurrentRightPage switch
@@ -47,7 +39,6 @@ public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
                     _ => ""
                 };
             });
-        }
     }
 
     private void ChangeBarCont(BarState state)
@@ -59,4 +50,11 @@ public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
             _ => CurrentView
         };
     }
+
+    #region 全屏顶栏板块
+
+    [Reactive] public string FullScreenTitle { get; set; }
+    [Reactive] public GeneralPageState CurrentMainPageState { get; private set; }
+
+    #endregion
 }

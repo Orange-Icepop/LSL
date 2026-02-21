@@ -8,10 +8,22 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Google.Protobuf" Version="3.32.1" />
-      <PackageReference Include="Google.Protobuf.Tools" Version="3.32.1" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-      <PackageReference Include="SharpZipLib" Version="1.4.2" />
+        <PackageReference Include="FluentResults" Version="4.0.0"/>
+        <PackageReference Include="Google.Protobuf" Version="3.32.1"/>
+        <PackageReference Include="Google.Protobuf.Tools" Version="3.32.1"/>
+        <PackageReference Include="Mutty" Version="1.0.63">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="PropertyChanged.Fody" Version="4.1.0" />
+        <PackageReference Include="SharpZipLib" Version="1.4.2"/>
+        <PackageReference Include="Tomlyn.Signed" Version="0.19.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Microsoft.Extensions.Http">
+            <HintPath>..\..\..\.nuget\packages\microsoft.extensions.http\9.0.9\lib\net8.0\Microsoft.Extensions.Http.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
 </Project>

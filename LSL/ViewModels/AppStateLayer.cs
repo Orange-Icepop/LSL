@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Frozen;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 using LSL.Common.Collections;
-using LSL.Common.Models;
+using LSL.Common.Models.AppConfig;
+using LSL.Common.Models.Minecraft;
+using LSL.Common.Models.ServerConfig;
 using LSL.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -15,16 +17,10 @@ namespace LSL.ViewModels;
 
 public class AppStateLayer : ReactiveObject
 {
-    public ILoggerFactory LoggerFactory { get; }
-    private ILogger<AppStateLayer> Logger { get; }
-    public InteractionUnits InteractionUnits { get; } // 为了方便把这东西放在这里了，实际上这个东西应该是全局的，但是ShellVM传到所有VM里面太麻烦了
-    public IObservable<FrozenDictionary<int, ServerConfig>> ServerConfigChanged { get; private set; }
-    public IObservable<int> ServerIndexChanged { get; private set; }
-    public IObservable<int> ServerIdChanged { get; private set; }
-
-    public AppStateLayer(InteractionUnits interUnit, ILoggerFactory loggerFactory)
+    public AppStateLayer(DialogCoordinator coordinator, PublicCommand commands, ILoggerFactory loggerFactory)
     {
-        InteractionUnits = interUnit;
+        Coordinator = coordinator;
+        Commands = commands;
         LoggerFactory = loggerFactory;
         Logger = LoggerFactory.CreateLogger<AppStateLayer>();
         CurrentBarState = BarState.Common;
@@ -46,16 +42,19 @@ public class AppStateLayer : ReactiveObject
             .Select(arg => arg.CommandType)
             .Subscribe(NavigateCommandHandler);
         // 配置公共监听属性
-        ServerConfigChanged = this.WhenAnyValue(stateLayer => stateLayer.CurrentServerConfigs).ObserveOn(RxApp.MainThreadScheduler);
-        ServerIndexChanged = this.WhenAnyValue(stateLayer => stateLayer.SelectedServerIndex).ObserveOn(RxApp.MainThreadScheduler);
-        ServerIdChanged = this.WhenAnyValue(stateLayer => stateLayer.SelectedServerId).ObserveOn(RxApp.MainThreadScheduler);
+        ServerConfigChanged = this.WhenAnyValue(stateLayer => stateLayer.CurrentServerConfigs)
+            .ObserveOn(RxApp.MainThreadScheduler);
+        ServerIndexChanged = this.WhenAnyValue(stateLayer => stateLayer.SelectedServerIndex)
+            .ObserveOn(RxApp.MainThreadScheduler);
+        ServerIdChanged = this.WhenAnyValue(stateLayer => stateLayer.SelectedServerId)
+            .ObserveOn(RxApp.MainThreadScheduler);
 
         #region 监听
 
         // 配置文件更新的连带更新
         ServerConfigChanged.Select(s => new ObservableCollection<int>(s.Keys))
             .ToPropertyEx(this, x => x.ServerIDs, scheduler: RxApp.MainThreadScheduler);
-        ServerConfigChanged.Select(s => new ObservableCollection<string>(s.Values.Select(v => v.Name)))
+        ServerConfigChanged.Select(s => new ObservableCollection<string>(s.Values.Select(v => v.ServerName)))
             .ToPropertyEx(this, x => x.ServerNames, scheduler: RxApp.MainThreadScheduler);
         ServerConfigChanged.Subscribe(configs =>
         {
@@ -90,6 +89,14 @@ public class AppStateLayer : ReactiveObject
         #endregion
     }
 
+    public ILoggerFactory LoggerFactory { get; }
+    private ILogger<AppStateLayer> Logger { get; }
+    public DialogCoordinator Coordinator { get; } // 传到所有VM里面太麻烦了，方便起见就直接放在这儿了
+    public PublicCommand Commands { get; }
+    public IObservable<ImmutableDictionary<int, IndexedServerConfig>> ServerConfigChanged { get; }
+    public IObservable<int> ServerIndexChanged { get; }
+    public IObservable<int> ServerIdChanged { get; private set; }
+
     #region 导航相关
 
     [Reactive] public BarState CurrentBarState { get; private set; }
@@ -101,22 +108,16 @@ public class AppStateLayer : ReactiveObject
 
     private void Navigate(BarState bar, GeneralPageState gen, RightPageState right)
     {
-        Navigate(new NavigateArgs() { BarTarget = bar, LeftTarget = gen, RightTarget = right });
+        Navigate(new NavigateArgs { BarTarget = bar, LeftTarget = gen, RightTarget = right });
     }
 
     private void Navigate(NavigateArgs args) // ASL不负责查重操作
     {
         (BarState, GeneralPageState, RightPageState) lastPage = (BarState.Common, CurrentGeneralPage,
             CurrentRightPage);
-        if (args.LeftTarget != GeneralPageState.Undefined)
-        {
-            CurrentGeneralPage = args.LeftTarget;
-        }
+        if (args.LeftTarget != GeneralPageState.Undefined) CurrentGeneralPage = args.LeftTarget;
 
-        if (args.RightTarget != RightPageState.Undefined)
-        {
-            CurrentRightPage = args.RightTarget;
-        }
+        if (args.RightTarget != RightPageState.Undefined) CurrentRightPage = args.RightTarget;
 
         if (args.BarTarget != BarState.Undefined)
         {
@@ -141,7 +142,10 @@ public class AppStateLayer : ReactiveObject
 
                 lastPage = (BarState.Common, GeneralPageState.Undefined, RightPageState.Undefined);
             }
-            else CurrentBarState = args.BarTarget;
+            else
+            {
+                CurrentBarState = args.BarTarget;
+            }
         }
 
         _lastPage = lastPage;
@@ -169,15 +173,16 @@ public class AppStateLayer : ReactiveObject
 
     #region 配置相关
 
-    [Reactive]
-    public FrozenDictionary<string, object> CurrentConfigs { get; set; } = FrozenDictionary<string, object>.Empty;
+    [Reactive] public DaemonConfig DaemonConfigs { get; set; } = new();
+    [Reactive] public WebConfig WebConfigs { get; set; } = new();
+    [Reactive] public DesktopConfig DesktopConfigs { get; set; } = new();
 
     [Reactive]
-    public FrozenDictionary<int, ServerConfig> CurrentServerConfigs { get; set; } =
-        FrozenDictionary<int, ServerConfig>.Empty;
+    public ImmutableDictionary<int, IndexedServerConfig> CurrentServerConfigs { get; set; } =
+        ImmutableDictionary<int, IndexedServerConfig>.Empty;
 
     [Reactive]
-    public FrozenDictionary<int, JavaInfo> CurrentJavaDict { get; set; } = FrozenDictionary<int, JavaInfo>.Empty;
+    public ImmutableDictionary<int, JavaInfo> CurrentJavaDict { get; set; } = ImmutableDictionary<int, JavaInfo>.Empty;
 
     #endregion
 
@@ -192,13 +197,9 @@ public class AppStateLayer : ReactiveObject
         {
             int fin;
             if (CurrentServerConfigs.Count == 0)
-            {
                 fin = -1;
-            }
             else if (value >= CurrentServerConfigs.Count)
-            {
                 fin = 0;
-            }
             else fin = value;
 
             this.RaiseAndSetIfChanged(ref _selectedServerIndex, fin);
@@ -213,8 +214,7 @@ public class AppStateLayer : ReactiveObject
 
     #region 服务器相关
 
-    [Reactive]
-    public ConcurrentDictionary<int, ObservableCollection<ColoredLine>> TerminalTexts { get; set; } = new();
+    [Reactive] public ConcurrentDictionary<int, ObservableCollection<ColoredLine>> TerminalTexts { get; set; } = new();
 
     [Reactive] public ConcurrentDictionary<int, ServerStatus> ServerStatuses { get; set; } = new();
     [Reactive] public ConcurrentDictionary<int, ObservableCollection<PlayerInfo>> UserDict { get; set; } = new();

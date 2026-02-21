@@ -5,23 +5,27 @@
              xmlns:controls="clr-namespace:LSL.Controls"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Download.ModDown">
-	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-		<StackPanel>
-			<controls:MyCard Text="Mod下载">
-				<StackPanel>
-					<DockPanel Margin="30,50,0,10">
-						<TextBlock DockPanel.Dock="Left" Text="名称" VerticalAlignment="Center" Margin="0,0,10,0"/>
-						<TextBox DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Center" Width="400"/>
-					</DockPanel>
-					<DockPanel Margin="30,0,0,20">
-						<controls:MyButton HorizontalAlignment="Left" ColorType="Highlight" Width="100" Height="40" Margin="0,0,10,0">搜索</controls:MyButton>
-						<controls:MyButton HorizontalAlignment="Left" Width="100" Height="40" Margin="0,0,10,0">清空条件</controls:MyButton>
-					</DockPanel>
-				</StackPanel>
-			</controls:MyCard>
-			<controls:MyCard>
-				<ContentControl/>
-			</controls:MyCard>
-		</StackPanel>
-	</ScrollViewer>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel>
+            <controls:MyCard Text="Mod下载">
+                <StackPanel>
+                    <DockPanel Margin="30,50,0,10">
+                        <TextBlock DockPanel.Dock="Left" Text="名称" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <TextBox DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                 Width="400" />
+                    </DockPanel>
+                    <DockPanel Margin="30,0,0,20">
+                        <controls:MyButton HorizontalAlignment="Left" ColorType="Highlight" Width="100" Height="40"
+                                           Margin="0,0,10,0">
+                            搜索
+                        </controls:MyButton>
+                        <controls:MyButton HorizontalAlignment="Left" Width="100" Height="40" Margin="0,0,10,0">清空条件</controls:MyButton>
+                    </DockPanel>
+                </StackPanel>
+            </controls:MyCard>
+            <controls:MyCard>
+                <ContentControl />
+            </controls:MyCard>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

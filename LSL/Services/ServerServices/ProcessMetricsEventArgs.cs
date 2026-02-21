@@ -1,8 +1,9 @@
 ﻿using System;
 
 namespace LSL.Services.ServerServices;
+
 /// <summary>
-/// Contains information about the CPU time and RAM usage of a Process.
+///     Contains information about the CPU time and RAM usage of a Process.
 /// </summary>
 /// <param name="cpuUsagePercent"></param>
 /// <param name="memoryUsageBytes"></param>
@@ -20,7 +21,7 @@ public class ProcessMetricsEventArgs(
 {
     /// <summary>The registered server's ID of this message.</summary>
     public int ServerId { get; } = serverId;
-    
+
     /// <summary>CPU usage of all cores.</summary>
     public double CpuUsagePercent { get; } = cpuUsagePercent;
 
@@ -29,7 +30,7 @@ public class ProcessMetricsEventArgs(
 
     /// <summary>RAM usage percent.</summary>
     public double MemoryUsagePercent { get; } = (double)memoryUsageBytes / allocatedMemoryBytes * 100;
-    
+
     /// <summary>Whether the server process has exited or not.</summary>
     public bool IsProcessExited { get; } = isProcessExited;
 

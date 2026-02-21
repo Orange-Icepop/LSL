@@ -13,38 +13,40 @@
                         BorderThickness="{TemplateBinding BorderThickness}"
                         Background="{TemplateBinding Background}"
                         CornerRadius="5">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" FlowDirection="LeftToRight">
-                        <Path Data="{TemplateBinding Icon}" Width="15" Margin="0,0,7,2" VerticalAlignment="Center" Fill="{TemplateBinding Foreground}" />
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal"
+                                FlowDirection="LeftToRight">
+                        <Path Data="{TemplateBinding Icon}" Width="15" Margin="0,0,7,2" VerticalAlignment="Center"
+                              Fill="{TemplateBinding Foreground}" />
                         <TextBlock Text="{TemplateBinding Title}" Foreground="{TemplateBinding Foreground}"
                                    FontSize="15" VerticalAlignment="Center" />
                     </StackPanel>
                 </Border>
             </ControlTemplate>
         </Setter>
-        <Setter Property="Background" Value="{DynamicResource OBlue}"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Foreground" Value="White"/>
-        <Setter Property="Width" Value="75"/>
-        <Setter Property="Height" Value="35"/>
-        <Setter Property="Margin" Value="5"/>
+        <Setter Property="Background" Value="{DynamicResource OBlue}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Width" Value="75" />
+        <Setter Property="Height" Value="35" />
+        <Setter Property="Margin" Value="5" />
         <Style Selector="^:pointerover">
-            <Setter Property="Background" Value="{DynamicResource OBlueBar}"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Background" Value="{DynamicResource OBlueBar}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="20" />
         </Style>
         <Style Selector="^:selected">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="{DynamicResource OBlue}"/>
-            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="{DynamicResource OBlue}" />
+            <Setter Property="FontSize" Value="20" />
         </Style>
         <Style Selector="^:pressed">
             <Setter Property="RenderTransform" Value="scale(0.98)" />
         </Style>
         <Setter Property="Transitions">
             <Transitions>
-                <BrushTransition Property="Background" Duration="0:0:0.1"/>
-                <BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
-                <BrushTransition Property="Foreground" Duration="0:0:0.1"/>
+                <BrushTransition Property="Background" Duration="0:0:0.1" />
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+                <BrushTransition Property="Foreground" Duration="0:0:0.1" />
             </Transitions>
         </Setter>
     </Style>

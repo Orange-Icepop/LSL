@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
-using Avalonia.Controls.Primitives;
 using LSL.Models;
 
 namespace LSL.Controls;
@@ -18,13 +17,13 @@ public class MyLeftButton : Button
             o => o.CurrentPageState,
             (o, v) => o.CurrentPageState = v);
 
+    private RightPageState _currentPageState;
+
     public string Text
     {
         get => GetValue(TextProperty);
         set => SetValue(TextProperty, value);
     }
-
-    private RightPageState _currentPageState;
 
     public RightPageState CurrentPageState
     {

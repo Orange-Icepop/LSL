@@ -4,38 +4,38 @@
              xmlns:vm="using:LSL.ViewModels"
              x:DataType="vm:InitializationViewModel"
              RequestedThemeVariant="Light">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
-	<!--全局资源定义-->
-	<Application.Resources>
-		<ResourceDictionary>
-			<ResourceDictionary.MergedDictionaries>
-				<ResourceInclude Source="avares://LSL/Assets/Dictionaries/GlobalResources.axaml"/>
-				<ResourceInclude Source="avares://LSL/Assets/Dictionaries/GeometryResources.axaml"/>
-			</ResourceDictionary.MergedDictionaries>
-		</ResourceDictionary>
-	</Application.Resources>
-    
-	<Application.Styles>
-		<FluentTheme/>
-		<StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml"/>
-		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
-		<StyleInclude Source="avares://LSL/Assets/Dictionaries/GlobalStyles.axaml"/>
-		<StyleInclude Source="avares://LSL/Assets/Dictionaries/TemplatedStyles.axaml"/>
-	</Application.Styles>
-	<!--托盘图标-->
-	<TrayIcon.Icons>
-		<TrayIcons>
-			<TrayIcon Icon="/Assets/icon.ico"
-					  ToolTipText="Lime Server Launcher">
-				<TrayIcon.Menu>
-					<NativeMenu>
-						<NativeMenuItem Header="唤出主窗口" Command="{Binding ShowMainWindowCmd}"/>
-						<!--
+    <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+    <!--全局资源定义-->
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://LSL/Assets/Dictionaries/GlobalResources.axaml" />
+                <ResourceInclude Source="avares://LSL/Assets/Dictionaries/GeometryResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml" />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+        <StyleInclude Source="avares://LSL/Assets/Dictionaries/GlobalStyles.axaml" />
+        <StyleInclude Source="avares://LSL/Assets/Dictionaries/TemplatedStyles.axaml" />
+    </Application.Styles>
+    <!--托盘图标-->
+    <TrayIcon.Icons>
+        <TrayIcons>
+            <TrayIcon Icon="/Assets/icon.ico"
+                      ToolTipText="Lime Server Launcher">
+                <TrayIcon.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="唤出主窗口" Command="{Binding ShowMainWindowCmd}" />
+                        <!--
 						<NativeMenuItem Header="强制关闭所有服务器"/>
 						-->
-						<NativeMenuItemSeparator />
-						<NativeMenuItem Header="关闭应用程序" Command="{Binding TrayQuitCmd}"/>
-						<!--示例，NativeMenu可以嵌套
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="关闭应用程序" Command="{Binding TrayQuitCmd}" />
+                        <!--示例，NativeMenu可以嵌套
 						<NativeMenuItem Header="Settings">
 							<NativeMenu>
 								<NativeMenuItem Header="唤出主窗口"/>
@@ -44,9 +44,9 @@
 								<NativeMenuItem Header="关闭应用程序"/>
 							</NativeMenu>
 						</NativeMenuItem>-->
-					</NativeMenu>
-				</TrayIcon.Menu>
-			</TrayIcon>
-		</TrayIcons>
-	</TrayIcon.Icons>
+                    </NativeMenu>
+                </TrayIcon.Menu>
+            </TrayIcon>
+        </TrayIcons>
+    </TrayIcon.Icons>
 </Application>

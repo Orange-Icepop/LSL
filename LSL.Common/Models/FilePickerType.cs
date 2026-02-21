@@ -3,5 +3,5 @@
 public enum FilePickerType
 {
     CoreFile,
-    ZipFile,
+    ZipFile
 }

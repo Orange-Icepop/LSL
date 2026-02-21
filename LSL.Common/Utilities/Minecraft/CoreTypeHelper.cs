@@ -1,0 +1,92 @@
+﻿using System.Collections.Frozen;
+using System.Text;
+using FluentResults;
+using ICSharpCode.SharpZipLib.Zip;
+using LSL.Common.Models.ServerConfig;
+
+namespace LSL.Common.Utilities.Minecraft;
+
+/// <summary>
+///     The specified validator for recognizing different types of server core.
+/// </summary>
+public static class CoreTypeHelper
+{
+    private static readonly FrozenDictionary<string, ServerCoreType> s_coreTypeMap =
+        new Dictionary<string, ServerCoreType>
+        {
+            ["net.minecraft.server.MinecraftServer"] = ServerCoreType.Vanilla,
+            ["net.minecraft.bundler.Main"] = ServerCoreType.Vanilla,
+            ["net.minecraft.client.Main"] = ServerCoreType.Client,
+            ["net.minecraftforge.installer.SimpleInstaller"] = ServerCoreType.ForgeInstaller,
+            ["net.fabricmc.installer.Main"] = ServerCoreType.FabricInstaller,
+            ["net.minecraftforge.bootstrap.shim.Main"] = ServerCoreType.ForgeShim,
+            ["net.minecraftforge.fml.relauncher.ServerLaunchWrapper"] = ServerCoreType.OldForge,
+            ["net.fabricmc.installer.ServerLauncher"] = ServerCoreType.Fabric,
+            ["io.papermc.paperclip.Paperclip"] = ServerCoreType.Akarin,
+            ["io.izzel.arclight.server.Launcher"] = ServerCoreType.Arclight,
+            ["catserver.server.CatServerLaunch"] = ServerCoreType.CatServer,
+            ["foxlaunch.FoxServerLauncher"] = ServerCoreType.CatServer,
+            ["org.bukkit.craftbukkit.Main"] = ServerCoreType.CraftBukkit,
+            ["org.bukkit.craftbukkit.bootstrap.Main"] = ServerCoreType.CraftBukkit,
+            ["io.papermc.paperclip.Main"] = ServerCoreType.Paper,
+            ["org.leavesmc.leavesclip.Main"] = ServerCoreType.Leaves,
+            ["net.md_5.bungee.Bootstrap"] = ServerCoreType.LightFall,
+            ["com.mohistmc.MohistMCStart"] = ServerCoreType.Mohist,
+            ["com.mohistmc.MohistMC"] = ServerCoreType.Mohist,
+            ["com.destroystokyo.paperclip.Paperclip"] = ServerCoreType.Paper,
+            ["com.velocitypowered.proxy.Velocity"] = ServerCoreType.Velocity
+        }.ToFrozenDictionary();
+
+    public static async Task<Result<ServerCoreType>> GetCoreType(string? filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return Result.Fail<ServerCoreType>(new Error($"Param {nameof(filePath)} is null or empty"));
+        if (!File.Exists(filePath))
+            return Result.Fail<ServerCoreType>(new Error($"Cannot find core file {filePath}"));
+
+        var jarMainClassResult = await GetMainClass(filePath).ConfigureAwait(false);
+        return jarMainClassResult.Bind(line =>
+            Result.Ok(s_coreTypeMap.GetValueOrDefault(line, ServerCoreType.Unknown)));
+    }
+
+    // the following code is taken and modified from https://github.com/Orange-Icepop/JavaMainClassFinder
+    private static async Task<Result<string>> GetMainClass(string jarFilePath)
+    {
+        try
+        {
+            await using var stream = new FileStream(jarFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                81920, true);
+            using var zipFile = new ZipFile(stream);
+            var entry = zipFile.GetEntry("META-INF/MANIFEST.MF");
+            if (entry is null || entry.IsDirectory) return Result.Fail<string>("MANIFEST.MF not found");
+            await using var fStream = zipFile.GetInputStream(entry);
+            if (fStream is null) return Result.Fail<string>("Unable to read MANIFEST.MF");
+            using var reader = new StreamReader(fStream, Encoding.UTF8);
+            var mc = await FindMainClassLine(reader);
+            return mc is null
+                ? Result.Fail<string>("Cannot find Main-Class property in MANIFEST.MF")
+                : Result.Ok(mc);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Result.Fail<string>("Access denied: " + ex.Message);
+        }
+        catch (IOException ex)
+        {
+            return Result.Fail<string>("Error reading file: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail<string>("Error reading jar file: " + ex.Message);
+        }
+    }
+
+    private static async Task<string?> FindMainClassLine(StreamReader reader)
+    {
+        while (await reader.ReadLineAsync().ConfigureAwait(false) is { } line)
+            if (line.StartsWith("Main-Class:"))
+                return line["Main-Class:".Length..].Trim();
+
+        return null;
+    }
+}

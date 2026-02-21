@@ -7,6 +7,5 @@ public partial class DownloadSettings : UserControl
     public DownloadSettings()
     {
         InitializeComponent();
-            
     }
 }

@@ -10,8 +10,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\LSL.Common\LSL.Common.csproj" />
-      <ProjectReference Include="..\LSL\LSL.csproj" />
+        <ProjectReference Include="..\LSL.Common\LSL.Common.csproj"/>
+        <ProjectReference Include="..\LSL\LSL.csproj"/>
     </ItemGroup>
 
 </Project>

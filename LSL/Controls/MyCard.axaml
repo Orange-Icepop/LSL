@@ -16,7 +16,7 @@
                             Background="{TemplateBinding CardBackground}">
                         <Border.Transitions>
                             <Transitions>
-                                <BrushTransition Property="Background" Duration="0:0:0.2"/>
+                                <BrushTransition Property="Background" Duration="0:0:0.2" />
                             </Transitions>
                         </Border.Transitions>
                         <Grid Background="Transparent" Name="PART_Container" RowDefinitions="Auto,*">
@@ -29,7 +29,7 @@
                                        Foreground="{TemplateBinding TitleColor}">
                                 <TextBlock.Transitions>
                                     <Transitions>
-                                        <BrushTransition Property="Foreground" Duration="0:0:0.2"/>
+                                        <BrushTransition Property="Foreground" Duration="0:0:0.2" />
                                     </Transitions>
                                 </TextBlock.Transitions>
                             </TextBlock>
@@ -37,7 +37,7 @@
                                               Grid.Row="1"
                                               ContentTemplate="{TemplateBinding ContentTemplate}"
                                               Content="{TemplateBinding Content}"
-                                              Margin="0, -35, 0, 0"/>
+                                              Margin="0, -35, 0, 0" />
                         </Grid>
                     </Border>
                 </Grid>

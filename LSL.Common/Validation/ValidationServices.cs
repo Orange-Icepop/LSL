@@ -36,15 +36,8 @@ public class MaxMemValidator(string minMemPropertyName) : ValidationAttribute //
 {
     protected override ValidationResult? IsValid(object? value, ValidationContext context)
     {
-                
-        var minMemValueName = context.ObjectType.GetProperty(minMemPropertyName);
-        
-        if (minMemValueName is null) return new ValidationResult("无法找到最小内存字段用于验证");
-        
-        var minMemValue = minMemValueName.GetValue(context.ObjectInstance) as string;
-        
-        var result = CheckComponents.MaxMem(value as string, minMemValue);
-        return !result.Passed ? new ValidationResult(result.Reason) : ValidationResult.Success;
+        var result = CheckComponents.MaxMem(value as string);
+        return result.Passed ? ValidationResult.Success : new ValidationResult(result.Reason);
     }
 }
 
@@ -61,7 +54,7 @@ public class ExtJvmValidator : ValidationAttribute // 扩展参数验证器
 {
     protected override ValidationResult? IsValid(object? value, ValidationContext context)
     {
-        var result = CheckComponents.ExtJvm(value as string);
+        var result = CheckComponents.ExtraJvmArg(value as string);
         return result.Passed ? ValidationResult.Success : new ValidationResult(result.Reason);
     }
 }

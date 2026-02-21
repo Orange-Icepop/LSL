@@ -7,7 +7,7 @@
              x:Class="LSL.Views.MessageDialog"
              x:DataType="vm:InitializationViewModel">
     <Grid>
-        <Grid Background="#000000" Opacity="0.3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <Grid Background="#000000" Opacity="0.3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
         <Border Padding="10"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"

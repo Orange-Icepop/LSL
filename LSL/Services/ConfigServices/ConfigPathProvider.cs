@@ -2,6 +2,7 @@
 using System.IO;
 
 namespace LSL.Services.ConfigServices;
+
 /// <summary> The static class to provide paths for logic config processing. </summary>
 public static class ConfigPathProvider
 {
@@ -11,9 +12,9 @@ public static class ConfigPathProvider
 
     public static readonly string ConfigFilePath = Path.Combine(LSLFolder, "Config.json");
 
-    public static readonly string ServerConfigPath = Path.Combine(LSLFolder, "ServersConfig.json");
+    public static readonly string ServerConfigPath = Path.Combine(LSLFolder, "ServersConfig.toml");
 
-    public static readonly string JavaListPath = Path.Combine(LSLFolder, "JavaList.json");
+    public static readonly string JavaListPath = Path.Combine(LSLFolder, "JavaList.toml");
 
     public static readonly string ServersFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Servers");
 
@@ -21,7 +22,6 @@ public static class ConfigPathProvider
     {
         // 检查文件夹是否存在
         if (!Directory.Exists(folderPath))
-        {
             try
             {
                 // 测试写权限
@@ -31,10 +31,9 @@ public static class ConfigPathProvider
             {
                 return false;
             }
-        }
 
         // 执行文件读写测试
-        string testFilePath = Path.Combine(folderPath, $"permission_test_{Guid.NewGuid()}.tmp");
+        var testFilePath = Path.Combine(folderPath, $"permission_test_{Guid.NewGuid()}.tmp");
 
         try
         {
@@ -61,7 +60,9 @@ public static class ConfigPathProvider
                 if (File.Exists(testFilePath))
                     File.Delete(testFilePath);
             }
-            catch{}
+            catch
+            {
+            }
         }
     }
 }

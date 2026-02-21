@@ -23,6 +23,9 @@ public class ServerStatus : ReactiveObject
         IsOnline = isOnline;
     }
 
+    [Reactive] public bool IsRunning { get; private set; }
+    [Reactive] public bool IsOnline { get; private set; }
+
     public ServerStatus Update(bool isRunning, bool isOnline)
     {
         IsRunning = isRunning;
@@ -36,7 +39,4 @@ public class ServerStatus : ReactiveObject
         IsOnline = param.Item2;
         return this;
     }
-
-    [Reactive] public bool IsRunning { get; private set; }
-    [Reactive] public bool IsOnline { get; private set; }
 }

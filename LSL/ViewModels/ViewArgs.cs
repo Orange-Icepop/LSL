@@ -5,10 +5,18 @@ namespace LSL.ViewModels;
 
 #region MessageBus事件类
 
-public record NotifyArgs(int Type, string? Title, string? Message); // 通知条事件
-// 0消息，1成功，2警告，3错误
+public record NotifyArgs(NotifyType Type, string? Title, string? Message); // 通知条事件
+
+public enum NotifyType
+{
+    Info,
+    Success,
+    Warning,
+    Error
+}
 
 public record InvokePopupArgs(PopupType PType, string PTitle, string PContent);
+
 public enum PopupType
 {
     InfoConfirm,
@@ -16,7 +24,7 @@ public enum PopupType
     WarningYesNoCancel,
     WarningYesNo,
     WarningConfirm,
-    ErrorConfirm,
+    ErrorConfirm
 }
 
 public enum PopupResult
@@ -24,7 +32,7 @@ public enum PopupResult
     Confirm,
     Yes,
     No,
-    Cancel,
+    Cancel
 }
 
 public class ViewBroadcastArgs(Type target, string msg)
@@ -57,9 +65,9 @@ public enum WindowOperationArgType
     Hide, // to MainWindow only
     Show, // to MainWindow only
     RequestClose, // to MainWindow only
-    CheckForClose,// from MainWindow to ShellVM only
+    CheckForClose, // from MainWindow to ShellVM only
     ConfirmClose, // from ShellVM to MainWindow only
-    ForceClose, // to MainWindow only
+    ForceClose // to MainWindow only
 }
 
 public class WindowOperationArgs(WindowOperationArgType cType)
@@ -70,5 +78,7 @@ public class WindowOperationArgs(WindowOperationArgType cType)
 #endregion
 
 #region EventHandler事件类
+
 public record GeneralMetricsEventArgs(double CpuUsage, double RamUsage, long RamValue);
+
 #endregion

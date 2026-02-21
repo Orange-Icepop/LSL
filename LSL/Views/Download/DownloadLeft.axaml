@@ -7,17 +7,19 @@
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="600"
              x:Class="LSL.Views.Download.DownloadsLeft">
-	<DockPanel Width="150" LastChildFill="False">
-		<TextBlock DockPanel.Dock="Top" Text="服务器核心" Margin="10,10,0,0" Foreground="Gray"/>
-		<!--
+    <DockPanel Width="150" LastChildFill="False">
+        <TextBlock DockPanel.Dock="Top" Text="服务器核心" Margin="10,10,0,0" Foreground="Gray" />
+        <!--
 		<controls:MyLeftButton Width="150" DockPanel.Dock="Top" x:Name="AutoDownButton" Text="自动下载" Page="AutoDown" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Command="{Binding RightViewCmd}" CommandParameter="AutoDown"/>
 		<controls:MyLeftButton Width="150" DockPanel.Dock="Top" x:Name="ManualDownButton" Text="手动下载" Page="ManualDown" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Command="{Binding RightViewCmd}" CommandParameter="ManualDown"/>
 		-->
-		<controls:MyLeftButton Width="150" DockPanel.Dock="Top" x:Name="AddServerButton" Text="导入服务器" Page="AddServer" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Command="{Binding RightViewCmd}" CommandParameter="AddServer"/>
-		<!--
+        <controls:MyLeftButton Width="150" DockPanel.Dock="Top" x:Name="AddServerButton" Text="导入服务器" Page="AddServer"
+                               CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}"
+                               Command="{Binding RightViewCmd}" CommandParameter="AddServer" />
+        <!--
 		<TextBlock DockPanel.Dock="Top" Text="其他资源" Margin="10,10,0,0" Foreground="Gray"/>
 		<controls:MyLeftButton Width="150" DockPanel.Dock="Top" x:Name="ModDownButton" Text="Mod下载" Page="ModDown" CurrentPageState="{Binding LeftViewModel.CurrentRightPageState}" Command="{Binding RightViewCmd}" CommandParameter="ModDown"/>
 		<controls:MyButton DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" Width="130" Height="40" Command="{Binding DownloadConfigCmd}">下载源设置</controls:MyButton>
 		-->
-	</DockPanel>
+    </DockPanel>
 </UserControl>

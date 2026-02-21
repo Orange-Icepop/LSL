@@ -15,11 +15,9 @@ public partial class ServerTerminal : UserControl
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(ForceScroll);
     }
+
     public void ForceScroll(ViewBroadcastArgs args)
     {
-        if (args.Target == typeof(ServerTerminal) && args.Message == "ScrollToEnd")
-        {
-            Terminal.ForceScrollToBottom();
-        }
+        if (args.Target == typeof(ServerTerminal) && args.Message == "ScrollToEnd") Terminal.ForceScrollToBottom();
     }
 }

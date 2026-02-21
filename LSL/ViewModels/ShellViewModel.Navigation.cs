@@ -17,23 +17,6 @@ namespace LSL.ViewModels;
 
 public partial class ShellViewModel
 {
-    #region 导航相关
-
-    //创建切换触发方法
-    public ICommand LeftViewCmd { get; }
-    public ICommand RightViewCmd { get; }
-    public ICommand FullViewCmd { get; set; }
-    public ICommand FullViewBackCmd { get; set; }
-
-    //这一部分是多参数导航按钮的部分，由于设置别的VM会导致堆栈溢出且暂时没找到替代方案，所以先摆了
-    //还有就是本来希望可以创建一个方法来传递两个参数的，但是太麻烦了，还是先搁置了
-    public ICommand ServerConfigCmd { get; }
-    public ICommand PanelConfigCmd { get; }
-    public ICommand DownloadConfigCmd { get; }
-    public ICommand CommonConfigCmd { get; }
-
-    #endregion
-
     #region 左视图切换命令
 
     public async Task NavigateLeftView(string viewName, bool dislink = false)
@@ -55,7 +38,7 @@ public partial class ShellViewModel
             case "DownloadsLeft":
                 gps = GeneralPageState.Downloads;
                 if (!dislink)
-                    rps = RightPageState.AddServer;//TODO
+                    rps = RightPageState.AddServer; //TODO:开发完全之后换到下载核心页面
                 break;
             case "SettingsLeft":
                 gps = GeneralPageState.Settings;
@@ -74,9 +57,7 @@ public partial class ShellViewModel
     public async Task NavigateRightView(string viewName, bool force = false)
     {
         if (Enum.TryParse<RightPageState>(viewName, out var rightPageState))
-        {
             await NavigateToPage(GeneralPageState.Undefined, rightPageState, force);
-        }
         else Logger.LogError("Unknown right page name {rps}", viewName);
     }
 
@@ -91,13 +72,13 @@ public partial class ShellViewModel
         // 检查右视图重合
         if (rps == AppState.CurrentRightPage && !force) return;
         // 自动保存配置
-        if (AppState.CurrentGeneralPage == GeneralPageState.Settings) await ConfigVM.ConfirmConfigAsync();
+        if (AppState.CurrentGeneralPage == GeneralPageState.Settings) await ConfigVM.SaveConfigAsync();
         // 新视图预操作
         if (gps == GeneralPageState.Settings) await ConfigVM.TryCacheConfigFromFileAsync();
         // 导航
         MessageBus.Current.SendMessage(new NavigateArgs
             { BarTarget = BarState.Undefined, LeftTarget = gps, RightTarget = rps });
-        Logger.LogDebug("Page Switched: {Left}, {Right}",gps.ToString(),rps.ToString());
+        Logger.LogDebug("Page Switched: {Left}, {Right}", gps.ToString(), rps.ToString());
     }
 
     #endregion
@@ -116,7 +97,10 @@ public partial class ShellViewModel
             FormViewModel.ClearForm(rightPageState);
             Logger.LogDebug("Successfully navigated to {FullScreen}.", viewName);
         }
-        else Logger.LogError("This view is not a fullscreen view: {name}.", viewName);
+        else
+        {
+            Logger.LogError("This view is not a fullscreen view: {name}.", viewName);
+        }
     }
 
     #endregion
@@ -132,9 +116,24 @@ public partial class ShellViewModel
     }
 
     #endregion
+
+    #region 导航相关
+
+    //创建切换触发方法
+    public ICommand LeftViewCmd { get; }
+    public ICommand RightViewCmd { get; }
+    public ICommand FullViewCmd { get; set; }
+    public ICommand FullViewBackCmd { get; set; }
+
+    //这一部分是多参数导航按钮的部分，由于设置别的VM会导致堆栈溢出且暂时没找到替代方案，所以先摆了
+    //还有就是本来希望可以创建一个方法来传递两个参数的，但是太麻烦了，还是先搁置了
+    public ICommand ServerConfigCmd { get; }
+    public ICommand PanelConfigCmd { get; }
+    public ICommand DownloadConfigCmd { get; }
+    public ICommand CommonConfigCmd { get; }
+
+    #endregion
 }
-
-
 
 public enum NavigateCommandType
 {
@@ -143,14 +142,15 @@ public enum NavigateCommandType
     FullScreenToCommon
 }
 
-    
 #region ViewFactory穷举并创建所有视图
+
 public static class ViewFactory
 {
     private static readonly HomeLeft s_homeLeftView = new();
     private static readonly ServerLeft s_serverLeftView = new();
     private static readonly DownloadsLeft s_downloadsLeftView = new();
     private static readonly SettingsLeft s_settingsLeftView = new();
+
     public static UserControl CreateView(string viewName)
     {
         return viewName switch
@@ -186,15 +186,18 @@ public static class ViewFactory
             "PanelSettings" => new PanelSettings(),
             "StyleSettings" => new StyleSettings(),
             "About" => new About(),
-            _ => throw new ArgumentException($"未找到视图: {viewName}，应用程序可能已经损坏。"),
+            _ => throw new ArgumentException($"未找到视图: {viewName}，应用程序可能已经损坏。")
         };
     }
 }
+
 #endregion
 
 public static class NavigationCollection
 {
-    public static readonly ImmutableArray<RightPageState> FullScreenViews = [RightPageState.AddCore, RightPageState.ServerConfEdit, RightPageState.AddFolder];
+    public static readonly ImmutableArray<RightPageState> FullScreenViews =
+        [RightPageState.AddCore, RightPageState.ServerConfEdit, RightPageState.AddFolder];
 
-    public static readonly ImmutableArray<RightPageState> ServerRightPages = [RightPageState.ServerStat, RightPageState.ServerTerminal, RightPageState.ServerConf];
+    public static readonly ImmutableArray<RightPageState> ServerRightPages =
+        [RightPageState.ServerStat, RightPageState.ServerTerminal, RightPageState.ServerConf];
 }

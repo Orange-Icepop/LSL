@@ -30,18 +30,18 @@
                         <Run Text="{Binding Version}" />
                     </TextBlock>
                     <controls:MyButton ColorType="Highlight" HorizontalAlignment="Left" Width="90" Height="30"
-                                    Margin="0,10,0,10" Command="{Binding PublicCmd.CheckUpdateCmd}">
+                                       Margin="0,10,0,10" Command="{Binding PublicCmd.CheckUpdateCmd}">
                         检查更新
                     </controls:MyButton>
-                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.AutoUpdate}">启动时自动检查更新</CheckBox>
-                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.BetaUpdate}">更新测试版</CheckBox>
+                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.DesktopConfigs.AutoCheckUpdate}">启动时自动检查更新</CheckBox>
+                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.DesktopConfigs.BetaUpdate}">更新测试版</CheckBox>
                 </StackPanel>
             </controls:MyCard>
             <controls:MyCard Text="相关链接">
                 <StackPanel Margin="25,40,23,15">
                     <controls:MyButton Width="80" Height="30" Margin="0,10,0,10" HorizontalAlignment="Left"
-                                    Command="{Binding PublicCmd.OpenWebPageCmd}"
-                                    CommandParameter="https://github.com/Orange-Icepop/LSL/">
+                                       Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                       CommandParameter="https://github.com/Orange-Icepop/LSL/">
                         GitHub
                     </controls:MyButton>
                 </StackPanel>
@@ -49,37 +49,39 @@
             <controls:MyCard Text="开源库使用声明">
                 <StackPanel Margin="25,40,23,15">
                     <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/dotnet.ico" Title=".NET Runtime"
-                                      Info="开放公共语言运行库，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
-                                      CommandParameter="https://github.com/dotnet/runtime" />
-                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/AvaloniaUI.png" Title="AvaloniaUI"
-                                      Info="UI框架，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
-                                      CommandParameter="https://github.com/AvaloniaUI/Avalonia" />
-                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/ReactiveUI.png" Title="ReactiveUI"
-                                      Info="反应式UI辅助框架，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
-                                      CommandParameter="https://github.com/reactiveui/reactiveui" />
+                                         Info="开放公共语言运行库，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                         CommandParameter="https://github.com/dotnet/runtime" />
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/AvaloniaUI.png"
+                                         Title="AvaloniaUI"
+                                         Info="UI框架，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                         CommandParameter="https://github.com/AvaloniaUI/Avalonia" />
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/ReactiveUI.png"
+                                         Title="ReactiveUI"
+                                         Info="反应式UI辅助框架，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                         CommandParameter="https://github.com/reactiveui/reactiveui" />
                     <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/Json.Net.png"
-                                      Title="Newtonsoft.Json" Info="Json编解码器，MIT"
-                                      Command="{Binding PublicCmd.OpenWebPageCmd}"
-                                      CommandParameter="https://github.com/JamesNK/Newtonsoft.Json" />
-                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/sharpziplib.png" Title="SharpZipLib"
-                                      Info="解压缩库，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
-                                      CommandParameter="https://github.com/icsharpcode/SharpZipLib" />
+                                         Title="Newtonsoft.Json" Info="Json编解码器，MIT"
+                                         Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                         CommandParameter="https://github.com/JamesNK/Newtonsoft.Json" />
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/sharpziplib.png"
+                                         Title="SharpZipLib"
+                                         Info="解压缩库，MIT" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                         CommandParameter="https://github.com/icsharpcode/SharpZipLib" />
                     <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/lib/Serilog.png" Title="Serilog"
-                                      Info="日志记录库，Apache-2.0" Command="{Binding PublicCmd.OpenWebPageCmd}"
-                                      CommandParameter="https://github.com/serilog/serilog" />
+                                         Info="日志记录库，Apache-2.0" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                         CommandParameter="https://github.com/serilog/serilog" />
                 </StackPanel>
             </controls:MyCard>
             <controls:MyCard Text="开源字体与图标使用声明">
                 <StackPanel Margin="25,40,23,15">
-                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/FontsAndIcons/SmileySans.png" Title="SmileySans 得意黑"
-                                      Info="v2.0.1, OFL-1.1" Command="{Binding PublicCmd.OpenWebPageCmd}"
-                                      CommandParameter="https://github.com/atelier-anchor/smiley-sans" />
-                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/FontsAndIcons/MapleMono.png" Title="Maple Mono"
-                                      Info="v7.5, OFL-1.1" Command="{Binding PublicCmd.OpenWebPageCmd}"
-                                      CommandParameter="https://github.com/subframe7536/Maple-font" />
-                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/FontsAndIcons/mdi.png" Title="Material Design Icons"
-                                         Info="Apache 2.0" Command="{Binding PublicCmd.OpenWebPageCmd}"
-                                         CommandParameter="https://github.com/Templarian/MaterialDesign"/>
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/fonts/SmileySans.png"
+                                         Title="SmileySans 得意黑"
+                                         Info="v2.0.1, OFL-1.1" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                         CommandParameter="https://github.com/atelier-anchor/smiley-sans" />
+                    <controls:MyListItem Logo="avares://LSL/Assets/Imported-Icons/fonts/MapleMono.png"
+                                         Title="Maple Mono"
+                                         Info="v7.5, OFL-1.1" Command="{Binding PublicCmd.OpenWebPageCmd}"
+                                         CommandParameter="https://github.com/subframe7536/Maple-font" />
                 </StackPanel>
             </controls:MyCard>
         </StackPanel>

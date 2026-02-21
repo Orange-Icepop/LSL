@@ -9,11 +9,6 @@ namespace LSL.ViewModels;
 
 public class LeftRegionViewModel : RegionalViewModelBase<LeftRegionViewModel>
 {
-    public UserControl CurrentView { [ObservableAsProperty] get; }
-
-    [Reactive] public double LeftWidth { get; set; }
-    [Reactive] public RightPageState CurrentRightPageState { get; private set; }
-
     public LeftRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
         CurrentView = null!;
@@ -24,10 +19,15 @@ public class LeftRegionViewModel : RegionalViewModelBase<LeftRegionViewModel>
         AppState.WhenAnyValue(stateLayer => stateLayer.CurrentRightPage)
             .Where(rightPageState => rightPageState != RightPageState.Undefined)
             .Subscribe(ChangeLeftHighlight);
-
     }
 
+    public UserControl CurrentView { [ObservableAsProperty] get; }
+
+    [Reactive] public double LeftWidth { get; set; }
+    [Reactive] public RightPageState CurrentRightPageState { get; private set; }
+
     #region 左栏导航逻辑
+
     private UserControl NavigateLeft(GeneralPageState page)
     {
         switch (page)
@@ -50,14 +50,13 @@ public class LeftRegionViewModel : RegionalViewModelBase<LeftRegionViewModel>
             }
         }
     }
+
     #endregion
 
-    private void ChangeLeftHighlight(RightPageState rps)// 切换状态
+    private void ChangeLeftHighlight(RightPageState rps) // 切换状态
     {
         if (rps is not (RightPageState.HomeRight or RightPageState.ServerConfEdit or RightPageState.AddCore
             or RightPageState.AddFolder or RightPageState.Empty or RightPageState.Undefined or RightPageState.Hold))
-        {
             CurrentRightPageState = rps;
-        }
     }
 }
