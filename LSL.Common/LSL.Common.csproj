@@ -11,11 +11,12 @@
         <PackageReference Include="FluentResults" Version="4.0.0"/>
         <PackageReference Include="Google.Protobuf" Version="3.33.5" />
         <PackageReference Include="Google.Protobuf.Tools" Version="3.33.5" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
         <PackageReference Include="Mutty" Version="1.0.63">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="PropertyChanged.Fody" Version="4.1.0" />
+        <PackageReference Include="PropertyChanged.Fody" Version="4.1.0" PrivateAssets="All" />
         <PackageReference Include="SharpZipLib" Version="1.4.2"/>
         <PackageReference Include="Tomlyn.Signed" Version="0.20.0" />
     </ItemGroup>
