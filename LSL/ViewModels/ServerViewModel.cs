@@ -14,7 +14,7 @@ namespace LSL.ViewModels;
 
 public partial class ServerViewModel : RegionalViewModelBase<ServerViewModel>
 {
-    public ServerViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
+    public ServerViewModel(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator, PublicCommand commands) : base(appState, connector, coordinator, commands)
     {
         // 避免编译器检查
         _currentStatus = null!;
@@ -107,15 +107,15 @@ public partial class ServerViewModel : RegionalViewModelBase<ServerViewModel>
             RightTarget = RightPageState.ServerTerminal
         });
         var res = await Connector.StartServer(AppState.SelectedServerId);
-        if (res.IsSuccess) AppState.Coordinator.Notify(NotifyType.Info, "服务器正在启动", "请稍候等待服务器启动完毕");
-        else AppState.Coordinator.Notify(NotifyType.Error, "服务器启动失败", "配置检查不通过，请检查配置是否存在错误");
+        if (res.IsSuccess) Coordinator.Notify(NotifyType.Info, "服务器正在启动", "请稍候等待服务器启动完毕");
+        else Coordinator.Notify(NotifyType.Error, "服务器启动失败", "配置检查不通过，请检查配置是否存在错误");
     }
 
     public void SendCommandToServer() //发送命令方法
     {
         if (string.IsNullOrEmpty(InputText))
         {
-            AppState.Coordinator.Notify(NotifyType.Error, "输入为空", "请输入要发送的命令");
+            Coordinator.Notify(NotifyType.Error, "输入为空", "请输入要发送的命令");
             return;
         }
 

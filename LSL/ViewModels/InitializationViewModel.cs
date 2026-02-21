@@ -17,13 +17,14 @@ namespace LSL.ViewModels;
 public partial class InitializationViewModel : ViewModelBase
 {
     public InitializationViewModel(ILogger<InitializationViewModel> logger, AppStateLayer appState,
-        DialogViewModel dialogModel) : base(logger)
+        DialogViewModel dialogModel, DialogCoordinator coordinator) : base(logger)
     {
         MessageBus.Current.Listen<ViewModelFatalError>()
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(ex => _ = OnFatalErrorReceived(ex));
         AppState = appState;
         DialogModel = dialogModel;
+        Coordinator = coordinator;
         ShowMainWindowCmd = ReactiveCommand.Create(ShowMainWindow);
         TrayQuitCmd = ReactiveCommand.Create(TrayCalledQuit);
         MainWindowView = new SplashView();
@@ -35,6 +36,7 @@ public partial class InitializationViewModel : ViewModelBase
     public AppStateLayer AppState { get; }
     public ShellViewModel? Shell { get; private set; }
     public DialogViewModel DialogModel { get; }
+    public DialogCoordinator Coordinator { get; }
 
     public ICommand ShowMainWindowCmd { get; } // 显示主窗口命令
     public ICommand TrayQuitCmd { get; } // 退出命令
@@ -80,7 +82,7 @@ public partial class InitializationViewModel : ViewModelBase
         {
             Logger.LogCritical(error.Ex, "A fatal error occured when running LSL, resulting a crash.");
             ShowMainWindow();
-            await AppState.Coordinator.PopupInteraction.Handle(
+            await Coordinator.PopupInteraction.Handle(
                 new InvokePopupArgs(PopupType.ErrorConfirm, "致命错误",
                     $"LSL Desktop在运行时发生了致命错误。请您确认并复制该报错信息以方便排查和上报Bug，随后LSL Desktop将自行关闭。\n{error.PopupMessage ?? error.Message}\n{error.Ex}"));
         }

@@ -11,7 +11,7 @@ namespace LSL.ViewModels;
 
 public partial class MonitorViewModel : RegionalViewModelBase<MonitorViewModel>
 {
-    public MonitorViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
+    public MonitorViewModel(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator, PublicCommand commands) : base(appState, connector, coordinator, commands)
     {
         AppState.ServerIdChanged.Select(id => AppState.MetricsDict.GetOrAdd(id, _ => new MetricsStorage(true)))
             .Subscribe(ms =>

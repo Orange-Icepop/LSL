@@ -133,7 +133,7 @@ public partial class ShellViewModel : ViewModelBase
         }
         else if (AppState.RunningServerCount > 0)
         {
-            var res = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
+            var res = await Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
                 PopupType.WarningYesNoCancel,
                 "是否要关闭所有服务器？",
                 "你正在尝试关闭LSL，但是有服务器正在运行。\n点击是将立刻关闭所有服务器；\n点击否将让这些服务器进程在后台运行，并且LSL不再管理它们；\n点击取消以取消关闭LSL的操作。"));

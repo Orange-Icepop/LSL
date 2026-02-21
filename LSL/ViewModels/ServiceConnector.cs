@@ -36,16 +36,20 @@ namespace LSL.ViewModels;
 public class ServiceConnector
 {
     private readonly AppStateLayer _appState;
+    private readonly DialogCoordinator _coordinator;
+    private readonly PublicCommand _commands;
     private readonly ConfigManager _configManager;
     private readonly ServerHost _daemonHost;
     private readonly ILogger<ServiceConnector> _logger;
     private readonly ServerOutputStorage _outputStorage;
     private readonly NetService _webHost;
 
-    public ServiceConnector(AppStateLayer appState, ConfigManager cfm, ServerHost daemon,
+    public ServiceConnector(AppStateLayer appState, DialogCoordinator coordinator, PublicCommand commands, ConfigManager cfm, ServerHost daemon,
         ServerOutputStorage optStorage, NetService netService)
     {
         _appState = appState;
+        _coordinator = coordinator;
+        _commands = commands;
         _configManager = cfm;
         _daemonHost = daemon;
         _outputStorage = optStorage;
@@ -87,27 +91,27 @@ public class ServiceConnector
         var result = await UpdateHelper.QueryLatest(_webHost.Factory);
         if (!result.IsSuccess)
         {
-            await _appState.Coordinator.ThrowError("检查更新时出错", $"检查更新时出现以下错误：\n{result.GetErrors().FlattenToString()}");
+            await _coordinator.ThrowError("检查更新时出错", $"检查更新时出现以下错误：\n{result.GetErrors().FlattenToString()}");
             return;
         }
 
         var isGreater = result.Value.IsNewerVersion(DesktopConstant.Version);
         if (!isGreater.IsSuccess)
         {
-            await _appState.Coordinator.ThrowError("检查更新时出错", "无法比较当前软件版本与远程软件版本的大小差异。这是一个开发错误，请向作者反馈。");
+            await _coordinator.ThrowError("检查更新时出错", "无法比较当前软件版本与远程软件版本的大小差异。这是一个开发错误，请向作者反馈。");
             return;
         }
 
         if (isGreater.Value)
         {
-            var confirm = await _appState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
+            var confirm = await _coordinator.PopupInteraction.Handle(new InvokePopupArgs(
                 PopupType.InfoYesNo,
                 "LSL 版本更新", $"LSL 有新版本 {result.Value.TagName} 已经发布。\n{result.Value.FormatBody().Body}\n是否前往更新？"));
-            if (confirm == PopupResult.Yes) await _appState.Commands.OpenWebPage(result.Value.HtmlUrl);
+            if (confirm == PopupResult.Yes) await _commands.OpenWebPage(result.Value.HtmlUrl);
         }
         else
         {
-            _appState.Coordinator.Notify(NotifyType.Success, "版本检查完成",
+            _coordinator.Notify(NotifyType.Success, "版本检查完成",
                 $"当前版本已经为最新：v{DesktopConstant.Version}");
         }
     }
@@ -239,12 +243,12 @@ public class ServiceConnector
 
     public async Task StopServer(int serverId)
     {
-        var confirm = await _appState.Coordinator.PopupInteraction
+        var confirm = await _coordinator.PopupInteraction
             .Handle(new InvokePopupArgs(PopupType.WarningYesNo, "确定要关闭该服务器吗？", "将会立刻踢出服务器内所有玩家，服务器上的最新更改会被保存。"));
         if (confirm == PopupResult.Yes)
         {
             _daemonHost.StopServer(serverId);
-            _appState.Coordinator.Notify(NotifyType.Info, "正在关闭服务器", "请稍作等待");
+            _coordinator.Notify(NotifyType.Info, "正在关闭服务器", "请稍作等待");
         }
     }
 
@@ -255,7 +259,7 @@ public class ServiceConnector
 
     public async Task EndServer(int serverId)
     {
-        var confirm = await _appState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
+        var confirm = await _coordinator.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo, "确定要终止该服务端进程吗？",
             "如果强制退出，将会立刻踢出服务器内所有玩家，并且可能会导致服务端最新更改不被保存！"));
         if (confirm == PopupResult.Yes) await _daemonHost.EndServer(serverId);

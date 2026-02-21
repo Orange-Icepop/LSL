@@ -17,10 +17,8 @@ namespace LSL.ViewModels;
 
 public partial class AppStateLayer : ReactiveObject
 {
-    public AppStateLayer(DialogCoordinator coordinator, PublicCommand commands, ILoggerFactory loggerFactory)
+    public AppStateLayer(ILoggerFactory loggerFactory)
     {
-        Coordinator = coordinator;
-        Commands = commands;
         LoggerFactory = loggerFactory;
         Logger = LoggerFactory.CreateLogger<AppStateLayer>();
         CurrentBarState = BarState.Common;
@@ -90,8 +88,6 @@ public partial class AppStateLayer : ReactiveObject
 
     public ILoggerFactory LoggerFactory { get; }
     private ILogger<AppStateLayer> Logger { get; }
-    public DialogCoordinator Coordinator { get; } // 传到所有VM里面太麻烦了，方便起见就直接放在这儿了
-    public PublicCommand Commands { get; }
     public IObservable<ImmutableDictionary<int, IndexedServerConfig>> ServerConfigChanged { get; }
     public IObservable<int> ServerIndexChanged { get; }
     public IObservable<int> ServerIdChanged { get; private set; }

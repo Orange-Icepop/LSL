@@ -11,7 +11,7 @@ namespace LSL.ViewModels;
 
 public partial class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
 {
-    public BarRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
+    public BarRegionViewModel(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator, PublicCommand commands) : base(appState, connector, coordinator, commands)
     {
         CurrentView = new Bar();
         FullScreenTitle = string.Empty;

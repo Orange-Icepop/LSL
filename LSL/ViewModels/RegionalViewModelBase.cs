@@ -10,12 +10,16 @@ public abstract class RegionalViewModelBase<T> : ViewModelBase where T : Regiona
 {
     protected readonly AppStateLayer AppState;
     protected readonly ServiceConnector Connector;
+    protected readonly DialogCoordinator Coordinator;
+    protected readonly PublicCommand Commands;
 
-    protected RegionalViewModelBase(AppStateLayer appState, ServiceConnector connector) : base(appState.LoggerFactory
+    protected RegionalViewModelBase(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator, PublicCommand commands) : base(appState.LoggerFactory
         .CreateLogger<T>())
     {
         AppState = appState;
         Connector = connector;
+        Coordinator = coordinator;
+        Commands = commands;
         Logger.LogDebug("Logger of {TypeName} initialized", typeof(T).Name);
     }
 }

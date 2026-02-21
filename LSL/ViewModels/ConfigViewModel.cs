@@ -19,7 +19,7 @@ namespace LSL.ViewModels;
 
 public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 {
-    public ConfigViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
+    public ConfigViewModel(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator, PublicCommand commands) : base(appState, connector, coordinator, commands)
     {
         _javaVersions = null!;
         SelectedServerConfig = IndexedServerConfig.None;
@@ -42,7 +42,16 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
             .ToProperty(this, x => x.JavaVersions);
         AppState.WhenAnyValue(x => x.CurrentServerConfigs, x => x.SelectedServerId)
             .Subscribe(scc => RaiseServerConfigChanged(scc.Item2, scc.Item1));
-        DeleteServerCmd = ReactiveCommand.CreateFromTask(async () => await DeleteServer());
+        DeleteServerCmd = ReactiveCommand.CreateFromTask(DeleteServer);
+        SearchJava = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                Coordinator.Notify(NotifyType.Info, "正在搜索Java", "请耐心等待......"));
+            var success = await Coordinator.SubmitServiceError(await Connector.FindJava());
+            if (success.IsSuccess)
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                    Coordinator.Notify(NotifyType.Success, "Java搜索完成！", $"搜索到了{success.Value}个Java"));
+        }); // 搜索Java命令-实现
     }
 
     #region Java配置
@@ -60,7 +69,7 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
                 .Bind(_ => Connector.ReadDesktopConfig(true))
                 .Bind(_ => Connector.ReadServerConfig(true))
                 .Bind(_ => Connector.ReadJavaConfig(true));
-            await AppState.Coordinator.SubmitServiceError(res);
+            await Coordinator.SubmitServiceError(res);
             return res.IsSuccess;
         }
         catch (Exception e)
@@ -96,7 +105,7 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
             return true;
         }
 
-        await AppState.Coordinator.SubmitServiceError(success);
+        await Coordinator.SubmitServiceError(success);
         return false;
     }
 
@@ -106,7 +115,7 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
             .Bind(_ => Connector.SaveWebConfig(WebConfigs.FinishDraft()))
             .Bind(_ => Connector.SaveDesktopConfig(DesktopConfigs.FinishDraft()))
             .Bind(_ => Result.Ok());
-        await AppState.Coordinator.SubmitServiceError(res, "保存配置时出现错误", true);
+        await Coordinator.SubmitServiceError(res, "保存配置时出现错误", true);
     }
 
     #endregion
@@ -121,41 +130,41 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
         var serverId = AppState.SelectedServerId;
         if (serverId < 0)
         {
-            await AppState.Coordinator.ThrowError("选定的服务器不存在", "你没有添加过服务器。该服务器是LSL提供的占位符，不支持删除。");
+            await Coordinator.ThrowError("选定的服务器不存在", "你没有添加过服务器。该服务器是LSL提供的占位符，不支持删除。");
             return;
         }
 
         if (!AppState.ServerStatuses.TryGetValue(serverId, out var status) ||
             !AppState.CurrentServerConfigs.TryGetValue(serverId, out var config))
         {
-            await AppState.Coordinator.ThrowError("无法删除服务器", "指定的服务器不存在。");
+            await Coordinator.ThrowError("无法删除服务器", "指定的服务器不存在。");
             return;
         }
 
         if (status.IsRunning)
         {
-            await AppState.Coordinator.ThrowError("无法删除服务器", $"指定的服务器{config.ServerName}正在运行，请先关闭服务器再删除。");
+            await Coordinator.ThrowError("无法删除服务器", $"指定的服务器{config.ServerName}正在运行，请先关闭服务器再删除。");
             return;
         }
 
-        var result1 = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
+        var result1 = await Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
             $"确认删除服务器{config.ServerName}吗？",
             "注意！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result1 == PopupResult.No) return;
-        var result2 = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
+        var result2 = await Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
             $"第二次确认，删除服务器{config.ServerName}吗？",
             "注意！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result2 == PopupResult.No) return;
-        var result3 = await AppState.Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
+        var result3 = await Coordinator.PopupInteraction.Handle(new InvokePopupArgs(
             PopupType.WarningYesNo,
             $"最后一次确认，你确定要删除服务器{config.ServerName}吗？",
             "这是最后一次警告！此操作不可逆！\n服务器的所有文件（包括存档、模组、核心文件）都会被完全删除，不会放入回收站！"));
         if (result3 == PopupResult.No) return;
-        var deleteResult = await AppState.Coordinator.SubmitServiceError(await Connector.DeleteServer(serverId));
+        var deleteResult = await Coordinator.SubmitServiceError(await Connector.DeleteServer(serverId));
         if (deleteResult.IsSuccess)
-            AppState.Coordinator.Notify(NotifyType.Success, null, $"服务器{config.ServerName}删除成功");
+            Coordinator.Notify(NotifyType.Success, null, $"服务器{config.ServerName}删除成功");
     }
 
     #endregion
@@ -182,6 +191,12 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
             SelectedServerPath = cache.ServerPath;
         }
     }
+
+    #endregion
+
+    #region  Java查找命令
+
+    public ICommand SearchJava { get; }
 
     #endregion
 }

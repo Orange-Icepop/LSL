@@ -9,7 +9,7 @@ namespace LSL.ViewModels;
 
 public partial class RightRegionViewModel : RegionalViewModelBase<RightRegionViewModel>
 {
-    public RightRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
+    public RightRegionViewModel(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator, PublicCommand commands) : base(appState, connector, coordinator, commands)
     {
         CurrentView = null!;
         AppState.WhenAnyValue(stateLayer => stateLayer.CurrentRightPage)

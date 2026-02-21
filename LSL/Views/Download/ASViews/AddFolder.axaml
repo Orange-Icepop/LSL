@@ -71,7 +71,7 @@
                                       SelectedIndex="{Binding FormViewModel.SelectedJavaIndex}" />
                             <controls:MyButton Name="GetJavaBtn" VerticalAlignment="Center" HorizontalAlignment="Left"
                                                Width="100"
-                                               Height="30" Margin="10,0,0,0" Command="{Binding PublicCmd.SearchJava}">
+                                               Height="30" Margin="10,0,0,0" Command="{Binding ConfigVM.SearchJava}">
                                 搜索Java
                             </controls:MyButton>
                         </StackPanel>

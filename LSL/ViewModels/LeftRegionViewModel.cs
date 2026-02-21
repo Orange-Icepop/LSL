@@ -9,7 +9,7 @@ namespace LSL.ViewModels;
 
 public partial class LeftRegionViewModel : RegionalViewModelBase<LeftRegionViewModel>
 {
-    public LeftRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
+    public LeftRegionViewModel(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator, PublicCommand commands) : base(appState, connector, coordinator, commands)
     {
         _currentView = null!;
         _currentViewHelper = AppState.WhenAnyValue(stateLayer => stateLayer.CurrentGeneralPage)

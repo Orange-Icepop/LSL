@@ -29,8 +29,8 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
             .Subscribe(args => CloseHandler(args.Body));
         this.WhenActivated(action =>
         {
-            action(ViewModel!.AppState.Coordinator.NotifyInteraction.RegisterHandler(ShowNotification));
-            action(ViewModel!.AppState.Coordinator.FilePickerInteraction.RegisterHandler(OpenFileOperation));
+            action(ViewModel!.Coordinator.NotifyInteraction.RegisterHandler(ShowNotification));
+            action(ViewModel!.Coordinator.FilePickerInteraction.RegisterHandler(OpenFileOperation));
         });
     }
 

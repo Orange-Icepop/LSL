@@ -17,27 +17,23 @@ namespace LSL.ViewModels;
 
 // 用于放置公共命令（仍然属于视图模型）
 // 主要成员为杂项ICommand
-public class PublicCommand : RegionalViewModelBase<PublicCommand>
+public class PublicCommand : ViewModelBase
 {
-    public PublicCommand(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
+    public PublicCommand(DialogCoordinator dc, ServiceConnector serveCon, ILogger<PublicCommand> logger) : base(logger)
     {
+        _coordinator = dc;
+        _connector = serveCon;
         OpenWebPageCmd = ReactiveCommand.CreateFromTask<string>(OpenWebPage); // 打开网页命令-实现
         OpenFileCmd = ReactiveCommand.CreateFromTask<string>(OpenExplorer);
-        SearchJava = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await Dispatcher.UIThread.InvokeAsync(() =>
-                AppState.Coordinator.Notify(NotifyType.Info, "正在搜索Java", "请耐心等待......"));
-            var success = await AppState.Coordinator.SubmitServiceError(await Connector.FindJava());
-            if (success.IsSuccess)
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                    AppState.Coordinator.Notify(NotifyType.Success, "Java搜索完成！", $"搜索到了{success.Value}个Java"));
-        }); // 搜索Java命令-实现
         CheckUpdateCmd = ReactiveCommand.CreateFromTask(serveCon.CheckForUpdates);
     }
+    
+    private readonly DialogCoordinator _coordinator;
+    private ServiceConnector _connector;
 
     public ICommand CheckUpdateCmd { get; }
 
-    public ICommand SearchJava { get; }
+
 
     #region 打开网页命令
 
@@ -48,13 +44,13 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         var result = XPlatformOperationHelper.OpenWebBrowser(url);
         if (result.IsSuccess)
         {
-            AppState.Coordinator.Notify(NotifyType.Success, "成功打开了网页！", url);
+            _coordinator.Notify(NotifyType.Success, "成功打开了网页！", url);
             Logger.LogInformation("Successfully opened web page {url}.", url);
         }
         else if (result.Errors.OfType<ExceptionalError>().FirstOrDefault()?.Exception is ArgumentException ex)
         {
             Logger.LogError(ex, "Error opening webpage {url} because of invalid URL format.", url);
-            await AppState.Coordinator.ThrowError("打开网页失败", $"URL格式不正确：{url}");
+            await _coordinator.ThrowError("打开网页失败", $"URL格式不正确：{url}");
         }
         else
         {
@@ -64,7 +60,7 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
                 ? "请确保安装了 xdg-utils 并且设置了默认浏览器以使用打开浏览器网址的功能。"
                 : "在此系统上似乎无法正常打开网页，请检查默认浏览器设置。");
             uiMsg.AppendLine(result.GetErrors().FlattenToString());
-            await AppState.Coordinator.ThrowError("打开网页失败", uiMsg.ToString());
+            await _coordinator.ThrowError("打开网页失败", uiMsg.ToString());
         }
     }
 
@@ -91,17 +87,17 @@ public class PublicCommand : RegionalViewModelBase<PublicCommand>
         catch (ArgumentException ae)
         {
             Logger.LogError(ae, "File or directory not found when trying to open file explorer.");
-            await AppState.Coordinator.ThrowError("打开文件失败", $"不存在位于{url}的文件或目录。");
+            await _coordinator.ThrowError("打开文件失败", $"不存在位于{url}的文件或目录。");
         }
         catch (DirectoryNotFoundException dnfe)
         {
             Logger.LogError(dnfe, "Parent directory not found when trying to open file explorer.");
-            await AppState.Coordinator.ThrowError("打开文件失败", $"无法获取位于{url}的文件的父目录。");
+            await _coordinator.ThrowError("打开文件失败", $"无法获取位于{url}的文件的父目录。");
         }
         catch (Exception e)
         {
             Logger.LogError(e, "Error executing open explorer task.");
-            await AppState.Coordinator.ThrowError("打开文件失败", $"在文件资源管理器中打开{url}时出现以下报错：\n{e.Message}");
+            await _coordinator.ThrowError("打开文件失败", $"在文件资源管理器中打开{url}时出现以下报错：\n{e.Message}");
         }
     }
 
