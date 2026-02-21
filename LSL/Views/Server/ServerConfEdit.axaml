@@ -13,29 +13,30 @@
                 <StackPanel Margin="25,10,25,15">
                     <StackPanel Margin="30,50,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器路径</TextBlock>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Width="500"
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Width="500" IsEnabled="False"
                                    Text="{Binding FormViewModel.CorePath}" TextWrapping="Wrap" />
                     </StackPanel>
                     <StackPanel Margin="30,10,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">服务器名称</TextBlock>
                         <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300"
-                                 Text="{Binding FormViewModel.ServerName}" />
+                                 Text="{Binding FormViewModel.EditingConfig.ServerName}" />
                     </StackPanel>
                     <StackPanel Margin="30,10,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">内存大小</TextBlock>
                         <StackPanel Orientation="Horizontal">
                             <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
-                                     Text="{Binding FormViewModel.MinMem}" />
+                                     Text="{Binding FormViewModel.EditingConfig.MinMemory}" />
                             <TextBlock VerticalAlignment="Center" Margin="10,0,10,0">MB ~</TextBlock>
                             <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
-                                     Text="{Binding FormViewModel.MaxMem}" />
+                                     Text="{Binding FormViewModel.EditingConfig.MaxMemory}" />
                             <TextBlock VerticalAlignment="Center" Margin="10,0,10,0">MB</TextBlock>
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Margin="30,10,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">Java路径</TextBlock>
                         <StackPanel Orientation="Horizontal">
-                            <TextBox HorizontalAlignment="Left" Width="450" Text="{Binding FormViewModel.JavaPath}" />
+                            <TextBox HorizontalAlignment="Left" Width="450"
+                                     Text="{Binding FormViewModel.EditingConfig.JavaPath}" />
                             <Border Background="Transparent">
                                 <Path Data="M14,7 A7,7 0 0,0 0,7 M0,7 A7,7 0 1,0 14,7 M7,3l0,2 M7,6l0,5"
                                       VerticalAlignment="Center"
@@ -66,9 +67,11 @@
                     </StackPanel>
                     <StackPanel Margin="30,10,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">附加JVM参数</TextBlock>
-                        <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" TextWrapping="Wrap"
-                                 Text="{Binding FormViewModel.ExtJvm}" />
+                        <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" MinHeight="300"
+                                 AcceptsReturn="True" TextWrapping="Wrap"
+                                 Text="{Binding FormViewModel.ExtraJvmArgs}" />
                     </StackPanel>
+                    <CheckBox Margin="0,10,0,5" IsChecked="{Binding FormViewModel.EditingConfig.StatusMonitoring}">服务器上线检测</CheckBox>
                     <controls:MyButton Name="Confirm" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100"
                                        Height="30" Margin="30,10,0,5" ColorType="Highlight"
                                        Command="{Binding FormViewModel.EditServerCmd}">
