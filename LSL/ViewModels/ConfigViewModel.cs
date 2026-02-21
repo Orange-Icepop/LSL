@@ -52,6 +52,8 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
                 await Dispatcher.UIThread.InvokeAsync(() =>
                     Coordinator.Notify(NotifyType.Success, "Java搜索完成！", $"搜索到了{success.Value}个Java"));
         }); // 搜索Java命令-实现
+        
+        CheckUpdateCmd = ReactiveCommand.CreateFromTask(Connector.CheckForUpdates);
     }
 
     #region Java配置
@@ -194,9 +196,11 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     #endregion
 
-    #region  Java查找命令
+    #region 其它命令
 
     public ICommand SearchJava { get; }
+    
+    public ICommand CheckUpdateCmd { get; }
 
     #endregion
 }

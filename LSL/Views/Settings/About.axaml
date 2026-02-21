@@ -30,7 +30,7 @@
                         <Run Text="{Binding Version}" />
                     </TextBlock>
                     <controls:MyButton ColorType="Highlight" HorizontalAlignment="Left" Width="90" Height="30"
-                                       Margin="0,10,0,10" Command="{Binding PublicCmd.CheckUpdateCmd}">
+                                       Margin="0,10,0,10" Command="{Binding ConfigVM.CheckUpdateCmd}">
                         检查更新
                     </controls:MyButton>
                     <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.DesktopConfigs.AutoCheckUpdate}">启动时自动检查更新</CheckBox>

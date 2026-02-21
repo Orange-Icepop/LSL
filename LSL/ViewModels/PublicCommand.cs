@@ -19,19 +19,14 @@ namespace LSL.ViewModels;
 // 主要成员为杂项ICommand
 public class PublicCommand : ViewModelBase
 {
-    public PublicCommand(DialogCoordinator dc, ServiceConnector serveCon, ILogger<PublicCommand> logger) : base(logger)
+    public PublicCommand(DialogCoordinator dc, ILogger<PublicCommand> logger) : base(logger)
     {
         _coordinator = dc;
-        _connector = serveCon;
         OpenWebPageCmd = ReactiveCommand.CreateFromTask<string>(OpenWebPage); // 打开网页命令-实现
         OpenFileCmd = ReactiveCommand.CreateFromTask<string>(OpenExplorer);
-        CheckUpdateCmd = ReactiveCommand.CreateFromTask(serveCon.CheckForUpdates);
     }
     
     private readonly DialogCoordinator _coordinator;
-    private ServiceConnector _connector;
-
-    public ICommand CheckUpdateCmd { get; }
 
 
 
