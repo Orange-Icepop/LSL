@@ -8,7 +8,7 @@ public record ServerConfigV2 : IServerConfig<ServerConfigV2>
 {
     public ServerConfigV2()
     {
-        EnablePreLaunchProtection = ServerType is not ServerCoreType.Mohist;
+        StatusMonitoring = ServerType is not ServerCoreType.Mohist;
     }
 
     public string? Name { get; init; } = string.Empty;
@@ -20,7 +20,7 @@ public record ServerConfigV2 : IServerConfig<ServerConfigV2>
     public uint? MinMemory { get; init; }
     public uint? MaxMemory { get; init; }
     public ImmutableList<string>? ExtraJvmArgs { get; init; }
-    public bool? EnablePreLaunchProtection { get; init; }
+    public bool? StatusMonitoring { get; init; }
 
     public static Result<ServerConfigV2> Deserialize(string content)
     {
@@ -33,7 +33,7 @@ public record ServerConfigV2 : IServerConfig<ServerConfigV2>
     {
         return LocatedServerConfig.CreateAsync(path,
             Name, ServerType, CommonCoreInfo, ForgeCoreInfo, JavaPath, MinMemory, MaxMemory, ExtraJvmArgs,
-            EnablePreLaunchProtection);
+            StatusMonitoring);
     }
 
     public string Serialize()

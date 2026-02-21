@@ -17,9 +17,9 @@ public record IndexedServerConfig
     /// <param name="minMemory">The minimum JVM allocated RAM.</param>
     /// <param name="maxMemory">The maximum JVM allocated RAM.</param>
     /// <param name="extJvm">The extent JVM parameters.</param>
-    /// <param name="enablePreLaunchProtection">
-    ///     Disable the operation before the server's complete start. May lock permanently
-    ///     in some types of server such as Mohist.
+    /// <param name="statusMonitoring">
+    /// Monitor the running/online status.
+    /// May work unproperly in some types of server such as Mohist, disable it in these situations.
     /// </param>
     public IndexedServerConfig(int serverId,
         string serverPath,
@@ -31,9 +31,9 @@ public record IndexedServerConfig
         uint minMemory,
         uint maxMemory,
         List<string> extJvm,
-        bool enablePreLaunchProtection) : this(serverId,
+        bool statusMonitoring) : this(serverId,
         new LocatedServerConfig(serverPath, serverName, serverType, commonInfo, forgeInfo, usingJava, minMemory,
-            maxMemory, extJvm, enablePreLaunchProtection))
+            maxMemory, extJvm, statusMonitoring))
     {
     }
 
@@ -55,7 +55,7 @@ public record IndexedServerConfig
     public uint MinMemory => LocatedConfig.MinMemory;
     public uint MaxMemory => LocatedConfig.MaxMemory;
     public ImmutableList<string> ExtraJvmArgs => LocatedConfig.ExtraJvmArgs;
-    public bool EnablePreLaunchProtection => LocatedConfig.EnablePreLaunchProtection;
+    public bool StatusMonitoring => LocatedConfig.StatusMonitoring;
 
     /// <summary>
     ///     Returns a server info which will be recognized as not added.

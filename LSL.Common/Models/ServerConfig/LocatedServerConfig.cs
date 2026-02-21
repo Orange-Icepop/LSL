@@ -22,7 +22,7 @@ public record LocatedServerConfig
         uint minMemory,
         uint maxMemory,
         IEnumerable<string> extJvm,
-        bool enablePreLaunchProtection)
+        bool statusMonitoring)
     {
         ServerPath = serverPath;
         ServerName = serverName;
@@ -33,7 +33,7 @@ public record LocatedServerConfig
         MinMemory = minMemory;
         MaxMemory = maxMemory;
         ExtraJvmArgs = extJvm.ToImmutableList();
-        EnablePreLaunchProtection = enablePreLaunchProtection;
+        StatusMonitoring = statusMonitoring;
     }
 
     public string ServerPath { get; init; }
@@ -45,7 +45,7 @@ public record LocatedServerConfig
     public uint MinMemory { get; init; }
     public uint MaxMemory { get; init; }
     public ImmutableList<string> ExtraJvmArgs { get; init; }
-    public bool EnablePreLaunchProtection { get; init; }
+    public bool StatusMonitoring { get; init; }
 
     public static LocatedServerConfig Empty =>
         new(string.Empty, string.Empty, ServerCoreType.Unknown, null, null, string.Empty, 1024, 4096, [], true);
@@ -133,7 +133,7 @@ public record LocatedServerConfig
             MinMemory = MinMemory,
             MaxMemory = MaxMemory,
             ExtraJvmArgs = ExtraJvmArgs,
-            EnablePreLaunchProtection = EnablePreLaunchProtection
+            StatusMonitoring = StatusMonitoring
         })));
     }
 
@@ -146,14 +146,14 @@ public record LocatedServerConfig
         uint? minMemory,
         uint? maxMemory,
         IEnumerable<string>? extJvm,
-        bool? enablePreLaunchProtection)
+        bool? statusMonitoring)
     {
         if (string.IsNullOrEmpty(serverName))
             return Task.FromResult(Result.Fail<LocatedServerConfig>("This server doesn't have a name"));
         return new LocatedServerConfig(serverPath, serverName, serverType ?? ServerCoreType.Error, commonInfo,
             forgeInfo,
             javaPath ?? string.Empty, minMemory ?? 0, maxMemory ?? 0, extJvm ?? [],
-            enablePreLaunchProtection ?? true).CheckAndFixAsync();
+            statusMonitoring ?? true).CheckAndFixAsync();
     }
 
     #endregion
