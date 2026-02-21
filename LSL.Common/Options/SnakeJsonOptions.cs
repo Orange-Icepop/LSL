@@ -16,7 +16,7 @@ namespace LSL.Common.Options;
 [JsonSourceGenerationOptions(WriteIndented = true, AllowTrailingCommas = true,
     PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower,
     UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip,
-    DefaultIgnoreCondition = JsonIgnoreCondition.Always)]
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
 public partial class SnakeJsonOptions : JsonSerializerContext
 {
 }

@@ -118,6 +118,12 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
     {
         try
         {
+            if (!File.Exists(ConfigPathProvider.JavaListPath))
+            {
+                await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "{}");
+                return Result.Ok(new Dictionary<int, JavaInfo>());
+            }
+
             var file = await File.ReadAllTextAsync(ConfigPathProvider.JavaListPath);
             var strDict = JsonSerializer.Deserialize(file, SnakeJsonOptions.Default.DictionaryStringJavaInfo) ??
                           new Dictionary<string, JavaInfo>();
