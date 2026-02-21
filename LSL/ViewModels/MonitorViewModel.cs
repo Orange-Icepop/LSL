@@ -5,11 +5,11 @@ using LSL.Common.Collections;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Common.Utilities;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
 
-public class MonitorViewModel : RegionalViewModelBase<MonitorViewModel>
+public partial class MonitorViewModel : RegionalViewModelBase<MonitorViewModel>
 {
     public MonitorViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
@@ -57,21 +57,21 @@ public class MonitorViewModel : RegionalViewModelBase<MonitorViewModel>
 
     #region 当前性能占用绑定器
 
-    [Reactive] public RangedObservableLinkedList<double> CurrentCpuMetrics { get; set; } = new(30, 0);
-    [Reactive] public RangedObservableLinkedList<double> CurrentRamMetrics { get; set; } = new(30, 0);
-    [Reactive] public RangedObservableLinkedList<long> CurrentRamValueMetrics { get; set; } = new(30, 0);
-    [Reactive] public double CurrentCpuUsage { get; private set; }
-    [Reactive] public double CurrentRamUsage { get; private set; }
-    [Reactive] public long CurrentRamValue { get; private set; }
-    [Reactive] public long CurrentRamMax { get; private set; }
+    [Reactive] public partial RangedObservableLinkedList<double> CurrentCpuMetrics { get; set; } = new(30, 0);
+    [Reactive] public partial RangedObservableLinkedList<double> CurrentRamMetrics { get; set; } = new(30, 0);
+    [Reactive] public partial RangedObservableLinkedList<long> CurrentRamValueMetrics { get; set; } = new(30, 0);
+    [Reactive] public partial double CurrentCpuUsage { get; private set; }
+    [Reactive] public partial double CurrentRamUsage { get; private set; }
+    [Reactive] public partial long CurrentRamValue { get; private set; }
+    [Reactive] public partial long CurrentRamMax { get; private set; }
 
     #endregion
 
     #region 全局性能占用绑定器
 
-    [Reactive] public double CurrentGeneralCpuUsage { get; private set; }
-    [Reactive] public double CurrentGeneralRamUsage { get; private set; }
-    [Reactive] public long CurrentGeneralRamValue { get; private set; }
+    [Reactive] public partial double CurrentGeneralCpuUsage { get; private set; }
+    [Reactive] public partial double CurrentGeneralRamUsage { get; private set; }
+    [Reactive] public partial long CurrentGeneralRamValue { get; private set; }
     public static long SystemRamMax => MemoryInfo.CurrentSystemMemory;
 
     #endregion

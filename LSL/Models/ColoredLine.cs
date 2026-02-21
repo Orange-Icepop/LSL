@@ -1,10 +1,10 @@
 using Avalonia.Media;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 
 namespace LSL.Models;
 
-public class ColoredLine : ReactiveObject
+public partial class ColoredLine : ReactiveObject
 {
     public ColoredLine(string line, ISolidColorBrush lineColor)
     {
@@ -18,6 +18,9 @@ public class ColoredLine : ReactiveObject
         LineColor = new SolidColorBrush(Color.Parse(colorHex));
     }
 
-    [Reactive] public string Line { get; init; }
-    [Reactive] public ISolidColorBrush LineColor { get; init; }
+    [Reactive]
+    private string _line;
+
+    [Reactive]
+    private ISolidColorBrush _lineColor;
 }

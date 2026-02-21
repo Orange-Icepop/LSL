@@ -12,11 +12,11 @@ using Avalonia.Threading;
 using LSL.Controls;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
 
-public class DialogViewModel : ViewModelBase
+public partial class DialogViewModel : ViewModelBase
 {
     private readonly Channel<(IInteractionContext<InvokePopupArgs, PopupResult> interaction, TaskCompletionSource tcs)>
         _popupChannel =
@@ -85,14 +85,14 @@ public class DialogViewModel : ViewModelBase
         dialogCoordinator.PopupInteraction.RegisterHandler(AddPopupTask);
     }
 
-    [Reactive] public string Title { get; private set; }
-    [Reactive] public string Message { get; private set; }
-    [Reactive] public bool IsVisible { get; private set; }
-    [Reactive] public bool IsOpen { get; private set; }
-    [Reactive] public double Height { get; private set; }
-    [Reactive] public double Opacity { get; private set; }
-    [Reactive] public SolidColorBrush BorderColor { get; private set; }
-    [Reactive] public StackPanel Buttons { get; private set; }
+    [Reactive] public partial string Title { get; private set; }
+    [Reactive] public partial string Message { get; private set; }
+    [Reactive] public partial bool IsVisible { get; private set; }
+    [Reactive] public partial bool IsOpen { get; private set; }
+    [Reactive] public partial double Height { get; private set; }
+    [Reactive] public partial double Opacity { get; private set; }
+    [Reactive] public partial SolidColorBrush BorderColor { get; private set; }
+    [Reactive] public partial StackPanel Buttons { get; private set; }
 
     private async Task HandlePopup(CancellationToken token)
     {

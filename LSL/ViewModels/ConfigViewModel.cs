@@ -13,22 +13,22 @@ using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
 
-public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
+public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 {
     public ConfigViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
     {
-        JavaVersions = null!;
+        _javaVersions = null!;
         SelectedServerConfig = IndexedServerConfig.None;
         SelectedServerName = string.Empty;
         SelectedServerPath = string.Empty;
         DaemonConfigs = AppState.DaemonConfigs.CreateDraft();
         WebConfigs = AppState.WebConfigs.CreateDraft();
         DesktopConfigs = AppState.DesktopConfigs.CreateDraft();
-        AppState.WhenAnyValue(stateLayer => stateLayer.CurrentJavaDict)
+        _javaVersionsHelper = AppState.WhenAnyValue(stateLayer => stateLayer.CurrentJavaDict)
             .Select(s => new FlatTreeDataGridSource<JavaInfo>(s.Values)
             {
                 Columns =
@@ -39,7 +39,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
                     new TextColumn<JavaInfo, string>("架构", x => x.Architecture)
                 }
             })
-            .ToPropertyEx(this, x => x.JavaVersions);
+            .ToProperty(this, x => x.JavaVersions);
         AppState.WhenAnyValue(x => x.CurrentServerConfigs, x => x.SelectedServerId)
             .Subscribe(scc => RaiseServerConfigChanged(scc.Item2, scc.Item1));
         DeleteServerCmd = ReactiveCommand.CreateFromTask(async () => await DeleteServer());
@@ -47,7 +47,7 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     #region Java配置
 
-    public FlatTreeDataGridSource<JavaInfo> JavaVersions { [ObservableAsProperty] get; }
+    [ObservableAsProperty] private FlatTreeDataGridSource<JavaInfo> _javaVersions;
 
     #endregion
 
@@ -74,9 +74,9 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     #region 核心配置数据
 
-    [Reactive] public MutableDaemonConfig DaemonConfigs { get; private set; }
-    [Reactive] public MutableWebConfig WebConfigs { get; private set; }
-    [Reactive] public MutableDesktopConfig DesktopConfigs { get; private set; }
+    [Reactive] public partial MutableDaemonConfig DaemonConfigs { get; private set; }
+    [Reactive] public partial MutableWebConfig WebConfigs { get; private set; }
+    [Reactive] public partial MutableDesktopConfig DesktopConfigs { get; private set; }
 
     #endregion
 
@@ -162,9 +162,9 @@ public class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     #region 服务器当前配置访问器
 
-    [Reactive] public IndexedServerConfig SelectedServerConfig { get; private set; }
-    [Reactive] public string SelectedServerName { get; private set; }
-    [Reactive] public string SelectedServerPath { get; private set; }
+    [Reactive] public partial IndexedServerConfig SelectedServerConfig { get; private set; }
+    [Reactive] public partial string SelectedServerName { get; private set; }
+    [Reactive] public partial string SelectedServerPath { get; private set; }
 
     private void RaiseServerConfigChanged(int serverId, ImmutableDictionary<int, IndexedServerConfig> serverConfig)
     {

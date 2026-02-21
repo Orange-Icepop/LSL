@@ -1,9 +1,10 @@
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
+
 
 namespace LSL.Models;
 
-public class ServerStatus : ReactiveObject
+public partial class ServerStatus : ReactiveObject
 {
     public ServerStatus()
     {
@@ -23,8 +24,10 @@ public class ServerStatus : ReactiveObject
         IsOnline = isOnline;
     }
 
-    [Reactive] public bool IsRunning { get; private set; }
-    [Reactive] public bool IsOnline { get; private set; }
+    [Reactive]
+    public partial bool IsRunning { get; private set; }
+    [Reactive]
+    public partial bool IsOnline { get; private set; }
 
     public ServerStatus Update(bool isRunning, bool isOnline)
     {

@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <LangVersion>12</LangVersion>
+        <LangVersion>latest</LangVersion>
         <OutputType>Library</OutputType>
         <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
         <UseWindowsForms>False</UseWindowsForms>
@@ -87,7 +87,10 @@
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
         <PackageReference Include="NLog" Version="6.1.0" />
         <PackageReference Include="NLog.Extensions.Logging" Version="6.1.1" />
-        <PackageReference Include="ReactiveUI.Fody" Version="19.5.41"/>
+        <PackageReference Include="ReactiveUI.SourceGenerators" Version="2.6.1">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="ReactiveUI.Validation" Version="6.0.18" />
         <PackageReference Include="SharpZipLib" Version="1.4.2"/>
         <PackageReference Include="SkiaSharp" Version="3.119.2" />

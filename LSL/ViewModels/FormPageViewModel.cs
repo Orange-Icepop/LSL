@@ -16,25 +16,25 @@ using LSL.Common.Validation;
 using LSL.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
 
-public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
+public partial class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
 {
     public FormPageViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
         // Reset to not null
         EditingConfig = MutableLocatedServerConfig.New;
         CorePath = string.Empty;
-        JavaList = [];
+        _javaList = [];
         ExtraJvmArgs = string.Empty;
         // end
         this.WhenAnyValue(formPageVM => formPageVM.SelectedJavaIndex)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Select(GetJavaPath)
             .Subscribe(val => EditingConfig.JavaPath = val);
-        AppState.WhenAnyValue(stateLayer => stateLayer.CurrentJavaDict)
+        _javaListHelper = AppState.WhenAnyValue(stateLayer => stateLayer.CurrentJavaDict)
             .Select(javaInfos => javaInfos.Values)
             .Select(vals =>
             {
@@ -43,7 +43,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
 
                 return fin;
             })
-            .ToPropertyEx(this, formPageVM => formPageVM.JavaList);
+            .ToProperty(this, formPageVM => formPageVM.JavaList);
         SelectCoreCmd = ReactiveCommand.CreateFromTask(SelectCore);
         SelectFolderCoreCmd = ReactiveCommand.CreateFromTask(SelectExistedServerCore);
         AddCoreCmd = ReactiveCommand.CreateFromTask(AddServerCore);
@@ -51,7 +51,7 @@ public class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
         AddExistedServerCmd = ReactiveCommand.CreateFromTask(AddServerFolder);
     }
 
-    public ObservableCollection<string> JavaList { [ObservableAsProperty] get; }
+    [ObservableAsProperty] private ObservableCollection<string> _javaList;
     public ICommand SelectCoreCmd { get; }
     public ICommand SelectFolderCoreCmd { get; }
     public ICommand AddCoreCmd { get; }
@@ -253,15 +253,14 @@ Java路径：{immutable.JavaPath}
 
     #endregion
 
-    [Reactive] public MutableLocatedServerConfig EditingConfig { get; private set; }
-    [Reactive] public string CorePath { get; set; }
-    [Reactive] public string ExtraJvmArgs { get; set; }
-    private int _selectedJavaIndex;
+    [Reactive] public partial MutableLocatedServerConfig EditingConfig { get; private set; }
+    [Reactive] public partial string CorePath { get; set; }
+    [Reactive] public partial string ExtraJvmArgs { get; set; }
 
     public int SelectedJavaIndex
     {
-        get => _selectedJavaIndex;
-        set => this.RaiseAndSetIfChanged(ref _selectedJavaIndex,
+        get;
+        set => this.RaiseAndSetIfChanged(ref field,
             AppState.CurrentJavaDict.Count == 0 ? -1 : Math.Clamp(value, 0, AppState.CurrentJavaDict.Count - 1));
     }
 

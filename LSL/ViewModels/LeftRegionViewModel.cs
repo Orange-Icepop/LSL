@@ -3,28 +3,28 @@ using System.Reactive.Linq;
 using Avalonia.Controls;
 using LSL.Models;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
 
-public class LeftRegionViewModel : RegionalViewModelBase<LeftRegionViewModel>
+public partial class LeftRegionViewModel : RegionalViewModelBase<LeftRegionViewModel>
 {
     public LeftRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
-        CurrentView = null!;
-        AppState.WhenAnyValue(stateLayer => stateLayer.CurrentGeneralPage)
+        _currentView = null!;
+        _currentViewHelper = AppState.WhenAnyValue(stateLayer => stateLayer.CurrentGeneralPage)
             .Where(generalPageState => generalPageState != GeneralPageState.Undefined)
             .Select(NavigateLeft)
-            .ToPropertyEx(this, t => t.CurrentView);
+            .ToProperty(this, t => t.CurrentView);
         AppState.WhenAnyValue(stateLayer => stateLayer.CurrentRightPage)
             .Where(rightPageState => rightPageState != RightPageState.Undefined)
             .Subscribe(ChangeLeftHighlight);
     }
 
-    public UserControl CurrentView { [ObservableAsProperty] get; }
+    [ObservableAsProperty] private UserControl _currentView;
 
-    [Reactive] public double LeftWidth { get; set; }
-    [Reactive] public RightPageState CurrentRightPageState { get; private set; }
+    [Reactive] public partial double LeftWidth { get; set; }
+    [Reactive] public partial RightPageState CurrentRightPageState { get; private set; }
 
     #region 左栏导航逻辑
 

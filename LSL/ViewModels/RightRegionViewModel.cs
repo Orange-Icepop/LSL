@@ -3,11 +3,11 @@ using System.Reactive.Linq;
 using Avalonia.Controls;
 using LSL.Models;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
 
-public class RightRegionViewModel : RegionalViewModelBase<RightRegionViewModel>
+public partial class RightRegionViewModel : RegionalViewModelBase<RightRegionViewModel>
 {
     public RightRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
@@ -25,7 +25,7 @@ public class RightRegionViewModel : RegionalViewModelBase<RightRegionViewModel>
             });
     }
 
-    [Reactive] public UserControl CurrentView { get; set; }
+    [Reactive] public partial UserControl CurrentView { get; set; }
 
     #region 右侧视图导航逻辑
 

@@ -8,19 +8,19 @@ using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Threading;
 using LSL.Models;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
 
-public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
+public partial class ServerViewModel : RegionalViewModelBase<ServerViewModel>
 {
     public ServerViewModel(AppStateLayer appState, ServiceConnector serveCon) : base(appState, serveCon)
     {
         // 避免编译器检查
-        CurrentStatus = null!;
-        TerminalText = [];
-        CurrentUsers = null!;
-        CurrentUserMessage = [];
+        _currentStatus = null!;
+        _terminalText = [];
+        _currentUsers = null!;
+        _currentUserMessage = [];
         StartServerCmd = ReactiveCommand.CreateFromTask(StartSelectedServer);
         StopServerCmd = ReactiveCommand.CreateFromTask(()=>Connector.StopServer(AppState.SelectedServerId));
         SaveServerCmd = ReactiveCommand.Create(() => Connector.SaveServer(AppState.SelectedServerId));
@@ -32,9 +32,9 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
         });
 
         // SelectedServerId的变化触发的属性通知
-        AppState.ServerIdChanged.Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
-            .ToPropertyEx(this, x => x.TerminalText);
-        AppState.ServerIdChanged.Select(id => new FlatTreeDataGridSource<PlayerInfo>(AppState.UserDict.GetOrAdd(id, []))
+        _terminalTextHelper = AppState.ServerIdChanged.Select(id => AppState.TerminalTexts.GetOrAdd(id, []))
+            .ToProperty(this, x => x.TerminalText);
+        _currentUsersHelper = AppState.ServerIdChanged.Select(id => new FlatTreeDataGridSource<PlayerInfo>(AppState.UserDict.GetOrAdd(id, []))
             {
                 Columns =
                 {
@@ -43,12 +43,12 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
                 }
             })
             .ToProperty(this, x => x.CurrentUsers);
-        AppState.ServerIdChanged.Select(id => AppState.MessageDict.GetOrAdd(id, []))
-            .ToPropertyEx(this, x => x.CurrentUserMessage);
+        _currentUserMessageHelper = AppState.ServerIdChanged.Select(id => AppState.MessageDict.GetOrAdd(id, []))
+            .ToProperty(this, x => x.CurrentUserMessage);
         // status更新
         var statusFlow =
             AppState.ServerIdChanged.Select(id => AppState.ServerStatuses.GetOrAdd(id, new ServerStatus()));
-        statusFlow.ToPropertyEx(this, x => x.CurrentStatus);
+        _currentStatusHelper = statusFlow.ToProperty(this, x => x.CurrentStatus);
         // status连带更新
         var statusChanges = this.WhenAnyValue(x => x.CurrentStatus)
             //.Where(status => status is not null)
@@ -68,9 +68,9 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
         });
     }
 
-    public ObservableCollection<ColoredLine> TerminalText { [ObservableAsProperty] get; }
-    public FlatTreeDataGridSource<PlayerInfo> CurrentUsers { [ObservableAsProperty] get; }
-    public ObservableCollection<UserMessageLine> CurrentUserMessage { [ObservableAsProperty] get; }
+    [ObservableAsProperty] private ObservableCollection<ColoredLine> _terminalText;
+    [ObservableAsProperty] private FlatTreeDataGridSource<PlayerInfo> _currentUsers;
+    [ObservableAsProperty] private ObservableCollection<UserMessageLine> _currentUserMessage;
 
     #region 控制
 
@@ -79,26 +79,25 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
     public ICommand SaveServerCmd { get; } // 保存服务器命令
     public ICommand EndServerCmd { get; } // 结束服务器进程命令
     public ICommand SendCommand { get; } // 发送服务器命令
-    private string _inputText = "";
 
     public string InputText
     {
-        get => _inputText;
+        get;
         set
         {
             var endless = value.TrimEnd('\r', '\n');
             if (endless.Length < value.Length)
             {
-                _inputText = endless;
+                field = endless;
                 SendCommandToServer();
-                Dispatcher.UIThread.Post(() => this.RaiseAndSetIfChanged(ref _inputText, "")); // 避免编译时优化将赋值无效化
+                Dispatcher.UIThread.Post(() => this.RaiseAndSetIfChanged(ref field, "")); // 避免编译时优化将赋值无效化
             }
             else
             {
-                this.RaiseAndSetIfChanged(ref _inputText, endless);
+                this.RaiseAndSetIfChanged(ref field, endless);
             }
         }
-    }
+    } = "";
 
     public async Task StartSelectedServer() //启动服务器方法
     {
@@ -132,7 +131,7 @@ public class ServerViewModel : RegionalViewModelBase<ServerViewModel>
 
     public ICommand LaunchButtonCmd => CurrentStatus?.IsRunning == true ? StopServerCmd : StartServerCmd;
     public string LaunchButtonContent => CurrentStatus?.IsRunning == true ? "停止服务器" : "启动服务器";
-    public ServerStatus CurrentStatus { [ObservableAsProperty] get; }
+    [ObservableAsProperty] private ServerStatus _currentStatus;
 
     #endregion
 }

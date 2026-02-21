@@ -5,11 +5,11 @@ using Avalonia.Threading;
 using LSL.Models;
 using LSL.Views;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
 
-public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
+public partial class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
 {
     public BarRegionViewModel(AppStateLayer appState, ServiceConnector connector) : base(appState, connector)
     {
@@ -23,7 +23,7 @@ public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
             .Subscribe(ChangeBarCont);
     }
 
-    [Reactive] public UserControl CurrentView { get; private set; }
+    [Reactive] public partial UserControl CurrentView { get; private set; }
 
     private void ChangeActiveButton(GeneralPageState state)
     {
@@ -53,8 +53,8 @@ public class BarRegionViewModel : RegionalViewModelBase<BarRegionViewModel>
 
     #region 全屏顶栏板块
 
-    [Reactive] public string FullScreenTitle { get; set; }
-    [Reactive] public GeneralPageState CurrentMainPageState { get; private set; }
+    [Reactive] public partial string FullScreenTitle { get; set; }
+    [Reactive] public partial GeneralPageState CurrentMainPageState { get; private set; }
 
     #endregion
 }

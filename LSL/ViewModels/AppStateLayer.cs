@@ -11,11 +11,11 @@ using LSL.Common.Models.ServerConfig;
 using LSL.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
 
-public class AppStateLayer : ReactiveObject
+public partial class AppStateLayer : ReactiveObject
 {
     public AppStateLayer(DialogCoordinator coordinator, PublicCommand commands, ILoggerFactory loggerFactory)
     {
@@ -27,12 +27,11 @@ public class AppStateLayer : ReactiveObject
         CurrentGeneralPage = GeneralPageState.Home;
         CurrentRightPage = RightPageState.HomeRight;
         // 自获取属性初始化
-        ServerIDs = [];
-        ServerNames = [];
-        SelectedServerId = -1;
-        TotalServerCount = 0;
+        _serverIDs = [];
+        _serverNames = [];
+        _selectedServerId = -1;
+        _totalServerCount = 0;
         RunningServerCount = 0;
-        NotTemplateServer = false;
         // end
         MessageBus.Current.Listen<NavigateArgs>()
             .ObserveOn(RxApp.MainThreadScheduler)
@@ -42,7 +41,7 @@ public class AppStateLayer : ReactiveObject
             .Select(arg => arg.CommandType)
             .Subscribe(NavigateCommandHandler);
         // 配置公共监听属性
-        ServerConfigChanged = this.WhenAnyValue(stateLayer => stateLayer.CurrentServerConfigs)
+        ServerConfigChanged = this.WhenAnyValue(stateLayer => stateLayer._currentServerConfigs)
             .ObserveOn(RxApp.MainThreadScheduler);
         ServerIndexChanged = this.WhenAnyValue(stateLayer => stateLayer.SelectedServerIndex)
             .ObserveOn(RxApp.MainThreadScheduler);
@@ -52,24 +51,24 @@ public class AppStateLayer : ReactiveObject
         #region 监听
 
         // 配置文件更新的连带更新
-        ServerConfigChanged.Select(s => new ObservableCollection<int>(s.Keys))
-            .ToPropertyEx(this, x => x.ServerIDs, scheduler: RxApp.MainThreadScheduler);
-        ServerConfigChanged.Select(s => new ObservableCollection<string>(s.Values.Select(v => v.ServerName)))
-            .ToPropertyEx(this, x => x.ServerNames, scheduler: RxApp.MainThreadScheduler);
+        _serverIDsHelper = ServerConfigChanged.Select(s => new ObservableCollection<int>(s.Keys))
+            .ToProperty(this, x=>x.ServerIDs);
+        _serverNamesHelper = ServerConfigChanged.Select(s => new ObservableCollection<string>(s.Values.Select(v => v.ServerName)))
+            .ToProperty(this, x=>x.ServerNames);
         ServerConfigChanged.Subscribe(configs =>
         {
             if (configs.Count == 0) return;
             SelectedServerIndex = 0;
             Logger.LogInformation("Selected server index reset to 0");
         });
-        ServerConfigChanged.Select(configs => !configs.TryGetValue(-1, out _))
-            .ToPropertyEx(this, x => x.NotTemplateServer);
-        ServerConfigChanged.Select(configs =>
+        _notTemplateServerHelper = ServerConfigChanged.Select(configs => !configs.TryGetValue(-1, out _))
+            .ToProperty(this, x => x.NotTemplateServer);
+        _totalServerCountHelper = ServerConfigChanged.Select(configs =>
             {
                 if (configs.Count == 0) return 0;
                 return configs.TryGetValue(-1, out _) ? 0 : configs.Count;
             })
-            .ToPropertyEx(this, x => x.TotalServerCount);
+            .ToProperty(this, x => x.TotalServerCount);
         // 在索引更新时刷新右视图
         ServerIndexChanged.Subscribe(_ =>
         {
@@ -77,14 +76,14 @@ public class AppStateLayer : ReactiveObject
             MessageBus.Current.SendMessage(new NavigateCommand(NavigateCommandType.Refresh));
         });
         // 更新服务器ID
-        this.WhenAnyValue(x => x.SelectedServerIndex, x => x.ServerIDs)
+        _selectedServerIdHelper = this.WhenAnyValue(x => x.SelectedServerIndex, x => x.ServerIDs)
             .Select(tup =>
             {
                 if (tup.Item1 < 0) return -1;
                 if (tup.Item2.Count > tup.Item1) return tup.Item2[tup.Item1];
                 return -1;
             })
-            .ToPropertyEx(this, x => x.SelectedServerId, scheduler: RxApp.MainThreadScheduler);
+            .ToProperty(this, x => x.SelectedServerId);
 
         #endregion
     }
@@ -99,9 +98,9 @@ public class AppStateLayer : ReactiveObject
 
     #region 导航相关
 
-    [Reactive] public BarState CurrentBarState { get; private set; }
-    [Reactive] public GeneralPageState CurrentGeneralPage { get; private set; }
-    [Reactive] public RightPageState CurrentRightPage { get; private set; }
+    [Reactive] public partial BarState CurrentBarState { get; private set; }
+    [Reactive] public partial GeneralPageState CurrentGeneralPage { get; private set; }
+    [Reactive] public partial RightPageState CurrentRightPage { get; private set; }
 
     private (BarState, GeneralPageState, RightPageState) _lastPage = (BarState.Common, GeneralPageState.Undefined,
         RightPageState.Undefined);
@@ -173,66 +172,64 @@ public class AppStateLayer : ReactiveObject
 
     #region 配置相关
 
-    [Reactive] public DaemonConfig DaemonConfigs { get; set; } = new();
-    [Reactive] public WebConfig WebConfigs { get; set; } = new();
-    [Reactive] public DesktopConfig DesktopConfigs { get; set; } = new();
+    [Reactive] private DaemonConfig _daemonConfigs = new();
+    [Reactive] private WebConfig _webConfigs = new();
+    [Reactive] private DesktopConfig _desktopConfigs = new();
 
     [Reactive]
-    public ImmutableDictionary<int, IndexedServerConfig> CurrentServerConfigs { get; set; } =
+    private ImmutableDictionary<int, IndexedServerConfig> _currentServerConfigs =
         ImmutableDictionary<int, IndexedServerConfig>.Empty;
 
     [Reactive]
-    public ImmutableDictionary<int, JavaInfo> CurrentJavaDict { get; set; } = ImmutableDictionary<int, JavaInfo>.Empty;
+    private ImmutableDictionary<int, JavaInfo> _currentJavaDict = ImmutableDictionary<int, JavaInfo>.Empty;
 
     #endregion
 
     #region 选项相关
 
-    private int _selectedServerIndex = -1;
-
     public int SelectedServerIndex
     {
-        get => _selectedServerIndex;
+        get;
         set
         {
             int fin;
-            if (CurrentServerConfigs.Count == 0)
+            if (_currentServerConfigs.Count == 0)
                 fin = -1;
-            else if (value >= CurrentServerConfigs.Count)
+            else if (value >= _currentServerConfigs.Count)
                 fin = 0;
             else fin = value;
 
-            this.RaiseAndSetIfChanged(ref _selectedServerIndex, fin);
+            this.RaiseAndSetIfChanged(ref field, fin);
         }
-    }
+    } = -1;
 
-    public int SelectedServerId { [ObservableAsProperty] get; }
-    public ObservableCollection<int> ServerIDs { [ObservableAsProperty] get; }
-    public ObservableCollection<string> ServerNames { [ObservableAsProperty] get; }
+    [ObservableAsProperty] private int _selectedServerId;
+    [ObservableAsProperty] private ObservableCollection<int> _serverIDs;
+    [ObservableAsProperty] private ObservableCollection<string> _serverNames;
 
     #endregion
 
     #region 服务器相关
 
-    [Reactive] public ConcurrentDictionary<int, ObservableCollection<ColoredLine>> TerminalTexts { get; set; } = new();
+    [Reactive] private ConcurrentDictionary<int, ObservableCollection<ColoredLine>> _terminalTexts = new();
 
-    [Reactive] public ConcurrentDictionary<int, ServerStatus> ServerStatuses { get; set; } = new();
-    [Reactive] public ConcurrentDictionary<int, ObservableCollection<PlayerInfo>> UserDict { get; set; } = new();
+    [Reactive] private ConcurrentDictionary<int, ServerStatus> _serverStatuses = new();
+    [Reactive] private ConcurrentDictionary<int, ObservableCollection<PlayerInfo>> _userDict = new();
 
     [Reactive]
-    public ConcurrentDictionary<int, ObservableCollection<UserMessageLine>> MessageDict { get; set; } = new();
+    private ConcurrentDictionary<int, ObservableCollection<UserMessageLine>> _messageDict = new();
 
-    public int TotalServerCount { [ObservableAsProperty] get; }
-    [Reactive] public int RunningServerCount { get; set; }
-    public bool NotTemplateServer { [ObservableAsProperty] get; }
+    [ObservableAsProperty] private int _totalServerCount;
+    [Reactive] private int _runningServerCount;
+    [ObservableAsProperty] private bool _notTemplateServer;
 
     #endregion
 
     #region 性能监控相关
 
-    [Reactive] public ConcurrentDictionary<int, MetricsStorage> MetricsDict { get; set; } = new();
-    [Reactive] public RangedObservableLinkedList<double> GeneralCpuMetrics { get; set; } = new(30, 0);
-    [Reactive] public RangedObservableLinkedList<double> GeneralRamMetrics { get; set; } = new(30, 0);
+    [Reactive] private ConcurrentDictionary<int, MetricsStorage> _metricsDict = new();
+    [Reactive] private RangedObservableLinkedList<double> _generalCpuMetrics = new(30, 0);
+    [Reactive] private RangedObservableLinkedList<double> _generalRamMetrics = new(30, 0);
     public event EventHandler<GeneralMetricsEventArgs>? GeneralMetricsEventHandler;
 
     public void OnGeneralMetricsUpdated(double cpu, double ram, long memVal)

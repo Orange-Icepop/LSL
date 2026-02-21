@@ -10,11 +10,11 @@ using LSL.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
 
-public class InitializationViewModel : ViewModelBase
+public partial class InitializationViewModel : ViewModelBase
 {
     public InitializationViewModel(ILogger<InitializationViewModel> logger, AppStateLayer appState,
         DialogViewModel dialogModel) : base(logger)
@@ -30,7 +30,7 @@ public class InitializationViewModel : ViewModelBase
         Logger.LogInformation("Initialization VM ctor complete.");
     }
 
-    [Reactive] public UserControl MainWindowView { get; private set; }
+    [Reactive] public partial UserControl MainWindowView { get; private set; }
 
     public AppStateLayer AppState { get; }
     public ShellViewModel? Shell { get; private set; }
