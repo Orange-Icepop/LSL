@@ -74,7 +74,6 @@
         <PackageReference Include="Avalonia.Skia" Version="11.3.12" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.12" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.12" />
-        <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.8" />
         <PackageReference Include="Avalonia.Win32" Version="11.3.12" />
         <PackageReference Include="AvaloniaEdit.TextMate" Version="11.4.1" />
         <PackageReference Include="DynamicData" Version="9.4.1"/>
@@ -87,6 +86,7 @@
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
         <PackageReference Include="NLog" Version="6.1.0" />
         <PackageReference Include="NLog.Extensions.Logging" Version="6.1.1" />
+        <PackageReference Include="ReactiveUI.Avalonia" Version="11.3.8" />
         <PackageReference Include="ReactiveUI.SourceGenerators" Version="2.6.1">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -97,7 +97,6 @@
         <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.2" />
         <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.119.2" />
-        <PackageReference Include="Splat" Version="19.2.1" />
         <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="11.3.9.2" />
         <PackageReference Include="Tomlyn.Signed" Version="0.20.0" />
     </ItemGroup>

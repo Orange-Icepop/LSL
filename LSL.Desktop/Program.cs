@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Avalonia;
-using Avalonia.ReactiveUI;
+using ReactiveUI.Avalonia;
 
 namespace LSL.Desktop;
 

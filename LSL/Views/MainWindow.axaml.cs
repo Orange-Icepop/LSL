@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Platform.Storage;
-using Avalonia.ReactiveUI;
 using LSL.Common.Models;
 using LSL.ViewModels;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 using Notification = Avalonia.Controls.Notifications.Notification;
 
 namespace LSL.Views;

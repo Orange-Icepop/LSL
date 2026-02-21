@@ -1,5 +1,5 @@
-﻿using Avalonia.ReactiveUI;
-using LSL.ViewModels;
+﻿using LSL.ViewModels;
+using ReactiveUI.Avalonia;
 
 namespace LSL.Views;
 
