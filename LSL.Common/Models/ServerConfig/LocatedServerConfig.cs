@@ -242,9 +242,3 @@ public partial class MutableLocatedServerConfig : INotifyPropertyChanged
 
     public static MutableLocatedServerConfig New => LocatedServerConfig.Empty.CreateDraft();
 }
-
-public static class MutableExtensions
-{
-    public static ImmutableList<string> ToImmutable(this List<string> list) => list.ToImmutableList();
-    public static List<string> AsMutable(this ImmutableList<string> list) => list.ToList();
-}
