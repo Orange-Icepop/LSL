@@ -6,31 +6,34 @@ namespace LSL.Common.Extensions;
 [Obsolete]
 public static class JsonElementExtensions
 {
-    public static bool TryGetString(this JsonElement property, [NotNullWhen(true)] out string? value)
+    extension(JsonElement property)
     {
-        if (property.ValueKind == JsonValueKind.String)
+        public bool TryGetString([NotNullWhen(true)] out string? value)
         {
-            value = property.GetString();
-            return value is not null;
-        }
-
-        value = null;
-        return false;
-    }
-
-    public static bool TryGetNullableString(this JsonElement property, out string? value)
-    {
-        switch (property.ValueKind)
-        {
-            case JsonValueKind.String:
+            if (property.ValueKind == JsonValueKind.String)
+            {
                 value = property.GetString();
                 return value is not null;
-            case JsonValueKind.Null:
-                value = null;
-                return true;
-            default:
-                value = null;
-                return false;
+            }
+
+            value = null;
+            return false;
+        }
+
+        public bool TryGetNullableString(out string? value)
+        {
+            switch (property.ValueKind)
+            {
+                case JsonValueKind.String:
+                    value = property.GetString();
+                    return value is not null;
+                case JsonValueKind.Null:
+                    value = null;
+                    return true;
+                default:
+                    value = null;
+                    return false;
+            }
         }
     }
 }

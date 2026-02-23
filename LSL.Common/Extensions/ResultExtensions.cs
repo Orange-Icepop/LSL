@@ -60,27 +60,30 @@ public static class ResultExtensions
 
     #endregion
 
-    public static IReadOnlyList<Exception> GetWarnings(this IResultBase result)
+    extension(IResultBase result)
     {
-        if (result.IsFailed) return [];
-        var warnings = result.Reasons.OfType<IWarning>().ToList();
-        if (warnings.Count == 0) return [];
-
-        return warnings.Select(w => w switch
+        public IReadOnlyList<Exception> GetWarnings()
         {
-            ExceptionalWarningReason ewr => ewr.Exception,
-            _ => new Exception(w.Message)
-        }).ToList();
-    }
+            if (result.IsFailed) return [];
+            var warnings = result.Reasons.OfType<IWarning>().ToList();
+            if (warnings.Count == 0) return [];
 
-    public static IReadOnlyList<Exception> GetErrors(this IResultBase result)
-    {
-        if (result.IsSuccess || result.Errors.Count == 0) return [];
-        return result.Errors.Select(e => e switch
+            return warnings.Select(w => w switch
+            {
+                ExceptionalWarningReason ewr => ewr.Exception,
+                _ => new Exception(w.Message)
+            }).ToList();
+        }
+
+        public IReadOnlyList<Exception> GetErrors()
         {
-            ExceptionalError er => er.Exception,
-            _ => new Exception(e.Message)
-        }).ToList();
+            if (result.IsSuccess || result.Errors.Count == 0) return [];
+            return result.Errors.Select(e => e switch
+            {
+                ExceptionalError er => er.Exception,
+                _ => new Exception(e.Message)
+            }).ToList();
+        }
     }
 
     #region PackAndThrowIfFailed
@@ -247,14 +250,17 @@ public static class ResultExtensions
 
     #endregion
 
-    public static Result ToResult(this AggregateException aggregate)
+    extension(AggregateException aggregate)
     {
-        return Result.Fail(aggregate.InnerExceptions.Select(e => new ExceptionalError(e)));
-    }
+        public Result ToResult()
+        {
+            return Result.Fail(aggregate.InnerExceptions.Select(e => new ExceptionalError(e)));
+        }
 
-    public static Result<TResult> ToResult<TResult>(this AggregateException aggregate)
-    {
-        return Result.Fail<TResult>(aggregate.InnerExceptions.Select(e => new ExceptionalError(e)));
+        public Result<TResult> ToResult<TResult>()
+        {
+            return Result.Fail<TResult>(aggregate.InnerExceptions.Select(e => new ExceptionalError(e)));
+        }
     }
 
     public static async Task<ResultBase> Basify(this Task<Result> task) => await task.ConfigureAwait(false);

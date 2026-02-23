@@ -102,14 +102,14 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             }, async (dict, w) =>
             {
                 JavaDict = dict;
-                logger.LogWarning("Some javas are invalid when reading java config:\n{error}", w.FlattenToString());
+                logger.LogWarning("Some javas are invalid when reading java config:\n{error}", w.GetMessages());
                 if (writeBack)
                     await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath,
                         JsonSerializer.Serialize(dict, SnakeJsonOptions.Default.DictionaryInt32JavaInfo));
                 logger.LogInformation("Read Java config completed.");
             }, e =>
             {
-                logger.LogError("Something went wrong while reading java config.\n{ex}", e.FlattenToString());
+                logger.LogError("Something went wrong while reading java config.\n{ex}", e.GetMessages());
                 return Task.CompletedTask;
             });
     }
@@ -125,18 +125,10 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             }
 
             var file = await File.ReadAllTextAsync(ConfigPathProvider.JavaListPath);
-            var strDict = JsonSerializer.Deserialize(file, SnakeJsonOptions.Default.DictionaryStringJavaInfo) ??
-                          new Dictionary<string, JavaInfo>();
-            Dictionary<int, JavaInfo> tmpDict = [];
-            List<string> error = [];
-            foreach (var kvp in strDict)
-                if (!int.TryParse(kvp.Key, out var id)) error.Add(kvp.Key);
-                else tmpDict.Add(id, kvp.Value);
-
-            return error.Count > 0
-                ? Result.Ok(tmpDict).WithReason(new WarningReason(
-                    new StringBuilder("Keys ").AppendJoin(',', error).Append(" are not valid").ToString()))
-                : Result.Ok(tmpDict);
+            var strDict = JsonSerializer.Deserialize(file, SnakeJsonOptions.Default.DictionaryInt32JavaInfo);
+            return strDict is null
+                ? Result.Fail<Dictionary<int, JavaInfo>>("The json file isn't parsable.")
+                : Result.Ok(strDict);
         }
         catch (Exception e)
         {
