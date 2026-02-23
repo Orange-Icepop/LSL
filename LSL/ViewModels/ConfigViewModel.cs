@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -88,6 +89,7 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     [Reactive] public partial MutableDaemonConfig DaemonConfigs { get; private set; }
     [Reactive] public partial MutableWebConfig WebConfigs { get; private set; }
     [Reactive] public partial MutableDesktopConfig DesktopConfigs { get; private set; }
+    [Reactive] private string _universalJvmPrefix = string.Empty;
 
     #endregion
 
@@ -103,6 +105,7 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
                 DaemonConfigs = AppState.DaemonConfigs.CreateDraft();
                 WebConfigs = AppState.WebConfigs.CreateDraft();
                 DesktopConfigs = AppState.DesktopConfigs.CreateDraft();
+                UniversalJvmPrefix = string.Join('\n', DaemonConfigs.UniversalJvmPrefix);
             });
             return true;
         }
@@ -113,6 +116,10 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
 
     public async Task SaveConfigAsync()
     {
+        DaemonConfigs.UniversalJvmPrefix = UniversalJvmPrefix.Split(
+            ["\r\n", "\r", "\n"],
+            StringSplitOptions.RemoveEmptyEntries
+        ).Select(line => line.Trim()).ToList();
         var res = await Connector.SaveDaemonConfig(DaemonConfigs.FinishDraft())
             .Bind(_ => Connector.SaveWebConfig(WebConfigs.FinishDraft()))
             .Bind(_ => Connector.SaveDesktopConfig(DesktopConfigs.FinishDraft()))
@@ -199,7 +206,6 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     #region 其它命令
 
     public ICommand SearchJava { get; }
-    
     public ICommand CheckUpdateCmd { get; }
 
     #endregion
