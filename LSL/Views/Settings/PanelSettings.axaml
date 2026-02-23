@@ -12,6 +12,11 @@
             <controls:MyCard Text="网页面板设置">
                 <StackPanel Margin="25,40,23,15">
                     <CheckBox Margin="0,10,0,5" IsChecked="{Binding ConfigVM.DaemonConfigs.WebPanelAutoStart}">自动开启LSL网页面板</CheckBox>
+                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.WebConfigs.UseSsl}">开启HTTPS</CheckBox>
+                    <TextBlock Text="SSL证书路径"/>
+                    <TextBox Width="150" Text="{Binding ConfigVM.WebConfigs.CertPath}" IsEnabled="{Binding ConfigVM.WebConfigs.UseSsl}"/>
+                    <TextBlock Text="面板地址"/>
+                    <TextBox Width="150" Text="{Binding ConfigVM.WebConfigs.SiteUrl}"/>
                     <DockPanel Margin="0,5,0,5">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0" Text="监听端口" />
                         <MaskedTextBox Watermark="0~65535"
@@ -19,7 +24,6 @@
                                        Width="100"
                                        Text="{Binding ConfigVM.WebConfigs.PanelPort}" />
                     </DockPanel>
-                    <CheckBox Margin="0,5,0,5" IsChecked="{Binding ConfigVM.WebConfigs.PerformanceMonitoring}">显示性能占用</CheckBox>
                 </StackPanel>
             </controls:MyCard>
         </StackPanel>
