@@ -1,11 +1,12 @@
 using System.ComponentModel;
 using FluentResults;
 using Mutty;
+using Tomlyn;
 
 namespace LSL.Common.Models.ServerConfig;
 
 [MutableGeneration]
-public record CommonCoreConfigV1 : ICoreConfig<CommonCoreConfigV1>
+public partial record CommonCoreConfigV1 : ICoreConfig<CommonCoreConfigV1>
 {
     public int ConfigVersion => 1;
     public string JarName { get; init; } = string.Empty;

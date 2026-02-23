@@ -2,11 +2,12 @@ using System.ComponentModel;
 using FluentResults;
 using LSL.Common.Utilities.Minecraft;
 using Mutty;
+using Tomlyn;
 
 namespace LSL.Common.Models.ServerConfig;
 
 [MutableGeneration]
-public record ForgeCoreConfigV1 : ICoreConfig<ForgeCoreConfigV1>
+public partial record ForgeCoreConfigV1 : ICoreConfig<ForgeCoreConfigV1>
 {
     public ForgeCoreConfigV1()
     {

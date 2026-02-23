@@ -4,9 +4,11 @@ using System.Text;
 using FluentResults;
 using LSL.Common.Validation;
 using Mutty;
+using Tomlyn;
 
 namespace LSL.Common.Models.AppConfig;
 
+[TomlModel]
 [MutableGeneration]
 public record WebConfig : AppConfigBase<WebConfig>, IConfig<WebConfig>
 {

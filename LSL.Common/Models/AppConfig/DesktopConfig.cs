@@ -4,16 +4,18 @@ using System.Text;
 using FluentResults;
 using LSL.Common.Validation;
 using Mutty;
+using Tomlyn;
 
 namespace LSL.Common.Models.AppConfig;
 
+[TomlModel]
 [MutableGeneration]
-public record DesktopConfig : AppConfigBase<DesktopConfig>, IConfig<DesktopConfig>
+public partial record DesktopConfig : AppConfigBase<DesktopConfig>, IConfig<DesktopConfig>
 {
     [IgnoreDataMember] public static readonly DesktopConfig Default = new();
 
     // system
-    public bool EnableTray { get; init; } = true;
+    [TomlPropertyName("enable_tray")] public bool EnableTray { get; init; } = true;
     public bool EnableDaemonKeepRunning { get; init; } = true;
 
     // styles

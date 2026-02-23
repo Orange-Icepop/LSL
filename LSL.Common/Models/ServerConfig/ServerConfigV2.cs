@@ -4,7 +4,8 @@ using Tomlyn;
 
 namespace LSL.Common.Models.ServerConfig;
 
-public record ServerConfigV2 : IServerConfig<ServerConfigV2>
+[TomlModel]
+public partial record ServerConfigV2 : IServerConfig<ServerConfigV2>
 {
     public ServerConfigV2()
     {
