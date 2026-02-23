@@ -1,0 +1,15 @@
+<Border xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="LSL.Controls.MyTip">
+    <Path Data="M14,7 A7,7 0 0,0 0,7 M0,7 A7,7 0 1,0 14,7 M7,3l0,2 M7,6l0,5"
+          VerticalAlignment="Center"
+          Margin="10"
+          Stroke="#019eff"
+          StrokeThickness="2" />
+    <ToolTip.Tip>
+        <TextBlock x:Name="Tip"/>
+    </ToolTip.Tip>
+</Border>
