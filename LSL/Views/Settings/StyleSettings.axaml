@@ -2,14 +2,46 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LSL.ViewModels"
              xmlns:controls="clr-namespace:LSL.Controls"
+             x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="600"
              x:Class="LSL.Views.Settings.StyleSettings">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel>
-            <controls:MyCard Text="个性化">
+            <controls:MyCard Text="主题">
                 <StackPanel Margin="25,40,23,15">
-                    <TextBlock HorizontalAlignment="Center" FontSize="20" Text="该功能暂未开放！" />
+                    <TextBlock Text="标题"/>
+                    <TextBox Text="{Binding ConfigVM.DesktopConfigs.CustomTitleText}"/>
+                    <TextBlock Text="主题色" />
+                    <MaskedTextBox Watermark="#33F3E5" Text="{Binding ConfigVM.DesktopConfigs.ThemeColor}"/>
+                    <TextBlock Text="背景色" />
+                    <MaskedTextBox Watermark="#C7FFEE" Text="{Binding ConfigVM.DesktopConfigs.BackgroundColor}"/>
+                </StackPanel>
+            </controls:MyCard>
+            <controls:MyCard Text="背景图片">
+                <StackPanel Margin="25, 40, 23, 15">
+                    <TextBlock Text="背景图片拉伸与裁切"/>
+                    <ComboBox SelectedIndex="{Binding ConfigVM.BackgroundStretch}">
+                        <ComboBoxItem>填充</ComboBoxItem>
+                        <ComboBoxItem>内接</ComboBoxItem>
+                        <ComboBoxItem>外接</ComboBoxItem>
+                    </ComboBox>
+                    <TextBlock Text="背景透明度"/>
+                    <DockPanel Margin="0, 5">
+                        <Slider x:Name="Opacity"
+                                Maximum="1.0"
+                                Minimum="0.0"
+                                Value="{Binding ConfigVM.DesktopConfigs.BackgroundOpacity}"
+                                TickFrequency="0.1"
+                                IsSnapToTickEnabled="True"
+                                Width="400"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Margin="0,-20,10,-20" />
+                        <TextBlock Text="{Binding #Opacity.Value}" Margin="10,-3,10,0"
+                                   VerticalAlignment="Center" FontWeight="Bold" />
+                    </DockPanel>
                 </StackPanel>
             </controls:MyCard>
         </StackPanel>

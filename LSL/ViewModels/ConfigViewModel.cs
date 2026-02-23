@@ -90,6 +90,7 @@ public partial class ConfigViewModel : RegionalViewModelBase<ConfigViewModel>
     [Reactive] public partial MutableWebConfig WebConfigs { get; private set; }
     [Reactive] public partial MutableDesktopConfig DesktopConfigs { get; private set; }
     [Reactive] private string _universalJvmPrefix = string.Empty;
+    [Reactive] private int _backgroundStretch = 0;
 
     #endregion
 

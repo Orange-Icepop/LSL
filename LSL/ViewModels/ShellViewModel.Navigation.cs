@@ -129,7 +129,6 @@ public partial class ShellViewModel
     //还有就是本来希望可以创建一个方法来传递两个参数的，但是太麻烦了，还是先搁置了
     public ICommand ServerConfigCmd { get; }
     public ICommand PanelConfigCmd { get; }
-    public ICommand DownloadConfigCmd { get; }
     public ICommand CommonConfigCmd { get; }
 
     #endregion
