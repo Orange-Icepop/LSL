@@ -6,6 +6,8 @@ using LSL.Common.Models.ServerConfig;
 namespace LSL.Common.Options;
 
 [JsonSerializable(typeof(JavaInfo))]
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(int))]
 [JsonSerializable(typeof(Dictionary<int, JavaInfo>))]
 [JsonSerializable(typeof(Dictionary<string, JavaInfo>))]
 [JsonSerializable(typeof(Dictionary<int, string>))]
@@ -17,6 +19,4 @@ namespace LSL.Common.Options;
     PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower,
     UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
-public partial class SnakeJsonOptions : JsonSerializerContext
-{
-}
+public partial class SnakeJsonOptions : JsonSerializerContext;

@@ -125,10 +125,18 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
             }
 
             var file = await File.ReadAllTextAsync(ConfigPathProvider.JavaListPath);
-            var strDict = JsonSerializer.Deserialize(file, SnakeJsonOptions.Default.DictionaryInt32JavaInfo);
-            return strDict is null
-                ? Result.Fail<Dictionary<int, JavaInfo>>("The json file isn't parsable.")
-                : Result.Ok(strDict);
+            var strDict = JsonSerializer.Deserialize(file, SnakeJsonOptions.Default.DictionaryStringJavaInfo) ??
+                          new Dictionary<string, JavaInfo>();
+            Dictionary<int, JavaInfo> tmpDict = [];
+            List<string> error = [];
+            foreach (var kvp in strDict)
+                if (!int.TryParse(kvp.Key, out var id)) error.Add(kvp.Key);
+                else tmpDict.Add(id, kvp.Value);
+
+            return error.Count > 0
+                ? Result.Ok(tmpDict).WithReason(new WarningReason(
+                    new StringBuilder("Keys ").AppendJoin(',', error).Append(" are not valid").ToString()))
+                : Result.Ok(tmpDict);
         }
         catch (Exception e)
         {
