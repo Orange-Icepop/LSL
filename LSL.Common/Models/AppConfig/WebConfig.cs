@@ -24,7 +24,6 @@ public record WebConfig : AppConfigBase<WebConfig>, IConfig<WebConfig>
     // Performance
     public bool PerformanceMonitoring { get; init; } = true;
     public ulong PerformanceReportInterval { get; init; } = 1000;
-
     public ulong OutputReportInterval { get; init; } = 1000;
 
     // Styles

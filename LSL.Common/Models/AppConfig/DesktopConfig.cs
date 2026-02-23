@@ -15,7 +15,7 @@ public partial record DesktopConfig : AppConfigBase<DesktopConfig>, IConfig<Desk
     [IgnoreDataMember] public static readonly DesktopConfig Default = new();
 
     // system
-    [TomlPropertyName("enable_tray")] public bool EnableTray { get; init; } = true;
+    public bool EnableTray { get; init; } = true;
     public bool EnableDaemonKeepRunning { get; init; } = true;
 
     // styles

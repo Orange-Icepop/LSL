@@ -18,7 +18,6 @@ public enum RightPageState
 
     //Settings
     CommonSettings,
-    DownloadSettings,
     PanelSettings,
     StyleSettings,
     About,

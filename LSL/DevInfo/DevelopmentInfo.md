@@ -16,7 +16,7 @@
 - [x] 重写JavaConfigManager
 - [x] 修改EditServer方法，使其直接使用LocatedServerConfig
 - [x] 重写更新检查逻辑（缺：配置文件重写）
-- [ ] 修改服务器配置添加/修改前端
+- [x] 修改服务器配置添加/修改前端
 - [ ] 修改主配置文件配置前端
 
 ## SubProject
@@ -44,7 +44,7 @@
 - [ ] 自动更新替换
 - [ ] 增加看门狗，定期检查状态冲突漏过的东西
 - [ ] 增加Forge的自动安装机制
-- [ ] 允许从run.sh/run.bat启动服务器
+- [ ] 启动Forge服务器
 - [x] 直接显示服务器配置信息
 - [x] 主页面直接跳转到服务器配置
 - [x] 添加“在资源管理器中打开”功能
@@ -74,7 +74,7 @@
 - [x] 简化所有页面按钮的状态绑定
 - [x] 使用Geometry替代Bar按钮的图标以支持自动换色
 - [x] 重写所有图标为Geometry
-- [ ] 将ReactiveUI.Fody换为ReactiveUI.SourceGenerators
+- [x] 将ReactiveUI.Fody换为ReactiveUI.SourceGenerators
 - [x] 将ServiceResult重构为FluentResult
 - [ ] 将ServerHost的报告链转换为IObservable
 

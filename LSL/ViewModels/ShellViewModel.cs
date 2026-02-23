@@ -50,8 +50,6 @@ public partial class ShellViewModel : ViewModelBase
             await NavigateToPage(GeneralPageState.Server, RightPageState.ServerConf));
         PanelConfigCmd = ReactiveCommand.CreateFromTask(async () =>
             await NavigateToPage(GeneralPageState.Settings, RightPageState.PanelSettings));
-        DownloadConfigCmd = ReactiveCommand.CreateFromTask(async () =>
-            await NavigateToPage(GeneralPageState.Settings, RightPageState.DownloadSettings));
         CommonConfigCmd = ReactiveCommand.CreateFromTask(async () =>
             await NavigateToPage(GeneralPageState.Settings, RightPageState.CommonSettings));
 

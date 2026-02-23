@@ -182,7 +182,6 @@ public static class ViewFactory
             "AddFolder" => new AddFolder(),
             //Settings
             "CommonSettings" => new CommonSettings(),
-            "DownloadSettings" => new DownloadSettings(),
             "PanelSettings" => new PanelSettings(),
             "StyleSettings" => new StyleSettings(),
             "About" => new About(),
