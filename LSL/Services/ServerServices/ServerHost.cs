@@ -27,7 +27,7 @@ public class ServerHost : IServerHost, IDisposable
     private readonly ServerOutputStorage _outputStorage;
     // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在ViewModel中将列表项解析为ServerId
 
-    private readonly ConcurrentDictionary<int, Models.Server.ServerProcess> _runningServers = []; // 存储正在运行的服务器实例
+    private readonly ConcurrentDictionary<int, ServerProcess> _runningServers = []; // 存储正在运行的服务器实例
     private readonly ServerConfigManager _serverConfigManager;
 
     public ServerHost(ServerOutputHandler outputHandler, ServerOutputStorage outputStorage, ServerConfigManager scm,
@@ -67,7 +67,7 @@ public class ServerHost : IServerHost, IDisposable
             return Result.Fail($"Server with id {serverId} not found in configuration.");
         }
 
-        var processResult = await Models.Server.ServerProcess.Create(config);
+        var processResult = await ServerProcess.Create(config);
         if (processResult.IsFailed)
         {
             var messages = processResult.GetErrors().GetMessages();
@@ -109,7 +109,6 @@ public class ServerHost : IServerHost, IDisposable
             if (!string.IsNullOrEmpty(e.Data))
                 _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data, OutputChannelType.StdErr));
         };
-        process.BeginRead();
         process.Exited += (_, _) =>
         {
             // 移除进程的实例
@@ -211,7 +210,7 @@ public class ServerHost : IServerHost, IDisposable
 
     #region 存储服务器进程实例LoadServer(int serverId, Process process)
 
-    private void LoadServer(int serverId, Models.Server.ServerProcess process)
+    private void LoadServer(int serverId, ServerProcess process)
     {
         _runningServers.AddOrUpdate(serverId, process, (_, _) => process);
     }
@@ -232,7 +231,7 @@ public class ServerHost : IServerHost, IDisposable
 
     #region 获取服务器进程实例GetServer(int serverId)
 
-    private Models.Server.ServerProcess? GetServer(int serverId)
+    private ServerProcess? GetServer(int serverId)
     {
         return _runningServers.GetValueOrDefault(serverId);
     }

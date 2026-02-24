@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -27,19 +28,29 @@ public partial class ServerProcess : IDisposable
     
     private readonly Subject<string> _outputSubject = new();
     private readonly Subject<string> _errorSubject = new();
-    private readonly Subject<ProcessMetrics> _metricsSubject = new();
     private readonly Subject<ServerStatusInfo> _statusSubject = new();
     private readonly Subject<int> _exitedSubject = new();
 
     // 公开为只读 Observable
-    public IObservable<string> Output => _outputSubject.AsObservable();
-    public IObservable<string> Error => _errorSubject.AsObservable();
-    public IObservable<ProcessMetrics> Metrics => _metricsSubject.AsObservable();
-    public IObservable<ServerStatusInfo> Status => _statusSubject.AsObservable();
-    public IObservable<int> Exited => _exitedSubject.AsObservable();
+    public IObservable<string> OutputStream { get; }
+    public IObservable<string> ErrorStream { get; }
+    public IObservable<ProcessMetrics> MetricsStream { get; }
+    public IObservable<ServerStatusInfo> StatusStream { get; }
+    public IObservable<int> Exited { get; }
 
     private ServerProcess(int id, long allocatedMemoryBytes, ProcessStartInfo startInfo)
     {
+        OutputStream = _outputSubject.AsObservable();
+        ErrorStream = _errorSubject.AsObservable();
+        MetricsStream = Observable.Interval(TimeSpan.FromSeconds(1))
+            .TakeUntil(_exitedSubject)
+            .Select(_ => GetCurrentMetrics())
+            .Where(m => m != null)
+            .Select(m => m!)  // 忽略已退出情况
+            .Publish()
+            .RefCount();
+        StatusStream = _statusSubject.AsObservable();
+        Exited = _exitedSubject.AsObservable();
         Id = id;
         _allocatedMemoryBytes = allocatedMemoryBytes;
         StartInfo = startInfo;
@@ -50,7 +61,8 @@ public partial class ServerProcess : IDisposable
     private Process? SProcess { get; set; }
     private ProcessStartInfo StartInfo { get; }
     private StreamWriter? InStream => SProcess is not null && !SProcess.HasExited ? SProcess.StandardInput : null;
-    public bool HasExited => SProcess?.HasExited ?? false;
+    [MemberNotNullWhen(false, nameof(SProcess))]
+    public bool HasExited => SProcess?.HasExited ?? true;
 
     public static Task<Result<ServerProcess>> Create(IndexedServerConfig config)
     {
@@ -60,13 +72,55 @@ public partial class ServerProcess : IDisposable
 
     #region 性能监控
 
-    private ProcessMetricsMonitor? _monitor;
-    public event EventHandler<ProcessMetrics>? MetricsReceived;
+    private readonly object _performanceLock = new();
+    private TimeSpan _prevCpuTime;
+    private DateTime _prevTime;
 
-    private EventHandler<ProcessMetrics> _metricsHandler = null!;
-    // Monitor is used in AttachProcessHandlers method.
+    private ProcessMetrics? GetCurrentMetrics()
+    {
+        lock (_performanceLock)
+        {
+            try
+            {
+                if (HasExited) return new ProcessMetrics(Id, 0, 0, 0, true);
+                
+                double cpuUsage = 0;
+                SProcess.Refresh();
+                // 计算CPU使用率
+                var currentTime = DateTime.UtcNow;
+                var currentCpuTime = SProcess.TotalProcessorTime;
 
-    private void OnMetricsReceived(ProcessMetrics metrics) => _metricsSubject.OnNext(metrics);
+                var cpuElapsed = (currentCpuTime - _prevCpuTime).TotalSeconds;
+                var timeElapsed = (currentTime - _prevTime).TotalSeconds;
+
+                _prevTime = currentTime;
+                _prevCpuTime = currentCpuTime;
+
+                if (timeElapsed > 0 && cpuElapsed > 0)
+                {
+                    cpuUsage = cpuElapsed / timeElapsed * 100;
+                    cpuUsage /= Environment.ProcessorCount; // 多核百分比
+                }
+
+                // 计算内存使用量
+                var processMemory = SProcess.PrivateMemorySize64;
+
+                // 触发事件（即使进程已退出也通知）
+                return new ProcessMetrics(
+                    Id,
+                    cpuUsage,
+                    processMemory,
+                    _allocatedMemoryBytes,
+                    false
+                );
+            }
+            catch (Exception ex)
+            {
+                // 触发包含错误信息的事件
+                return new ProcessMetrics(Id, 0, 0, 0, true, ex.Message);
+            }
+        }
+    }
 
     #endregion
 
@@ -92,18 +146,10 @@ public partial class ServerProcess : IDisposable
         if (SProcess is null || SProcess.HasExited)
             throw new InvalidOperationException("Failed to start server process.");
         SProcess.EnableRaisingEvents = true;
-        InitProcessHandlers();
         AttachProcessHandlers();
         UpdateStatus(true, IsOnline);
-    }
-
-    public void BeginRead()
-    {
-        if (SProcess is not null && !SProcess.HasExited)
-        {
-            SProcess.BeginOutputReadLine();
-            SProcess.BeginErrorReadLine();
-        }
+        SProcess.BeginOutputReadLine();
+        SProcess.BeginErrorReadLine();
     }
 
     public void Stop() => SendCommand("stop");
@@ -111,7 +157,7 @@ public partial class ServerProcess : IDisposable
     public void SendCommand(string command)
     {
         InStream?.WriteLine(command);
-        InStream?.FlushAsync();
+        InStream?.Flush();
     }
 
     #endregion
@@ -123,7 +169,6 @@ public partial class ServerProcess : IDisposable
         _outputReceivedHandler = (_, args) => OnOutputReceived(args.Data);
         _errorReceivedHandler = (_, args) => OnErrorReceived(args.Data);
         _exitedHandler = (_, _) => OnExited();
-        _metricsHandler = (sender, args) => MetricsReceived?.Invoke(sender, args);
     }
 
     private void AttachProcessHandlers()
@@ -132,8 +177,6 @@ public partial class ServerProcess : IDisposable
         SProcess.OutputDataReceived += _outputReceivedHandler;
         SProcess.ErrorDataReceived += _errorReceivedHandler;
         SProcess.Exited += _exitedHandler;
-        _monitor = new ProcessMetricsMonitor(SProcess, Id, _allocatedMemoryBytes);
-        _monitor.MetricsUpdated += _metricsHandler;
     }
 
     private void CleanupProcessHandlers()
@@ -157,39 +200,37 @@ public partial class ServerProcess : IDisposable
     
     public async Task Kill()
     {
-        if (SProcess is not null)
-            try
+        if (SProcess is null) return;
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        try
+        {
+            if (!SProcess.HasExited)
             {
-                if (!SProcess.HasExited)
-                {
-                    SProcess.Kill();
-                    await SProcess.WaitForExitAsync(new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
-                }
+                SProcess.Kill();
+                await SProcess.WaitForExitAsync(cts.Token);
             }
-            catch (Exception) { }
-            finally
-            {
-                CleanupProcessHandlers();
-                SProcess?.Dispose();
-                SProcess = null;
-            }
+        }
+        catch (Exception) { }
+        finally
+        {
+            CleanupProcessHandlers();
+            SProcess?.Dispose();
+            SProcess = null;
+        }
     }
 
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        _monitor?.Dispose();
         SProcess?.Kill();
         SProcess?.Dispose();
         CleanupProcessHandlers();
         _outputSubject.OnCompleted();
         _errorSubject.OnCompleted();
-        _metricsSubject.OnCompleted();
         _statusSubject.OnCompleted();
         _exitedSubject.OnCompleted();
         _outputSubject.Dispose();
         _errorSubject.Dispose();
-        _metricsSubject.Dispose();
         _statusSubject.Dispose();
         _exitedSubject.Dispose();
     }
