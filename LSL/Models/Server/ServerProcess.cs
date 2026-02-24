@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentResults;
 using FluentResults.Extensions;
+using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using LSL.Services.ServerServices;
 
@@ -17,15 +21,29 @@ namespace LSL.Models.Server;
 public partial class ServerProcess : IDisposable
 {
     private readonly long _allocatedMemoryBytes;
+    private DataReceivedEventHandler _outputReceivedHandler = null!;
     private DataReceivedEventHandler _errorReceivedHandler = null!;
     private EventHandler _exitedHandler = null!;
-    private DataReceivedEventHandler _outputReceivedHandler = null!;
+    
+    private readonly Subject<string> _outputSubject = new();
+    private readonly Subject<string> _errorSubject = new();
+    private readonly Subject<ProcessMetrics> _metricsSubject = new();
+    private readonly Subject<ServerStatusInfo> _statusSubject = new();
+    private readonly Subject<int> _exitedSubject = new();
+
+    // 公开为只读 Observable
+    public IObservable<string> Output => _outputSubject.AsObservable();
+    public IObservable<string> Error => _errorSubject.AsObservable();
+    public IObservable<ProcessMetrics> Metrics => _metricsSubject.AsObservable();
+    public IObservable<ServerStatusInfo> Status => _statusSubject.AsObservable();
+    public IObservable<int> Exited => _exitedSubject.AsObservable();
 
     private ServerProcess(int id, long allocatedMemoryBytes, ProcessStartInfo startInfo)
     {
         Id = id;
         _allocatedMemoryBytes = allocatedMemoryBytes;
         StartInfo = startInfo;
+        InitProcessHandlers();
     }
 
     public int Id { get; }
@@ -34,17 +52,11 @@ public partial class ServerProcess : IDisposable
     private StreamWriter? InStream => SProcess is not null && !SProcess.HasExited ? SProcess.StandardInput : null;
     public bool HasExited => SProcess?.HasExited ?? false;
 
-    public int? ExitCode { get; private set; }
-
     public static Task<Result<ServerProcess>> Create(IndexedServerConfig config)
     {
         return config.LocatedConfig.GetStartInfo().Bind(r =>
             Result.Ok(new ServerProcess(config.ServerId, (long)config.MaxMemory * 1024 * 1024, r)));
     }
-
-    public event DataReceivedEventHandler? OutputReceived;
-    public event DataReceivedEventHandler? ErrorReceived;
-    public event EventHandler? Exited;
 
     #region 性能监控
 
@@ -54,35 +66,19 @@ public partial class ServerProcess : IDisposable
     private EventHandler<ProcessMetrics> _metricsHandler = null!;
     // Monitor is used in AttachProcessHandlers method.
 
+    private void OnMetricsReceived(ProcessMetrics metrics) => _metricsSubject.OnNext(metrics);
+
     #endregion
 
     # region 状态获取
+    public bool IsOnline { get; private set; }
+    public bool IsRunning { get; private set; }
 
-    public event EventHandler<(bool IsRunning, bool IsOnline)>? StatusEventHandler;
-    private bool _isOnline;
-
-    public bool IsOnline
+    private void UpdateStatus(bool isRunning, bool isOnline)
     {
-        get => _isOnline;
-        private set
-        {
-            if (_isOnline == value) return;
-            _isOnline = value;
-            StatusEventHandler?.Invoke(this, (IsRunning, value));
-        }
-    }
-
-    private bool _isRunning;
-
-    public bool IsRunning
-    {
-        get => _isRunning;
-        private set
-        {
-            if (_isRunning == value) return;
-            _isRunning = value;
-            StatusEventHandler?.Invoke(this, (value, IsOnline));
-        }
+        IsRunning = isRunning;
+        IsOnline = isOnline;
+        _statusSubject.OnNext(new ServerStatusInfo(Id, isRunning, isOnline));
     }
 
     #endregion
@@ -98,7 +94,7 @@ public partial class ServerProcess : IDisposable
         SProcess.EnableRaisingEvents = true;
         InitProcessHandlers();
         AttachProcessHandlers();
-        IsRunning = true;
+        UpdateStatus(true, IsOnline);
     }
 
     public void BeginRead()
@@ -110,11 +106,7 @@ public partial class ServerProcess : IDisposable
         }
     }
 
-    public void Stop()
-    {
-        InStream?.WriteLine("stop");
-        InStream?.FlushAsync();
-    }
+    public void Stop() => SendCommand("stop");
 
     public void SendCommand(string command)
     {
@@ -128,18 +120,9 @@ public partial class ServerProcess : IDisposable
 
     private void InitProcessHandlers()
     {
-        _outputReceivedHandler = (sender, args) => OutputReceived?.Invoke(sender, args);
-        _outputReceivedHandler += (_, args) => HandleOutput(args.Data);
-        _errorReceivedHandler = (sender, args) => ErrorReceived?.Invoke(sender, args);
-        _exitedHandler = (sender, args) =>
-        {
-            IsOnline = false;
-            IsRunning = false;
-            CleanupProcessHandlers();
-            ExitCode = SProcess?.ExitCode;
-            Exited?.Invoke(sender, args);
-            SProcess?.Dispose();
-        };
+        _outputReceivedHandler = (_, args) => OnOutputReceived(args.Data);
+        _errorReceivedHandler = (_, args) => OnErrorReceived(args.Data);
+        _exitedHandler = (_, _) => OnExited();
         _metricsHandler = (sender, args) => MetricsReceived?.Invoke(sender, args);
     }
 
@@ -164,10 +147,14 @@ public partial class ServerProcess : IDisposable
             SProcess.CancelOutputRead();
             SProcess.CancelErrorRead();
         }
-
-        StatusEventHandler = null;
     }
 
+    private void OnExited()
+    {
+        UpdateStatus(false, false);
+        _exitedSubject.OnNext(SProcess?.ExitCode ?? -1);
+    }
+    
     public async Task Kill()
     {
         if (SProcess is not null)
@@ -190,11 +177,21 @@ public partial class ServerProcess : IDisposable
 
     public void Dispose()
     {
+        GC.SuppressFinalize(this);
         _monitor?.Dispose();
         SProcess?.Kill();
         SProcess?.Dispose();
         CleanupProcessHandlers();
-        GC.SuppressFinalize(this);
+        _outputSubject.OnCompleted();
+        _errorSubject.OnCompleted();
+        _metricsSubject.OnCompleted();
+        _statusSubject.OnCompleted();
+        _exitedSubject.OnCompleted();
+        _outputSubject.Dispose();
+        _errorSubject.Dispose();
+        _metricsSubject.Dispose();
+        _statusSubject.Dispose();
+        _exitedSubject.Dispose();
     }
 
     #endregion
@@ -219,6 +216,22 @@ public partial class ServerProcess : IDisposable
         if (string.IsNullOrEmpty(output) || s_getPlayerMessage.IsMatch(output)) return;
         if (s_getDone.IsMatch(output)) IsOnline = true;
         else if (s_getExit.IsMatch(output)) IsOnline = false;
+    }
+
+    
+    private void OnOutputReceived(string? data)
+    {
+        if (!string.IsNullOrEmpty(data))
+        {
+            HandleOutput(data);
+            _outputSubject.OnNext(data);
+        }
+    }
+
+    private void OnErrorReceived(string? data)
+    {
+        if (!string.IsNullOrEmpty(data))
+            _errorSubject.OnNext(data);
     }
 
     #endregion

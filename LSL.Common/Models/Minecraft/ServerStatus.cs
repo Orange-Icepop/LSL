@@ -2,6 +2,17 @@ using System.ComponentModel;
 
 namespace LSL.Common.Models.Minecraft;
 
+public record ServerStatusInfo
+{
+    public ServerStatusInfo(int id, bool isRunning, bool isOnline)
+    {
+        Id = id;
+        Info = new ServerStatus(isRunning, isOnline);
+    }
+    public int Id { get; init; }
+    public ServerStatus Info { get; init; }
+}
+
 public partial class ServerStatus : INotifyPropertyChanged
 {
     public ServerStatus()
