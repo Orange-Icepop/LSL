@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -22,54 +23,84 @@ namespace LSL.Models.Server;
 /// </summary>
 public partial class ServerProcess : IDisposable
 {
+    private readonly Process _process;
+    private readonly int _id;
     private readonly long _allocatedMemoryBytes;
-    private DataReceivedEventHandler _outputReceivedHandler = null!;
-    private DataReceivedEventHandler _errorReceivedHandler = null!;
-    private EventHandler _exitedHandler = null!;
-    
-    private readonly Subject<string> _outputSubject = new();
-    private readonly Subject<string> _errorSubject = new();
-    private readonly Subject<ServerStatusInfo> _statusSubject = new();
-    private readonly Subject<int> _exitedSubject = new();
+    private readonly CompositeDisposable _subscription; // 用于管理内部订阅
+    private readonly BehaviorSubject<ServerStatusInfo> _statusSubject;
 
-    // 公开为只读 Observable
     public IObservable<string> OutputStream { get; }
     public IObservable<string> ErrorStream { get; }
+    public IObservable<int> Exited { get; }
     public IObservable<ProcessMetrics> MetricsStream { get; }
     public IObservable<ServerStatusInfo> StatusStream { get; }
-    public IObservable<int> Exited { get; }
 
-    private ServerProcess(int id, long allocatedMemoryBytes, ProcessStartInfo startInfo)
+    private ServerProcess(int id, Process process, long allocatedMemoryBytes)
     {
-        OutputStream = _outputSubject.AsObservable();
-        ErrorStream = _errorSubject.AsObservable();
+        _process = process;
+        _id = id;
+        _allocatedMemoryBytes = allocatedMemoryBytes;
+
+        // 将事件转换为 Observable
+        var output = Observable.FromEventPattern<DataReceivedEventHandler, DataReceivedEventArgs>(
+                h => _process.OutputDataReceived += h,
+                h => _process.OutputDataReceived -= h)
+            .Select(x => x.EventArgs.Data)
+            .Where(data => data != null)
+            .Select(s => s!)
+            .Finally(() => _process.CancelOutputRead());
+
+        var error = Observable.FromEventPattern<DataReceivedEventHandler, DataReceivedEventArgs>(
+                h => _process.ErrorDataReceived += h,
+                h => _process.ErrorDataReceived -= h)
+            .Select(x => x.EventArgs.Data)
+            .Where(data => data != null)
+            .Select(s => s!)
+            .Finally(() => _process.CancelErrorRead());
+
+        var exit = Observable.FromEventPattern<EventHandler, EventArgs>(
+                h => _process.Exited += h,
+                h => _process.Exited -= h)
+            .Select(_ => _process.ExitCode)
+            .Take(1)
+            .Finally(() => _process.Dispose());
+
+        // 输出和错误流在进程退出时自动完成
+        OutputStream = output.TakeUntil(exit).Publish().RefCount();
+        ErrorStream = error.TakeUntil(exit).Publish().RefCount();
+        Exited = exit.Publish().RefCount();
+
+        // 性能监控：每秒采样，直到进程退出
         MetricsStream = Observable.Interval(TimeSpan.FromSeconds(1))
-            .TakeUntil(_exitedSubject)
+            .TakeUntil(Exited)
             .Select(_ => GetCurrentMetrics())
             .Where(m => m != null)
-            .Select(m => m!)  // 忽略已退出情况
+            .Select(m => m!)
             .Publish()
             .RefCount();
+
+        // 初始化状态
+        IsRunning = true;
+        IsOnline = false;
+        _statusSubject = new BehaviorSubject<ServerStatusInfo>(
+            new ServerStatusInfo(_id, IsRunning, IsOnline));
         StatusStream = _statusSubject.AsObservable();
-        Exited = _exitedSubject.AsObservable();
-        Id = id;
-        _allocatedMemoryBytes = allocatedMemoryBytes;
-        StartInfo = startInfo;
-        InitProcessHandlers();
+
+        // 启动异步读取
+        _process.BeginOutputReadLine();
+        _process.BeginErrorReadLine();
+
+        // 可选：将内部订阅组合为一个，便于整体释放
+        // 订阅输出流和退出事件以更新状态
+        var disposables = new CompositeDisposable
+        {
+            OutputStream.Subscribe(HandleOutput),
+            Exited.Subscribe(_ => SetExited())
+        };
+        _subscription = disposables;
     }
 
-    public int Id { get; }
-    private Process? SProcess { get; set; }
-    private ProcessStartInfo StartInfo { get; }
-    private StreamWriter? InStream => SProcess is not null && !SProcess.HasExited ? SProcess.StandardInput : null;
-    [MemberNotNullWhen(false, nameof(SProcess))]
-    public bool HasExited => SProcess?.HasExited ?? true;
-
-    public static Task<Result<ServerProcess>> Create(IndexedServerConfig config)
-    {
-        return config.LocatedConfig.GetStartInfo().Bind(r =>
-            Result.Ok(new ServerProcess(config.ServerId, (long)config.MaxMemory * 1024 * 1024, r)));
-    }
+    public bool HasExited => _process.HasExited;
 
     #region 性能监控
 
@@ -83,13 +114,13 @@ public partial class ServerProcess : IDisposable
         {
             try
             {
-                if (HasExited) return new ProcessMetrics(Id, 0, 0, 0, true);
-                
+                if (HasExited) return new ProcessMetrics(_id, 0, 0, 0, true);
+
                 double cpuUsage = 0;
-                SProcess.Refresh();
+                _process.Refresh();
                 // 计算CPU使用率
                 var currentTime = DateTime.UtcNow;
-                var currentCpuTime = SProcess.TotalProcessorTime;
+                var currentCpuTime = _process.TotalProcessorTime;
 
                 var cpuElapsed = (currentCpuTime - _prevCpuTime).TotalSeconds;
                 var timeElapsed = (currentTime - _prevTime).TotalSeconds;
@@ -104,11 +135,11 @@ public partial class ServerProcess : IDisposable
                 }
 
                 // 计算内存使用量
-                var processMemory = SProcess.PrivateMemorySize64;
+                var processMemory = _process.PrivateMemorySize64;
 
                 // 触发事件（即使进程已退出也通知）
                 return new ProcessMetrics(
-                    Id,
+                    _id,
                     cpuUsage,
                     processMemory,
                     _allocatedMemoryBytes,
@@ -118,7 +149,7 @@ public partial class ServerProcess : IDisposable
             catch (Exception ex)
             {
                 // 触发包含错误信息的事件
-                return new ProcessMetrics(Id, 0, 0, 0, true, ex.Message);
+                return new ProcessMetrics(_id, 0, 0, 0, true, ex.Message);
             }
         }
     }
@@ -126,115 +157,69 @@ public partial class ServerProcess : IDisposable
     #endregion
 
     # region 状态获取
+
+    private readonly object _statusLock = new();
     public bool IsOnline { get; private set; }
     public bool IsRunning { get; private set; }
 
-    private void UpdateStatus(bool isRunning, bool isOnline)
+    private void SetOnline(bool online)
     {
-        IsRunning = isRunning;
-        IsOnline = isOnline;
-        _statusSubject.OnNext(new ServerStatusInfo(Id, isRunning, isOnline));
+        lock (_statusLock)
+        {
+            if (IsOnline == online) return;
+            IsOnline = online;
+            _statusSubject.OnNext(new ServerStatusInfo(_id, IsRunning, IsOnline));
+        }
+    }
+
+    private void SetExited()
+    {
+        lock (_statusLock)
+        {
+            IsRunning = false;
+            IsOnline = false;
+            _statusSubject.OnNext(new ServerStatusInfo(_id, IsRunning, IsOnline));
+        }
     }
 
     #endregion
 
     #region 命令
 
-    public void Start()
+    public static Task<Result<ServerProcess>> Start(IndexedServerConfig config)
     {
-        if (IsRunning) return;
-        SProcess = Process.Start(StartInfo);
-        if (SProcess is null || SProcess.HasExited)
-            throw new InvalidOperationException("Failed to start server process.");
-        SProcess.EnableRaisingEvents = true;
-        AttachProcessHandlers();
-        UpdateStatus(true, IsOnline);
-        SProcess.BeginOutputReadLine();
-        SProcess.BeginErrorReadLine();
+        return config.LocatedConfig.GetStartInfo()
+            .Bind(startInfo =>
+            {
+                var process = Process.Start(startInfo);
+                if (process == null || process.HasExited)
+                    throw new InvalidOperationException("Failed to start process.");
+                process.EnableRaisingEvents = true;
+                return Result.Ok(process);
+            })
+            .Bind(process =>
+                Result.Ok(new ServerProcess(config.ServerId, process, (long)config.MaxMemory * 1024 * 1024)));
     }
 
     public void Stop() => SendCommand("stop");
 
-    public void SendCommand(string command)
-    {
-        InStream?.WriteLine(command);
-        InStream?.Flush();
-    }
+    public void SendCommand(string command) => _process.StandardInput.WriteLine(command);
 
     #endregion
 
     #region 句柄与生命周期
 
-    private void InitProcessHandlers()
-    {
-        _outputReceivedHandler = (_, args) => OnOutputReceived(args.Data);
-        _errorReceivedHandler = (_, args) => OnErrorReceived(args.Data);
-        _exitedHandler = (_, _) => OnExited();
-    }
-
-    private void AttachProcessHandlers()
-    {
-        if (SProcess is null) return;
-        SProcess.OutputDataReceived += _outputReceivedHandler;
-        SProcess.ErrorDataReceived += _errorReceivedHandler;
-        SProcess.Exited += _exitedHandler;
-    }
-
-    private void CleanupProcessHandlers()
-    {
-        if (SProcess is not null)
-        {
-            // 停止异步读取
-            SProcess.OutputDataReceived -= _outputReceivedHandler;
-            SProcess.ErrorDataReceived -= _errorReceivedHandler;
-            SProcess.Exited -= _exitedHandler;
-            SProcess.CancelOutputRead();
-            SProcess.CancelErrorRead();
-        }
-    }
-
-    private void OnExited()
-    {
-        UpdateStatus(false, false);
-        _exitedSubject.OnNext(SProcess?.ExitCode ?? -1);
-        _exitedSubject.OnCompleted();
-    }
-    
-    public async Task Kill()
-    {
-        if (SProcess is null) return;
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        try
-        {
-            if (!SProcess.HasExited)
-            {
-                SProcess.Kill();
-                await SProcess.WaitForExitAsync(cts.Token);
-            }
-        }
-        catch (Exception) { }
-        finally
-        {
-            CleanupProcessHandlers();
-            SProcess?.Dispose();
-            SProcess = null;
-        }
-    }
-
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        SProcess?.Kill();
-        SProcess?.Dispose();
-        CleanupProcessHandlers();
-        _outputSubject.OnCompleted();
-        _errorSubject.OnCompleted();
-        _statusSubject.OnCompleted();
-        _exitedSubject.OnCompleted();
-        _outputSubject.Dispose();
-        _errorSubject.Dispose();
-        _statusSubject.Dispose();
-        _exitedSubject.Dispose();
+        if (!_process.HasExited)
+        {
+            _process.Kill();
+            _process.WaitForExit(5000);
+        }
+
+        _subscription?.Dispose();
+        _process.Dispose();
     }
 
     #endregion
@@ -254,27 +239,16 @@ public partial class ServerProcess : IDisposable
     private static readonly Regex s_getExit = GetExitRegex();
     private static readonly Regex s_getPlayerMessage = GetMessageRegex();
 
+
     private void HandleOutput(string? output)
     {
-        if (string.IsNullOrEmpty(output) || s_getPlayerMessage.IsMatch(output)) return;
-        if (s_getDone.IsMatch(output)) IsOnline = true;
-        else if (s_getExit.IsMatch(output)) IsOnline = false;
-    }
+        if (string.IsNullOrEmpty(output) || s_getPlayerMessage.IsMatch(output))
+            return;
 
-    
-    private void OnOutputReceived(string? data)
-    {
-        if (!string.IsNullOrEmpty(data))
-        {
-            HandleOutput(data);
-            _outputSubject.OnNext(data);
-        }
-    }
-
-    private void OnErrorReceived(string? data)
-    {
-        if (!string.IsNullOrEmpty(data))
-            _errorSubject.OnNext(data);
+        if (s_getDone.IsMatch(output))
+            SetOnline(true);
+        else if (s_getExit.IsMatch(output))
+            SetOnline(false);
     }
 
     #endregion
