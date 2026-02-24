@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reactive;
+using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
@@ -196,6 +197,7 @@ public partial class ServerProcess : IDisposable
     {
         UpdateStatus(false, false);
         _exitedSubject.OnNext(SProcess?.ExitCode ?? -1);
+        _exitedSubject.OnCompleted();
     }
     
     public async Task Kill()

@@ -78,8 +78,8 @@ public class ServerHost : IServerHost, IDisposable
         }
 
         var process = processResult.Value;
-        process.StatusEventHandler += (_, args) =>
-            EventBus.Instance.Fire<IStorageArgs>(new ServerStatusArgs(serverId, args.IsRunning, args.IsOnline));
+        process.StatusStream.Subscribe(args =>
+            EventBus.Instance.Fire<IStorageArgs>(new ServerStatusArgs(serverId, args.Info.IsRunning, args.Info.IsOnline)));
         // 启动服务器
         try
         {
@@ -98,26 +98,23 @@ public class ServerHost : IServerHost, IDisposable
         _logger.LogInformation("Server with id {id} is mounted.", serverId);
         _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器正在启动，请稍后......",
             OutputChannelType.LSLInfo));
-        process.OutputReceived += (_, e) =>
+        process.OutputStream.Subscribe(s =>
         {
-            if (!string.IsNullOrEmpty(e.Data))
-                _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data, OutputChannelType.StdOut));
-        };
+            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, s, OutputChannelType.StdOut));
+        });
 
-        process.ErrorReceived += (_, e) =>
+        process.ErrorStream.Subscribe(s =>
         {
-            if (!string.IsNullOrEmpty(e.Data))
-                _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data, OutputChannelType.StdErr));
-        };
-        process.Exited += (_, _) =>
+            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, s, OutputChannelType.StdErr));
+        });
+        process.Exited.Subscribe(code =>
         {
             // 移除进程的实例
             UnloadServer(serverId);
             var exitCode = "Unknown，因为服务端进程以异常的方式结束了";
             try
             {
-                var processExitCode = process.ExitCode ?? -1;
-                exitCode = processExitCode == -1 ? "Unknown，因为服务端进程以异常的方式结束了" : processExitCode.ToString();
+                exitCode = code == -1 ? "Unknown，因为服务端进程以异常的方式结束了" : code.ToString();
             }
             finally
             {
@@ -127,17 +124,17 @@ public class ServerHost : IServerHost, IDisposable
                 _logger.LogInformation("Server with id {id} is stopped.", serverId);
                 process.Dispose();
             }
-        };
-        process.StatusEventHandler += (_, e) =>
+        });
+        process.StatusStream.Subscribe(stat =>
         {
-            if (e.IsOnline)
+            if (stat.Info.IsOnline)
             {
                 _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动成功!",
                     OutputChannelType.LSLInfo));
                 _logger.LogInformation("Server with id {id} is online now.", serverId);
             }
-        };
-        process.MetricsReceived += (_, e) => { _metricsHandler.TryWrite(e); };
+        });
+        process.MetricsStream.Subscribe(e => _metricsHandler.TryWrite(e));
         _logger.LogInformation("Server with id {id} is started.", serverId);
         return Result.Ok();
     }
