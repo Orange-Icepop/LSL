@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using LSL.Models.Server;
 
 namespace LSL.Services.ServerServices;
 
@@ -36,7 +37,7 @@ public class ProcessMetricsMonitor : IDisposable
         {
             if (_disposed) return;
 
-            MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(
+            MetricsUpdated?.Invoke(this, new ProcessMetrics(
                 _id,
                 0,
                 0,
@@ -49,7 +50,7 @@ public class ProcessMetricsMonitor : IDisposable
         }
     }
 
-    public event EventHandler<ProcessMetricsEventArgs>? MetricsUpdated;
+    public event EventHandler<ProcessMetrics>? MetricsUpdated;
 
     private void OnTimerCallback(object? state)
     {
@@ -97,12 +98,12 @@ public class ProcessMetricsMonitor : IDisposable
             catch (Exception ex)
             {
                 // 触发包含错误信息的事件
-                MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(_id, 0, 0, 0, true, ex.Message));
+                MetricsUpdated?.Invoke(this, new ProcessMetrics(_id, 0, 0, 0, true, ex.Message));
                 return;
             }
 
             // 触发事件（即使进程已退出也通知）
-            MetricsUpdated?.Invoke(this, new ProcessMetricsEventArgs(
+            MetricsUpdated?.Invoke(this, new ProcessMetrics(
                 _id,
                 cpuUsage,
                 processMemory,

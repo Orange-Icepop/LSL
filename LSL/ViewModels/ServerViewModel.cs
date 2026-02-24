@@ -6,6 +6,7 @@ using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Threading;
+using LSL.Common.Models.Minecraft;
 using LSL.Models;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;

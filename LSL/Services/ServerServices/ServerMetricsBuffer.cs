@@ -8,12 +8,13 @@ using System.Threading.Tasks;
 using LSL.Common.Collections;
 using LSL.Common.DTOs;
 using LSL.Common.Utilities;
+using LSL.Models.Server;
 using Microsoft.Extensions.Logging;
 
 namespace LSL.Services.ServerServices;
 
 /// <summary>
-///     A class used to transfer ProcessMetricsEventArgs into continuous & low-cost args.
+///     A class used to transfer ProcessMetrics into continuous & low-cost args.
 ///     Also caches metrics information.
 /// </summary>
 public class ServerMetricsBuffer : IDisposable
@@ -31,7 +32,7 @@ public class ServerMetricsBuffer : IDisposable
     // 当前秒数据
     private readonly ConcurrentDictionary<int, (double Cpu, long RamBytes, double RamPercent)> _currentMetrics = new();
     private readonly ILogger<ServerMetricsBuffer> _logger;
-    private readonly Channel<ProcessMetricsEventArgs> _metricsChannel;
+    private readonly Channel<ProcessMetrics> _metricsChannel;
 
     // 当前分钟数据
     private readonly List<double> _minuteCpuSamples = [];
@@ -48,7 +49,7 @@ public class ServerMetricsBuffer : IDisposable
     {
         _logger = logger;
         _cts = new CancellationTokenSource();
-        _metricsChannel = Channel.CreateUnbounded<ProcessMetricsEventArgs>(
+        _metricsChannel = Channel.CreateUnbounded<ProcessMetrics>(
             new UnboundedChannelOptions { SingleReader = true });
 
         _processingTask = Task.Run(() => ProcessMetricsAsync(_cts.Token));
@@ -69,7 +70,7 @@ public class ServerMetricsBuffer : IDisposable
         _logger.LogInformation("ServerMetricsBuffer disposed");
     }
 
-    public bool TryWrite(ProcessMetricsEventArgs args)
+    public bool TryWrite(ProcessMetrics args)
     {
         return _metricsChannel.Writer.TryWrite(args);
     }
@@ -165,7 +166,7 @@ public class ServerMetricsBuffer : IDisposable
         _lastMinuteReportTime = DateTime.Now;
     }
 
-    private (double Cpu, long RamBytes, double RamPercent) GetValidatedMetrics(ProcessMetricsEventArgs args)
+    private (double Cpu, long RamBytes, double RamPercent) GetValidatedMetrics(ProcessMetrics args)
     {
         if (args.IsProcessExited || args.Error != null)
             return (0, 0, 0);

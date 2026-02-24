@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 using FluentResults;
 using FluentResults.Extensions;
 using LSL.Common.Models.ServerConfig;
+using LSL.Services.ServerServices;
 
-namespace LSL.Services.ServerServices;
+namespace LSL.Models.Server;
 
 /// <summary>
 ///     The process instance of an LSL hosted Minecraft server.
@@ -48,9 +49,9 @@ public partial class ServerProcess : IDisposable
     #region 性能监控
 
     private ProcessMetricsMonitor? _monitor;
-    public event EventHandler<ProcessMetricsEventArgs>? MetricsReceived;
+    public event EventHandler<ProcessMetrics>? MetricsReceived;
 
-    private EventHandler<ProcessMetricsEventArgs> _metricsHandler = null!;
+    private EventHandler<ProcessMetrics> _metricsHandler = null!;
     // Monitor is used in AttachProcessHandlers method.
 
     #endregion
