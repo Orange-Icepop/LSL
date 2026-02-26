@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Reactive;
 using System.Reactive.Disposables;
-using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentResults;
 using FluentResults.Extensions;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
-using LSL.Services.ServerServices;
 
 namespace LSL.Models.Server;
 
@@ -24,8 +18,8 @@ namespace LSL.Models.Server;
 public partial class ServerProcess : IDisposable
 {
     private readonly Process _process;
-    private readonly int _id;
-    private readonly long _allocatedMemoryBytes;
+    public int Id { get; }
+    public readonly long AllocatedMemoryBytes;
     private readonly CompositeDisposable _subscription; // 用于管理内部订阅
     private readonly BehaviorSubject<ServerStatusInfo> _statusSubject;
 
@@ -38,8 +32,8 @@ public partial class ServerProcess : IDisposable
     private ServerProcess(int id, Process process, long allocatedMemoryBytes)
     {
         _process = process;
-        _id = id;
-        _allocatedMemoryBytes = allocatedMemoryBytes;
+        Id = id;
+        AllocatedMemoryBytes = allocatedMemoryBytes;
 
         // 将事件转换为 Observable
         var output = Observable.FromEventPattern<DataReceivedEventHandler, DataReceivedEventArgs>(
@@ -83,7 +77,7 @@ public partial class ServerProcess : IDisposable
         IsRunning = true;
         IsOnline = false;
         _statusSubject = new BehaviorSubject<ServerStatusInfo>(
-            new ServerStatusInfo(_id, IsRunning, IsOnline));
+            new ServerStatusInfo(Id, IsRunning, IsOnline));
         StatusStream = _statusSubject.AsObservable();
 
         // 启动异步读取
@@ -114,7 +108,7 @@ public partial class ServerProcess : IDisposable
         {
             try
             {
-                if (HasExited) return new ProcessMetrics(_id, 0, 0, 0, true);
+                if (HasExited) return new ProcessMetrics(Id, 0, 0, 0, true);
 
                 double cpuUsage = 0;
                 _process.Refresh();
@@ -139,17 +133,17 @@ public partial class ServerProcess : IDisposable
 
                 // 触发事件（即使进程已退出也通知）
                 return new ProcessMetrics(
-                    _id,
+                    Id,
                     cpuUsage,
                     processMemory,
-                    _allocatedMemoryBytes,
+                    AllocatedMemoryBytes,
                     false
                 );
             }
             catch (Exception ex)
             {
                 // 触发包含错误信息的事件
-                return new ProcessMetrics(_id, 0, 0, 0, true, ex.Message);
+                return new ProcessMetrics(Id, 0, 0, 0, true, ex.Message);
             }
         }
     }
@@ -168,7 +162,7 @@ public partial class ServerProcess : IDisposable
         {
             if (IsOnline == online) return;
             IsOnline = online;
-            _statusSubject.OnNext(new ServerStatusInfo(_id, IsRunning, IsOnline));
+            _statusSubject.OnNext(new ServerStatusInfo(Id, IsRunning, IsOnline));
         }
     }
 
@@ -178,7 +172,7 @@ public partial class ServerProcess : IDisposable
         {
             IsRunning = false;
             IsOnline = false;
-            _statusSubject.OnNext(new ServerStatusInfo(_id, IsRunning, IsOnline));
+            _statusSubject.OnNext(new ServerStatusInfo(Id, IsRunning, IsOnline));
         }
     }
 
@@ -186,22 +180,19 @@ public partial class ServerProcess : IDisposable
 
     #region 命令
 
-    public static Task<Result<ServerProcess>> Start(IndexedServerConfig config)
+    public static Task<Result<ServerProcess>> Create(IndexedServerConfig config)
     {
         return config.LocatedConfig.GetStartInfo()
             .Bind(startInfo =>
             {
                 var process = Process.Start(startInfo);
-                if (process == null || process.HasExited)
-                    throw new InvalidOperationException("Failed to start process.");
+                if (process == null || process.HasExited) return Result.Fail<Process>("Failed to start process.");
                 process.EnableRaisingEvents = true;
                 return Result.Ok(process);
             })
             .Bind(process =>
                 Result.Ok(new ServerProcess(config.ServerId, process, (long)config.MaxMemory * 1024 * 1024)));
     }
-
-    public void Stop() => SendCommand("stop");
 
     public void SendCommand(string command) => _process.StandardInput.WriteLine(command);
 

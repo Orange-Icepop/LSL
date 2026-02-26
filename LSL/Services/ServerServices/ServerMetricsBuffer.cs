@@ -113,7 +113,7 @@ public class ServerMetricsBuffer : IDisposable
     private void ReportPerSecondMetrics()
     {
         var reports = _currentMetrics.Select(kvp =>
-                new MetricsReport(
+                new SecondlyMetricsReport(
                     kvp.Key,
                     SanitizeValue(kvp.Value.Cpu),
                     kvp.Value.RamBytes,

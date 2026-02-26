@@ -15,7 +15,7 @@ public class MetricsStorage
         MemPct = new RangedObservableLinkedList<double>(30, 0, notifiable);
     }
 
-    public MetricsStorage(MetricsReport report, bool notifiable = false) : this(notifiable)
+    public MetricsStorage(SecondlyMetricsReport report, bool notifiable = false) : this(notifiable)
     {
         Add(report);
     }
@@ -24,7 +24,7 @@ public class MetricsStorage
     public RangedObservableLinkedList<long> MemCnt { get; }
     public RangedObservableLinkedList<double> MemPct { get; }
 
-    public MetricsStorage Add(MetricsReport report)
+    public MetricsStorage Add(SecondlyMetricsReport report)
     {
         CpuPct.Add(report.CpuUsage);
         MemCnt.Add(report.MemBytes);

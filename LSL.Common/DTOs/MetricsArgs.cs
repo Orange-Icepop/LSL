@@ -3,7 +3,7 @@
 namespace LSL.Common.DTOs;
 
 /// <summary>Contracts for methods handling server metrics information in LSL.</summary>
-public interface IMetricsArgs;
+public interface IMetricsArgs : IStorageArgs;
 
 /// <summary>
 ///     The report of metrics of a single server which will be sent once a second. Will be wrapped in an IEnumerable.
@@ -13,11 +13,12 @@ public interface IMetricsArgs;
 /// <param name="CpuUsage">The CPU multicore usage percent that has been kept integer.</param>
 /// <param name="MemUsage">The RAM usage percent that has been kept integer.</param>
 /// <param name="MemBytes">How many bytes of RAM has been used by this server.</param>
-public record MetricsReport(int ServerId, double CpuUsage, long MemBytes, double MemUsage);
+public record SecondlyMetricsReport(int ServerId, double CpuUsage, long MemBytes, double MemUsage) : IMetricsArgs;
+public record MinutelyMetricsReport(int ServerId, double CpuUsage, long MemBytes, double MemUsage) : IMetricsArgs;
 
 /// <summary>Message that contains the current second's metrics of all servers that are running now.</summary>
-/// <param name="Metrics">An IEnumerable of MetricsReport instances.</param>
-public record MetricsUpdateArgs(IEnumerable<MetricsReport> Metrics) : IMetricsArgs;
+/// <param name="Metrics">An IEnumerable of SecondlyMetricsReport instances.</param>
+public record MetricsUpdateArgs(IEnumerable<SecondlyMetricsReport> Metrics) : IMetricsArgs;
 
 /// <summary>Minutely metrics report of recent 30 mins.</summary>
 public record GeneralMetricsArgs(
