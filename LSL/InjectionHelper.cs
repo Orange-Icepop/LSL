@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using LSL.Common.Extensions;
+using LSL.Models.Server;
 using LSL.Services;
 using LSL.Services.ConfigServices;
 using LSL.Services.ServerServices;
@@ -19,7 +20,6 @@ using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
 using Polly.Retry;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
-using ServerOutputHandler = LSL.Services.ServerServices.ServerOutputHandler;
 
 namespace LSL;
 
@@ -47,57 +47,57 @@ public static class InjectionHelper
         });
     }
 
-    public static void AddNetworking(this IServiceCollection collection)
+    extension(IServiceCollection collection)
     {
-        collection.AddHttpClient("LSL", client => { client.ResetUserAgent($"LSL/{DesktopConstant.Version}"); })
-            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-            {
-                PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),
-                UseCookies = false
-            })
-            .AddPolicyHandler((provider, _) => GetRetryPolicy(provider))
-            .AddPolicyHandler((provider, _) => GetCircuitBreakerPolicy(provider));
-        collection.AddSingleton<NetService>();
-    }
+        public void AddNetworking()
+        {
+            collection.AddHttpClient("LSL", client => { client.ResetUserAgent($"LSL/{DesktopConstant.Version}"); })
+                .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+                {
+                    PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),
+                    UseCookies = false
+                })
+                .AddPolicyHandler((provider, _) => GetRetryPolicy(provider))
+                .AddPolicyHandler((provider, _) => GetCircuitBreakerPolicy(provider));
+            collection.AddSingleton<NetService>();
+        }
 
-    public static void AddConfigManager(this IServiceCollection collection)
-    {
-        collection.AddSingleton<JavaConfigManager>();
-        collection.AddSingleton<ServerConfigManager>();
-        collection.AddSingleton<DaemonConfigManager>();
-        collection.AddSingleton<WebConfigManager>();
-        collection.AddSingleton<DesktopConfigManager>();
-        collection.AddSingleton<ConfigManager>();
-    }
+        public void AddConfigManager()
+        {
+            collection.AddSingleton<JavaConfigManager>();
+            collection.AddSingleton<ServerConfigManager>();
+            collection.AddSingleton<DaemonConfigManager>();
+            collection.AddSingleton<WebConfigManager>();
+            collection.AddSingleton<DesktopConfigManager>();
+            collection.AddSingleton<ConfigManager>();
+        }
 
-    public static void AddServerHost(this IServiceCollection collection)
-    {
-        collection.AddSingleton<ServerOutputHandler>();
-        collection.AddSingleton<ServerOutputStorage>();
-        collection.AddSingleton<ServerMetricsBuffer>();
-        collection.AddSingleton<ServerHost>();
-    }
+        public void AddServerHost()
+        {
+            collection.AddSingleton<IServerHost, ServerHost>();
+        }
 
-    public static void AddStartUp(this IServiceCollection collection)
-    {
-        collection.AddSingleton<DialogCoordinator>();
-        collection.AddSingleton<DialogViewModel>();
-        collection.AddSingleton<AppStateLayer>();
-        collection.AddSingleton<InitializationViewModel>();
-    }
+        public void AddStartUp()
+        {
+            collection.AddSingleton<DialogCoordinator>();
+            collection.AddSingleton<DialogViewModel>();
+            collection.AddSingleton<AppStateLayer>();
+            collection.AddSingleton<InitializationViewModel>();
+        }
 
-    public static void AddViewModels(this IServiceCollection collection)
-    {
-        collection.AddSingleton<ServiceConnector>();
-        collection.AddSingleton<PublicCommand>();
-        collection.AddSingleton<BarRegionViewModel>();
-        collection.AddSingleton<LeftRegionViewModel>();
-        collection.AddSingleton<RightRegionViewModel>();
-        collection.AddSingleton<ConfigViewModel>();
-        collection.AddSingleton<MonitorViewModel>();
-        collection.AddSingleton<ServerViewModel>();
-        collection.AddSingleton<FormPageViewModel>();
-        collection.AddSingleton<ShellViewModel>();
+        public void AddViewModels()
+        {
+            collection.AddSingleton<ServiceConnector>();
+            collection.AddSingleton<PublicCommand>();
+            collection.AddSingleton<BarRegionViewModel>();
+            collection.AddSingleton<LeftRegionViewModel>();
+            collection.AddSingleton<RightRegionViewModel>();
+            collection.AddSingleton<ConfigViewModel>();
+            collection.AddSingleton<MonitorViewModel>();
+            collection.AddSingleton<ServerViewModel>();
+            collection.AddSingleton<FormPageViewModel>();
+            collection.AddSingleton<ShellViewModel>();
+        }
     }
 
     #endregion

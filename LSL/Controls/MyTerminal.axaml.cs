@@ -3,7 +3,6 @@ using System.Collections.Specialized;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using LSL.Common.Models.Minecraft;
 using LSL.Models;
 
 namespace LSL.Controls;

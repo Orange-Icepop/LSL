@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using FluentResults;
 using FluentResults.Extensions;
 using LSL.Common.DTOs;
-using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 using Microsoft.Extensions.Logging;
 

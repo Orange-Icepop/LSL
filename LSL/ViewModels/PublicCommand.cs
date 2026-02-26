@@ -6,7 +6,6 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Avalonia.Threading;
 using FluentResults;
 using LSL.Common.Extensions;
 using LSL.Common.Utilities;

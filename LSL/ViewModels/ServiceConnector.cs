@@ -41,18 +41,15 @@ public class ServiceConnector
     private readonly ConfigManager _configManager;
     private readonly ServerHost _daemonHost;
     private readonly ILogger<ServiceConnector> _logger;
-    private readonly ServerOutputStorage _outputStorage;
     private readonly NetService _webHost;
 
-    public ServiceConnector(AppStateLayer appState, DialogCoordinator coordinator, PublicCommand commands, ConfigManager cfm, ServerHost daemon,
-        ServerOutputStorage optStorage, NetService netService)
+    public ServiceConnector(AppStateLayer appState, DialogCoordinator coordinator, PublicCommand commands, ConfigManager cfm, ServerHost daemon, NetService netService)
     {
         _appState = appState;
         _coordinator = coordinator;
         _commands = commands;
         _configManager = cfm;
         _daemonHost = daemon;
-        _outputStorage = optStorage;
         _webHost = netService;
         _logger = _appState.LoggerFactory.CreateLogger<ServiceConnector>();
         EventBus.Instance.Subscribe<IStorageArgs>(args => _serverOutputChannel.Writer.TryWrite(args));
