@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using FluentResults;
 using FluentResults.Extensions;
+using LSL.Common.DTOs;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
 
@@ -21,13 +22,13 @@ public partial class ServerProcess : IDisposable
     public int Id { get; }
     public readonly long AllocatedMemoryBytes;
     private readonly CompositeDisposable _subscription; // 用于管理内部订阅
-    private readonly BehaviorSubject<ServerStatusInfo> _statusSubject;
+    private readonly BehaviorSubject<ServerStatusArgs> _statusSubject;
 
     public IObservable<string> OutputStream { get; }
     public IObservable<string> ErrorStream { get; }
     public IObservable<int> Exited { get; }
     public IObservable<ProcessMetrics> MetricsStream { get; }
-    public IObservable<ServerStatusInfo> StatusStream { get; }
+    public IObservable<ServerStatusArgs> StatusStream { get; }
 
     private ServerProcess(int id, Process process, long allocatedMemoryBytes)
     {
@@ -76,8 +77,8 @@ public partial class ServerProcess : IDisposable
         // 初始化状态
         IsRunning = true;
         IsOnline = false;
-        _statusSubject = new BehaviorSubject<ServerStatusInfo>(
-            new ServerStatusInfo(Id, IsRunning, IsOnline));
+        _statusSubject = new BehaviorSubject<ServerStatusArgs>(
+            new ServerStatusArgs(Id, IsRunning, IsOnline));
         StatusStream = _statusSubject.AsObservable();
 
         // 启动异步读取
@@ -162,7 +163,7 @@ public partial class ServerProcess : IDisposable
         {
             if (IsOnline == online) return;
             IsOnline = online;
-            _statusSubject.OnNext(new ServerStatusInfo(Id, IsRunning, IsOnline));
+            _statusSubject.OnNext(new ServerStatusArgs(Id, IsRunning, IsOnline));
         }
     }
 
@@ -172,7 +173,7 @@ public partial class ServerProcess : IDisposable
         {
             IsRunning = false;
             IsOnline = false;
-            _statusSubject.OnNext(new ServerStatusInfo(Id, IsRunning, IsOnline));
+            _statusSubject.OnNext(new ServerStatusArgs(Id, IsRunning, IsOnline));
         }
     }
 

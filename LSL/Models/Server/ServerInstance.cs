@@ -29,7 +29,7 @@ public partial class ServerInstance : IDisposable
     private readonly ReplaySubject<PlayerUpdateArgs> _playerUpdate;
     private readonly ReplaySubject<SecondlyMetricsReport> _secondlyMetrics; // 缓存最近60秒
     private readonly ReplaySubject<MinutelyMetricsReport> _minutelyMetrics; // 缓存最近30分钟
-    private readonly BehaviorSubject<ServerStatusInfo> _status; // 只缓存最新状态
+    private readonly BehaviorSubject<ServerStatusArgs> _status; // 只缓存最新状态
 
     #endregion
 
@@ -43,14 +43,14 @@ public partial class ServerInstance : IDisposable
         _playerUpdate = new ReplaySubject<PlayerUpdateArgs>(1000);
         _secondlyMetrics = new ReplaySubject<SecondlyMetricsReport>(60);
         _minutelyMetrics = new ReplaySubject<MinutelyMetricsReport>(30);
-        _status = new BehaviorSubject<ServerStatusInfo>(new ServerStatusInfo(_serverId, true, false));
+        _status = new BehaviorSubject<ServerStatusArgs>(new ServerStatusArgs(_serverId, true, false));
         _logger = logger;
 
         // 订阅原始流并处理
         _subscriptions.Add(process.OutputStream.Subscribe(OnOutput, ex => _logger.LogError(ex, "OutputStream error")));
         _subscriptions.Add(process.ErrorStream.Subscribe(OnError, ex => _logger.LogError(ex, "ErrorStream error")));
         _subscriptions.Add(process.MetricsStream.Subscribe(OnMetrics, ex => _logger.LogError(ex, "MetricsStream error")));
-        _subscriptions.Add(process.StatusStream.Subscribe(status => _status.OnNext(status), ex => _logger.LogError(ex, "StatusStream error")));
+        _subscriptions.Add(process.StatusStream.Subscribe(OnStatus, ex => _logger.LogError(ex, "StatusStream error")));
         _subscriptions.Add(process.Exited.Subscribe(OnExited, ex => _logger.LogError(ex, "Exited error")));
         // 推送平均值报告（如果需要峰值，可再推送一个）
         _subscriptions.Add(
@@ -81,6 +81,7 @@ public partial class ServerInstance : IDisposable
 
     public void Stop()
     {
+        _logger.LogInformation("Stopping server instance {id}", _serverId);
         _colorOutput.OnNext(new ColorOutputArgs(_serverId, "[LSL|Info] Server is stopping, please wait......",
             "#019eff"));
         SendCommand("stop");
@@ -97,7 +98,7 @@ public partial class ServerInstance : IDisposable
     public IObservable<PlayerUpdateArgs> PlayerUpdate => _playerUpdate.AsObservable();
     public IObservable<SecondlyMetricsReport> SecondlyMetrics => _secondlyMetrics.AsObservable();
     public IObservable<MinutelyMetricsReport> MinutelyMetrics => _minutelyMetrics.AsObservable();
-    public IObservable<ServerStatusInfo> Status => _status.AsObservable();
+    public IObservable<ServerStatusArgs> Status => _status.AsObservable();
 
     // 统一流
     public IObservable<IStorageArgs> AllEvents => Observable.Merge<IStorageArgs>(
@@ -169,6 +170,12 @@ public partial class ServerInstance : IDisposable
         _colorOutput.OnNext(new ColorOutputArgs(_serverId, line, "#ff0000"));
     }
 
+    private void OnStatus(ServerStatusArgs status)
+    {
+        if (status.IsOnline) _logger.LogInformation("Server with id {id} is online now", _serverId);
+        _status.OnNext(status);
+    }
+
     private void OnMetrics(ProcessMetrics metrics)
     {
         _secondlyMetrics.OnNext(new SecondlyMetricsReport(_serverId, metrics.CpuUsagePercent, metrics.MemoryUsageBytes,
@@ -178,14 +185,15 @@ public partial class ServerInstance : IDisposable
     private void OnExited(int exitCode)
     {
         // 退出时发送最终状态并完成所有 Subject
-        _status.OnNext(new ServerStatusInfo(_serverId, false, false));
-        _colorOutput.OnNext(new ColorOutputArgs(_serverId, $"[LSL|Info] 服务器已退出，代码 {exitCode}", "#ff0000"));
+        _status.OnNext(new ServerStatusArgs(_serverId, false, false));
+        _colorOutput.OnNext(new ColorOutputArgs(_serverId, $"[LSL|Info] Server exited，code {exitCode}", "#ff0000"));
         _colorOutput.OnCompleted();
         _playerMessage.OnCompleted();
         _playerUpdate.OnCompleted();
         _secondlyMetrics.OnCompleted();
         _minutelyMetrics.OnCompleted();
         _status.OnCompleted();
+        _logger.LogInformation("Server with id {id} is stopped.", _serverId);
     }
 
     #endregion
