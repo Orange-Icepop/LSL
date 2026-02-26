@@ -11,7 +11,8 @@ namespace LSL.ViewModels;
 
 public partial class MonitorViewModel : RegionalViewModelBase<MonitorViewModel>
 {
-    public MonitorViewModel(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator, PublicCommand commands) : base(appState, connector, coordinator, commands)
+    public MonitorViewModel(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator,
+        PublicCommand commands) : base(appState, connector, coordinator, commands)
     {
         AppState.ServerIdChanged.Select(id => AppState.MetricsDict.GetOrAdd(id, _ => new MetricsStorage()))
             .Subscribe(ms =>
@@ -32,12 +33,18 @@ public partial class MonitorViewModel : RegionalViewModelBase<MonitorViewModel>
         AppState.ServerConfigChanged.Select(dict =>
                 dict.TryGetValue(AppState.SelectedServerId, out var value) ? value : IndexedServerConfig.None)
             .Subscribe(sc => { CurrentRamMax = (long)sc.MaxMemory * 1024 * 1024; });
-        AppState.GeneralMetricsEventHandler += (_, args) =>
-        {
-            CurrentGeneralCpuUsage = args.CpuUsage;
-            CurrentGeneralRamUsage = args.RamUsage;
-            CurrentGeneralRamValue = args.RamValue;
-        };
+        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+                handler => AppState.GeneralCpuMetrics.CollectionChanged += handler,
+                handler => AppState.GeneralCpuMetrics.CollectionChanged -= handler)
+            .Subscribe(_ => CurrentGeneralCpuUsage = AppState.GeneralCpuMetrics.LastItem);
+        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+                handler => AppState.GeneralRamMetrics.CollectionChanged += handler,
+                handler => AppState.GeneralRamMetrics.CollectionChanged -= handler)
+            .Subscribe(_ => CurrentGeneralRamUsage = AppState.GeneralRamMetrics.LastItem);
+        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+                handler => AppState.GeneralRamCount.CollectionChanged += handler,
+                handler => AppState.GeneralRamCount.CollectionChanged -= handler)
+            .Subscribe(_ => CurrentGeneralRamValue = AppState.GeneralRamCount.LastItem);
     }
 
     private void OnCpuMetricsChanged(object? sender, NotifyCollectionChangedEventArgs e)
