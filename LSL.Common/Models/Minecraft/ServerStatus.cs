@@ -3,7 +3,7 @@ using LSL.Common.DTOs;
 
 namespace LSL.Common.Models.Minecraft;
 
-public record ServerStatusInfo : IStorageArgs
+public record ServerStatusInfo : IServerMessage
 {
     public ServerStatusInfo(int id, bool isRunning, bool isOnline)
     {

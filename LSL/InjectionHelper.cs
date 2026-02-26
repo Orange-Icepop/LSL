@@ -75,6 +75,7 @@ public static class InjectionHelper
         public void AddServerHost()
         {
             collection.AddSingleton<IServerHost, ServerHost>();
+            collection.AddSingleton<ClientConnector>();
         }
 
         public void AddStartUp()

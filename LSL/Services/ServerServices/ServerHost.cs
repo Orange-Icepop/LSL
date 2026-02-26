@@ -35,16 +35,22 @@ public class ServerHost : IServerHost, IDisposable
 
     private readonly ConcurrentDictionary<int, ServerInstance> _runningServers = []; // 存储正在运行的服务器实例
     private readonly ConcurrentDictionary<int, IDisposable> _serverSubscriptions = new();
-
+    private readonly Subject<IObservable<IServerMessage>> _instanceStreams = new();
+    public IObservable<IServerMessage> ServerMessages =>
+        Observable.Merge(
+            _instanceStreams.Merge(), // 展开所有实例流
+            _globalSecondlySubject, // 全局秒级历史
+            _globalMinutelySubject // 全局分钟级历史
+        );
+    
     #region 全局统计相关
 
     private static readonly long s_systemMemory = MemoryInfo.CurrentSystemMemory; // 系统总内存（字节）
     private readonly ConcurrentDictionary<int, SecondlyMetricsReport> _latestSecondlyMetrics = new(); // 各服务器最新的秒级指标
-    private readonly Subject<GlobalSecondlyMetricsReport> _globalSecondlySubject = new(); // 每秒发布的全局指标
+    private readonly ReplaySubject<GlobalSecondlyMetricsReport> _globalSecondlySubject = new(60); // 每秒发布的全局指标
+    private readonly ReplaySubject<GlobalMinutelyMetricsReport> _globalMinutelySubject = new(30); // 每分钟发布的聚合指标
 
-    private readonly Subject<GlobalMinutelyMetricsReport> _globalMinutelySubject = new(); // 每分钟发布的聚合指标
-
-    // 公开的全局流
+    // 公开的全局性能流
     public IObservable<GlobalSecondlyMetricsReport> GlobalSecondly => _globalSecondlySubject.AsObservable();
     public IObservable<GlobalMinutelyMetricsReport> GlobalMinutely => _globalMinutelySubject.AsObservable();
 
@@ -79,6 +85,7 @@ public class ServerHost : IServerHost, IDisposable
         _secondlyTimer.Dispose();
         _minutelyTimer.Dispose();
         EndAllServers().Wait(TimeSpan.FromSeconds(5));
+        _instanceStreams.Dispose();
         _globalSecondlySubject.Dispose();
         _globalMinutelySubject.Dispose();
     }
@@ -124,7 +131,7 @@ public class ServerHost : IServerHost, IDisposable
         // 保存订阅以便卸载时取消
         _serverSubscriptions[serverId] = new CompositeDisposable(secondlySub, statusSub);
 
-        instance.AllEvents.Subscribe(args => EventBus.Instance.Fire(args));
+        _instanceStreams.OnNext(instance.AllEvents);
 
         LoadServer(serverId, instance);
         _logger.LogInformation("Server with id {id} is mounted.", serverId);

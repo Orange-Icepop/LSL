@@ -52,8 +52,8 @@ public class ServiceConnector
         _daemonHost = daemon;
         _webHost = netService;
         _logger = _appState.LoggerFactory.CreateLogger<ServiceConnector>();
-        EventBus.Instance.Subscribe<IStorageArgs>(args => _serverOutputChannel.Writer.TryWrite(args));
-        EventBus.Instance.Subscribe<IMetricsArgs>(ReceiveMetrics);
+        EventBus.Instance.Subscribe<IServerMessage>(args => _serverOutputChannel.Writer.TryWrite(args));
+        EventBus.Instance.Subscribe<IServerMetrics>(ReceiveMetrics);
         _handleOutputTask = Task.Run(() => HandleOutput(_outputCts.Token));
         _initializationTask = CopyServerOutput();
         _logger.LogInformation("Got total RAM:{ram}", MemoryInfo.CurrentSystemMemory);
@@ -274,7 +274,7 @@ public class ServiceConnector
 
     #region 读取服务器输出
 
-    private readonly Channel<IStorageArgs> _serverOutputChannel = Channel.CreateUnbounded<IStorageArgs>();
+    private readonly Channel<IServerMessage> _serverOutputChannel = Channel.CreateUnbounded<IServerMessage>();
     private CancellationTokenSource _outputCts = new();
     private Task _handleOutputTask;
 
@@ -302,7 +302,7 @@ public class ServiceConnector
         }
     }
 
-    private async Task ArgsProcessor(IStorageArgs args)
+    private async Task ArgsProcessor(IServerMessage args)
     {
         switch (args)
         {
@@ -374,7 +374,7 @@ public class ServiceConnector
 
     #region 接收服务器资源占用信息
 
-    private void ReceiveMetrics(IMetricsArgs args)
+    private void ReceiveMetrics(IServerMetrics args)
     {
         switch (args)
         {

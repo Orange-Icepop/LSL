@@ -100,7 +100,7 @@ public partial class ServerInstance : IDisposable
     public IObservable<ServerStatusArgs> Status => _status.AsObservable();
 
     // 统一流
-    public IObservable<IStorageArgs> AllEvents => Observable.Merge<IStorageArgs>(
+    public IObservable<IServerMessage> AllEvents => Observable.Merge<IServerMessage>(
         _colorOutput,
         _playerMessage,
         _playerUpdate,
