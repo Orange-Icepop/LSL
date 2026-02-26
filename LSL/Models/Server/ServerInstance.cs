@@ -123,7 +123,7 @@ public partial class ServerInstance : IDisposable
             if (s_getPlayerMessage.IsMatch(match.Groups["context"].Value))
             {
                 _playerMessage.OnNext(
-                    new PlayerMessageArgs(_serverId, match.Groups["context"].Value));
+                    new PlayerMessageArgs(_serverId, match.Groups["player"].Value, match.Groups["context"].Value));
             }
             else
             {

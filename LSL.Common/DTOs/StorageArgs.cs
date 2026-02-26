@@ -25,8 +25,8 @@ public record ServerStatusArgs(int ServerId, bool IsRunning, bool IsOnline) : IS
 /// <param name="Entering">Whether the player is logging in or out.</param>
 public record PlayerUpdateArgs(int ServerId, string UUID, string PlayerName, bool Entering) : IServerMessage;
 
-// 服务器消息事件 TODO:增加用户名参数
+// 服务器消息事件
 /// <summary>An argument being sent when a player sends a message in the server.</summary>
 /// <param name="ServerId">The registered ID of the server process which the player sends the message.</param>
 /// <param name="Message">The message content.</param>
-public record PlayerMessageArgs(int ServerId, string Message) : IServerMessage;
+public record PlayerMessageArgs(int ServerId, string PlayerName, string Message) : IServerMessage;
