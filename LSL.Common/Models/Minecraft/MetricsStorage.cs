@@ -8,14 +8,14 @@ namespace LSL.Common.Models.Minecraft;
 /// </summary>
 public class MetricsStorage
 {
-    public MetricsStorage(bool notifiable = false)
+    public MetricsStorage(bool notifiable = true)
     {
         CpuPct = new RangedObservableLinkedList<double>(30, 0, notifiable);
         MemCnt = new RangedObservableLinkedList<long>(30, 0, notifiable);
         MemPct = new RangedObservableLinkedList<double>(30, 0, notifiable);
     }
 
-    public MetricsStorage(SecondlyMetricsReport report, bool notifiable = false) : this(notifiable)
+    public MetricsStorage(SecondlyMetricsReport report, bool notifiable = true) : this(notifiable)
     {
         Add(report);
     }

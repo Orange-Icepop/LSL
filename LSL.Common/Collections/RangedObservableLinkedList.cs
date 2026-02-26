@@ -12,7 +12,7 @@ public class RangedObservableLinkedList<T> : IEnumerable<T>, INotifyCollectionCh
     {
         if (maxLength <= 0)
             throw new ArgumentOutOfRangeException(nameof(maxLength), "The maxLength must be greater than zero.");
-        _list = new LinkedList<T>();
+        _list = [];
         _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         MaxLength = maxLength;
         Notifiable = notify;

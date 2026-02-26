@@ -226,6 +226,7 @@ public partial class AppStateLayer : ReactiveObject
     [Reactive] private ConcurrentDictionary<int, MetricsStorage> _metricsDict = new();
     [Reactive] private RangedObservableLinkedList<double> _generalCpuMetrics = new(30, 0);
     [Reactive] private RangedObservableLinkedList<double> _generalRamMetrics = new(30, 0);
+    [Reactive] private RangedObservableLinkedList<double> _generalRamCount = new(30, 0);
     public event EventHandler<GeneralMetricsEventArgs>? GeneralMetricsEventHandler;
 
     public void OnGeneralMetricsUpdated(double cpu, double ram, long memVal)

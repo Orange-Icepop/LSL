@@ -13,7 +13,7 @@ public partial class MonitorViewModel : RegionalViewModelBase<MonitorViewModel>
 {
     public MonitorViewModel(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator, PublicCommand commands) : base(appState, connector, coordinator, commands)
     {
-        AppState.ServerIdChanged.Select(id => AppState.MetricsDict.GetOrAdd(id, _ => new MetricsStorage(true)))
+        AppState.ServerIdChanged.Select(id => AppState.MetricsDict.GetOrAdd(id, _ => new MetricsStorage()))
             .Subscribe(ms =>
             {
                 CurrentCpuMetrics.CollectionChanged -= OnCpuMetricsChanged;
