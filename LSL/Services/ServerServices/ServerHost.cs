@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using FluentResults;
+using LSL.Common.Collections;
+using LSL.Common.DTOs;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
+using LSL.Common.Utilities;
 using LSL.Models.Server;
 using LSL.Services.ConfigServices;
 using Microsoft.Extensions.Logging;
@@ -17,30 +23,64 @@ namespace LSL.Services.ServerServices;
 /// </summary>
 public class ServerHost : IServerHost, IDisposable
 {
+    #region 依赖
+
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<ServerHost> _logger;
-    
+    private readonly ServerConfigManager _serverConfigManager;
+
+    #endregion
+
     // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在ViewModel中将列表项解析为ServerId
 
     private readonly ConcurrentDictionary<int, ServerInstance> _runningServers = []; // 存储正在运行的服务器实例
-    private readonly ServerConfigManager _serverConfigManager;
+    private readonly ConcurrentDictionary<int, IDisposable> _serverSubscriptions = new();
+
+    #region 全局统计相关
+
+    private static readonly long s_systemMemory = MemoryInfo.CurrentSystemMemory; // 系统总内存（字节）
+    private readonly ConcurrentDictionary<int, SecondlyMetricsReport> _latestSecondlyMetrics = new(); // 各服务器最新的秒级指标
+    private readonly Subject<GlobalSecondlyMetricsReport> _globalSecondlySubject = new(); // 每秒发布的全局指标
+
+    private readonly Subject<GlobalMinutelyMetricsReport> _globalMinutelySubject = new(); // 每分钟发布的聚合指标
+
+    // 公开的全局流
+    public IObservable<GlobalSecondlyMetricsReport> GlobalSecondly => _globalSecondlySubject.AsObservable();
+    public IObservable<GlobalMinutelyMetricsReport> GlobalMinutely => _globalMinutelySubject.AsObservable();
+
+    // 用于分钟级聚合的历史采样（最近一分钟的秒级报告）
+    private readonly RangedObservableLinkedList<GlobalSecondlyMetricsReport> _lastMinuteSamples = new(60);
+
+    // 定时器
+    private readonly IDisposable _secondlyTimer;
+    private readonly IDisposable _minutelyTimer;
+
+    #endregion
 
     public ServerHost(ServerConfigManager scm, ILogger<ServerHost> logger, ILoggerFactory loggerFactory)
     {
         _serverConfigManager = scm;
         _logger = logger;
         _loggerFactory = loggerFactory;
-        _logger.LogInformation("ServerHost Launched");
+        // 每秒触发一次全局统计
+        _secondlyTimer = Observable.Interval(TimeSpan.FromSeconds(1))
+            .Subscribe(_ => OnSecondlyTick());
+
+        // 每分钟触发一次分钟级聚合
+        _minutelyTimer = Observable.Interval(TimeSpan.FromMinutes(1))
+            .Subscribe(_ => OnMinutelyTick());
+        _logger.LogInformation("ServerHost initialized");
     }
 
     // 释放资源
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        foreach (var server in _runningServers.Values)
-        {
-            Task.Run((() => server.Dispose()));
-        }
+        _secondlyTimer.Dispose();
+        _minutelyTimer.Dispose();
+        EndAllServers().Wait(TimeSpan.FromSeconds(5));
+        _globalSecondlySubject.Dispose();
+        _globalMinutelySubject.Dispose();
     }
 
     #region 启动服务器RunServer(int serverId)
@@ -61,27 +101,33 @@ public class ServerHost : IServerHost, IDisposable
             return Result.Fail($"Server with id {serverId} not found in configuration.");
         }
 
-        var processResult = await ServerInstance.Create(config, _loggerFactory.CreateLogger<ServerInstance>());
-        if (processResult.IsFailed)
+        var instanceResult = await ServerInstance.Create(config, _loggerFactory.CreateLogger<ServerInstance>());
+        if (instanceResult.IsFailed)
         {
-            var messages = processResult.GetErrors().GetMessages();
+            var messages = instanceResult.GetErrors().GetMessages();
             _logger.LogError("Server with id {id} failed to run: {error}.", serverId, messages);
-            return processResult.Bind(_ => Result.Ok());
+            return instanceResult.Bind(_ => Result.Ok());
         }
 
-        var process = processResult.Value;
-        process.AllEvents.Subscribe(args => EventBus.Instance.Fire(args));
+        var instance = instanceResult.Value;
+        // 订阅秒级指标，更新最新数据
+        var secondlySub = instance.SecondlyMetrics.Subscribe(metrics =>
+        {
+            _latestSecondlyMetrics[serverId] = metrics;
+        });
 
-        LoadServer(serverId, process);
+        // 订阅状态流，监测进程退出以清理资源
+        var statusSub = instance.Status
+            .Where(status => !status.IsRunning)
+            .Subscribe(_ => UnloadServer(serverId));
+
+        // 保存订阅以便卸载时取消
+        _serverSubscriptions[serverId] = new CompositeDisposable(secondlySub, statusSub);
+
+        instance.AllEvents.Subscribe(args => EventBus.Instance.Fire(args));
+
+        LoadServer(serverId, instance);
         _logger.LogInformation("Server with id {id} is mounted.", serverId);
-        process.Status.Where(info => !info.IsRunning)
-            .Subscribe(_ =>
-            {
-                // 移除进程的实例
-                UnloadServer(serverId);
-                process.Dispose();
-            });
-        _logger.LogInformation("Server with id {id} is started.", serverId);
         return Result.Ok();
     }
 
@@ -125,9 +171,14 @@ public class ServerHost : IServerHost, IDisposable
 
     public async Task EndAllServers()
     {
-        await Parallel.ForEachAsync(_runningServers.Values, (i, t) =>
+        await Parallel.ForEachAsync(_runningServers.Values, (i, _) =>
         {
-            Task.Run(i.Dispose, t);
+            i.Dispose();
+            return ValueTask.CompletedTask;
+        });
+        await Parallel.ForEachAsync(_serverSubscriptions.Values, (i, _) =>
+        {
+            i.Dispose();
             return ValueTask.CompletedTask;
         });
         _runningServers.Clear();
@@ -149,10 +200,18 @@ public class ServerHost : IServerHost, IDisposable
 
     private void UnloadServer(int serverId)
     {
-        if (_runningServers.TryRemove(serverId, out _))
+        if (_runningServers.TryRemove(serverId, out var process))
+        {
+            process.Dispose();
+            if (_serverSubscriptions.TryRemove(serverId, out var subscription))
+            {
+                subscription.Dispose();
+            }
+
             _logger.LogInformation("Server with id {id} unloaded successfully.", serverId);
-        else
-            _logger.LogError("Server with id {id} not found.", serverId);
+        }
+        else _logger.LogError("Server with id {id} not found.", serverId);
+        _latestSecondlyMetrics.TryRemove(serverId, out _);
     }
 
     #endregion
@@ -173,6 +232,60 @@ public class ServerHost : IServerHost, IDisposable
         var server = GetServer(serverId);
         server?.Dispose();
         UnloadServer(serverId);
+    }
+
+    #endregion
+
+    #region 性能记录
+
+    private void OnSecondlyTick()
+    {
+        // 获取所有服务器的最新秒级指标快照
+        var snapshots = _latestSecondlyMetrics.Values.ToArray();
+        if (snapshots.Length == 0) return;
+
+        double totalCpu = 0;
+        long totalMem = 0;
+        foreach (var s in snapshots)
+        {
+            totalCpu += s.CpuUsage;
+            totalMem += s.MemBytes;
+        }
+
+        double totalMemPercent = (double)totalMem / s_systemMemory * 100;
+
+        var report = new GlobalSecondlyMetricsReport(
+            DateTime.UtcNow,
+            totalCpu,
+            totalMem,
+            totalMemPercent
+        );
+
+        _globalSecondlySubject.OnNext(report);
+
+        // 添加到分钟采样列表
+        _lastMinuteSamples.Add(report);
+    }
+
+    private void OnMinutelyTick()
+    {
+        if (_latestSecondlyMetrics.IsEmpty) return;
+        var list = _lastMinuteSamples.ToArray();
+        if (list.Length == 0) return;
+
+        // 计算平均值和峰值
+        var avgCpu = list.Average(r => r.CpuUsage);
+        var avgMem = (long)list.Average(r => r.MemBytes);
+        var avgMemPercent = list.Average(r => r.MemUsage);
+
+        var minutelyReport = new GlobalMinutelyMetricsReport(
+            DateTime.UtcNow,
+            avgCpu,
+            avgMem,
+            avgMemPercent
+        );
+
+        _globalMinutelySubject.OnNext(minutelyReport);
     }
 
     #endregion

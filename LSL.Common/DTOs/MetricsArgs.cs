@@ -15,6 +15,8 @@ public interface IMetricsArgs : IStorageArgs;
 /// <param name="MemBytes">How many bytes of RAM has been used by this server.</param>
 public record SecondlyMetricsReport(int ServerId, double CpuUsage, long MemBytes, double MemUsage) : IMetricsArgs;
 public record MinutelyMetricsReport(int ServerId, double CpuUsage, long MemBytes, double MemUsage) : IMetricsArgs;
+public record GlobalSecondlyMetricsReport(DateTime Timestamp, double CpuUsage, long MemBytes, double MemUsage) : IMetricsArgs;
+public record GlobalMinutelyMetricsReport(DateTime Timestamp, double CpuUsage, long MemBytes, double MemUsage) : IMetricsArgs;
 
 /// <summary>Message that contains the current second's metrics of all servers that are running now.</summary>
 /// <param name="Metrics">An IEnumerable of SecondlyMetricsReport instances.</param>
