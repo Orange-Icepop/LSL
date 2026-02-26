@@ -22,6 +22,7 @@ using LSL.Common.Models.ServerConfig;
 using LSL.Common.Utilities;
 using LSL.Common.Utilities.Minecraft;
 using LSL.Models;
+using LSL.Models.Server;
 using LSL.Services;
 using LSL.Services.ConfigServices;
 using LSL.Services.ServerServices;
@@ -40,12 +41,12 @@ public class ServiceConnector
     private readonly DialogCoordinator _coordinator;
     private readonly PublicCommand _commands;
     private readonly ConfigManager _configManager;
-    private readonly ServerHost _daemonHost;
+    private readonly IServerHost _daemonHost;
     private readonly ILogger<ServiceConnector> _logger;
     private readonly NetService _webHost;
     private readonly CompositeDisposable _disposables;
 
-    public ServiceConnector(AppStateLayer appState, DialogCoordinator coordinator, PublicCommand commands, ConfigManager cfm, ServerHost daemon, NetService netService)
+    public ServiceConnector(AppStateLayer appState, DialogCoordinator coordinator, PublicCommand commands, ConfigManager cfm, IServerHost daemon, NetService netService)
     {
         _appState = appState;
         _coordinator = coordinator;

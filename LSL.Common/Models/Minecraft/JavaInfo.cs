@@ -27,6 +27,6 @@ public record JavaInfo
     public async Task<bool> Validate()
     {
         if (!File.Exists(Path)) return false;
-        return await JavaFinder.GetJavaInfo(Path) is null;
+        return await JavaFinder.GetJavaInfo(Path) is not null;
     }
 }

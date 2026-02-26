@@ -13,7 +13,7 @@
         <PackageReference Include="Google.Protobuf" Version="3.33.5" />
         <PackageReference Include="Google.Protobuf.Tools" Version="3.33.5" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
-        <PackageReference Include="Mutty" Version="1.0.65">
+        <PackageReference Include="Mutty" Version="1.0.75">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
