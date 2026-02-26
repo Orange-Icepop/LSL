@@ -55,7 +55,7 @@ public record LocatedServerConfig
     public async Task<Result<ProcessStartInfo>> GetStartInfo()
     {
         if (!await CheckComponents.IsValidJava(JavaPath))
-            return Result.Fail<ProcessStartInfo>(new Error($"Java at {JavaPath} is not valid"));
+            return Result.Fail<ProcessStartInfo>($"Java at {JavaPath} is not valid");
         if (ServerType is not ServerCoreType.Forge && File.Exists(CommonCoreInfo?.JarName))
             return Result.Ok(new ProcessStartInfo
             {

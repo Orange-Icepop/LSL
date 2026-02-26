@@ -1,11 +1,18 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using FluentResults;
+using LSL.Common.Collections;
 using LSL.Common.DTOs;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
+using LSL.Common.Utilities;
+using LSL.Models.Server;
 using LSL.Services.ConfigServices;
 using Microsoft.Extensions.Logging;
 
@@ -16,34 +23,71 @@ namespace LSL.Services.ServerServices;
 /// </summary>
 public class ServerHost : IServerHost, IDisposable
 {
+    #region 依赖
+
+    private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<ServerHost> _logger;
-
-    private readonly ServerMetricsBuffer _metricsHandler;
-
-    // 启动输出处理器
-    private readonly ServerOutputHandler _outputHandler;
-
-    private readonly ServerOutputStorage _outputStorage;
-    // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在ViewModel中将列表项解析为ServerId
-
-    private readonly ConcurrentDictionary<int, ServerProcess> _runningServers = []; // 存储正在运行的服务器实例
     private readonly ServerConfigManager _serverConfigManager;
 
-    public ServerHost(ServerOutputHandler outputHandler, ServerOutputStorage outputStorage, ServerConfigManager scm,
-        ServerMetricsBuffer smt, ILogger<ServerHost> logger)
+    #endregion
+
+    // 注意：接受ServerId作为参数的方法采用的都是注册服务器的顺序，必须先在ViewModel中将列表项解析为ServerId
+
+    private readonly ConcurrentDictionary<int, ServerInstance> _runningServers = []; // 存储正在运行的服务器实例
+    private readonly ConcurrentDictionary<int, IDisposable> _serverSubscriptions = new();
+    private readonly Subject<IObservable<IServerMessage>> _instanceStreams = new();
+    public IObservable<IServerMessage> ServerMessages =>
+        Observable.Merge(
+            _instanceStreams.Merge(), // 展开所有实例流
+            _globalSecondlySubject, // 全局秒级历史
+            _globalMinutelySubject // 全局分钟级历史
+        );
+    
+    #region 全局统计相关
+
+    private static readonly long s_systemMemory = MemoryInfo.CurrentSystemMemory; // 系统总内存（字节）
+    private readonly ConcurrentDictionary<int, SecondlyMetricsReport> _latestSecondlyMetrics = new(); // 各服务器最新的秒级指标
+    private readonly ReplaySubject<GlobalSecondlyMetricsReport> _globalSecondlySubject = new(60); // 每秒发布的全局指标
+    private readonly ReplaySubject<GlobalMinutelyMetricsReport> _globalMinutelySubject = new(30); // 每分钟发布的聚合指标
+
+    // 公开的全局性能流
+    public IObservable<GlobalSecondlyMetricsReport> GlobalSecondly => _globalSecondlySubject.AsObservable();
+    public IObservable<GlobalMinutelyMetricsReport> GlobalMinutely => _globalMinutelySubject.AsObservable();
+
+    // 用于分钟级聚合的历史采样（最近一分钟的秒级报告）
+    private readonly RangedObservableLinkedList<GlobalSecondlyMetricsReport> _lastMinuteSamples = new(60);
+
+    // 定时器
+    private readonly IDisposable _secondlyTimer;
+    private readonly IDisposable _minutelyTimer;
+
+    #endregion
+
+    public ServerHost(ServerConfigManager scm, ILogger<ServerHost> logger, ILoggerFactory loggerFactory)
     {
-        _outputStorage = outputStorage;
-        _outputHandler = outputHandler;
         _serverConfigManager = scm;
-        _metricsHandler = smt;
         _logger = logger;
-        _logger.LogInformation("ServerHost Launched");
+        _loggerFactory = loggerFactory;
+        // 每秒触发一次全局统计
+        _secondlyTimer = Observable.Interval(TimeSpan.FromSeconds(1))
+            .Subscribe(_ => OnSecondlyTick());
+
+        // 每分钟触发一次分钟级聚合
+        _minutelyTimer = Observable.Interval(TimeSpan.FromMinutes(1))
+            .Subscribe(_ => OnMinutelyTick());
+        _logger.LogInformation("ServerHost initialized");
     }
 
     // 释放资源
     public void Dispose()
     {
         GC.SuppressFinalize(this);
+        _secondlyTimer.Dispose();
+        _minutelyTimer.Dispose();
+        EndAllServers().Wait(TimeSpan.FromSeconds(5));
+        _instanceStreams.Dispose();
+        _globalSecondlySubject.Dispose();
+        _globalMinutelySubject.Dispose();
     }
 
     #region 启动服务器RunServer(int serverId)
@@ -53,8 +97,6 @@ public class ServerHost : IServerHost, IDisposable
         _logger.LogInformation("Starting server with id {id}...", serverId);
         if (GetServer(serverId) is not null)
         {
-            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 警告]: 服务器已经在运行中。",
-                OutputChannelType.LSLError));
             _logger.LogError("Server with id {id} is already running. Not running another instance.", serverId);
             return Result.Ok().WithReason(new WarningReason($"Server with id {serverId} is already running."));
         }
@@ -66,79 +108,33 @@ public class ServerHost : IServerHost, IDisposable
             return Result.Fail($"Server with id {serverId} not found in configuration.");
         }
 
-        var processResult = await ServerProcess.Create(config);
-        if (processResult.IsFailed)
+        var instanceResult = await ServerInstance.Create(config, _loggerFactory.CreateLogger<ServerInstance>());
+        if (instanceResult.IsFailed)
         {
-            var messages = processResult.GetErrors().GetMessages();
-            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, $"[LSL 错误]: {messages}",
-                OutputChannelType.LSLError));
+            var messages = instanceResult.GetErrors().GetMessages();
             _logger.LogError("Server with id {id} failed to run: {error}.", serverId, messages);
-            return processResult.Bind(_ => Result.Ok());
+            return instanceResult.Bind(_ => Result.Ok());
         }
 
-        var process = processResult.Value;
-        process.StatusEventHandler += (_, args) =>
-            EventBus.Instance.Fire<IStorageArgs>(new ServerStatusArgs(serverId, args.IsRunning, args.IsOnline));
-        // 启动服务器
-        try
+        var instance = instanceResult.Value;
+        // 订阅秒级指标，更新最新数据
+        var secondlySub = instance.SecondlyMetrics.Subscribe(metrics =>
         {
-            process.Start();
-        }
-        catch (Exception ex)
-        {
-            process.Dispose();
-            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器启动失败，请检查配置文件。",
-                OutputChannelType.LSLError));
-            _logger.LogError("Server with id {id} failed to run.\n{ex}", serverId, ex);
-            return Result.Fail(new ExceptionalError(ex));
-        }
+            _latestSecondlyMetrics[serverId] = metrics;
+        });
 
-        LoadServer(serverId, process);
+        // 订阅状态流，监测进程退出以清理资源
+        var statusSub = instance.Status
+            .Where(status => !status.IsRunning)
+            .Subscribe(_ => UnloadServer(serverId));
+
+        // 保存订阅以便卸载时取消
+        _serverSubscriptions[serverId] = new CompositeDisposable(secondlySub, statusSub);
+
+        _instanceStreams.OnNext(instance.AllEvents);
+
+        LoadServer(serverId, instance);
         _logger.LogInformation("Server with id {id} is mounted.", serverId);
-        _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器正在启动，请稍后......",
-            OutputChannelType.LSLInfo));
-        process.OutputReceived += (_, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data))
-                _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data, OutputChannelType.StdOut));
-        };
-
-        process.ErrorReceived += (_, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data))
-                _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, e.Data, OutputChannelType.StdErr));
-        };
-        process.BeginRead();
-        process.Exited += (_, _) =>
-        {
-            // 移除进程的实例
-            UnloadServer(serverId);
-            var exitCode = "Unknown，因为服务端进程以异常的方式结束了";
-            try
-            {
-                var processExitCode = process.ExitCode ?? -1;
-                exitCode = processExitCode == -1 ? "Unknown，因为服务端进程以异常的方式结束了" : processExitCode.ToString();
-            }
-            finally
-            {
-                var status = $"已关闭，进程退出码为{exitCode}";
-                _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 当前服务器" + status,
-                    OutputChannelType.StdOut));
-                _logger.LogInformation("Server with id {id} is stopped.", serverId);
-                process.Dispose();
-            }
-        };
-        process.StatusEventHandler += (_, e) =>
-        {
-            if (e.IsOnline)
-            {
-                _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 服务器启动成功!",
-                    OutputChannelType.LSLInfo));
-                _logger.LogInformation("Server with id {id} is online now.", serverId);
-            }
-        };
-        process.MetricsReceived += (_, e) => { _metricsHandler.TryWrite(e); };
-        _logger.LogInformation("Server with id {id} is started.", serverId);
         return Result.Ok();
     }
 
@@ -149,18 +145,9 @@ public class ServerHost : IServerHost, IDisposable
     public void StopServer(int serverId)
     {
         var server = GetServer(serverId);
-        if (server is not null && server.IsRunning)
-        {
-            _logger.LogInformation("Stopping server with id {id}...", serverId);
-            server.Stop();
-            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......",
-                OutputChannelType.LSLInfo));
-        }
-        else
-        {
-            _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送",
-                OutputChannelType.LSLError));
-        }
+        if (server is null) return;
+        _logger.LogInformation("Stopping server with id {id}...", serverId);
+        server.Stop();
     }
 
     #endregion
@@ -170,29 +157,19 @@ public class ServerHost : IServerHost, IDisposable
     public bool SendCommand(int serverId, string command)
     {
         var server = GetServer(serverId);
-        if (server is not null && server.IsRunning)
-        {
-            if (command == "stop")
-                _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 消息]: 关闭服务器命令已发出，请等待......",
-                    OutputChannelType.LSLInfo));
-            server.SendCommand(command);
-            return true;
-        }
-
-        _outputHandler.TrySendLine(new TerminalOutputArgs(serverId, "[LSL 错误]: 服务器未启动，消息无法发送",
-            OutputChannelType.LSLError));
-        return false;
+        if (server is null) return false;
+        server.SendCommand(command);
+        return true;
     }
 
     #endregion
 
     #region 强制结束服务器进程EndServer(int serverId)
 
-    public async Task EndServer(int serverId)
+    public Task EndServer(int serverId)
     {
         var server = GetServer(serverId);
-        var t = server?.Kill();
-        if (t is not null) await t;
+        return Task.Run(() => server?.Dispose());
     }
 
     #endregion
@@ -201,16 +178,25 @@ public class ServerHost : IServerHost, IDisposable
 
     public async Task EndAllServers()
     {
-        await Parallel.ForEachAsync(_runningServers.Values, (p, _) => new ValueTask(p.Kill()));
+        await Parallel.ForEachAsync(_runningServers.Values, (i, _) =>
+        {
+            i.Dispose();
+            return ValueTask.CompletedTask;
+        });
+        await Parallel.ForEachAsync(_serverSubscriptions.Values, (i, _) =>
+        {
+            i.Dispose();
+            return ValueTask.CompletedTask;
+        });
         _runningServers.Clear();
         _logger.LogInformation("Ended all servers.");
     }
 
     #endregion
 
-    #region 存储服务器进程实例LoadServer(int serverId, Process process)
+    #region 存储服务器进程实例
 
-    private void LoadServer(int serverId, ServerProcess process)
+    private void LoadServer(int serverId, ServerInstance process)
     {
         _runningServers.AddOrUpdate(serverId, process, (_, _) => process);
     }
@@ -221,17 +207,25 @@ public class ServerHost : IServerHost, IDisposable
 
     private void UnloadServer(int serverId)
     {
-        if (_runningServers.TryRemove(serverId, out _))
+        if (_runningServers.TryRemove(serverId, out var process))
+        {
+            process.Dispose();
+            if (_serverSubscriptions.TryRemove(serverId, out var subscription))
+            {
+                subscription.Dispose();
+            }
+
             _logger.LogInformation("Server with id {id} unloaded successfully.", serverId);
-        else
-            _logger.LogError("Server with id {id} not found.", serverId);
+        }
+        else _logger.LogError("Server with id {id} not found.", serverId);
+        _latestSecondlyMetrics.TryRemove(serverId, out _);
     }
 
     #endregion
 
     #region 获取服务器进程实例GetServer(int serverId)
 
-    private ServerProcess? GetServer(int serverId)
+    private ServerInstance? GetServer(int serverId)
     {
         return _runningServers.GetValueOrDefault(serverId);
     }
@@ -245,6 +239,60 @@ public class ServerHost : IServerHost, IDisposable
         var server = GetServer(serverId);
         server?.Dispose();
         UnloadServer(serverId);
+    }
+
+    #endregion
+
+    #region 性能记录
+
+    private void OnSecondlyTick()
+    {
+        // 获取所有服务器的最新秒级指标快照
+        var snapshots = _latestSecondlyMetrics.Values.ToArray();
+        if (snapshots.Length == 0) return;
+
+        double totalCpu = 0;
+        long totalMem = 0;
+        foreach (var s in snapshots)
+        {
+            totalCpu += s.CpuUsage;
+            totalMem += s.MemBytes;
+        }
+
+        double totalMemPercent = (double)totalMem / s_systemMemory * 100;
+
+        var report = new GlobalSecondlyMetricsReport(
+            DateTime.UtcNow,
+            totalCpu,
+            totalMem,
+            totalMemPercent
+        );
+
+        _globalSecondlySubject.OnNext(report);
+
+        // 添加到分钟采样列表
+        _lastMinuteSamples.Add(report);
+    }
+
+    private void OnMinutelyTick()
+    {
+        if (_latestSecondlyMetrics.IsEmpty) return;
+        var list = _lastMinuteSamples.ToArray();
+        if (list.Length == 0) return;
+
+        // 计算平均值和峰值
+        var avgCpu = list.Average(r => r.CpuUsage);
+        var avgMem = (long)list.Average(r => r.MemBytes);
+        var avgMemPercent = list.Average(r => r.MemUsage);
+
+        var minutelyReport = new GlobalMinutelyMetricsReport(
+            DateTime.UtcNow,
+            avgCpu,
+            avgMem,
+            avgMemPercent
+        );
+
+        _globalMinutelySubject.OnNext(minutelyReport);
     }
 
     #endregion

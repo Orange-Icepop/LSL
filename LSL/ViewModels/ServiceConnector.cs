@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
@@ -41,24 +42,21 @@ public class ServiceConnector
     private readonly ConfigManager _configManager;
     private readonly ServerHost _daemonHost;
     private readonly ILogger<ServiceConnector> _logger;
-    private readonly ServerOutputStorage _outputStorage;
     private readonly NetService _webHost;
+    private readonly CompositeDisposable _disposables;
 
-    public ServiceConnector(AppStateLayer appState, DialogCoordinator coordinator, PublicCommand commands, ConfigManager cfm, ServerHost daemon,
-        ServerOutputStorage optStorage, NetService netService)
+    public ServiceConnector(AppStateLayer appState, DialogCoordinator coordinator, PublicCommand commands, ConfigManager cfm, ServerHost daemon, NetService netService)
     {
         _appState = appState;
         _coordinator = coordinator;
         _commands = commands;
         _configManager = cfm;
         _daemonHost = daemon;
-        _outputStorage = optStorage;
         _webHost = netService;
         _logger = _appState.LoggerFactory.CreateLogger<ServiceConnector>();
-        EventBus.Instance.Subscribe<IStorageArgs>(args => _serverOutputChannel.Writer.TryWrite(args));
-        EventBus.Instance.Subscribe<IMetricsArgs>(ReceiveMetrics);
-        _handleOutputTask = Task.Run(() => HandleOutput(_outputCts.Token));
-        _initializationTask = CopyServerOutput();
+        _disposables = new CompositeDisposable(_outputCts,
+            daemon.ServerMessages.Subscribe(args => _serverOutputChannel.Writer.TryWrite(args)));
+        Task.Run(() => HandleOutput(_outputCts.Token));
         _logger.LogInformation("Got total RAM:{ram}", MemoryInfo.CurrentSystemMemory);
     }
 
@@ -275,11 +273,54 @@ public class ServiceConnector
 
     #endregion
 
+    #region 服务器添加、修改与删除
+
+    public async Task<Result> AddServerUsingCore(LocatedServerConfig config, string corePath)
+    {
+        var registerResult = await _configManager.AddServerUsingCore(config, corePath); // TODO:安插等待Forge安装方法
+        return await registerResult.Bind(async Task<Result> (dict) =>
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = dict.ToImmutableDictionary());
+            return Result.Ok();
+        });
+    }
+
+    public async Task<Result> EditServer(int id, LocatedServerConfig config)
+    {
+        var result = await _configManager.EditServer(new IndexedServerConfig(id, config));
+        return await result.Bind(async Task<Result> (dict) =>
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = dict.ToImmutableDictionary());
+            return Result.Ok();
+        });
+    }
+
+    public async Task<Result> DeleteServer(int serverId)
+    {
+        var result = await _configManager.DeleteServer(serverId);
+        return await result.Bind(async Task<Result> (dict) =>
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = dict.ToImmutableDictionary());
+            return Result.Ok();
+        });
+    }
+
+    public async Task<Result> AddServerFolder(LocatedServerConfig config, IProgress<string>? progress = null)
+    {
+        var result = await _configManager.AddServerFolder(config, progress); // TODO:进度的后台运行与报告
+        return await result.Bind(async Task<Result> (dict) =>
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = dict.ToImmutableDictionary());
+            return Result.Ok();
+        });
+    }
+
+    #endregion
+
     #region 读取服务器输出
 
-    private readonly Channel<IStorageArgs> _serverOutputChannel = Channel.CreateUnbounded<IStorageArgs>();
-    private CancellationTokenSource _outputCts = new();
-    private Task _handleOutputTask;
+    private readonly Channel<IServerMessage> _serverOutputChannel = Channel.CreateUnbounded<IServerMessage>();
+    private readonly CancellationTokenSource _outputCts = new();
 
     private async Task HandleOutput(CancellationToken token)
     {
@@ -305,7 +346,7 @@ public class ServiceConnector
         }
     }
 
-    private async Task ArgsProcessor(IStorageArgs args)
+    private async Task ArgsProcessor(IServerMessage args)
     {
         switch (args)
         {
@@ -316,6 +357,14 @@ public class ServiceConnector
                         value.Add(new ColoredLine(coa.Output, coa.ColorHex));
                         return value;
                     }));
+                break;
+            case GlobalMinutelyMetricsReport gmmr:
+                await Dispatcher.UIThread.InvokeAsync(() => ProcessMinutelyMetrics(gmmr));
+                break;
+            case SecondlyMetricsReport smr:
+                await Dispatcher.UIThread.InvokeAsync(() => _appState.MetricsDict.AddOrUpdate(smr.ServerId,
+                    _ => new MetricsStorage(smr),
+                    (_, storage) => storage.Add(smr)));
                 break;
             case ServerStatusArgs ssa:
                 await Dispatcher.UIThread.InvokeAsync(() => UpdateStatus(ssa));
@@ -374,171 +423,14 @@ public class ServiceConnector
     }
 
     #endregion
-
+    
     #region 接收服务器资源占用信息
 
-    private void ReceiveMetrics(IMetricsArgs args)
+    private void ProcessMinutelyMetrics(GlobalMinutelyMetricsReport args)
     {
-        switch (args)
-        {
-            case MetricsUpdateArgs mua: ProcessSecondlyMetrics(mua); break;
-            case GeneralMetricsArgs gma: ProcessMinutelyMetrics(gma); break;
-        }
-    }
-
-    private void ProcessSecondlyMetrics(MetricsUpdateArgs args)
-    {
-        foreach (var item in args.Metrics)
-            _appState.MetricsDict.AddOrUpdate(item.ServerId, _ => new MetricsStorage(item),
-                (_, storage) => storage.Add(item));
-    }
-
-    private void ProcessMinutelyMetrics(GeneralMetricsArgs args)
-    {
-        RangedObservableLinkedList<double> cpu = new(30);
-        RangedObservableLinkedList<double> ram = new(30);
-        foreach (var c in args.CpuHistory) cpu.Add(c);
-
-        foreach (var r in args.RamPctHistory) ram.Add(r);
-
-        _appState.GeneralCpuMetrics = cpu;
-        _appState.GeneralRamMetrics = ram;
-        _appState.OnGeneralMetricsUpdated(args.CpuHistory.LastItem, args.RamPctHistory.LastItem,
-            args.RamBytesAvgHistory.LastItem);
-    }
-
-    #endregion
-
-    #region 服务器添加、修改与删除
-
-    public static async Task<Result> ValidateNewServerConfig(MutableLocatedServerConfig config, bool skipCorePathCheck = false)
-    {
-        var checkResult = await config.CheckAndFixAsync(skipCorePathCheck);
-        if (checkResult.IsFailed) return Result.Fail(checkResult.Errors);
-
-        if (skipCorePathCheck) return Result.Ok(); // 不检查核心，直接返回
-        return checkResult.Value.ServerType switch
-        {
-            ServerCoreType.ForgeInstaller => Result.Fail(
-                "您选择的文件是一个Forge安装器，而不是一个Minecraft服务端核心文件。LSL暂不支持Forge服务器的添加与启动。"),
-            ServerCoreType.FabricInstaller => Result.Fail(
-                "您选择的文件是一个Fabric安装器，而不是一个Minecraft服务端核心文件。请下载Fabric官方服务器jar文件，而不是安装器。"),
-            ServerCoreType.Unknown => Result.Ok().WithReason(new WarningReason(
-                "LSL无法确认您选择的文件是否为Minecraft服务端核心文件。\n这可能是由于LSL没有收集足够的关于服务器核心的辨识信息造成的。如果这是确实一个Minecraft服务端核心并且具有一定的知名度，请您前往LSL的仓库（https://github.com/Orange-Icepop/LSL）提交相关Issue。\n您可以直接点击确认绕过校验，但是LSL及其开发团队不为因此造成的后果作担保。")),
-            ServerCoreType.Client => Result.Fail("您选择的文件是一个Minecraft客户端核心文件，而不是一个服务端核心文件。"),
-            _ => Result.Ok()
-        };
-    }
-
-    public static Task<Result<ServerCoreType>> GetCoreType(string? corePath)
-    {
-        return CoreTypeHelper.GetCoreType(corePath);
-    }
-
-    public async Task<Result> AddServerUsingCore(LocatedServerConfig config, string corePath)
-    {
-        var registerResult = await _configManager.AddServerUsingCore(config, corePath); // TODO:安插等待Forge安装方法
-        return await registerResult.Bind(async Task<Result> (dict) =>
-        {
-            await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = dict.ToImmutableDictionary());
-            return Result.Ok();
-        });
-    }
-
-    public async Task<Result> EditServer(int id, LocatedServerConfig config)
-    {
-        var result = await _configManager.EditServer(new IndexedServerConfig(id, config));
-        return await result.Bind(async Task<Result> (dict) =>
-        {
-            await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = dict.ToImmutableDictionary());
-            return Result.Ok();
-        });
-    }
-
-    public async Task<Result> DeleteServer(int serverId)
-    {
-        var result = await _configManager.DeleteServer(serverId);
-        return await result.Bind(async Task<Result> (dict) =>
-        {
-            await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = dict.ToImmutableDictionary());
-            return Result.Ok();
-        });
-    }
-
-    public async Task<Result> AddServerFolder(LocatedServerConfig config, IProgress<string>? progress = null)
-    {
-        var result = await _configManager.AddServerFolder(config, progress); // TODO:进度的后台运行与报告
-        return await result.Bind(async Task<Result> (dict) =>
-        {
-            await Dispatcher.UIThread.InvokeAsync(() => _appState.CurrentServerConfigs = dict.ToImmutableDictionary());
-            return Result.Ok();
-        });
-    }
-
-    #endregion
-
-    #region 从服务线程拷贝服务器输出字典
-
-    private readonly Task _initializationTask;
-    private readonly SemaphoreSlim _copyLock = new(1, 1);
-
-    private async Task CopyServerOutput()
-    {
-        // 保险起见用锁Throttle一下，别瞎玩搞竞态了
-        await _copyLock.WaitAsync();
-        try
-        {
-            // 暂停输出处理
-            _logger.LogInformation("Copy server output. Stopping output handler...");
-            await _outputCts.CancelAsync();
-            await _handleOutputTask;
-            // 拷贝输出字典
-            _appState.TerminalTexts = new ConcurrentDictionary<int, ObservableCollection<ColoredLine>>(
-                _outputStorage.OutputDict.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => new ObservableCollection<ColoredLine>(
-                        kvp.Value.Select(line => new ColoredLine(line.Line, line.ColorHex))
-                    )
-                )
-            );
-
-            _appState.ServerStatuses = new ConcurrentDictionary<int, ServerStatus>(
-                _outputStorage.StatusDict.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => new ServerStatus(kvp.Value)
-                )
-            );
-            await Dispatcher.UIThread.InvokeAsync(UpdateRunningServer);
-
-            _appState.UserDict = new ConcurrentDictionary<int, ObservableCollection<PlayerInfo>>(
-                _outputStorage.PlayerDict
-                    .GroupBy(kvp => kvp.Key.ServerId)
-                    .ToDictionary(
-                        g => g.Key,
-                        g => new ObservableCollection<PlayerInfo>(
-                            g.Select(kvp => new PlayerInfo(kvp.Value, kvp.Key.PlayerName))
-                        )
-                    )
-            );
-
-            _appState.MessageDict = new ConcurrentDictionary<int, ObservableCollection<UserMessageLine>>(
-                _outputStorage.MessageDict.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => new ObservableCollection<UserMessageLine>(
-                        kvp.Value.Select(line => new UserMessageLine(line))
-                    )
-                )
-            );
-        }
-        finally
-        {
-            // 恢复输出处理
-            _outputCts = new CancellationTokenSource();
-            _handleOutputTask = Task.Run(() => HandleOutput(_outputCts.Token));
-            _logger.LogInformation("Output handler restarted.");
-            // 释放锁
-            _copyLock.Release();
-        }
+        _appState.GeneralCpuMetrics.Add(args.CpuUsage);
+        _appState.GeneralRamMetrics.Add(args.MemUsage);
+        _appState.GeneralRamCount.Add(args.MemBytes);
     }
 
     #endregion

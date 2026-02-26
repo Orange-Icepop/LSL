@@ -1,4 +1,4 @@
-namespace LSL.Models;
+namespace LSL.Common.Models.Minecraft;
 
 public class PlayerInfo
 {

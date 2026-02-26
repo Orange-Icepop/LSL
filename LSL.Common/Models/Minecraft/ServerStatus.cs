@@ -1,10 +1,9 @@
-using ReactiveUI;
-using ReactiveUI.SourceGenerators;
+using System.ComponentModel;
+using LSL.Common.DTOs;
 
+namespace LSL.Common.Models.Minecraft;
 
-namespace LSL.Models;
-
-public partial class ServerStatus : ReactiveObject
+public partial class ServerStatus : INotifyPropertyChanged
 {
     public ServerStatus()
     {
@@ -23,11 +22,9 @@ public partial class ServerStatus : ReactiveObject
         IsRunning = isRunning;
         IsOnline = isOnline;
     }
-
-    [Reactive]
-    public partial bool IsRunning { get; private set; }
-    [Reactive]
-    public partial bool IsOnline { get; private set; }
+    
+    public bool IsRunning { get; private set; }
+    public bool IsOnline { get; private set; }
 
     public ServerStatus Update(bool isRunning, bool isOnline)
     {

@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 using LSL.Common.Collections;
+using LSL.Common.DTOs;
 using LSL.Common.Models.AppConfig;
 using LSL.Common.Models.Minecraft;
 using LSL.Common.Models.ServerConfig;
@@ -223,15 +224,10 @@ public partial class AppStateLayer : ReactiveObject
 
     #region 性能监控相关
 
-    [Reactive] private ConcurrentDictionary<int, MetricsStorage> _metricsDict = new();
-    [Reactive] private RangedObservableLinkedList<double> _generalCpuMetrics = new(30, 0);
-    [Reactive] private RangedObservableLinkedList<double> _generalRamMetrics = new(30, 0);
-    public event EventHandler<GeneralMetricsEventArgs>? GeneralMetricsEventHandler;
-
-    public void OnGeneralMetricsUpdated(double cpu, double ram, long memVal)
-    {
-        GeneralMetricsEventHandler?.Invoke(this, new GeneralMetricsEventArgs(cpu, ram, memVal));
-    }
+    public ConcurrentDictionary<int, MetricsStorage> MetricsDict { get; } = new();
+    public RangedObservableLinkedList<double> GeneralCpuMetrics { get; } = new(30, 0);
+    public RangedObservableLinkedList<double> GeneralRamMetrics { get; } = new(30, 0);
+    public RangedObservableLinkedList<long> GeneralRamCount { get; } = new(30, 0);
 
     #endregion
 }
