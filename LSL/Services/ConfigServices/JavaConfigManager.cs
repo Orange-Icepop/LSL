@@ -34,13 +34,13 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
         try
         {
             if (!File.Exists(ConfigPathProvider.JavaListPath))
-                await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "");
+                await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath, "{}");
 
             logger.LogInformation("Start detecting Java...");
             List<JavaInfo> javaList;
             try
             {
-                javaList = await Task.Run(JavaFinder.GetInstalledJavaInfosAsync); //调用JavaFinder查找Java
+                javaList = await JavaFinder.GetInstalledJavaInfosAsync(); //调用JavaFinder查找Java
             }
             catch (Exception e)
             {
@@ -48,16 +48,15 @@ public class JavaConfigManager(ILogger<JavaConfigManager> logger) //Java相关�
                 return Result.Fail(new ExceptionalError(e));
             }
 
-            Dictionary<string, JavaInfo> javaDict = [];
+            Dictionary<int, JavaInfo> javaDict = [];
             //遍历写入Java信息
             var id = 0;
             foreach (var javaInfo in javaList)
             {
-                var writtenId = id.ToString();
-                javaDict.Add(writtenId, javaInfo);
+                javaDict.Add(id, javaInfo);
                 id++;
             }
-
+            JavaDict = javaDict.ToImmutableDictionary();
             await File.WriteAllTextAsync(ConfigPathProvider.JavaListPath,
                 JsonSerializer.Serialize(javaDict, SnakeJsonOptions.Default.DictionaryInt32JavaInfo)); //写入配置文件
             logger.LogInformation("Java detection completed, found {count} javas.", javaDict.Count);

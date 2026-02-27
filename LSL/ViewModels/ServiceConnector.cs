@@ -237,7 +237,7 @@ public class ServiceConnector
 
     public Task<Result<int>> FindJava()
     {
-        return _configManager.DetectJavaAsync().Bind(() => ReadJavaConfig(true));
+        return _configManager.DetectJavaAsync().Bind(() => ReadJavaConfig());
     }
 
     #endregion
