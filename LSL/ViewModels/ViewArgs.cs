@@ -65,6 +65,7 @@ public enum WindowOperationArgType
     Hide, // to MainWindow only
     Show, // to MainWindow only
     RequestClose, // to MainWindow only
+    RequestInstantClose, // to MainWindow only, skips EnableTray check
     CheckForClose, // from MainWindow to ShellVM only, return pre-close check request
     ConfirmClose, // from ShellVM to MainWindow only, response of check request
     ForceClose // to MainWindow only

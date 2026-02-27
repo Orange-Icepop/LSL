@@ -70,7 +70,7 @@ public partial class InitializationViewModel : ViewModelBase
 
     private static void TrayCalledQuit()
     {
-        MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.RequestClose));
+        MessageBus.Current.SendMessage(new WindowOperationArgs(WindowOperationArgType.RequestInstantClose));
     }
 
     private async Task OnFatalErrorReceived(ViewModelFatalError error)

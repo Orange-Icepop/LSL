@@ -57,8 +57,10 @@ public partial class ShellViewModel : ViewModelBase
 
         MessageBus.Current.Listen<WindowOperationArgs>()
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Where(args => args.Body is WindowOperationArgType.CheckForClose)
-            .Select(_ => Observable.FromAsync(PreExitOperations))
+            .Where(args =>
+                args.Body is WindowOperationArgType.CheckForClose or WindowOperationArgType.RequestInstantClose)
+            .Select(args =>
+                Observable.FromAsync(() => PreExitOperations(args.Body is WindowOperationArgType.RequestInstantClose)))
             .Switch()
             .Subscribe(
                 result =>
@@ -119,10 +121,10 @@ public partial class ShellViewModel : ViewModelBase
             await ServeCon.CheckForUpdates();
     }
 
-    private async Task<int> PreExitOperations() // 退出事件处理
+    private async Task<int> PreExitOperations(bool skipTrayCheck) // 退出事件处理
     {
         await ConfigVM.SaveConfigAsync();
-        if (AppState.DesktopConfigs.EnableDaemonKeepRunning) return 1;
+        if (!skipTrayCheck && AppState.DesktopConfigs.EnableTray) return 1;
         if (AppState.DaemonConfigs.EndServerOnClose)
         {
             await ServeCon.EndAllServers();
