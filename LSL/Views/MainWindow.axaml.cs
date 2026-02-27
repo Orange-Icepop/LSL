@@ -22,11 +22,11 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
     public MainWindow()
     {
         InitializeComponent();
-        Closing += MainWindow_Closing; // 重定向关闭窗口事件
+        Closing += MainWindowClosing; // 重定向关闭窗口事件
         MessageBus.Current.Listen<WindowOperationArgs>()
             .ObserveOn(RxApp.MainThreadScheduler)
             .Where(args => args.Body is not WindowOperationArgType.CheckForClose)
-            .Subscribe(args => CloseHandler(args.Body));
+            .Subscribe(args => MessageHandler(args.Body));
         this.WhenActivated(action =>
         {
             action(ViewModel!.Coordinator.NotifyInteraction.RegisterHandler(ShowNotification));
@@ -96,7 +96,7 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
 
     private bool _confirmClose;
 
-    private void MainWindow_Closing(object? sender, CancelEventArgs e)
+    private void MainWindowClosing(object? sender, CancelEventArgs e)
     {
         if (_confirmClose)
         {
@@ -109,7 +109,7 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
         }
     }
 
-    private void CloseHandler(WindowOperationArgType cType)
+    private void MessageHandler(WindowOperationArgType cType)
     {
         switch (cType)
         {
@@ -121,6 +121,12 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
                 break;
             case WindowOperationArgType.Hide:
                 Hide();
+                break;
+            case WindowOperationArgType.Show:
+                Show();
+                break;
+            case WindowOperationArgType.RequestClose:
+                Close();
                 break;
             default: return;
         }
