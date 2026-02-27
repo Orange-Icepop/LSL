@@ -10,6 +10,7 @@ using LSL.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
@@ -20,7 +21,7 @@ public partial class InitializationViewModel : ViewModelBase
         DialogViewModel dialogModel, DialogCoordinator coordinator) : base(logger)
     {
         MessageBus.Current.Listen<ViewModelFatalError>()
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(AvaloniaScheduler.Instance)
             .Subscribe(ex => _ = OnFatalErrorReceived(ex));
         AppState = appState;
         DialogModel = dialogModel;

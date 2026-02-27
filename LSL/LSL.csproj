@@ -86,7 +86,7 @@
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
         <PackageReference Include="NLog" Version="6.1.0" />
         <PackageReference Include="NLog.Extensions.Logging" Version="6.1.1" />
-        <PackageReference Include="ReactiveUI.Avalonia" Version="11.3.8" />
+        <PackageReference Include="ReactiveUI.Avalonia" Version="11.4.3" />
         <PackageReference Include="ReactiveUI.SourceGenerators" Version="2.6.1">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

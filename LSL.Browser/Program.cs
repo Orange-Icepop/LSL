@@ -14,7 +14,8 @@ internal sealed class Program
     {
         await BuildAvaloniaApp()
             .WithInterFont()
-            .UseReactiveUI()
+            .UseReactiveUI(rxui => { })
+            .RegisterReactiveUIViewsFromEntryAssembly()
             .StartBrowserAppAsync("out");
     }
 

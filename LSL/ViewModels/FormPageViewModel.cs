@@ -14,13 +14,16 @@ using LSL.Common.Utilities.Minecraft;
 using LSL.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 using ReactiveUI.SourceGenerators;
+using ReactiveUI.Validation.Extensions;
 
 namespace LSL.ViewModels;
 
 public partial class FormPageViewModel : RegionalViewModelBase<FormPageViewModel>
 {
-    public FormPageViewModel(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator, PublicCommand commands) : base(appState, connector, coordinator, commands)
+    public FormPageViewModel(AppStateLayer appState, ServiceConnector connector, DialogCoordinator coordinator,
+        PublicCommand commands) : base(appState, connector, coordinator, commands)
     {
         // Reset to not null
         EditingConfig = MutableLocatedServerConfig.New;
@@ -29,7 +32,7 @@ public partial class FormPageViewModel : RegionalViewModelBase<FormPageViewModel
         ExtraJvmArgs = string.Empty;
         // end
         this.WhenAnyValue(formPageVM => formPageVM.SelectedJavaIndex)
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(AvaloniaScheduler.Instance)
             .Select(GetJavaPath)
             .Subscribe(val => EditingConfig.JavaPath = val);
         _javaListHelper = AppState.WhenAnyValue(stateLayer => stateLayer.CurrentJavaDict)
@@ -47,6 +50,13 @@ public partial class FormPageViewModel : RegionalViewModelBase<FormPageViewModel
         AddCoreCmd = ReactiveCommand.CreateFromTask(AddServerCore);
         EditServerCmd = ReactiveCommand.CreateFromTask(EditServer);
         AddExistedServerCmd = ReactiveCommand.CreateFromTask(AddServerFolder);
+
+        // 校验
+        this.ValidationRule(vm => vm.EditingConfig.ServerName, name => !string.IsNullOrWhiteSpace(name), "服务器名称不可为空");
+        this.ValidationRule(vm => vm.EditingConfig.ServerName, name => !AppState.ServerNames.Contains(name!), "服务器名称不可与其他服务器重复");
+        var mem = this.WhenAnyValue(vm => vm.EditingConfig.MinMemory, vm => vm.EditingConfig.MaxMemory,
+            (min, max) => min <= max);
+        this.ValidationRule(vm => vm.EditingConfig.MaxMemory, mem, "最小内存不得大于最大内存");
     }
 
     [ObservableAsProperty] private ObservableCollection<string> _javaList;

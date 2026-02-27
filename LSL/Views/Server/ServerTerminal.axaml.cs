@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using Avalonia.Controls;
 using LSL.ViewModels;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 
 namespace LSL.Views.Server;
 
@@ -12,7 +13,7 @@ public partial class ServerTerminal : UserControl
     {
         InitializeComponent();
         MessageBus.Current.Listen<ViewBroadcastArgs>()
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(AvaloniaScheduler.Instance)
             .Subscribe(ForceScroll);
     }
 

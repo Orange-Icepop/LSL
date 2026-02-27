@@ -22,17 +22,15 @@ public class App : Application
 
     public App()
     {
+        
+    }
+    
+    public App(ServiceProvider services, InitializationViewModel startupViewModel)
+    {
         s_logger.Info("Building LSL DI Container");
-        var serviceDescriptors = new ServiceCollection();
-        serviceDescriptors.AddLogging();
-        serviceDescriptors.AddNetworking();
-        serviceDescriptors.AddConfigManager();
-        serviceDescriptors.AddServerHost();
-        serviceDescriptors.AddStartUp();
-        serviceDescriptors.AddViewModels();
-        _diServices = serviceDescriptors.BuildServiceProvider();
+        _diServices = services;
+        _startupViewModel = startupViewModel;
         s_logger.Info("DI Completed");
-        _startupViewModel = _diServices.GetRequiredService<InitializationViewModel>();
         DataContext = _startupViewModel;
     }
 

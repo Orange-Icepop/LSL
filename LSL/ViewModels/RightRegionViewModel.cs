@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using Avalonia.Controls;
 using LSL.Models;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
@@ -17,7 +18,7 @@ public partial class RightRegionViewModel : RegionalViewModelBase<RightRegionVie
             .Select(NavigateRight)
             .Subscribe(t => CurrentView = t);
         MessageBus.Current.Listen<NavigateCommand>()
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(AvaloniaScheduler.Instance)
             .Subscribe(e =>
             {
                 if (e.CommandType == NavigateCommandType.Refresh)

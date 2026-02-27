@@ -24,7 +24,7 @@ public partial class MainWindow : ReactiveWindow<InitializationViewModel>
         InitializeComponent();
         Closing += MainWindowClosing; // 重定向关闭窗口事件
         MessageBus.Current.Listen<WindowOperationArgs>()
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(AvaloniaScheduler.Instance)
             .Where(args => args.Body is not WindowOperationArgType.CheckForClose)
             .Subscribe(args => MessageHandler(args.Body));
         this.WhenActivated(action =>

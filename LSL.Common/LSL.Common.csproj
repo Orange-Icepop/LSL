@@ -10,10 +10,10 @@
 
     <ItemGroup>
         <PackageReference Include="FluentResults" Version="4.0.0"/>
-        <PackageReference Include="Google.Protobuf" Version="3.33.5" />
-        <PackageReference Include="Google.Protobuf.Tools" Version="3.33.5" />
+        <PackageReference Include="Google.Protobuf" Version="3.34.0" />
+        <PackageReference Include="Google.Protobuf.Tools" Version="3.34.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
-        <PackageReference Include="Mutty" Version="1.0.75">
+        <PackageReference Include="Mutty" Version="1.0.83">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

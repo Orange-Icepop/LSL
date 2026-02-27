@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using LSL.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 
 namespace LSL.ViewModels;
 
@@ -56,7 +57,7 @@ public partial class ShellViewModel : ViewModelBase
         #endregion
 
         MessageBus.Current.Listen<WindowOperationArgs>()
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(AvaloniaScheduler.Instance)
             .Where(args =>
                 args.Body is WindowOperationArgType.CheckForClose or WindowOperationArgType.RequestInstantClose)
             .Select(args =>

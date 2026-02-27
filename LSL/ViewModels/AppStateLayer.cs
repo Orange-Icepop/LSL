@@ -12,6 +12,7 @@ using LSL.Common.Models.ServerConfig;
 using LSL.Models;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 using ReactiveUI.SourceGenerators;
 
 namespace LSL.ViewModels;
@@ -33,19 +34,19 @@ public partial class AppStateLayer : ReactiveObject
         RunningServerCount = 0;
         // end
         MessageBus.Current.Listen<NavigateArgs>()
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(AvaloniaScheduler.Instance)
             .Subscribe(Navigate);
         MessageBus.Current.Listen<NavigateCommand>()
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(AvaloniaScheduler.Instance)
             .Select(arg => arg.CommandType)
             .Subscribe(NavigateCommandHandler);
         // 配置公共监听属性
         ServerConfigChanged = this.WhenAnyValue(stateLayer => stateLayer._currentServerConfigs)
-            .ObserveOn(RxApp.MainThreadScheduler);
+            .ObserveOn(AvaloniaScheduler.Instance);
         ServerIndexChanged = this.WhenAnyValue(stateLayer => stateLayer.SelectedServerIndex)
-            .ObserveOn(RxApp.MainThreadScheduler);
+            .ObserveOn(AvaloniaScheduler.Instance);
         ServerIdChanged = this.WhenAnyValue(stateLayer => stateLayer.SelectedServerId)
-            .ObserveOn(RxApp.MainThreadScheduler);
+            .ObserveOn(AvaloniaScheduler.Instance);
 
         #region 监听
 

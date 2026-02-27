@@ -33,23 +33,23 @@ public static class InjectionHelper
 
     #region 添加单例
 
-    public static void AddLogging(this IServiceCollection collection)
+    extension(IServiceCollection collection)
     {
-        collection.AddLogging(builder =>
+        public IServiceCollection AddLogging()
         {
-            builder.ClearProviders();
-            builder.AddNLog();
+            return collection.AddLogging(builder =>
+            {
+                builder.ClearProviders();
+                builder.AddNLog();
 #if DEBUG
-            builder.SetMinimumLevel(LogLevel.Debug);
+                builder.SetMinimumLevel(LogLevel.Debug);
 #else
             builder.SetMinimumLevel(LogLevel.Information);
 #endif
-        });
-    }
+            });
+        }
 
-    extension(IServiceCollection collection)
-    {
-        public void AddNetworking()
+        public IServiceCollection AddNetworking()
         {
             collection.AddHttpClient("LSL", client => { client.ResetUserAgent($"LSL/{DesktopConstant.Version}"); })
                 .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
@@ -61,45 +61,48 @@ public static class InjectionHelper
                 .AddPolicyHandler((provider, _) => GetRetryPolicy(provider))
                 .AddPolicyHandler((provider, _) => GetCircuitBreakerPolicy(provider));
             collection.AddSingleton<NetService>();
+            return collection;
         }
 
-        public void AddConfigManager()
+        public IServiceCollection AddConfigManager()
         {
-            collection.AddSingleton<JavaConfigManager>();
-            collection.AddSingleton<ServerConfigManager>();
-            collection.AddSingleton<DaemonConfigManager>();
-            collection.AddSingleton<WebConfigManager>();
-            collection.AddSingleton<DesktopConfigManager>();
-            collection.AddSingleton<ConfigManager>();
+            return collection.AddSingleton<JavaConfigManager>()
+                .AddSingleton<ServerConfigManager>()
+                .AddSingleton<DaemonConfigManager>()
+                .AddSingleton<WebConfigManager>()
+                .AddSingleton<DesktopConfigManager>()
+                .AddSingleton<ConfigManager>();
         }
 
-        public void AddServerHost()
+        public IServiceCollection AddServerHost()
         {
-            collection.AddSingleton<IServerHost, ServerHost>();
-            collection.AddSingleton<ClientConnector>();
+            return collection.AddSingleton<IServerHost, ServerHost>()
+                .AddSingleton<ClientConnector>();
         }
 
-        public void AddStartUp()
+        public IServiceCollection AddStartUp()
         {
-            collection.AddSingleton<DialogCoordinator>();
-            collection.AddSingleton<DialogViewModel>();
-            collection.AddSingleton<AppStateLayer>();
-            collection.AddSingleton<InitializationViewModel>();
+            return collection.AddSingleton<DialogCoordinator>()
+                .AddSingleton<DialogViewModel>()
+                .AddSingleton<AppStateLayer>()
+                .AddSingleton<InitializationViewModel>();
         }
 
-        public void AddViewModels()
+        public IServiceCollection AddViewModels()
         {
-            collection.AddSingleton<ServiceConnector>();
-            collection.AddSingleton<PublicCommand>();
-            collection.AddSingleton<BarRegionViewModel>();
-            collection.AddSingleton<LeftRegionViewModel>();
-            collection.AddSingleton<RightRegionViewModel>();
-            collection.AddSingleton<ConfigViewModel>();
-            collection.AddSingleton<MonitorViewModel>();
-            collection.AddSingleton<ServerViewModel>();
-            collection.AddSingleton<FormPageViewModel>();
-            collection.AddSingleton<ShellViewModel>();
+            return collection.AddSingleton<ServiceConnector>()
+                .AddSingleton<PublicCommand>()
+                .AddSingleton<BarRegionViewModel>()
+                .AddSingleton<LeftRegionViewModel>()
+                .AddSingleton<RightRegionViewModel>()
+                .AddSingleton<ConfigViewModel>()
+                .AddSingleton<MonitorViewModel>()
+                .AddSingleton<ServerViewModel>()
+                .AddSingleton<FormPageViewModel>()
+                .AddSingleton<ShellViewModel>();
         }
+
+        
     }
 
     #endregion

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Avalonia;
-using ReactiveUI.Avalonia;
+using ReactiveUI.Avalonia.Splat;
 
 namespace LSL.Desktop;
 
@@ -37,6 +37,14 @@ internal class Program
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace()
-            .UseReactiveUI();
+            .UseReactiveUIWithMicrosoftDependencyResolver(services =>
+            {
+                services.AddLogging()
+                    .AddNetworking()
+                    .AddConfigManager()
+                    .AddServerHost()
+                    .AddStartUp()
+                    .AddViewModels();
+            });
     }
 }
