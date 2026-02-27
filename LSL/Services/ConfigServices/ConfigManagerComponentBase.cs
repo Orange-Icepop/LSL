@@ -75,6 +75,7 @@ public abstract class ConfigManagerComponentBase<T, TConfig> : IConfigManager<TC
                 {
                     try
                     {
+                        Config = c;
                         await File.WriteAllTextAsync(ConfigPath, c.Serialize());
                         return Result.Ok(c);
                     }

@@ -212,15 +212,27 @@ public class ServiceConnector
 
     public Task<Result<DaemonConfig>> SaveDaemonConfig(DaemonConfig? config)
     {
-        return _configManager.SetDaemonConfig(config).Bind(_ => ReadDaemonConfig());
+        return _configManager.SetDaemonConfig(config).Bind(c =>
+        {
+            _appState.DaemonConfigs = c;
+            return Result.Ok(c);
+        });
     }
     public Task<Result<WebConfig>> SaveWebConfig(WebConfig? config)
     {
-        return _configManager.SetWebConfig(config).Bind(_ => ReadWebConfig());
+        return _configManager.SetWebConfig(config).Bind(c =>
+        {
+            _appState.WebConfigs = c;
+            return Result.Ok(c);
+        });
     }
     public Task<Result<DesktopConfig>> SaveDesktopConfig(DesktopConfig? config)
     {
-        return _configManager.SetDesktopConfig(config).Bind(_ => ReadDesktopConfig());
+        return _configManager.SetDesktopConfig(config).Bind(c =>
+        {
+            _appState.DesktopConfigs = c;
+            return Result.Ok(c);
+        });
     }
 
     public Task<Result<int>> FindJava()
