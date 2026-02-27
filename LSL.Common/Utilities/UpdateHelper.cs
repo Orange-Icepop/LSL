@@ -11,11 +11,11 @@ public static class UpdateHelper
     private const string StableVersionEndpoint = "https://api.orllow.cn/lsl/latest/stable";
     private const string PrereleaseVersionEndpoint = "https://api.orllow.cn/lsl/latest/prerelease";
 
-    public static Task<Result<UpdateApiResponse>> QueryLatest(IHttpClientFactory factory, bool prerelease = false)
+    public static async Task<Result<UpdateApiResponse>> QueryLatest(IHttpClientFactory factory, bool prerelease = false)
     {
         using var client = factory.CreateClient();
         client.ResetUserAgent($"LSL/{Constant.Version}");
-        return GetUpdateApiAsync(client, prerelease ? PrereleaseVersionEndpoint : StableVersionEndpoint);
+        return await GetUpdateApiAsync(client, prerelease ? PrereleaseVersionEndpoint : StableVersionEndpoint);
     }
 
     private static async Task<Result<UpdateApiResponse>> GetUpdateApiAsync(HttpClient httpClient, string url)
@@ -35,12 +35,11 @@ public static class UpdateHelper
         }
         catch (HttpRequestException ex)
         {
-            return Result.Fail<UpdateApiResponse>(
-                new Error("Update check failed due to network connectivity issue").CausedBy(ex));
+            return Result.Fail<UpdateApiResponse>($"Update check failed due to network connectivity issue.\n{ex}");
         }
         catch (TaskCanceledException ex)
         {
-            return Result.Fail<UpdateApiResponse>(new Error("Update check timeout").CausedBy(ex));
+            return Result.Fail<UpdateApiResponse>($"Update check timeout.\n{ex}");
         }
         catch (Exception ex)
         {

@@ -54,6 +54,7 @@ public static class InjectionHelper
             collection.AddHttpClient("LSL", client => { client.ResetUserAgent($"LSL/{DesktopConstant.Version}"); })
                 .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
                 {
+                    ConnectTimeout = TimeSpan.FromSeconds(5),
                     PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),
                     UseCookies = false
                 })

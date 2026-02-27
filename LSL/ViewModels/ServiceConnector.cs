@@ -90,7 +90,7 @@ public class ServiceConnector
         var result = await UpdateHelper.QueryLatest(_webHost.Factory);
         if (!result.IsSuccess)
         {
-            await _coordinator.ThrowError("检查更新时出错", $"检查更新时出现以下错误：\n{result.GetErrors().FlattenToString()}");
+            await _coordinator.ThrowError("检查更新时出错", $"检查更新时出现以下错误：\n{result.GetErrors().GetMessages()}");
             return;
         }
 
@@ -164,6 +164,7 @@ public class ServiceConnector
                     var error = new StringBuilder("在读取已保存的Java列表时出现了一些非致命错误:");
                     error.AppendLine();
                     error.AppendJoin('\n', res.Reasons.OfType<IWarning>().Select(w => w.Message));
+                    error.AppendLine();
                     error.AppendLine("这些配置没有被读取。你可以通过重新搜索Java来解决这个问题。");
                     rt.WithReason(new WarningReason(error.ToString()));
                 }

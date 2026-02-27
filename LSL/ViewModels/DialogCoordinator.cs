@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using FluentResults;
 using LSL.Common.Extensions;
 using LSL.Common.Models;
@@ -41,16 +42,18 @@ public class DialogCoordinator(ILogger<DialogCoordinator> logger) : ViewModelBas
     private async Task ShowServiceError(PopupType type, IEnumerable<Exception> errors, string? title = null)
     {
         var exceptions = errors.ToArray();
-        await PopupInteraction.Handle(new InvokePopupArgs(type, "服务错误", exceptions.GetMessages() + "\n堆栈追踪：\n" + exceptions.FlattenToString()));
+        await Dispatcher.UIThread.InvokeAsync(() =>
+            PopupInteraction.Handle(new InvokePopupArgs(type, title ?? "服务错误",
+                exceptions.GetMessages() + "\n\n\n堆栈追踪：\n" + exceptions.FlattenToString())));
     }
 
     public void Notify(NotifyType type, string? title, string? message)
     {
-        NotifyInteraction.Handle(new NotifyArgs(type, title, message)).Subscribe();
+        _ = Dispatcher.UIThread.InvokeAsync(() => NotifyInteraction.Handle(new NotifyArgs(type, title, message)).Subscribe());
     }
 
     public async Task WaitNotify(NotifyType type, string? title, string? message)
     {
-        await NotifyInteraction.Handle(new NotifyArgs(type, title, message));
+        await Dispatcher.UIThread.InvokeAsync(() => NotifyInteraction.Handle(new NotifyArgs(type, title, message)));
     }
 }
