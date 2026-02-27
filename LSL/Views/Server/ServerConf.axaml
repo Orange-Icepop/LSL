@@ -4,9 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:LSL.ViewModels"
              xmlns:controls="clr-namespace:LSL.Controls"
+             xmlns:server="clr-namespace:LSL.Views.Server"
              x:DataType="vm:ShellViewModel"
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="600"
              x:Class="LSL.Views.Server.ServerConf">
+    <UserControl.Resources>
+        <server:JvmParamConverter x:Key="JvmConverter"/>
+    </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel>
             <controls:MyCard Text="概述">
@@ -38,7 +42,7 @@
                     <SelectableTextBlock Grid.Row="3" Grid.Column="1"
                                          Text="{Binding ConfigVM.SelectedServerConfig.JavaPath}" />
                     <SelectableTextBlock Grid.Row="4" Grid.Column="1"
-                                         Text="{Binding ConfigVM.SelectedServerConfig.ExtraJvmArgs}" />
+                                         Text="{Binding ConfigVM.SelectedServerConfig.ExtraJvmArgs, Converter={StaticResource JvmConverter}}" />
                 </Grid>
             </controls:MyCard>
             <controls:MyCard Text="配置操作">
