@@ -1,22 +1,15 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 
 namespace LSL.Controls;
 
-public partial class MyTip : Border
+public partial class MyTip : TemplatedControl
 {
-    public MyTip()
-    {
-        InitializeComponent();
-    }
     public static readonly StyledProperty<string> TextProperty = AvaloniaProperty.Register<MyTip, string>(nameof(Text));
     public string Text
     {
         get => GetValue(TextProperty);
-        set
-        {
-            SetValue(TextProperty, value);
-            this.Tip.Text = value;
-        }
+        set => SetValue(TextProperty, value);
     }
 }

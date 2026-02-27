@@ -44,18 +44,7 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBox HorizontalAlignment="Left" Width="450"
                                      Text="{Binding FormViewModel.EditingConfig.JavaPath}" />
-                            <Border Background="Transparent">
-                                <Path Data="M14,7 A7,7 0 0,0 0,7 M0,7 A7,7 0 1,0 14,7 M7,3l0,2 M7,6l0,5"
-                                      VerticalAlignment="Center"
-                                      Margin="10"
-                                      Stroke="#019eff"
-                                      StrokeThickness="2" />
-                                <ToolTip.Tip>
-                                    <TextBlock>
-                                        出于性能考虑，不会即时检查目标可执行文件是否为Java。在提交表单时将会进行检查。
-                                    </TextBlock>
-                                </ToolTip.Tip>
-                            </Border>
+                            <controls:MyTip Text="出于性能考虑，不会即时检查目标可执行文件是否为Java。在提交表单时将会进行检查。"/>
                         </StackPanel>
                         <TextBlock Margin="0,0,10,0" FontSize="10" Foreground="Gray">从搜索到的Java中选择</TextBlock>
                         <StackPanel Orientation="Horizontal">
@@ -73,7 +62,10 @@
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Margin="30,10,0,5">
-                        <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">附加JVM参数</TextBlock>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">附加JVM参数</TextBlock>
+                            <controls:MyTip Text="除了内存与jar文件外，其他你要添加的JVM参数，例如指定使用ZGC。支持使用空格或换行来分割参数。"/>
+                        </StackPanel>
                         <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" MinHeight="300"
                                  AcceptsReturn="True" TextWrapping="Wrap"
                                  Text="{Binding FormViewModel.ExtraJvmArgs}" />
