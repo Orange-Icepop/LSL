@@ -77,7 +77,7 @@
 - [x] 重写所有图标为Geometry
 - [x] 将ReactiveUI.Fody换为ReactiveUI.SourceGenerators
 - [x] 将ServiceResult重构为FluentResult
-- [ ] 将ServerHost的报告链转换为IObservable
+- [x] 将ServerHost的报告链转换为IObservable
 
 ### 主题与美化
 

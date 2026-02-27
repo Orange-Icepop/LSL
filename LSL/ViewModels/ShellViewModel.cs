@@ -105,14 +105,12 @@ public partial class ShellViewModel : ViewModelBase
         {
             BarTarget = BarState.Common, LeftTarget = GeneralPageState.Home, RightTarget = RightPageState.HomeRight
         });
-        await DoStartUp();
+        DoStartUp();
     }
 
-    private async Task DoStartUp()
+    private void DoStartUp()
     {
-        await Task.WhenAll(
-            AutoCheckUpdates()
-        );
+        _ = Task.Run(AutoCheckUpdates);
     }
 
     private async Task AutoCheckUpdates()

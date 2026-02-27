@@ -54,11 +54,8 @@ public partial class InitializationViewModel : ViewModelBase
 
         Shell = provider.GetRequiredService<ShellViewModel>();
         if (Shell is null) throw new Exception("ShellViewModel failed to initialize");
-        await Task.Run(async () =>
-        {
-            await Shell.InitializeMainWindow();
-            await Shell.ConfigVM.Init();
-        });
+        await Shell.ConfigVM.Init();
+        await Shell.InitializeMainWindow();
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             MainWindowView = new MainView { DataContext = Shell, ViewModel = Shell };
