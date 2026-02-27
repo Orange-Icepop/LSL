@@ -9,6 +9,7 @@ using LSL.Services;
 using LSL.Services.ConfigServices;
 using LSL.Services.ServerServices;
 using LSL.ViewModels;
+using LSL.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -102,7 +103,11 @@ public static class InjectionHelper
                 .AddSingleton<ShellViewModel>();
         }
 
-        
+        public IServiceCollection AddViews()
+        {
+            return collection.AddSingleton<MainWindow>()
+                .AddSingleton<MainView>();
+        }
     }
 
     #endregion

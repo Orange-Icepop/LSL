@@ -17,8 +17,8 @@ public class App : Application
 {
     private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
 
-    private readonly ServiceProvider _diServices;
-    private readonly InitializationViewModel _startupViewModel;
+    private readonly ServiceProvider? _diServices;
+    private readonly InitializationViewModel? _startupViewModel;
 
     public App()
     {
@@ -45,18 +45,18 @@ public class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var logger = _diServices.GetRequiredService<ILogger<App>>();
+            var logger = _diServices?.GetRequiredService<ILogger<App>>();
             desktop.MainWindow = new MainWindow
             {
                 DataContext = _startupViewModel,
                 ViewModel = _startupViewModel,
-                Logger = _diServices.GetRequiredService<ILogger<MainWindow>>()
+                Logger = _diServices?.GetRequiredService<ILogger<MainWindow>>()
             };
             desktop.MainWindow.Show();
-            _ = _startupViewModel.Initialize(_diServices).ContinueWith(t =>
+            _ = _startupViewModel?.Initialize(_diServices).ContinueWith(t =>
             {
                 if (!t.IsFaulted) return;
-                logger.LogError(t.Exception, "An error occured while initializing the application.");
+                logger?.LogError(t.Exception, "An error occured while initializing the application.");
                 Environment.Exit(1);
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }
