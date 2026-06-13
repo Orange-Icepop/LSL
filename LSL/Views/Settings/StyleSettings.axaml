@@ -29,7 +29,7 @@
                     </ComboBox>
                     <TextBlock Text="背景透明度"/>
                     <DockPanel Margin="0, 5">
-                        <Slider x:Name="Opacity"
+                        <Slider x:Name="OpacitySlider"
                                 Maximum="1.0"
                                 Minimum="0.0"
                                 Value="{Binding ConfigVM.DesktopConfigs.BackgroundOpacity}"
@@ -39,7 +39,7 @@
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
                                 Margin="0,-20,10,-20" />
-                        <TextBlock Text="{Binding #Opacity.Value}" Margin="10,-3,10,0"
+                        <TextBlock Text="{Binding #OpacitySlider.Value}" Margin="10,-3,10,0"
                                    VerticalAlignment="Center" FontWeight="Bold" />
                     </DockPanel>
                 </StackPanel>
